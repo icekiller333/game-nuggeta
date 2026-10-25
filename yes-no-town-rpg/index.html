@@ -54,6 +54,8 @@ button{font-family:inherit; cursor:pointer;}
 .slot{ width:38px; height:38px; border:3px solid var(--ink); background:var(--paper);
   display:flex; align-items:center; justify-content:center; box-shadow:3px 3px 0 var(--ink); position:relative;}
 .slot.empty{ opacity:.28; box-shadow:none; }
+.slot.seen{ filter:grayscale(1); opacity:.5; }
+.slot.unknown{ font-size:22px; font-weight:900; }
 .slot svg{ width:26px; height:26px; }
 .slot .tip{ position:absolute; top:42px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--paper);
   font-size:10px; font-weight:800; padding:2px 6px; white-space:nowrap; display:none; z-index:5;}
@@ -79,6 +81,7 @@ button{font-family:inherit; cursor:pointer;}
   border:4px solid var(--ink); opacity:0; pointer-events:none; z-index:4; letter-spacing:1px;}
 #peekYes{ left:12px; background:var(--teal); color:var(--ink); transform:rotate(-8deg); }
 #peekNo{ right:12px; background:var(--coral); color:#fff; transform:rotate(8deg); }
+#peekCont{ left:50%; transform:translateX(-50%) rotate(-3deg); background:var(--sun); color:#14100c; font-size:20px; }
 #cardtext{ padding:16px 18px 18px; font-size:19px; line-height:1.38; font-weight:600; min-height:104px; }
 #cardtext .small{ font-size:15px; }
 #stamp{ position:absolute; left:50%; top:38%; transform:translate(-50%,-50%) rotate(-10deg);
@@ -92,9 +95,14 @@ button{font-family:inherit; cursor:pointer;}
 .ynbtn:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 var(--ink); }
 #btnNo{ background:var(--coral); color:#fff; }
 #btnYes{ background:var(--teal); color:var(--ink); }
-#btnNext{ flex:1; max-width:300px; border:4px solid var(--ink); font-weight:900; font-size:21px;
-  padding:14px 0; box-shadow:5px 5px 0 var(--ink); background:var(--sun); color:#14100c; display:none;}
-#btnNext:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 var(--ink); }
+#btnContinue{ background:var(--sun); color:#14100c; display:none; }
+#swipehint{ flex:1; max-width:200px; display:none; align-items:center; justify-content:center; gap:8px;
+  font-weight:900; font-size:13px; letter-spacing:.5px; padding:14px 0; opacity:.8; text-align:center; }
+#swipehint .arr{ display:inline-block; font-size:22px; }
+#swipehint .arrL{ animation:nudgeL 1.1s ease-in-out infinite; }
+#swipehint .arrR{ animation:nudgeR 1.1s ease-in-out infinite; }
+@keyframes nudgeL{ 0%,100%{ transform:translateX(0);} 50%{ transform:translateX(-5px);} }
+@keyframes nudgeR{ 0%,100%{ transform:translateX(0);} 50%{ transform:translateX(5px);} }
 /* ---------- overlays ---------- */
 .overlay{ position:fixed; inset:0; background:rgba(10,6,16,.72); display:none;
   align-items:center; justify-content:center; z-index:50; padding:18px;}
@@ -142,6 +150,7 @@ button{font-family:inherit; cursor:pointer;}
         <div id="speaker" style="display:none"></div>
         <div class="peek" id="peekYes">YES</div>
         <div class="peek" id="peekNo">NO</div>
+        <div class="peek" id="peekCont">◂ CONTINUE ▸</div>
         <div id="stamp"></div>
       </div>
       <div id="cardtext"></div>
@@ -151,11 +160,12 @@ button{font-family:inherit; cursor:pointer;}
 
 <div id="controls">
   <button class="ynbtn" id="btnNo" aria-label="No">✕ NO</button>
-  <button id="btnNext">NEXT ▸</button>
+  <button class="ynbtn" id="btnContinue" aria-label="Continue">CONTINUE ▸</button>
+  <div id="swipehint" aria-hidden="true"><span class="arr arrL">⟵</span><span id="swipehintText">OR SWIPE EITHER WAY</span><span class="arr arrR">⟶</span></div>
   <button class="ynbtn" id="btnYes" aria-label="Yes">YES ✓</button>
 </div>
 
-<div id="coach"><p id="coachtext"></p><button id="coachbtn">NEXT</button></div>
+<div id="coach"><p id="coachtext"></p><button id="coachbtn">OK</button></div>
 <div id="toast"></div>
 
 <div class="overlay" id="journalOverlay">
@@ -246,7 +256,7 @@ var ITEM_ORDER = ["knife","coin","tonic","key","rope","marble","clapper"];
 var S; // state
 function newState(){
   return {
-    items:{}, flags:{}, lies:0,
+    items:{}, seen:{}, flags:{}, lies:0,
     quests:{}, // id -> 'done' | 'failed' | 'skipped'
     doneCount:0, cardsSeen:0, started:false,
     chapter:"PROLOGUE", onboarded:false, journalSeen:false
@@ -265,15 +275,15 @@ var QUEST_META = [
   {id:"q10", icon:"🌊", name:"A Name for the River"}
 ];
 function has(item){ return !!S.items[item]; }
-function give(item){ if(!S.items[item]){ S.items[item]=true; toast("GOT: "+ITEMS[item].name.toUpperCase()+" — it's in your JOURNAL"); renderHUD(); } }
+function give(item){ if(!S.items[item]){ S.items[item]=true; S.seen[item]=true; toast("GOT: "+ITEMS[item].name.toUpperCase()+" — it's in your JOURNAL"); renderHUD(); } }
 function lose(item){ delete S.items[item]; renderHUD(); }
 function completeQuest(id){ if(S.quests[id]!=="done"){ S.quests[id]="done"; S.doneCount++; renderHUD(); } }
-function failQuest(id){ if(!S.quests[id]){ S.quests[id]="failed"; renderHUD(); } }
-function skipQuest(id){ if(!S.quests[id]){ S.quests[id]="skipped"; renderHUD(); } }
+function failQuest(id){ if(S.quests[id]!=="done"){ S.quests[id]="failed"; renderHUD(); } }
+function skipQuest(id){ if(S.quests[id]!=="done"){ S.quests[id]="skipped"; renderHUD(); } }
 
 /* ============================================================
    CARD LIBRARY
-   kind: 'yn' (default) | 'auto' (NEXT) | 'death' | 'end'
+   kind: 'yn' (default) | 'auto' (swipe on, either way) | 'death' | 'end'
    fx(s, choice) runs on answering. next can be fn(s,choice)->id
    itemGate: {item, has, lacks} auto-picks next id by inventory
    ============================================================ */
@@ -659,17 +669,20 @@ function renderHUD(){
   var list = "";
   QUEST_META.forEach(function(q){
     var st = S.quests[q.id];
-    var cls = st==="done" ? "jrow done" : st ? "jrow gone" : "jrow";
-    var label = st==="done" ? "✓ DONE" : st ? "✕ SLIPPED AWAY" : "· NOT YET";
+    if(!st) return; /* quests not yet discovered stay hidden entirely */
+    var cls = st==="done" ? "jrow done" : st==="active" ? "jrow" : "jrow gone";
+    var label = st==="done" ? "✓ DONE" : st==="active" ? "● ACTIVE" : "✕ SLIPPED AWAY";
     list += '<div class="'+cls+'"><span>'+q.icon+'</span><span class="jname">'+q.name+'</span><span class="jst">'+label+'</span></div>';
   });
-  $("jquests").innerHTML = list;
+  $("jquests").innerHTML = list || '<div class="jrow"><span class="jname">No quests yet — the town will find you.</span></div>';
   $("jfinale").textContent = S.doneCount >= 4
     ? "★ THE FINALE IS OPEN. When night falls, go to the tower."
     : "THE FINALE — the night the bell rings itself — opens at 4 quests done. You have "+S.doneCount+".";
   var html = "";
   ITEM_ORDER.forEach(function(k){
-    html += '<div class="slot'+(has(k)?"":" empty")+'">'+ITEMS[k].svg+'<span class="tip">'+ITEMS[k].name+'</span></div>';
+    if(has(k)) html += '<div class="slot">'+ITEMS[k].svg+'<span class="tip">'+ITEMS[k].name+'</span></div>';
+    else if(S.seen[k]) html += '<div class="slot seen">'+ITEMS[k].svg+'<span class="tip">'+ITEMS[k].name+' — not held</span></div>';
+    else html += '<div class="slot unknown">?</div>';
   });
   $("jpockets").innerHTML = html;
 }
@@ -741,10 +754,11 @@ function showCard(id){
   var isAuto = card.kind === "auto" || card.kind === "death";
   $("btnYes").style.display = isAuto ? "none" : "block";
   $("btnNo").style.display = isAuto ? "none" : "block";
-  var bn = $("btnNext");
-  bn.style.display = isAuto ? "block" : "none";
-  bn.textContent = card.kind === "death" ? "THE TOWN GOES ON — RESTART" :
-    (id.indexOf("intro") === 0 || id.indexOf("inter_") === 0) ? "CONTINUE ▸" : "NEXT ▸";
+  $("btnContinue").style.display = isAuto ? "block" : "none";
+  $("btnContinue").textContent = card.kind === "death" ? "BEGIN AGAIN ▸" : "CONTINUE ▸";
+  $("swipehint").style.display = isAuto ? "flex" : "none";
+  $("swipehintText").textContent = card.kind === "death" ? "OR SWIPE TO BEGIN AGAIN" : "OR SWIPE EITHER WAY";
+  if(card.quest && !S.quests[card.quest]) S.quests[card.quest] = "active";
   var ch = chapterFor(id);
   if(ch !== S.chapter){ S.chapter = ch; }
   document.body.setAttribute("data-ch", ch);
@@ -755,7 +769,7 @@ function showCard(id){
     queueCoach("controls", "Swipe the card right for YES, left for NO — or tap. There are no other buttons.");
     queueCoach("journalBtn", "Your quests and pockets live here. Finish any 4 quests to open the finale.");
   }
-  $("peekYes").style.opacity = 0; $("peekNo").style.opacity = 0;
+  $("peekYes").style.opacity = 0; $("peekNo").style.opacity = 0; $("peekCont").style.opacity = 0;
   requestAnimationFrame(function(){ requestAnimationFrame(function(){ c.classList.remove("noanim"); }); });
 }
 function resolveChoice(card, choice){
@@ -778,17 +792,17 @@ function answer(choice){
   animating = true;
   var c = $("card");
   var dir = choice === "yes" ? 1 : -1;
-  if(card.kind !== "auto"){ c.classList.add("settle"); c.style.transform = "translateX("+(dir*130)+"%) rotate("+(dir*10)+"deg)"; }
+  c.classList.add("settle"); c.style.transform = "translateX("+(dir*130)+"%) rotate("+(dir*10)+"deg)";
   setTimeout(function(){
     animating = false;
     var raw = resolveChoice(card, choice);
     if(card.fx) card.fx();
     goNext(raw);
-  }, card.kind === "auto" ? 30 : 180);
+  }, 180);
 }
 $("btnYes").addEventListener("click", function(){ answer("yes"); });
 $("btnNo").addEventListener("click", function(){ answer("no"); });
-$("btnNext").addEventListener("click", function(){ answer("yes"); });
+$("btnContinue").addEventListener("click", function(){ answer("yes"); });
 
 /* ---------- swipe ---------- */
 (function(){
@@ -796,7 +810,7 @@ $("btnNext").addEventListener("click", function(){ answer("yes"); });
   card.addEventListener("pointerdown", function(e){
     if(coachActive || animating) return;
     var cur = CARDS[currentId];
-    if(!cur || cur.kind){ return; } /* only plain yes/no cards swipe */
+    if(!cur){ return; } /* every card swipes: choices by direction, the rest either way */
     dragging = true; startX = e.clientX; dx = 0;
     card.classList.add("noanim");
     try{ card.setPointerCapture(e.pointerId); }catch(err){}
@@ -805,8 +819,13 @@ $("btnNext").addEventListener("click", function(){ answer("yes"); });
     if(!dragging) return;
     dx = e.clientX - startX;
     card.style.transform = "translateX("+dx+"px) rotate("+(dx/16)+"deg)";
-    $("peekYes").style.opacity = dx > 8 ? Math.min(dx/70, 1) : 0;
-    $("peekNo").style.opacity = dx < -8 ? Math.min(-dx/70, 1) : 0;
+    var cur2 = CARDS[currentId];
+    if(cur2 && !cur2.kind){
+      $("peekYes").style.opacity = dx > 8 ? Math.min(dx/70, 1) : 0;
+      $("peekNo").style.opacity = dx < -8 ? Math.min(-dx/70, 1) : 0;
+    } else {
+      $("peekCont").style.opacity = Math.abs(dx) > 8 ? Math.min(Math.abs(dx)/70, 1) : 0;
+    }
   });
   function endDrag(){
     if(!dragging) return;
@@ -814,7 +833,7 @@ $("btnNext").addEventListener("click", function(){ answer("yes"); });
     card.classList.remove("noanim"); card.classList.add("settle");
     if(dx > 70){ answer("yes"); }
     else if(dx < -70){ answer("no"); }
-    else { card.style.transform = "none"; $("peekYes").style.opacity = 0; $("peekNo").style.opacity = 0; }
+    else { card.style.transform = "none"; $("peekYes").style.opacity = 0; $("peekNo").style.opacity = 0; $("peekCont").style.opacity = 0; }
     setTimeout(function(){ card.classList.remove("settle"); }, 200);
   }
   card.addEventListener("pointerup", endDrag);
