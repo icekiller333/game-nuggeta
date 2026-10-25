@@ -11,13 +11,13 @@
     --bg:#f6ead2; --panel:#fff8ea; --ink:#1c1408; --muted:#5a4a2f;
     --mud:#8a5a24; --mud-d:#5f3c14; --mud-l:#c98d45; --wet:#4a2f0e;
     --accent:#ffcf3f; --teal:#1fb6a6; --pink:#ff6b8a; --red:#e23b2e; --green:#3fae4a;
-    --water:#3aa7e8; --card:#ffffff; --shadow:#1c1408;
+    --water:#3aa7e8; --card:#ffffff; --shadow:#1c1408; --green-tx:#1e7a27;
   }
   @media (prefers-color-scheme: dark){
     :root{
       --bg:#17110a; --panel:#241a0f; --ink:#f6ead2;
       --muted:#cdbb96; --card:#2d2013; --shadow:#000000;
-      --mud:#a06a2c; --mud-d:#7a4e1c; --mud-l:#d99a4e;
+      --mud:#a06a2c; --mud-d:#7a4e1c; --mud-l:#d99a4e; --green-tx:#4cc25e;
     }
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -40,9 +40,10 @@
   .tabbar{display:flex; gap:8px; padding-top:8px; padding-bottom:calc(8px + env(safe-area-inset-bottom)); flex:none;}
   .tabBtn{
     flex:1; background:var(--card); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
-    font-size:15px; font-weight:900; padding:10px 4px;
+    font-size:15px; font-weight:900; padding:10px 4px; height:46px;
+    white-space:nowrap; overflow:hidden;
   }
-  .tabBtn.on{background:var(--accent);}
+  .tabBtn.on{background:var(--accent); color:#1c1408;}
   .tabBtn .tabBadge{
     display:inline-block; background:var(--pink); border:2px solid var(--ink); color:#2b0713;
     font-size:11px; padding:0 5px; margin-left:4px; vertical-align:2px;
@@ -55,20 +56,21 @@
   .hud{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:6px; flex:none;}
   .stat{
     background:var(--card); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
-    padding:4px 2px; text-align:center;
+    padding:4px 2px; text-align:center; overflow:hidden; min-width:0;
   }
-  .stat .num{font-size:18px; font-weight:900; line-height:1.05;}
+  .stat .num{font-size:18px; font-weight:900; line-height:1.05; white-space:nowrap;}
   .stat .lab{font-size:9px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--muted);}
   .stat.mana .num{color:#7a3fd1;}
   @media (prefers-color-scheme: dark){ .stat.mana .num{color:#c99aff;} }
 
   .hint{
-    background:var(--accent); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
-    padding:6px 8px; font-weight:800; font-size:13px; margin-bottom:8px; min-height:36px;
+    background:var(--accent); color:#1c1408; border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
+    padding:6px 8px; font-weight:800; font-size:13px; margin-bottom:8px; height:60px;
     display:flex; align-items:center; gap:8px; flex:none; overflow:hidden;
   }
+  #hintText{min-width:0; overflow:hidden; line-height:1.3;}
   .hint .step{
-    background:var(--ink); color:var(--accent); font-size:10px; font-weight:900;
+    background:#1c1408; color:#ffcf3f; font-size:10px; font-weight:900;
     padding:2px 6px; white-space:nowrap;
   }
 
@@ -83,7 +85,7 @@
   /* ---------- PIT ---------- */
   .pitScene{display:flex; gap:10px; align-items:stretch; flex:1; min-height:0; overflow:hidden;}
   .pit{
-    flex:1.2; position:relative; min-height:0; overflow:hidden;
+    flex:1.2; position:relative; min-width:0; min-height:0; overflow:hidden;
     background:linear-gradient(180deg,#7ec8e3 0 34%, #6db35a 34% 46%, var(--mud) 46% 100%);
     border:3px solid var(--ink); cursor:pointer; user-select:none; -webkit-user-select:none; touch-action:none;
   }
@@ -110,35 +112,43 @@
     100%{transform:translate(var(--dx),var(--dy)) scale(.4); opacity:0;}
   }
   @media (prefers-reduced-motion: reduce){ .splat{animation:none; opacity:0;} }
-  .pileBox{flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column; gap:6px;}
+  .pileBox{flex:1; min-width:0; min-height:0; overflow:hidden; display:flex; flex-direction:column; gap:6px;}
   .pileVisual{
     flex:1; min-height:0; overflow:hidden; border:3px solid var(--ink); background:var(--card);
-    display:flex; flex-direction:column; align-items:center; padding:6px 4px 4px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:6px;
   }
-  /* Fixed-size track for the pile graphic: the mound's height is a % OF
-     THIS BOX and clips at its edges — growing the pile can never grow
-     the panel or push anything below it. */
-  .pileTrack{flex:1; min-height:0; width:100%; display:flex; align-items:flex-end; justify-content:center; overflow:hidden;}
-  .pileMound{
-    width:70%; max-height:100%; min-height:6px; background:var(--mud); border:3px solid var(--ink); border-bottom:none;
-    border-radius:50% 50% 0 0 / 100% 100% 0 0; transition:height .25s;
+  /* The pile is a progress bar in a fixed slot: the slot (pileVisual) and
+     the bar track NEVER change size — at 0 mud the track is simply empty,
+     and the fill's width is the only thing that ever moves. */
+  .pileCap{font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); height:13px; line-height:13px; flex:none; white-space:nowrap;}
+  .pileBar{
+    width:100%; height:34px; flex:none; position:relative; overflow:hidden;
+    background:var(--wet); border:3px solid var(--ink);
   }
-  .pileLab{font-size:11px; font-weight:800; text-align:center; margin-top:4px; flex:none;}
+  .pileFill{
+    position:absolute; top:0; bottom:0; left:0; width:0%;
+    background:var(--mud-l); transition:width .2s ease-out;
+  }
+  .pileBar.full .pileFill{background:var(--accent);}
+  .pileLab{font-size:11px; font-weight:800; text-align:center; height:14px; line-height:14px; flex:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
   .digBtn{
-    background:var(--mud-l); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
+    background:var(--mud-l); color:#1c1408; border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
     font-size:16px; font-weight:900; padding:11px 6px; width:100%; flex:none;
     user-select:none; -webkit-user-select:none; touch-action:none;
   }
   .digBtn:active, .digBtn.holding{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadow); background:var(--mud); color:#fff;}
-  .autoLine{font-size:11px; font-weight:700; color:var(--muted); text-align:center; min-height:14px; flex:none;}
+  .autoLine{font-size:11px; font-weight:700; color:var(--muted); text-align:center; height:14px; line-height:14px; flex:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 
   /* ---------- DRYING RACK — the ball IS the button ---------- */
-  /* Fixed 4 columns: tiles shrink to fit the row, never wrap early —
-     4 balls always make one full row, 5–8 make two rows of four. */
-  .rack{display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;}
-  .ballTile{display:flex; flex-direction:column; align-items:stretch;}
+  /* Fixed 4 columns in a fixed-height box: the box is one row tall whether
+     it holds 0 balls or 4 (RACK_MAX is 4 = one row), so balls appearing,
+     drying, or being stacked never change the panel's size. The empty
+     note overlays the same box instead of taking its own height. */
+  .rackBox{position:relative; height:98px; overflow:hidden; flex:none;}
+  .rack{display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; height:100%; align-content:start;}
+  .ballTile{display:flex; flex-direction:column; align-items:stretch; min-width:0; overflow:hidden;}
   .ballTap{
-    position:relative; width:100%; aspect-ratio:1/1; min-height:72px;
+    position:relative; width:100%; height:72px; flex:none;
     background:var(--card); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
     display:flex; align-items:center; justify-content:center; padding:4px;
   }
@@ -152,7 +162,7 @@
     box-shadow:0 0 0 3px var(--green), 0 0 16px 5px rgba(63,174,74,.55), 3px 3px 0 var(--shadow);
     animation:ballWiggle .8s ease-in-out infinite;
   }
-  .ballTile.ready .ballPct{color:var(--green);}
+  .ballTile.ready .ballPct{color:var(--green-tx);}
   @keyframes ballWiggle{0%,100%{transform:rotate(0deg);}25%{transform:rotate(-4deg);}75%{transform:rotate(4deg);}}
   @media (prefers-reduced-motion: reduce){ .ballTile.ready .ballTap{animation:none;} }
   /* too dry: droplet badge — tap adds water */
@@ -162,7 +172,10 @@
   }
   .ballTile.dry .dropBadge{display:block;}
   .ballTile.dry .ballTap{border-color:var(--water);}
-  .emptyNote{font-size:12px; font-weight:700; color:var(--muted); text-align:center; padding:8px 4px;}
+  .emptyNote{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; color:var(--muted); text-align:center; padding:8px; line-height:1.4;
+  }
 
   /* ---------- STACK & SUMMON ---------- */
   .stackScene{display:flex; gap:10px; align-items:center;}
@@ -176,14 +189,17 @@
   .costBig{font-size:21px; font-weight:900; line-height:1.1;}
   .summonBtn{
     background:var(--pink); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
-    font-size:14px; font-weight:900; padding:9px 8px; width:100%; margin-top:5px; color:#2b0713;
+    font-size:13px; font-weight:900; padding:9px 8px; width:100%; height:44px; margin-top:5px; color:#2b0713;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
-  .summonBtn:disabled{background:#bdbdbd; color:#555;}
+  #stackCountLine, #ritualLenLine{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  #ritualDots{height:20px; overflow:hidden;}
+  .summonBtn:disabled{background:#bdbdbd; color:#333; opacity:1;}
 
   /* ---------- PILLAGE STRIP ---------- */
   /* Capped strip: extra golem chips scroll inside the strip's own box
      instead of pushing the rest of the screen down. */
-  .pillStrip{display:none; flex-direction:column; gap:5px; margin-bottom:8px; flex:none; max-height:148px; overflow-y:auto; overflow-x:hidden;}
+  .pillStrip{display:none; flex-direction:column; gap:5px; margin-bottom:8px; flex:none; height:102px; overflow-y:auto; overflow-x:hidden;}
   .pillStrip.has{display:flex;}
   .pillChip{
     display:flex; align-items:center; gap:8px; background:var(--card);
@@ -198,12 +214,12 @@
     background:var(--teal); border:2px solid var(--ink); box-shadow:2px 2px 0 var(--shadow);
     font-weight:900; font-size:11px; padding:6px 8px; color:#04211d; flex:0 0 auto;
   }
-  .lifeLine{font-size:11px; color:var(--muted); font-weight:700; text-align:center; flex:none; padding:2px 0 4px;}
+  .lifeLine{font-size:11px; color:var(--muted); font-weight:700; text-align:center; flex:none; height:22px; line-height:16px; padding:3px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 
   /* ---------- TOAST ---------- */
   .toast{
     position:fixed; left:50%; bottom:86px; transform:translateX(-50%) translateY(16px);
-    background:var(--ink); color:var(--accent); border:3px solid var(--accent);
+    background:#1c1408; color:#ffcf3f; border:3px solid var(--accent);
     font-weight:900; font-size:14px; padding:9px 14px; z-index:60; opacity:0; pointer-events:none;
     transition:opacity .25s, transform .25s; max-width:92vw; text-align:center;
   }
@@ -221,10 +237,10 @@
   .upg .uDesc{font-size:11px; color:var(--muted); font-weight:700; line-height:1.3;}
   .upg .uLvl{font-size:10px; font-weight:900;}
   .buyBtn{
-    background:var(--accent); border:3px solid var(--ink); box-shadow:2px 2px 0 var(--shadow);
+    background:var(--accent); color:#1c1408; border:3px solid var(--ink); box-shadow:2px 2px 0 var(--shadow);
     font-weight:900; font-size:12px; padding:7px 9px; white-space:nowrap;
   }
-  .buyBtn:disabled{background:#bdbdbd;}
+  .buyBtn:disabled{background:#bdbdbd; color:#333; opacity:1;}
   .skill{border:3px solid var(--ink); background:var(--card); box-shadow:3px 3px 0 var(--shadow); padding:5px 8px; margin-bottom:5px; display:flex; gap:8px; align-items:center;}
   .skill.locked{opacity:.88;}
   .skill .sInfo{flex:1; min-width:0;}
@@ -232,9 +248,9 @@
   .skill .sDesc{font-size:11px; color:var(--muted); font-weight:700; line-height:1.3;}
   .toggleBtn{
     border:3px solid var(--ink); font-weight:900; font-size:12px; padding:7px 9px; min-width:66px;
-    box-shadow:2px 2px 0 var(--shadow); background:#d8d8d8;
+    box-shadow:2px 2px 0 var(--shadow); background:#d8d8d8; color:#1c1408;
   }
-  .toggleBtn.on{background:var(--green); color:#fff;}
+  .toggleBtn.on{background:var(--green); color:#10240c;}
   .skillNote{font-size:12px; font-weight:800; background:var(--panel); border:3px solid var(--ink); padding:6px 8px; margin-bottom:8px; line-height:1.35;}
 
   /* ---------- OVERLAYS ---------- */
@@ -250,7 +266,7 @@
   .sheet h2{margin:0 0 8px; font-size:21px; font-weight:900;}
   .sheet p{font-size:15px; line-height:1.45; font-weight:600;}
   .bigBtn{
-    background:var(--accent); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
+    background:var(--accent); color:#1c1408; border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
     font-size:15px; font-weight:900; padding:11px 16px; width:100%; margin-top:10px;
   }
 
@@ -285,7 +301,7 @@
     display:flex; align-items:flex-start; justify-content:center; padding-top:2px;
   }
   .building::before{content:""; position:absolute; top:-14px; left:-4px; right:-4px; height:12px; background:var(--red); border:3px solid var(--ink); border-bottom:none;}
-  .building .bHp{font-size:10px; font-weight:900; background:#fff; border:2px solid var(--ink); padding:0 3px;}
+  .building .bHp{font-size:10px; font-weight:900; background:#fff; color:#1c1408; border:2px solid var(--ink); padding:0 3px;}
   .building.dead{background:#555; transform:rotate(-4deg) translateY(8px); opacity:.75;}
   .building.dead::before{background:#333;}
   .hpBarWrap{height:20px; border:3px solid var(--ink); background:#e8dcc2; position:relative; margin:6px 0;}
@@ -379,7 +395,8 @@
         </div>
         <div class="pileBox">
           <div class="pileVisual">
-            <div class="pileTrack"><div class="pileMound" id="pileMound" style="height:10%"></div></div>
+            <div class="pileCap">Next ball</div>
+            <div class="pileBar" id="pileBar"><div class="pileFill" id="pileFill"></div></div>
             <div class="pileLab" id="pileLab">Pile: 0 / 10 mud</div>
           </div>
           <button class="digBtn" id="digBtn">⛏ DIG — hold me!</button>
@@ -390,8 +407,10 @@
 
     <div class="panel">
       <div class="panelLab">Drying rack — tap a glowing ball to stack it</div>
-      <div class="rack" id="rack"></div>
-      <div class="emptyNote" id="rackEmpty">No balls yet. Fill a pile and a wet ball forms on its own — dim and soaking at 100%. It dries on its own.</div>
+      <div class="rackBox">
+        <div class="rack" id="rack"></div>
+        <div class="emptyNote" id="rackEmpty">No balls yet. Fill the pile bar and a wet ball forms on its own — dim and soaking at 100%. It dries on its own.</div>
+      </div>
     </div>
 
     <div class="panel">
@@ -401,6 +420,9 @@
           <div style="font-weight:800; font-size:11px;">NEXT GOLEM COSTS</div>
           <div class="costBig"><span id="costNum">3</span> balls</div>
           <div style="font-size:12px; font-weight:700;" id="stackCountLine">Stacked: 0</div>
+          <div style="font-size:12px; font-weight:900; margin-top:6px;" id="ritualLenLine">Rite: 3 symbols</div>
+          <div style="font-size:16px; letter-spacing:3px; font-weight:900; line-height:1.2;" id="ritualDots" aria-hidden="true">○○○</div>
+          <div style="font-size:11px; font-weight:700; color:var(--muted); line-height:1.3;">Each golem in the field adds +1 symbol.</div>
           <button class="summonBtn" id="summonBtn" disabled>SUMMON — need 3 stacked</button>
         </div>
       </div>
@@ -489,6 +511,10 @@ function golemCost(){
   SKILLS.forEach(function(sk){ if(S.enabled[sk.id]) c += sk.cost; });
   return c;
 }
+function activeGolemCount(){
+  try { return (typeof pillages !== 'undefined' && pillages) ? pillages.length : 0; } catch(e){ return 0; }
+}
+function ritualLength(){ return 3 + activeGolemCount(); }
 function upgCost(u){
   var lvl = S.upg[u.id]||0;
   if(lvl >= u.max) return null;
@@ -499,7 +525,7 @@ function upgCost(u){
 function $(id){ return document.getElementById(id); }
 var hudMud=$('hudMud'), hudBalls=$('hudBalls'), hudStack=$('hudStack'), hudMana=$('hudMana');
 var hintStep=$('hintStep'), hintText=$('hintText');
-var pileMound=$('pileMound'), pileLab=$('pileLab'), autoLine=$('autoLine');
+var pileBar=$('pileBar'), pileFill=$('pileFill'), pileLab=$('pileLab'), autoLine=$('autoLine');
 var rackEl=$('rack'), rackEmpty=$('rackEmpty'), stackVisual=$('stackVisual');
 var costNum=$('costNum'), stackCountLine=$('stackCountLine'), summonBtn=$('summonBtn');
 var pillStrip=$('pillStrip');
@@ -538,7 +564,7 @@ var HINTS = [
   ['DRY','Tap a glowing ball to stack it. Tap a dry ball to splash it. A dim ball is still drying.'],
   ['READY','A ball is glowing and wiggling — tap it to stack it before it dries past!'],
   ['BUILD','Nice — one stacked. Keep going: a plain golem needs just 3 stacked balls.'],
-  ['SUMMON','Your stack is ready! Press SUMMON and repeat the 8-stone rite.'],
+  ['SUMMON','Your stack is ready! Press SUMMON and repeat the rite — it grows by 1 for each golem out.'],
   ['PILLAGE','It lives! It pillages on its own — keep digging. Its mana arrives when it falls.'],
   ['SPEND','Mana earned! Spend it in the SHOP tab below: gathering first, then balls, the rite… and golem SKILLS.']
 ];
@@ -695,7 +721,7 @@ function render(){
   hudStack.textContent = S.stacked;
   hudMana.textContent = S.mana;
   renderPile();
-  autoLine.textContent = (S.upg.auto ? 'Gnome: +'+S.upg.auto+' mud/sec · ' : '') + 'Tap dig: '+digPower()+' mud · Hold dig: slow trickle';
+  autoLine.textContent = (S.upg.auto ? 'Gnome +'+S.upg.auto+'/s · ' : '') + 'Tap: '+digPower()+' mud · Hold: trickle';
   renderBalls();
   renderStack();
   if(currentView === 'shop') renderShop();
@@ -707,18 +733,19 @@ function render(){
 }
 function renderPile(){
   var pct = Math.min(100, Math.round(S.pile / mudPerBall() * 100));
-  /* Height is a % of the fixed pileTrack box (capped by max-height:100%
-     in CSS) — the graphic scales inside its container, never beyond it. */
-  pileMound.style.height = Math.max(10, pct)+'%';
+  /* Only the fill's WIDTH changes — the bar track and its slot are fixed
+     size, so the pile filling, emptying, or sitting FULL moves nothing. */
+  pileFill.style.width = pct+'%';
+  pileBar.classList.toggle('full', pct >= 100);
   pileLab.textContent = S.balls.length >= RACK_MAX && S.pile >= mudPerBall()
-    ? 'Pile FULL — rack is full! Stack a ball to make room.'
+    ? 'Pile FULL — rack full!'
     : 'Pile: '+Math.floor(S.pile)+' / '+mudPerBall()+' mud';
 }
 var rackSig = '';
 function renderBalls(){
   syncAllBalls();
   hudBalls.textContent = S.balls.length;
-  rackEmpty.style.display = S.balls.length ? 'none' : 'block';
+  rackEmpty.style.display = S.balls.length ? 'none' : 'flex';
   /* Tiles are built once per ball and updated in place — rebuilding them on
      every tick would restart the ready wiggle and lose tap focus. */
   var sig = S.balls.map(function(b){ return b.id; }).join(',');
@@ -767,6 +794,11 @@ function renderStack(){
   hudStack.textContent = S.stacked;
   costNum.textContent = golemCost();
   stackCountLine.textContent = 'Stacked: '+S.stacked+' of '+golemCost()+' needed';
+  var rl = ritualLength();
+  var rlEl = document.getElementById('ritualLenLine');
+  if(rlEl) rlEl.textContent = 'Rite: '+rl+' symbol'+(rl===1?'':'s')+' · '+activeGolemCount()+' golem'+(activeGolemCount()===1?'':'s')+' in field';
+  var rdEl = document.getElementById('ritualDots');
+  if(rdEl){ var ds=''; for(var di=0; di<rl; di++) ds+='○'; rdEl.textContent = ds; rdEl.setAttribute('aria-label', rl+' symbols required'); }
   stackVisual.innerHTML = '';
   var show = Math.min(S.stacked, 30);
   for(var i=0;i<show;i++){
@@ -928,7 +960,8 @@ function startRitual(){
   buildRitual();
   $('ritualOverlay').classList.add('open');
   ritual.seq = [];
-  for(var i=0;i<8;i++) ritual.seq.push(Math.floor(Math.random()*5));
+  var rLen = ritualLength();
+  for(var i=0;i<rLen;i++) ritual.seq.push(Math.floor(Math.random()*5));
   ritual.input = 0;
   playSequence();
   render();
@@ -949,7 +982,7 @@ function playSequence(){
       play++;
       if(play < plays){ step = 0; $('ritualStatus').textContent = 'Once more — watch…'; setTimeout(next, 700); return; }
       ritual.showing = false;
-      $('ritualStatus').textContent = 'Your turn — repeat all 8!';
+      $('ritualStatus').textContent = 'Your turn — repeat all '+ritual.seq.length+'!';
       $('ritualReplay').style.display = 'block';
       updateRitualProgress();
       pulseHint();
@@ -963,7 +996,8 @@ function playSequence(){
 }
 function updateRitualProgress(){
   var s = '';
-  for(var i=0;i<8;i++) s += (i < ritual.input) ? '●' : '○';
+  var len = ritual.seq.length || ritualLength();
+  for(var i=0;i<len;i++) s += (i < ritual.input) ? '●' : '○';
   $('ritualProgress').textContent = ritual.showing ? '· · ·' : s;
 }
 function pulseHint(){
@@ -991,7 +1025,7 @@ function ritualPress(i){
 function ritualSuccess(){
   ritual.active = false;
   $('ritualStatus').textContent = 'THE GROUND SPLITS — IT RISES!';
-  $('ritualProgress').textContent = '●●●●●●●●';
+  var doneDots=''; for(var di=0; di<ritual.seq.length; di++) doneDots+='●'; $('ritualProgress').textContent = doneDots;
   setTimeout(function(){
     $('ritualOverlay').classList.remove('open');
     startPillage();
@@ -1170,7 +1204,7 @@ function openWatch(P){
 function paintWatch(P){
   var pct = Math.max(0, Math.round(P.hp / P.maxHp * 100));
   $('watchHpBar').style.width = pct+'%';
-  $('watchHpBar').style.background = pct > 40 ? 'var(--green)' : 'var(--red)';
+  $('watchHpBar').style.background = pct > 40 ? 'var(--green)' : '#ff7a4d';
   $('watchHpLab').textContent = 'GOLEM HP: '+Math.max(0, Math.ceil(P.hp))+' / '+P.maxHp;
   $('watchSmashed').textContent = 'Smashed: '+P.smashed+' / '+P.buildings.length;
   $('watchMana').textContent = 'Mana looted: '+P.mana;

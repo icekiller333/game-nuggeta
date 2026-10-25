@@ -2515,7 +2515,7 @@
         if (S.mode === "play") {
           // Collector down: the win may only land once every monster it left
           // behind has resolved — spawn queue spent AND field truly empty.
-          if (S.collectorDown && S.waveState !== "dying" && fieldClear()) {
+          if (S.collectorDown && !S.endless && S.waveState !== "dying" && fieldClear()) {
             despawnRunners();
             S.waveState = "dying";
             S.winT = 1.2;
@@ -2795,6 +2795,7 @@
         document.getElementById("winScreen").hidden = true;
         fieldEl.classList.remove("dawn");
         S.endless = true;
+        S.collectorDown = false; // the win already landed — its field-empty trigger must not re-fire in endless
         S.hearts = S.maxHearts; // dawn rested the house — endless starts whole
         drawHearts();
         S.mode = "play";
