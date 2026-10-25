@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Games in Development</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, sans-serif; background: #1e1b2e; color: #fff; padding: 24px 16px 48px; }
+  h1 { margin: 0 0 8px; font-size: 28px; }
+  p { margin: 0 0 24px; color: #cfc8e8; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; max-width: 960px; }
+  a.card { display: block; padding: 28px 20px; text-decoration: none; color: #151515; font-weight: 800; font-size: 20px;
+    border: 3px solid #000; box-shadow: 6px 6px 0 #000; border-radius: 0; }
+  a.card span { display: block; margin-top: 8px; font-weight: 400; font-size: 14px; color: #333; }
+  a.card:nth-child(8n+1) { background: #ffd6e8; }
+  a.card:nth-child(8n+2) { background: #ffe66d; }
+  a.card:nth-child(8n+3) { background: #8dd9ff; }
+  a.card:nth-child(8n+4) { background: #b8f1a8; }
+  a.card:nth-child(8n+5) { background: #ffb26b; }
+  a.card:nth-child(8n+6) { background: #d3b3ff; }
+  a.card:nth-child(8n+7) { background: #7ef0d4; }
+  a.card:nth-child(8n+8) { background: #ff9fb2; }
+  a.card:active { transform: translate(3px, 3px); box-shadow: 3px 3px 0 #000; }
+</style>
+</head>
+<body>
+<h1>Games in Development</h1>
+<p>Click a game to play it.</p>
+<div class="grid">
+  <a class="card" href="paper-route/index.html">Paper Route<span>In development</span></a>
+  <a class="card" href="peel-the-moon/index.html">Peel the Moon<span>In development</span></a>
+  <a class="card" href="yes-no-town-rpg/index.html">Yes/No Town RPG<span>In development</span></a>
+  <a class="card" href="gladiator-timing-combat/index.html">Gladiator Timing Combat<span>Live action</span></a>
+  <a class="card" href="gladiator-timing-combat-turn-based/index.html">Gladiator Timing Combat<span>Turn-based</span></a>
+  <a class="card" href="mud-golem/index.html">Mud Golem<span>In development</span></a>
+  <a class="card" href="monster-tap-defense/index.html">Monster Tap Defense<span>In development</span></a>
+  <a class="card" href="scape-goat/index.html">Scape Goat<span>In development</span></a>
+</div>
+</body>
+</html>
