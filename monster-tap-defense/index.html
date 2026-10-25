@@ -409,6 +409,18 @@
       #game.debutHold #field { filter: saturate(.7) brightness(.82); }
       .setRow + .setRow { margin-top: 10px; }
 
+
+      /* ---------- Final boss: phase tag + morph/wind-up tells ---------- */
+      .phaseTag { position: absolute; left: 50%; transform: translateX(-50%); z-index: 3; pointer-events: none;
+        background: #141414; color: #ffd21f; font-weight: 900; font-size: 11px; letter-spacing: 1px; padding: 3px 9px;
+        border-radius: 9px; white-space: nowrap; border: 2px solid #ffd21f; }
+      .monster.cphase2 .art { filter: hue-rotate(70deg) saturate(1.15); }
+      .monster.cphase4 .art { filter: hue-rotate(-45deg) saturate(1.35); }
+      .monster.morphing .art { animation: morphFlash .16s steps(2) infinite; }
+      @keyframes morphFlash { from { filter: brightness(1) saturate(1); } to { filter: brightness(2.3) saturate(.3); } }
+      .monster.windup .art { animation: windupShake .08s linear infinite; }
+      @keyframes windupShake { from { transform: translate(-3px,0) rotate(-3deg); } to { transform: translate(3px,0) rotate(3deg); } }
+      .monster .pips i.g4 { background: #2ec4b6; }
       /* ---------- Polish pass: softer corners, entrances, depth ---------- */
       .panel { border-radius: 20px; background: linear-gradient(180deg, #ffffff 0%, #fff6dc 100%); box-shadow: 8px 8px 0 var(--ink), 0 22px 44px rgba(0,0,0,.35); animation: panelIn .3s cubic-bezier(.2,1.25,.3,1) both; }
       @keyframes panelIn { from { opacity: 0; transform: translateY(16px) scale(.93); } to { opacity: 1; transform: none; } }
@@ -986,7 +998,7 @@
         mini:      { hp: 1, speed: 0.225, size: 40, score: 5,   dmg: 1, art: "mini",      name: "MINI",       tip: "" },
         shieldback:{ hp: 3, speed: 0.075, size: 82, score: 40,  dmg: 1, art: "shieldback",name: "SHIELDBACK", tip: "Only tap when its shell pops OPEN!" },
         boss:      { hp: 14, speed: 0.042, size: 138, score: 300, dmg: 2, art: "boss",    name: "KING CHOMPER", tip: "Huge! Keep tapping — don't let it land!" },
-        collector: { hp: 45, speed: 0.032, size: 168, score: 1000, dmg: 3, art: "collector", name: "THE COLLECTOR", tip: "Every trick you learned. All at once." },
+        collector: { hp: 48, speed: 0.032, size: 168, score: 1000, dmg: 3, art: "collector", name: "THE COLLECTOR", tip: "The final boss. 4 phases — it acts like a Zigzagger, a Shieldback, a Phaser, then a Dartling. Read the tag above its head!" },
         banjo:     { hp: 3, speed: 0.082, size: 74, score: 40,  dmg: 1, art: "banjo",     name: "BANJO PLAYER", tip: "Tap him to hush him — 3 hushes and he leaves. While he's quiet, taps do nothing." },
         knockback: { hp: 1, speed: 0.078, size: 86, score: 60,  dmg: 1, art: "knockback", name: "KNOCKBACK",   tip: "Taps don't hurt him — they shove him back. Shove him off the screen to beat him." },
         pooler:    { hp: 1, speed: 0.100, size: 58, score: 20,  dmg: 1, art: "pooler",    name: "POOL MONSTER", tip: "One tap kills it — but it leaves a pool that SPEEDS UP anything that touches it. Kill it somewhere lonely!" },
@@ -1178,7 +1190,11 @@
         return { w: fieldEl.clientWidth, h: fieldEl.clientHeight, cx: fieldEl.clientWidth / 2, cy: fieldEl.clientHeight / 2 };
       }
       function zoomFor(hour) {
-        return Math.max(0.5, Math.pow(0.95, Math.max(0, hour - 1)));
+        return Math.max(0.575, Math.pow(0.95, Math.max(0, hour - 1))); // floor raised from 0.5: late-night creatures ~15% bigger
+      }
+      function speedZoom() { // speed keeps following the ORIGINAL zoom curve so late-game pace is unchanged
+        var h = Math.max(1, S ? S.wave : 1);
+        return Math.max(0.5, Math.pow(0.95, h - 1));
       }
       function currentZoom() { return zoomFor(Math.max(1, S ? S.wave : 1)); }
       // Hours 11+: ~20% fewer monsters on screen at once (14 → 11); totals unchanged.
@@ -1498,7 +1514,7 @@
       }
       function bossPhase(m) {
         var f = m.hp / m.maxHp;
-        return f > 2 / 3 ? 1 : f > 1 / 3 ? 2 : 3;
+        return f > 0.75 ? 1 : f > 0.5 ? 2 : f > 0.25 ? 3 : 4;
       }
       function makeMonster(type, opts) {
         opts = opts || {};
@@ -1521,19 +1537,27 @@
         var box = Math.max(minBox, artBox * hitBoost);
         var padExtra = (box - artBox) / 2;                    // keep pips hugging the art
         el.style.width = box + "px"; el.style.height = box + "px";
-        var pipStep = type === "collector" ? 3 : type === "heartrunner" ? 2 : 1;
+        var pipStep = type === "collector" ? 4 : type === "heartrunner" ? 2 : 1;
         var pips = "";
         if (t.hp > 1 && type !== "segmented") {
           var n = Math.ceil(t.hp / pipStep);
           pips = '<span class="pips" style="top:' + (-13 + padExtra).toFixed(1) + 'px">';
           for (var i = 0; i < n; i++) {
             var cls = "";
-            if (type === "collector") cls = i < 5 ? "g3" : i < 10 ? "g2" : "";
+            if (type === "collector") cls = i < 3 ? "g3" : i < 6 ? "g2" : i < 9 ? "g4" : "";
             pips += '<i class="' + cls + '"></i>';
           }
           pips += "</span>";
         }
         el.innerHTML = pips + '<span class="art" style="width:' + (dispSize * z) + 'px;height:' + (dispSize * z) + 'px">' + ART[type === "segmented" ? "segpiece" : t.art] + "</span>";
+        if (type === "collector") {
+          var ptag = document.createElement("span");
+          ptag.className = "phaseTag";
+          ptag.style.top = (-38 + padExtra).toFixed(1) + "px";
+          ptag.textContent = COLLECTOR_PHASES[1].tag;
+          el.appendChild(ptag);
+          el.classList.add("cphase1");
+        }
         if (type === "banjo") {
           // Hush dots start empty and fill one per hush.
           el.querySelectorAll(".pips i").forEach(function (d) { d.classList.add("spent"); });
@@ -1541,7 +1565,7 @@
         var m = {
           id: ++uid, type: type, el: el, hp: t.hp, maxHp: t.hp,
           angle: angle, prog: opts.prog != null ? opts.prog : 0, // 0 at edge → 1 at base
-          speed: t.speed * (0.9 + Math.random() * 0.2) * Math.pow(z, 0.7), // slows with the zoom-out so small monsters aren't racing
+          speed: t.speed * (0.9 + Math.random() * 0.2) * Math.pow(speedZoom(), 0.7), // slows with the zoom-out so small monsters aren't racing
           dist0: spawnDist(angle),
           lat: opts.lat || 0, phase0: Math.random() * Math.PI * 2,
           shieldT: Math.random() * 1.2, open: false,
@@ -1578,11 +1602,15 @@
         if (m.type === "zigzagger") lat += Math.sin(m.prog * 14 + m.phase0) * 46;
         if (m.type === "healer") lat += Math.sin((S ? S.time : 0) * 1.1 + m.phase0) * 26; // a slow drift along the edge while it holds position
         if (m.type === "collector") {
-          if (m.phase === 1) lat += Math.sin(m.prog * 10 + m.phase0) * 38;
-          else if (m.phase === 3) lat += Math.sin(m.prog * 16 + m.phase0) * 30;
+          var wantLat = m.phase === 1 ? Math.sin(m.prog * 14 + m.phase0) * 46 : m.phase === 4 ? Math.sin(m.prog * 16 + m.phase0) * 30 : 0;
+          m.latSm = m.latSm == null ? wantLat : m.latSm + (wantLat - m.latSm) * 0.12;
+          lat += m.latSm;
         }
         m.x = f.cx + px * dist + (-py) * lat;
         m.y = f.cy + py * dist + px * lat;
+        if (m.type === "healer" && m.prog >= 96 / m.dist0 - 0.002) { // hovering: keep the whole body on screen while it drifts
+          m.x = Math.max(36, Math.min(f.w - 36, m.x)); m.y = Math.max(36, Math.min(f.h - 36, m.y));
+        }
         var scale = 0.8 + 0.42 * m.prog;
         m.el.style.transform = "translate(" + (m.x - m.el.offsetWidth / 2) + "px," + (m.y - m.el.offsetHeight / 2) + "px) scale(" + scale.toFixed(3) + ")";
         m.el.style.zIndex = String(20 + Math.round(m.prog * 40));
@@ -1666,6 +1694,20 @@
           m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
           return;
         }
+        if (m.type === "collector") {
+          if ((m.morphT || 0) > 0) {
+            floater(m.x, m.y - 60, "MORPHING!", "clank");
+            beep(150, 0.05, "square", 0.04);
+            m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
+            return;
+          }
+          if (bossPhase(m) === 3 && !m.inPhase) {
+            floater(m.x, m.y - 60, "NOT THERE!", "clank");
+            beep(140, 0.05, "square", 0.035);
+            m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
+            return;
+          }
+        }
         if (m.type === "segmented") {
           // The pieces are separate monsters now, spread across the field.
           // A tap MARKS this piece (big red ✗) — it does NOT remove it, and
@@ -1747,7 +1789,7 @@
         }
         if (m.type === "knockback") {
           // Taps never hurt him — they shove him back toward his edge.
-          m.prog -= 0.17;
+          m.prog -= 0.15;
           m.shoved = true; // from now on, leaving the screen counts as being knocked out
           m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
           floater(m.x, m.y - 48, "BOING!", "");
@@ -2376,43 +2418,66 @@
       });
 
       /* ================= The Collector (final boss) ================= */
-      function collectorTick(m, dt) {
-        var ph = bossPhase(m);
-        if (ph !== m.phase) {
-          m.phase = ph;
-          if (ph === 2) {
-            m.open = false; m.shieldT = 0.9; m.spitT = 1.4;
-            m.el.classList.remove("open");
-            floater(m.x, m.y - 90, "ITS SHELL SLAMS SHUT!", "big");
-          } else if (ph === 3) {
-            m.open = true; m.spitT = 1.4;
-            m.el.classList.remove("open");
-            floater(m.x, m.y - 90, "THE SHELL SHATTERS — IT'S CHARGING!", "big");
-          }
+      var COLLECTOR_PHASES = {
+        1: { tag: "PHASE 1 · ZIGZAG",  title: "PHASE 1 · ZIGZAG",     text: "It weaves like a Zigzagger — lead your taps!" },
+        2: { tag: "PHASE 2 · SHELL",   title: "PHASE 2 · SHELL",      text: "Like a Shieldback: tap it only when the shell pops OPEN!" },
+        3: { tag: "PHASE 3 · PHASE-SHIFT", title: "PHASE 3 · PHASE-SHIFT", text: "Like a Phaser: tap it only while it's SOLID!" },
+        4: { tag: "PHASE 4 · DASH",    title: "PHASE 4 · DASH",       text: "Like a Dartling: it charges and spits darts. Tap fast!" }
+      };
+      function enterCollectorPhase(m, ph, first) {
+        m.phase = ph;
+        var info = COLLECTOR_PHASES[ph];
+        var tag = m.el.querySelector(".phaseTag");
+        if (tag) tag.textContent = info.tag;
+        for (var i = 1; i <= 4; i++) m.el.classList.toggle("cphase" + i, i === ph);
+        m.el.classList.remove("outphase", "windup");
+        // Shell art: closed ONLY in the shell phase, lifted (shell off) in every other phase.
+        if (ph === 2) { m.open = false; m.shieldT = 1.4; m.el.classList.remove("open"); }
+        else { m.open = true; m.el.classList.add("open"); }
+        if (ph === 3) { m.inPhase = true; m.phaseT = 1.0 + 1.6; }
+        if (ph === 4) { m.burstT = 0; m.burstCd = 1.0 + 1.8; m.spitT = 1.0 + 1.6; }
+        if (!first) {
+          m.morphT = 1.0; // a beat of standing still so the change is readable
+          m.el.classList.add("morphing");
           burst(m.x, m.y, "#ffd21f", 14);
           beep(90, 0.3, "sawtooth", 0.1, -30);
+          smallShake(); haptic([30, 30, 60]);
+        }
+        showBanner(info.title, info.text, null);
+      }
+      function collectorTick(m, dt) {
+        if (!m.announced) { m.announced = true; enterCollectorPhase(m, m.phase || 1, true); }
+        var ph = bossPhase(m);
+        if (ph !== m.phase) enterCollectorPhase(m, ph, false);
+        if ((m.morphT || 0) > 0) {
+          m.morphT -= dt;
+          if (m.morphT <= 0) m.el.classList.remove("morphing");
+          return; // nothing else happens while it morphs
         }
         if (m.phase === 2) {
+          // SHELLBACK: shell opens and closes; tap only when it's open.
           m.shieldT -= dt;
           if (m.shieldT <= 0) {
             m.open = !m.open;
-            m.shieldT = m.open ? 1.15 : 1.55 + Math.random() * 0.5;
+            m.shieldT = m.open ? 1.3 : 1.5 + Math.random() * 0.5;
             m.el.classList.toggle("open", m.open);
             if (m.open) beep(760, 0.06, "sine", 0.05);
           }
-          m.spitT -= dt;
-          if (m.spitT <= 0 && S.monsters.length < 10) {
-            m.spitT = 4.2;
-            var mini = makeMonster("mini", { angle: m.angle, prog: Math.max(0, m.prog - 0.03), lat: Math.random() < 0.5 ? -38 : 38 });
-            mini.dist0 = m.dist0;
-            positionMonster(mini);
-            floater(m.x, m.y - 70, "IT SPITS!", "");
-          }
         } else if (m.phase === 3) {
-          if (m.burstT > 0) { m.burstT -= dt; }
+          // PHASER: blinks in and out; only hittable while solid.
+          m.phaseT -= dt;
+          if (m.phaseT <= 0) {
+            m.inPhase = !m.inPhase;
+            m.phaseT = m.inPhase ? 1.6 : 1.3;
+            m.el.classList.toggle("outphase", !m.inPhase);
+          }
+        } else if (m.phase === 4) {
+          // DARTLING: winds up, then charges; spits darts.
+          if (m.burstT > 0) { m.burstT -= dt; if (m.burstT <= 0) m.el.classList.remove("windup"); }
           else {
             m.burstCd -= dt;
-            if (m.burstCd <= 0) { m.burstT = 0.7; m.burstCd = 2.4; beep(980, 0.08, "square", 0.05, 300); }
+            if (m.burstCd <= 0.5) m.el.classList.add("windup");
+            if (m.burstCd <= 0) { m.burstT = 0.7; m.burstCd = 2.6; m.el.classList.remove("windup"); beep(980, 0.08, "square", 0.05, 300); }
           }
           m.spitT -= dt;
           if (m.spitT <= 0 && S.monsters.length < 10) {
@@ -2498,7 +2563,8 @@
         var anyClose = false;
         S.monsters.slice().forEach(function (m) {
           var sp = m.speed;
-          if (m.type === "collector" && m.phase === 3 && m.burstT > 0) sp *= 2.3;
+          if (m.type === "collector" && m.phase === 4 && m.burstT > 0) sp *= 2.3;
+          if (m.type === "collector" && (m.morphT || 0) > 0) sp = 0; // standing still while it changes shape
           if (m.type === "banjo") {
             if (!m.playing) {
               sp = 0; // hushed: he stands perfectly still until the music restarts
@@ -2582,7 +2648,8 @@
           if (m.type === "knockback" && m.shoved) {
             // Fully off-screen (his whole body past an edge) after being shoved = knocked out.
             var kf = field(), kh = (m.el.offsetWidth / 2) * (0.8 + 0.42 * Math.max(0, m.prog));
-            kbOff = m.x < -kh || m.x > kf.w + kh || m.y < -kh || m.y > kf.h + kh;
+            var kbPad = kh + 14; // must be CLEARLY gone, not just clipping the edge
+            kbOff = m.x < -kbPad || m.x > kf.w + kbPad || m.y < -kbPad || m.y > kf.h + kbPad;
           }
           if (m.type === "knockback" && (m.prog <= -0.1 || kbOff)) {
             // Shoved off the edge he came from — the only way he falls.
@@ -3103,7 +3170,7 @@
         if (type === "banjo") return ["DEFEAT", "3 HUSHES"];
         if (type === "knockback") return ["DEFEAT", "PUSH OFF-SCREEN"];
         if (type === "ninja") return ["DEFEAT", "1 LANDED HIT"];
-        if (type === "collector") return ["HP", "45 · 3 PHASES"];
+        if (type === "collector") return ["HP", "48 · 4 PHASES"];
         return ["HP", String(TYPES[type].hp)];
       }
       function renderBestiary() {
