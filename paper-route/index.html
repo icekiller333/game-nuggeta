@@ -1,0 +1,1197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Paper Route — 3AM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;700;900&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        --ink:#12121c;
+        --paper:#fff6e0;
+        --panel:#fff6e0;
+        --accent:#ffd23f;
+        --accent2:#ef476f;
+        --good:#0a9b78;
+        --bad:#ef476f;
+        --muted:#514d40;
+        --combo:#c9184a;
+        --ok:#0a7a5c;
+        --map-house:#3a3a55;
+        --map-miss:#8a8578;
+        --page:#e9e2cf;
+        --hudbg:#fff6e0;
+        --shadow:5px 5px 0 var(--ink);
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --page:#0d0d16;
+          --panel:#1d1d2e;
+          --hudbg:#1d1d2e;
+          --paper:#f4ecd8;
+          --ink:#f4ecd8;
+          --good:#06d6a0;
+          --muted:#b9b2a0;
+          --combo:#ff7096;
+          --ok:#06d6a0;
+          --map-house:#7a7aa6;
+          --map-miss:#6e6e92;
+          --shadow:5px 5px 0 #000;
+        }
+      }
+      *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+      html,body{ height:100%; }
+      body{
+        margin:0; background:var(--page); color:var(--ink);
+        font-family:"Archivo",system-ui,sans-serif;
+        display:flex; justify-content:center;
+        overflow:hidden;
+      }
+      #app{
+        width:min(100vw,480px); height:100dvh; display:flex; flex-direction:column;
+        position:relative;
+      }
+      /* ---------- HUD ---------- */
+      #hud{
+        display:flex; align-items:stretch; gap:6px; padding:8px 8px 6px;
+        z-index:5;
+      }
+      .hudbox{
+        background:var(--hudbg); border:3px solid var(--ink); box-shadow:3px 3px 0 rgba(0,0,0,.85);
+        padding:3px 7px; display:flex; flex-direction:column; justify-content:center; min-width:0; flex:0 1 auto;
+      }
+      .hudbox .lab{ font-size:10px; font-weight:900; letter-spacing:.1em; color:var(--muted); white-space:nowrap; }
+      .hudbox .val{ font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:16px; line-height:1.05; white-space:nowrap; }
+      #hudScore{ flex:1 1 auto; }
+      #hudCombo .val{ color:var(--combo); }
+      .hudbtn{
+        background:var(--accent); border:3px solid var(--ink); box-shadow:3px 3px 0 rgba(0,0,0,.85);
+        font-family:"Archivo Black",sans-serif; font-size:15px; color:#12121c;
+        width:44px; flex:0 0 44px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      }
+      .hudbtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 rgba(0,0,0,.85); }
+      .hudbtn svg{ width:22px; height:22px; }
+      /* ---------- Stage ---------- */
+      #stage{ position:relative; flex:1; min-height:0; margin:0 8px 8px; border:3px solid var(--ink); box-shadow:var(--shadow); overflow:hidden; background:#191930; }
+      #game{ position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; }
+      /* ---------- Overlays ---------- */
+      .overlay{
+        position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+        padding:18px; z-index:10; background:rgba(10,10,22,.55);
+      }
+      .overlay.show{ display:flex; }
+      .card{
+        background:var(--panel); color:var(--ink); border:3px solid var(--ink); box-shadow:var(--shadow);
+        padding:20px 20px 16px; max-width:360px; width:100%; max-height:100%; overflow-y:auto;
+        animation:pop .18s ease-out;
+      }
+      @keyframes pop{ from{ transform:scale(.92) rotate(-1deg); } to{ transform:scale(1) rotate(0); } }
+      .card h1{
+        font-family:"Archivo Black",sans-serif; font-size:30px; line-height:.95; margin:0 0 6px;
+        text-transform:uppercase;
+      }
+      .card h2{
+        font-family:"Archivo Black",sans-serif; font-size:21px; line-height:1; margin:0 0 8px;
+        text-transform:uppercase;
+      }
+      .card p{ font-size:15px; line-height:1.45; font-weight:500; margin:0 0 10px; }
+      .card p.big{ font-size:17px; font-weight:700; }
+      .stamp{
+        display:inline-block; background:var(--ink); color:var(--panel);
+        font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:11px; letter-spacing:.12em;
+        padding:3px 8px; margin-bottom:10px; text-transform:uppercase;
+      }
+      .headline{
+        border:3px solid var(--ink); padding:10px 12px; margin:0 0 12px; background:rgba(0,0,0,.05);
+        font-family:"Archivo Black",sans-serif; font-size:16px; line-height:1.25; text-transform:uppercase;
+      }
+      @media (prefers-color-scheme: dark){ .headline{ background:rgba(255,255,255,.06); } }
+      .btn{
+        display:block; width:100%; background:var(--accent); color:#12121c; border:3px solid var(--ink);
+        box-shadow:4px 4px 0 rgba(0,0,0,.85); font-family:"Archivo Black",sans-serif; font-size:17px;
+        padding:12px 10px; cursor:pointer; text-transform:uppercase; margin-top:10px; text-align:center;
+      }
+      .btn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 rgba(0,0,0,.85); }
+      .btn.alt{ background:var(--panel); color:var(--ink); }
+      .btn.good{ background:var(--good); }
+      .btnrow{ display:flex; gap:10px; }
+      .btnrow .btn{ flex:1; }
+      .tally{ font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:15px; line-height:1.7; }
+      .tally .row{ display:flex; justify-content:space-between; border-bottom:2px dashed rgba(128,128,128,.5); }
+      /* gesture demo / practice */
+      .demoWrap{ display:flex; gap:12px; align-items:center; margin:6px 0 4px; }
+      .demoBox{
+        width:104px; height:104px; flex:0 0 104px; border:3px solid var(--ink); background:#23233c;
+        position:relative; overflow:hidden;
+      }
+      .demoBox svg{ position:absolute; inset:0; width:100%; height:100%; }
+      .demoBox .pathdraw{
+        fill:none; stroke:var(--accent); stroke-width:6; stroke-linecap:round; stroke-linejoin:round;
+        stroke-dasharray:600; stroke-dashoffset:600; animation:drawpath 1.8s ease-in-out infinite;
+      }
+      @keyframes drawpath{ 0%{ stroke-dashoffset:600; } 70%{ stroke-dashoffset:0; } 100%{ stroke-dashoffset:0; } }
+      .demoBox .tapring{
+        fill:none; stroke:var(--accent); stroke-width:5;
+        transform-box:fill-box; transform-origin:center; animation:taping 1.6s ease-out infinite;
+      }
+      @keyframes taping{ 0%{ transform:scale(.3); opacity:1; } 70%{ transform:scale(1.3); opacity:0; } 100%{ transform:scale(1.3); opacity:0; } }
+      #practiceBox{ cursor:crosshair; background:#191930; }
+      #practiceCanvas{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; }
+      .pracStat{ font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:13px; min-height:18px; }
+      .pracStat.ok{ color:var(--ok); }
+      /* route map */
+      .routemap{ margin:10px 0 2px; }
+      .routemap .rlab{ font-size:10px; font-weight:900; letter-spacing:.14em; color:var(--muted); margin-bottom:5px; }
+      .maprow{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px; align-items:flex-end; }
+      .maprow .nlab{ font-family:"IBM Plex Mono",monospace; font-size:10px; font-weight:700; width:16px; color:var(--muted); }
+      .mh{
+        width:17px; height:15px; background:var(--map-house); position:relative;
+        clip-path:polygon(50% 0,100% 38%,100% 100%,0 100%,0 38%);
+      }
+      .mh.done{ background:var(--good); }
+      .mh.quiet{ background:#118ab2; }
+      .mh.woke{ background:var(--bad); }
+      .mh.miss{ background:var(--map-miss); }
+      /* rules */
+      .rule{
+        border:3px solid var(--ink); padding:9px 11px; margin-bottom:9px; background:rgba(0,0,0,.04);
+        display:flex; gap:10px; align-items:flex-start;
+      }
+      @media (prefers-color-scheme: dark){ .rule{ background:rgba(255,255,255,.05); } }
+      .rule .ric{ flex:0 0 34px; width:34px; height:34px; background:#23233c; border:2px solid var(--ink); display:flex; align-items:center; justify-content:center; }
+      .rule .ric svg{ width:24px; height:24px; }
+      .rule b{ font-family:"Archivo Black",sans-serif; font-size:13px; text-transform:uppercase; display:block; }
+      .rule span{ font-size:13px; font-weight:500; line-height:1.35; }
+      .newtag{ background:var(--accent2); color:#12121c; font-size:10px; font-weight:900; letter-spacing:.1em; padding:1px 5px; vertical-align:2px; margin-left:6px; }
+      .mini{ font-size:12px; color:var(--muted); font-weight:500; }
+      #toast{
+        position:absolute; left:50%; top:12px; transform:translateX(-50%); z-index:8;
+        background:var(--ink); color:var(--panel); font-family:"IBM Plex Mono",monospace; font-weight:700;
+        font-size:13px; padding:6px 12px; border:2px solid var(--panel); display:none; white-space:nowrap;
+      }
+      #toast.show{ display:block; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="hud">
+        <div class="hudbox" id="hudNight"><span class="lab">NIGHT</span><span class="val" id="nightVal">—</span></div>
+        <div class="hudbox" id="hudScore"><span class="lab">SCORE</span><span class="val" id="scoreVal">0</span></div>
+        <div class="hudbox" id="hudCombo"><span class="lab">COMBO</span><span class="val" id="comboVal">×1</span></div>
+        <div class="hudbox"><span class="lab">PAPERS</span><span class="val" id="papersVal">0/0</span></div>
+        <button class="hudbtn" id="soundBtn" aria-label="Toggle sound">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#12121c" stroke-width="2.4" stroke-linecap="square"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#12121c"/><path id="soundWaves" d="M16 9c1.2 1 1.2 5 0 6M18.5 7c2 2 2 8 0 10"/></svg>
+        </button>
+        <button class="hudbtn" id="rulesBtn" aria-label="Rules">?</button>
+      </div>
+
+      <div id="stage">
+        <canvas id="game"></canvas>
+        <div id="toast"></div>
+
+        <!-- STORY -->
+        <div class="overlay" id="ovStory">
+          <div class="card">
+            <span class="stamp">The Daily Quiet · Route 9</span>
+            <h1>Paper Route</h1>
+            <p class="big">3:00 AM. Low Hollow sleeps. Every house. Every night.</p>
+            <p>You carry tomorrow's paper. Nobody asks how you get it early. Nobody ever asks.</p>
+            <button class="btn" id="storyNext">Take the route</button>
+          </div>
+        </div>
+
+        <!-- HOW TO -->
+        <div class="overlay" id="ovHow">
+          <div class="card">
+            <span class="stamp">Before you ride</span>
+            <h2>The route</h2>
+            <p class="big">Your bike rides itself — when a house lights up, do the throw shown on its badge, anywhere on the street.</p>
+            <button class="btn" id="howNext">Start night 1</button>
+          </div>
+        </div>
+
+        <!-- SPOTLIGHT: new throw / rule -->
+        <div class="overlay" id="ovSpot">
+          <div class="card">
+            <span class="stamp" id="spotStamp">New throw</span>
+            <h2 id="spotTitle">Tap</h2>
+            <p id="spotText"></p>
+            <div class="demoWrap" id="spotDemoWrap">
+              <div class="demoBox"><svg id="spotDemoSvg" viewBox="0 0 100 100"></svg></div>
+              <div style="flex:1;min-width:0">
+                <p style="margin:0 0 4px"><b>Try it:</b> draw it in the dark box.</p>
+                <div class="pracStat" id="pracStat">Waiting…</div>
+              </div>
+              <div class="demoBox" id="practiceBox"><canvas id="practiceCanvas" width="208" height="208"></canvas></div>
+            </div>
+            <button class="btn" id="spotGo">Got it — ride</button>
+            <p class="mini" style="text-align:center;margin-top:8px">The demo loops on the left. Practice is optional — the first houses tonight are slow.</p>
+          </div>
+        </div>
+
+        <!-- NIGHT COMPLETE -->
+        <div class="overlay" id="ovNight">
+          <div class="card">
+            <span class="stamp" id="nightStamp">Night 1 done</span>
+            <div class="headline" id="nightHeadline"></div>
+            <div class="tally" id="nightTally"></div>
+            <div class="routemap"><div class="rlab">ROUTE MAP — HOUSES YOU'VE SERVED</div><div id="routeMapNight"></div></div>
+            <button class="btn good" id="nightNext">Next night</button>
+          </div>
+        </div>
+
+        <!-- NIGHT FAILED -->
+        <div class="overlay" id="ovFail">
+          <div class="card">
+            <span class="stamp">Route failed</span>
+            <h2>Too many missed</h2>
+            <p>The town wakes up paperless and grumpy. The route doesn't forgive — but it does rerun.</p>
+            <div class="tally" id="failTally"></div>
+            <button class="btn" id="failRetry">Ride the night again</button>
+          </div>
+        </div>
+
+        <!-- ENDING -->
+        <div class="overlay" id="ovEnd">
+          <div class="card">
+            <span class="stamp">The Daily Quiet · Final edition</span>
+            <div class="headline">“Paper carrier arrives home. 3AM. Right on time.”</div>
+            <p>You were never late. You were never early. You throw the last paper through your own window, and for the first time all week, you already know what it says.</p>
+            <div class="tally" id="endTally"></div>
+            <div class="routemap"><div class="rlab">THE FULL ROUTE</div><div id="routeMapEnd"></div></div>
+            <div class="btnrow">
+              <button class="btn good" id="endEndless">Endless route</button>
+              <button class="btn alt" id="endRestart">Ride again</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RULES -->
+        <div class="overlay" id="ovRules">
+          <div class="card">
+            <span class="stamp">Route rules · newest first</span>
+            <h2>Throws &amp; rules</h2>
+            <div id="rulesList"></div>
+            <p class="mini">Do a throw anywhere on the street while its house is lit up in the zone. A wrong throw costs your combo — the house waits, throw again.</p>
+            <button class="btn" id="rulesClose">Back to the route</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    "use strict";
+    /* ================= helpers ================= */
+    const $ = id => document.getElementById(id);
+    const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+    const lerp = (a,b,t)=>a+(b-a)*t;
+    const rand = (a,b)=>a+Math.random()*(b-a);
+    const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+    const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    /* ================= audio (tiny synth) ================= */
+    let AC=null, soundOn=true;
+    function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==="suspended")AC.resume(); return AC; }
+    function tone(freq,dur,type,vol,when,slide){
+      if(!soundOn) return; const c=ac(); if(!c)return;
+      const t=c.currentTime+(when||0);
+      const o=c.createOscillator(), g=c.createGain();
+      o.type=type||"sine"; o.frequency.setValueAtTime(freq,t);
+      if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30,slide),t+dur);
+      g.gain.setValueAtTime(vol||0.12,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+0.02);
+    }
+    function noiseBurst(dur,vol,freq){
+      if(!soundOn) return; const c=ac(); if(!c)return;
+      const n=c.sampleRate*dur, buf=c.createBuffer(1,n,c.sampleRate), d=buf.getChannelData(0);
+      for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+      const s=c.createBufferSource(); s.buffer=buf;
+      const f=c.createBiquadFilter(); f.type="bandpass"; f.frequency.value=freq||900;
+      const g=c.createGain(); g.gain.value=vol||0.15;
+      s.connect(f); f.connect(g); g.connect(c.destination); s.start();
+    }
+    const sfx = {
+      toss(){ noiseBurst(0.16,0.10,1200); },
+      hit(combo){ const base=520+Math.min(combo,10)*36; tone(base,0.12,"triangle",0.16); tone(base*1.5,0.16,"triangle",0.12,0.06); },
+      thud(){ tone(120,0.16,"square",0.14,0,60); noiseBurst(0.08,0.08,300); },
+      miss(){ tone(300,0.22,"sawtooth",0.07,0,140); },
+      quiet(){ tone(880,0.14,"sine",0.08); tone(1174,0.2,"sine",0.07,0.07); },
+      wake(){ tone(660,0.12,"square",0.14); tone(520,0.12,"square",0.14,0.13); tone(660,0.2,"square",0.14,0.26); },
+      night(){ [523,659,784,1046].forEach((f,i)=>tone(f,0.22,"triangle",0.12,i*0.09)); },
+      fanfare(){ [392,523,659,784,1046,1318].forEach((f,i)=>tone(f,0.3,"triangle",0.13,i*0.11)); }
+    };
+
+    /* ================= gesture classifier ================= */
+    function segDist(a,b){ const dx=a.x-b.x, dy=a.y-b.y; return Math.hypot(dx,dy); }
+    function angDiff(a,b){ let d=a-b; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI; return d; }
+    function resamplePts(pts,step){
+      if(pts.length<2) return pts.slice();
+      const out=[pts[0]]; let acc=0;
+      for(let i=1;i<pts.length;i++){
+        acc+=segDist(pts[i-1],pts[i]);
+        if(acc>=step){ out.push(pts[i]); acc=0; }
+      }
+      if(out[out.length-1]!==pts[pts.length-1]) out.push(pts[pts.length-1]);
+      return out;
+    }
+    function countReversals(pts,axis){
+      let rev=0, sign=0, acc=0;
+      for(let i=1;i<pts.length;i++){
+        acc += pts[i][axis]-pts[i-1][axis];
+        if(Math.abs(acc)>16){
+          const s = acc>0?1:-1;
+          if(sign!==0 && s!==sign) rev++;
+          sign=s; acc=0;
+        }
+      }
+      return rev;
+    }
+    function classifyStroke(raw){
+      if(!raw || raw.length<2) return "tap";
+      let len=0; for(let i=1;i<raw.length;i++) len+=segDist(raw[i-1],raw[i]);
+      if(len<34) return "tap";                              // barely moved: a tap
+      const pts = resamplePts(raw, 11);
+      if(pts.length<3) return "tap";
+      const angs=[];
+      for(let i=1;i<pts.length;i++) angs.push(Math.atan2(pts[i].y-pts[i-1].y, pts[i].x-pts[i-1].x));
+      let cum=0;
+      for(let i=1;i<angs.length;i++) cum+=angDiff(angs[i],angs[i-1]);
+      let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+      raw.forEach(p=>{ minx=Math.min(minx,p.x);maxx=Math.max(maxx,p.x);miny=Math.min(miny,p.y);maxy=Math.max(maxy,p.y); });
+      const diag=Math.hypot(maxx-minx,maxy-miny)||1;
+      const startEnd=segDist(raw[0],raw[raw.length-1]);
+      const turn=Math.abs(cum);                             // abs: direction never matters
+      if(turn>=4.5) return "circle";                        // most of a loop, either direction
+      if(turn>=3.7 && startEnd<0.8*diag) return "circle";   // looser loop ending near its start — still a circle
+      if(turn>=0.5) return "curve";                         // any real bend counts — generous
+      return "swipe";                                       // straight line, any direction at all
+    }
+
+    /* ================= game data ================= */
+    const THROWS = {
+      tap:    { name:"Tap",    pts:10, blurb:"Just tap — anywhere on the street, no drawing. The basic throw, and every route starts here." },
+      swipe:  { name:"Swipe",  pts:20, blurb:"One straight swipe, any direction — a good hard flick. It clears the low fences." },
+      curve:  { name:"Curve",  pts:30, blurb:"A swipe that bends — one smooth arc, like a banana. Not straight, not a loop. It hooks around hedges and washing lines." },
+      circle: { name:"Circle", pts:40, blurb:"Draw one full circle in a single stroke. The paper loops in over the roof — the hardest houses take nothing else." }
+    };
+    const TARGETS = {
+      door:    { name:"door",    mult:1 },
+      mailbox: { name:"mailbox", mult:1.5 },
+      window:  { name:"window",  mult:2 }
+    };
+    const NIGHTS = [
+      { houses:3, speed:95,  throws:["tap"],                                  lit:0,    teeth:0,    newThrow:"tap",    multi:0,    triple:0 },
+      { houses:4, speed:103, throws:["tap","swipe"],                          lit:0,    teeth:0,    newThrow:"swipe",  multi:0.38, triple:0,    newMulti:true },
+      { houses:5, speed:111, throws:["tap","swipe","curve"],                  lit:0,    teeth:0,    newThrow:"curve",  multi:0.38, triple:0 },
+      { houses:6, speed:117, throws:["tap","swipe","curve"],                  lit:0.24, teeth:0,    newRule:"lit",     multi:0.42, triple:0.10 },
+      { houses:7, speed:124, throws:["tap","swipe","curve","circle"],         lit:0.20, teeth:0,    newThrow:"circle", multi:0.42, triple:0.14 },
+      { houses:8, speed:130, throws:["tap","swipe","curve","circle"],         lit:0.20, teeth:0.20, newRule:"teeth",   multi:0.46, triple:0.16 },
+      { houses:9, speed:132, throws:["tap","swipe","curve","circle"],         lit:0.18, teeth:0.16, finale:true,       multi:0.50, triple:0.20 }
+    ];
+    const HEADLINES = [
+      "“Nothing happened last night, say residents. Again.”",
+      "“Man seen reading tomorrow's paper. Denies everything.”",
+      "“Teeth found in mailbox. No note. No apology.”",
+      "“Sleep study cancelled. Entire town already asleep.”",
+      "“Full moon over Route 9. Carrier continues route.”",
+      "“The house at the end pays in teeth. It always has.”"
+    ];
+    const HOUSE_COLORS = ["#ffd166","#ef476f","#06d6a0","#118ab2","#f78c6b","#c77dff","#8ac926","#ff9f1c","#4cc9f0","#f4a261","#e5989b","#90be6d"];
+
+    /* ================= state ================= */
+    const cv = $("game"), ctx = cv.getContext("2d");
+    let W=0,H=0, roadHalf=90, roadCX=0, bikeY=0, zoneTop=0, zoneBot=0;
+    let state = "boot";           // boot | story | how | spot | play | nightEnd | fail | end
+    let paused = false;           // rules overlay
+    let nightIdx = 0, endless = false, endlessCount = 0;
+    let score=0, combo=0, bestCombo=0, totalScore=0;
+    let houses=[], papers=[], particles=[], popups=[], trail=[];
+    let spawned=0, deliveredN=0, quietN=0, missedN=0, wokeN=0, nightEarned=0;
+    let spawnGap=0, scrollOff=0, shakeT=0, timeMs=0;
+    let routeResults = [];        // per night: array of 'done'|'quiet'|'miss'|'woke'
+    let learned = [];             // throw keys in learn order
+    let rulesLearned = [];        // 'lit' | 'teeth' in learn order
+    let stroke = null;            // active pointer stroke on main canvas
+    let finaleDone = false;
+    let spotQueue = [];           // pending spotlight cards for this night, shown one at a time
+
+    function resize(){
+      const st = $("stage").getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio||1, 2);
+      cv.width = Math.round(st.width*dpr); cv.height = Math.round(st.height*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      W = st.width; H = st.height;
+      roadCX = W/2; roadHalf = Math.min(92, W*0.235);
+      bikeY = H-138; zoneTop = 56; zoneBot = bikeY+64;
+    }
+    window.addEventListener("resize", resize);
+
+    /* ================= night setup ================= */
+    function nightCfg(){
+      if(!endless) return NIGHTS[nightIdx];
+      const sp = 132 + Math.min(48, endlessCount*6);
+      return { houses:10, speed:sp, throws:["tap","swipe","curve","circle"], lit:0.22, teeth:0.2, endless:true, multi:0.5, triple:0.2 };
+    }
+    function startNight(){
+      const cfg = nightCfg();
+      houses=[]; papers=[]; particles=[]; popups=[];
+      spawned=0; deliveredN=0; quietN=0; missedN=0; wokeN=0; nightEarned=0;
+      combo=0; spawnGap = 190; scrollOff=0;
+      routeResults.push([]);
+      updateHUD();
+      // spotlights first if something new arrives this night — queued, one at a time
+      spotQueue = [];
+      if(cfg.newThrow && learned.indexOf(cfg.newThrow)<0){
+        learned.push(cfg.newThrow);
+        spotQueue.push({ type:"throw", key:cfg.newThrow });
+      }
+      if(cfg.newMulti && rulesLearned.indexOf("multi")<0){
+        rulesLearned.push("multi");
+        spotQueue.push({ type:"rule", key:"multi" });
+      }
+      if(cfg.newRule && rulesLearned.indexOf(cfg.newRule)<0){
+        rulesLearned.push(cfg.newRule);
+        spotQueue.push({ type:"rule", key:cfg.newRule });
+      }
+      if(spotQueue.length){ showNextSpot(); }
+      else { state="play"; }
+      updateHUD();
+    }
+    function spawnHouse(){
+      const cfg = nightCfg();
+      const side = (spawned%2===0) ? (Math.random()<0.5?-1:1) : (houses.length&&houses[houses.length-1].side===1?-1:1);
+      const isLit = Math.random() < cfg.lit;
+      const isTeeth = !isLit && Math.random() < cfg.teeth;
+      let thr;
+      if(isLit) thr=null;
+      else if(cfg.newThrow && learned[learned.length-1]===cfg.newThrow && Math.random()<0.55) thr=cfg.newThrow;
+      else thr = pick(cfg.throws);
+      // finale: the very last house is yours — circle through the window
+      const isFinaleHouse = cfg.finale && spawned===cfg.houses-1;
+      if(isFinaleHouse){ thr="circle"; }
+      const target = isFinaleHouse ? "window" : (Math.random()<0.42?"door":(Math.random()<0.55?"mailbox":"window"));
+      // repeat throws: some houses need the same gesture 2–3 times (never the night's first house, never lit, never the finale)
+      let hitsNeeded = 1;
+      if(!isLit && !isFinaleHouse && spawned>0){
+        if(isTeeth) hitsNeeded = 2;
+        else if(cfg.multi && Math.random() < cfg.multi){
+          hitsNeeded = 2;
+          if(cfg.triple && Math.random() < cfg.triple) hitsNeeded = 3;
+        }
+      }
+      const hgt = rand(118,168);
+      houses.push({
+        side, y:-hgt/2-10, h:hgt, w:rand(86,104),
+        color: isFinaleHouse ? "#fff3b0" : pick(HOUSE_COLORS),
+        roof: Math.floor(rand(0,3.99)), seed: Math.random()*10,
+        throwReq: thr, target, lit:isLit, teeth:isTeeth, hits:0, hitsNeeded,
+        resolved:null, shakeT:0, flashT:0, yours:isFinaleHouse
+      });
+      spawned++;
+    }
+    function activeHouse(){
+      let best=null;
+      for(const h of houses){
+        if(h.resolved) continue;
+        if(h.y > zoneBot) continue;
+        if(!best || h.y > best.y) best=h;
+      }
+      return (best && best.y > 30) ? best : null;
+    }
+
+    /* ================= flow ================= */
+    function resolveHouse(h, kind){
+      h.resolved = kind;
+      routeResults[routeResults.length-1].push(kind==="done"?"done":kind);
+      if(kind==="miss"){ missedN++; combo=0; sfx.miss(); addPopup(h.side<0?70:W-70, h.y, "MISSED", "#ef476f"); }
+      updateHUD();
+    }
+    function throwAt(house, gesture){
+      if(!house) { // wild paper into the night
+        spawnPaper(gesture, roadCX + (Math.random()<0.5?-1:1)*roadHalf*0.5, bikeY-30, true);
+        sfx.toss(); return;
+      }
+      if(house.lit){
+        sfx.wake(); shake(0.45); combo=0; wokeN++;
+        addPopup(house.side<0?86:W-86, house.y-30, "YOU WOKE THEM!", "#ef476f");
+        resolveHouse(house, "woke");
+        burst(houseX(house), house.y, "#ffd23f", 10);
+        return;
+      }
+      if(gesture === house.throwReq){
+        house.hits++;
+        const hx = houseX(house), ty = targetY(house);
+        spawnPaper(gesture, roadCX, bikeY-34, false, hx, ty);
+        if(house.hits < (house.hitsNeeded||1)){
+          const left = (house.hitsNeeded||1) - house.hits;
+          sfx.hit(combo); house.flashT=0.25;
+          addPopup(hx, house.y-house.h/2-16, left===1 ? "ONE MORE!" : left+" MORE!", "#ffd23f");
+          burst(hx, ty, "#ffffff", 8);
+          return;
+        }
+        combo++; bestCombo=Math.max(bestCombo,combo);
+        const mult = 1 + Math.min(3, Math.floor(combo/5));
+        const pts = Math.round(THROWS[house.throwReq].pts * TARGETS[house.target].mult) * mult;
+        score += pts; nightEarned += pts; deliveredN++;
+        sfx.hit(combo);
+        house.flashT=0.3;
+        addPopup(hx, house.y-house.h/2-18, "+"+pts+(mult>1?" ×"+mult:""), "#06d6a0");
+        burst(hx, ty, "#fff6e0", REDUCED?4:14);
+        resolveHouse(house, "done");
+        if(house.yours) finaleDone = true;
+        updateHUD();
+      } else {
+        // wrong throw: combo dies, house waits for another try
+        combo=0; house.shakeT=0.4; sfx.thud(); shake(0.18);
+        const want = house.throwReq ? THROWS[house.throwReq].name.toUpperCase() : "";
+        addPopup(houseX(house), house.y-house.h/2-18, "NO — WANTS "+want, "#ef476f");
+        spawnPaper(gesture, roadCX, bikeY-34, true);
+        updateHUD();
+      }
+    }
+    function nightFinished(){
+      const cfg = nightCfg();
+      const total = cfg.houses;
+      const handled = deliveredN + quietN;
+      const ratio = handled/total;
+      const tally = [
+        ["Delivered", deliveredN+" / "+total],
+        ["Quiet passes", quietN],
+        ["Missed", missedN],
+        ["Woken", wokeN],
+        ["Best combo", "×"+(1+Math.min(3,Math.floor(bestCombo/5)))+" ("+bestCombo+" in a row)"],
+        ["Night score", nightEarned]
+      ];
+      if(endless){
+        if(ratio>=0.6){
+          endlessCount++;
+          state="nightEnd";
+          $("nightStamp").textContent = "Endless night "+endlessCount+" done";
+          $("nightHeadline").textContent = "“The route goes down past the town now. Nobody maps it.”";
+          $("nightTally").innerHTML = tally.map(r=>'<div class="row"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join("");
+          $("nightNext").textContent = "Deeper";
+          renderRouteMap($("routeMapNight"));
+          show("ovNight"); sfx.night();
+        } else {
+          state="fail";
+          $("failTally").innerHTML = tally.concat([["Final score", score]]).map(r=>'<div class="row"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join("");
+          show("ovFail"); sfx.miss();
+        }
+        return;
+      }
+      if(nightIdx===NIGHTS.length-1 && finaleDone && ratio>=0.6){
+        state="end"; totalScore=score;
+        $("endTally").innerHTML = tally.concat([["Final score", score]]).map(r=>'<div class="row"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join("");
+        renderRouteMap($("routeMapEnd"));
+        show("ovEnd"); sfx.fanfare();
+        return;
+      }
+      if(ratio>=0.6){
+        state="nightEnd";
+        $("nightStamp").textContent = "Night "+(nightIdx+1)+" done";
+        $("nightHeadline").textContent = HEADLINES[nightIdx] || "“The last house waits. Its window is open.”";
+        $("nightTally").innerHTML = tally.map(r=>'<div class="row"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join("");
+        $("nightNext").textContent = nightIdx===NIGHTS.length-2 ? "The last night" : "Next night";
+        renderRouteMap($("routeMapNight"));
+        show("ovNight"); sfx.night();
+      } else {
+        state="fail";
+        routeResults.pop();
+        $("failTally").innerHTML = tally.map(r=>'<div class="row"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join("");
+        show("ovFail"); sfx.miss();
+      }
+    }
+
+    /* ================= fx ================= */
+    function shake(t){ if(!REDUCED) shakeT=Math.max(shakeT,t); }
+    function addPopup(x,y,text,color){ popups.push({x,y,text,color,t:0}); }
+    function burst(x,y,color,n){ for(let i=0;i<n;i++) particles.push({x,y,vx:rand(-90,90),vy:rand(-140,20),t:0,life:rand(0.35,0.7),color}); }
+    function spawnPaper(style,x0,y0,wild,x1,y1){
+      papers.push({style,x0,y0,x1:x1||x0+rand(-40,40),y1:y1||y0-rand(60,120),t:0,dur:wild?0.5:0.34,wild,rot:rand(0,6)});
+    }
+    function toast(msg,ms){
+      const t=$("toast"); t.textContent=msg; t.classList.add("show");
+      clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"), ms||1600);
+    }
+
+    /* ================= geometry ================= */
+    function houseX(h){ return h.side<0 ? roadCX-roadHalf-h.w/2-8 : roadCX+roadHalf+h.w/2+8; }
+    function targetY(h){
+      if(h.target==="door") return h.y + h.h*0.22;
+      if(h.target==="mailbox") return h.y + h.h*0.42;
+      return h.y - h.h*0.12;
+    }
+    function targetX(h){
+      const cx = houseX(h);
+      if(h.target==="mailbox") return cx + (h.side<0? h.w/2+7 : -h.w/2-7);
+      return cx;
+    }
+
+    /* ================= update ================= */
+    let lastTs=0;
+    function loop(ts){
+      requestAnimationFrame(loop);
+      const dt = Math.min(0.05,(ts-lastTs)/1000||0); lastTs=ts;
+      if(state==="play" && !paused){
+        timeMs+=dt*1000;
+        const cfg=nightCfg();
+        scrollOff += cfg.speed*dt;
+        spawnGap -= cfg.speed*dt;
+        if(spawned<cfg.houses && spawnGap<=0){ spawnHouse(); spawnGap = rand(215,265); }
+        for(const h of houses){
+          h.y += cfg.speed*dt;
+          if(h.shakeT>0)h.shakeT-=dt;
+          if(h.flashT>0)h.flashT-=dt;
+          if(!h.resolved && h.y > zoneBot){
+            if(h.lit){ quietN++; score+=5; nightEarned+=5; sfx.quiet(); addPopup(houseX(h), h.y-20, "+5 QUIET", "#4cc9f0"); resolveHouse(h,"quiet"); }
+            else resolveHouse(h,"miss");
+          }
+        }
+        houses = houses.filter(h=>h.y < H+220);
+        // night over?
+        if(spawned>=cfg.houses && houses.every(h=>h.resolved) && papers.length===0){
+          nightFinished();
+        }
+      }
+      // fx always tick
+      for(const p of papers) p.t += dt/p.dur;
+      papers = papers.filter(p=>p.t<1);
+      for(const pt of particles){ pt.t+=dt; pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.vy+=300*dt; }
+      particles = particles.filter(pt=>pt.t<pt.life);
+      for(const pp of popups){ pp.t+=dt; pp.y-=34*dt; }
+      popups = popups.filter(pp=>pp.t<1.1);
+      if(shakeT>0) shakeT-=dt;
+      draw();
+    }
+
+    /* ================= draw ================= */
+    function draw(){
+      ctx.save();
+      ctx.clearRect(0,0,W,H);
+      if(shakeT>0) ctx.translate(rand(-1,1)*shakeT*10, rand(-1,1)*shakeT*10);
+      drawStreet();
+      const act = state==="play" ? activeHouse() : null;
+      // houses sorted so lower (closer) draw last
+      const sorted = houses.slice().sort((a,b)=>a.y-b.y);
+      for(const h of sorted) drawHouse(h, h===act);
+      drawPapers();
+      drawBike(act);
+      drawParticles();
+      drawTrail();
+      drawPopups();
+      if(state==="play" && act) drawZoneHint(act);
+      ctx.restore();
+    }
+    function drawStreet(){
+      // sky strip at top (you ride toward the top of the screen-world; horizon glow)
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,"#232347"); g.addColorStop(0.25,"#1b1b31"); g.addColorStop(1,"#14142a");
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      // stars
+      ctx.fillStyle="rgba(255,246,224,.7)";
+      for(let i=0;i<26;i++){
+        const sx=(i*67.3)%W, sy=((i*41.7)%(H*0.5));
+        if((i+Math.floor(timeMs/900))%7===0) continue;
+        ctx.fillRect(sx,sy,2,2);
+      }
+      // moon
+      ctx.fillStyle="#fff3b0"; ctx.beginPath(); ctx.arc(W-44,36,15,0,7); ctx.fill();
+      ctx.fillStyle="#232347"; ctx.beginPath(); ctx.arc(W-51,31,13,0,7); ctx.fill();
+      // sidewalks + lawns
+      ctx.fillStyle="#2c2c48"; ctx.fillRect(0,0,roadCX-roadHalf-16,H);
+      ctx.fillRect(roadCX+roadHalf+16,0,W,H);
+      // road
+      ctx.fillStyle="#33334f"; ctx.fillRect(roadCX-roadHalf,0,roadHalf*2,H);
+      // curb lines
+      ctx.fillStyle="#ffd23f";
+      ctx.fillRect(roadCX-roadHalf-3,0,3,H); ctx.fillRect(roadCX+roadHalf,0,3,H);
+      // center dashes scrolling
+      ctx.fillStyle="rgba(255,246,224,.55)";
+      const dashH=34, gap=30, off=scrollOff%(dashH+gap);
+      for(let y=-dashH+off; y<H; y+=dashH+gap) ctx.fillRect(roadCX-2,y,4,dashH);
+      // streetlamp pools
+      ctx.fillStyle="rgba(255,210,63,.05)";
+      for(let y=-80+(scrollOff%260); y<H; y+=260){ ctx.beginPath(); ctx.ellipse(roadCX-roadHalf-40,y,54,34,0,0,7); ctx.fill(); ctx.beginPath(); ctx.ellipse(roadCX+roadHalf+40,y+130,54,34,0,0,7); ctx.fill(); }
+      // throw zone band
+      if(state==="play"){
+        ctx.fillStyle="rgba(255,210,63,.07)"; ctx.fillRect(roadCX-roadHalf, zoneTop, roadHalf*2, zoneBot-zoneTop);
+        ctx.strokeStyle="rgba(255,210,63,.5)"; ctx.lineWidth=2; ctx.setLineDash([8,7]);
+        ctx.beginPath(); ctx.moveTo(roadCX-roadHalf,zoneBot); ctx.lineTo(roadCX+roadHalf,zoneBot); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+    function roundRect(x,y,w,h,r){
+      ctx.beginPath();
+      ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+    }
+    function drawHouse(h, isActive){
+      const cx=houseX(h), x=cx-h.w/2, y=h.y-h.h/2;
+      let dx=0; if(h.shakeT>0) dx=Math.sin(timeMs*0.09)*4*h.shakeT;
+      ctx.save(); ctx.translate(dx,0);
+      // shadow
+      ctx.fillStyle="rgba(0,0,0,.4)"; ctx.fillRect(x+5,y+6,h.w,h.h);
+      // body
+      ctx.fillStyle=h.resolved==="woke" ? "#ef476f" : h.color;
+      ctx.fillRect(x,y,h.w,h.h);
+      ctx.lineWidth=3; ctx.strokeStyle="#0c0c16"; ctx.strokeRect(x,y,h.w,h.h);
+      // roof variants
+      ctx.fillStyle="#0c0c16";
+      ctx.beginPath();
+      if(h.roof===0){ ctx.moveTo(x-5,y); ctx.lineTo(cx,y-24); ctx.lineTo(x+h.w+5,y); }
+      else if(h.roof===1){ ctx.rect(x-3,y-10,h.w+6,10); }
+      else if(h.roof===2){ ctx.moveTo(x-5,y); ctx.lineTo(x+h.w+5,y-18); ctx.lineTo(x+h.w+5,y); }
+      else { ctx.moveTo(x-5,y); ctx.quadraticCurveTo(cx,y-34,x+h.w+5,y); }
+      ctx.closePath(); ctx.fill();
+      // door
+      const dw=20, dh=34, dxd=cx-dw/2, dyd=y+h.h-dh;
+      ctx.fillStyle="#5b3a29"; ctx.fillRect(dxd,dyd,dw,dh);
+      ctx.strokeStyle="#0c0c16"; ctx.lineWidth=2; ctx.strokeRect(dxd,dyd,dw,dh);
+      ctx.fillStyle="#ffd23f"; ctx.fillRect(dxd+dw-6,dyd+dh/2,3,3);
+      // windows
+      const wins=[[x+10,y+16],[x+h.w-26,y+16]];
+      for(const [wx,wy] of wins){
+        ctx.fillStyle = h.lit ? "#ffe66d" : "#20203a";
+        ctx.fillRect(wx,wy,16,16);
+        ctx.strokeStyle="#0c0c16"; ctx.strokeRect(wx,wy,16,16);
+        ctx.beginPath(); ctx.moveTo(wx+8,wy); ctx.lineTo(wx+8,wy+16); ctx.stroke();
+        if(h.lit){ ctx.fillStyle="rgba(255,230,109,.25)"; ctx.fillRect(wx-5,wy-5,26,26); }
+      }
+      // mailbox at road edge
+      const mbx = cx + (h.side<0? h.w/2+7 : -h.w/2-7);
+      ctx.fillStyle="#e63946"; ctx.fillRect(mbx-7, y+h.h*0.42-6, 14, 11);
+      ctx.strokeStyle="#0c0c16"; ctx.lineWidth=2; ctx.strokeRect(mbx-7, y+h.h*0.42-6, 14, 11);
+      ctx.fillRect(mbx-1.5, y+h.h*0.42+5, 3, 12);
+      // target ring
+      if(!h.resolved && !h.lit){
+        const tx=targetX(h), ty=targetY(h);
+        const pulse = 1+Math.sin(timeMs*0.006)*0.12;
+        ctx.strokeStyle="#fff"; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.arc(tx,ty,11*pulse,0,7); ctx.stroke();
+        ctx.strokeStyle="#ef476f"; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(tx,ty,14*pulse,0,7); ctx.stroke();
+      }
+      // your house marker
+      if(h.yours){
+        ctx.fillStyle="#12121c"; ctx.fillRect(x-4,y+h.h+4,h.w+8,17);
+        ctx.fillStyle="#ffd23f"; ctx.font="700 10px 'IBM Plex Mono',monospace"; ctx.textAlign="center";
+        ctx.fillText("YOUR HOUSE", cx, y+h.h+16);
+      }
+      // flash on hit
+      if(h.flashT>0){ ctx.fillStyle="rgba(255,255,255,"+(h.flashT*1.6)+")"; ctx.fillRect(x,y,h.w,h.h); }
+      // resolved dim
+      if(h.resolved==="done"){ ctx.fillStyle="rgba(20,20,40,.45)"; ctx.fillRect(x,y,h.w,h.h);
+        ctx.fillStyle="#06d6a0"; ctx.font="900 22px Archivo,sans-serif"; ctx.textAlign="center"; ctx.fillText("✓", cx, y+h.h/2+8); }
+      if(h.resolved==="miss"){ ctx.fillStyle="rgba(20,20,40,.55)"; ctx.fillRect(x,y,h.w,h.h); }
+      // active highlight + badge — badge hangs off the BOTTOM edge of the house,
+      // so it's the first thing visible as the house rolls in from the top
+      if(isActive && !h.resolved){
+        ctx.strokeStyle="#ffd23f"; ctx.lineWidth=4;
+        ctx.strokeRect(x-4,y-4,h.w+8,h.h+8);
+        drawBadge(h, cx, y + h.h + (h.yours?27:11));
+      }
+      ctx.restore();
+    }
+    function drawBadge(h, cx, by){
+      // badge bubble above the active house showing what it wants
+      const needs = h.hitsNeeded||1;
+      const left = needs - h.hits;
+      const isMulti = !h.lit && needs>1;
+      const bw = h.lit ? 62 : (h.teeth ? 98 : (isMulti ? 84 : 62)), bh=40;
+      const bx = clamp(cx-bw/2, 4, W-bw-4);
+      by = clamp(by, 12, H-bh-6);
+      ctx.fillStyle="#fff6e0"; ctx.fillRect(bx,by,bw,bh);
+      ctx.lineWidth=3; ctx.strokeStyle="#0c0c16"; ctx.strokeRect(bx,by,bw,bh);
+      // tail points UP to the house above
+      ctx.beginPath(); ctx.moveTo(cx-6,by); ctx.lineTo(cx+6,by); ctx.lineTo(cx,by-8); ctx.closePath();
+      ctx.fillStyle="#fff6e0"; ctx.fill(); ctx.stroke();
+      ctx.save(); ctx.translate(bx+bw/2, by+bh/2);
+      if(h.lit){
+        drawEyeIcon(0,0,1.1);
+      } else if(h.teeth){
+        drawThrowIcon(h.throwReq, -24, 0, 0.95);
+        ctx.save(); ctx.translate(0,0); drawToothIcon(0,0,0.9); ctx.restore();
+        ctx.fillStyle="#12121c"; ctx.font="700 13px 'IBM Plex Mono',monospace"; ctx.textAlign="left";
+        ctx.fillText("×"+left, 12, 5);
+      } else if(isMulti){
+        drawThrowIcon(h.throwReq, -15, 0, 1);
+        ctx.fillStyle="#12121c"; ctx.font="700 14px 'IBM Plex Mono',monospace"; ctx.textAlign="left";
+        ctx.fillText("×"+left, 3, 5);
+      } else {
+        drawThrowIcon(h.throwReq, 0, 0, 1);
+      }
+      ctx.restore();
+    }
+    function drawThrowIcon(kind, x, y, s){
+      ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+      ctx.strokeStyle="#12121c"; ctx.fillStyle="#12121c"; ctx.lineWidth=3; ctx.lineCap="round"; ctx.lineJoin="round";
+      if(kind==="tap"){
+        ctx.beginPath(); ctx.arc(0,0,10.5,0,7); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0,0,3.4,0,7); ctx.fill();
+      } else if(kind==="swipe"){
+        ctx.beginPath(); ctx.moveTo(-12,9); ctx.lineTo(10,-10); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(2,-11); ctx.lineTo(10,-10); ctx.lineTo(11,-2); ctx.stroke();
+      } else if(kind==="curve"){
+        ctx.beginPath(); ctx.moveTo(-12,10); ctx.quadraticCurveTo(0,-13,12,10); ctx.stroke();
+        ctx.beginPath(); ctx.arc(12,10,2.6,0,7); ctx.fill();
+      } else if(kind==="circle"){
+        ctx.beginPath(); ctx.arc(0,0,11,0,7); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-6,-13); ctx.lineTo(0,-11); ctx.lineTo(-2,-5); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    function drawEyeIcon(x,y,s){
+      ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+      ctx.strokeStyle="#12121c"; ctx.lineWidth=2.6;
+      ctx.beginPath(); ctx.moveTo(-13,0); ctx.quadraticCurveTo(0,-11,13,0); ctx.quadraticCurveTo(0,11,-13,0); ctx.stroke();
+      ctx.fillStyle="#12121c"; ctx.beginPath(); ctx.arc(0,0,4,0,7); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-11,-11); ctx.lineTo(11,11); ctx.strokeStyle="#ef476f"; ctx.lineWidth=3; ctx.stroke();
+      ctx.restore();
+    }
+    function drawToothIcon(x,y,s){
+      ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+      ctx.fillStyle="#fff"; ctx.strokeStyle="#12121c"; ctx.lineWidth=2.2;
+      ctx.beginPath();
+      ctx.moveTo(-8,-7); ctx.quadraticCurveTo(0,-11,8,-7);
+      ctx.quadraticCurveTo(10,-2,7,3); ctx.quadraticCurveTo(6,9,3,9);
+      ctx.quadraticCurveTo(1,4,-1,4); ctx.quadraticCurveTo(-3,9,-5,8);
+      ctx.quadraticCurveTo(-8,3,-9,-2); ctx.quadraticCurveTo(-9,-6,-8,-7);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+    function drawBike(act){
+      const bx=roadCX, by=bikeY + Math.sin(timeMs*0.02)*1.5;
+      ctx.save(); ctx.translate(bx,by);
+      // lantern glow
+      const gl=ctx.createRadialGradient(0,-6,4,0,-6,66);
+      gl.addColorStop(0,"rgba(255,210,63,.30)"); gl.addColorStop(1,"rgba(255,210,63,0)");
+      ctx.fillStyle=gl; ctx.beginPath(); ctx.arc(0,-6,66,0,7); ctx.fill();
+      // wheels
+      ctx.strokeStyle="#0c0c16"; ctx.lineWidth=3.4;
+      ctx.beginPath(); ctx.arc(-17,16,10,0,7); ctx.stroke();
+      ctx.beginPath(); ctx.arc(19,16,10,0,7); ctx.stroke();
+      ctx.strokeStyle="#ffd23f"; ctx.lineWidth=3;
+      const wa=timeMs*0.02;
+      for(const wx of [-17,19]){ ctx.beginPath(); ctx.moveTo(wx+Math.cos(wa)*8,16+Math.sin(wa)*8); ctx.lineTo(wx-Math.cos(wa)*8,16-Math.sin(wa)*8); ctx.stroke(); }
+      // frame
+      ctx.strokeStyle="#ef476f"; ctx.lineWidth=3.6;
+      ctx.beginPath(); ctx.moveTo(-17,16); ctx.lineTo(-2,-4); ctx.lineTo(19,16); ctx.lineTo(4,16); ctx.lineTo(-2,-4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(14,-8); ctx.lineTo(19,16); ctx.stroke();
+      // rider
+      ctx.strokeStyle="#0c0c16"; ctx.lineWidth=4; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(-2,-6); ctx.lineTo(2,-22); ctx.stroke();        // torso
+      ctx.beginPath(); ctx.moveTo(2,-22); ctx.lineTo(13,-10); ctx.stroke();       // arm to bars
+      ctx.beginPath(); ctx.moveTo(-2,-6); ctx.lineTo(-9,8); ctx.lineTo(-16,14); ctx.stroke(); // leg
+      ctx.fillStyle="#ffd9a0"; ctx.beginPath(); ctx.arc(4,-29,7.5,0,7); ctx.fill(); // head
+      ctx.strokeStyle="#0c0c16"; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle="#118ab2"; ctx.beginPath(); ctx.arc(4,-31.5,7.5,Math.PI,0); ctx.fill(); // cap
+      ctx.fillRect(9,-33,7,3);
+      // paper satchel with papers
+      ctx.fillStyle="#fff6e0"; ctx.fillRect(-16,-24,13,15);
+      ctx.strokeStyle="#0c0c16"; ctx.lineWidth=2; ctx.strokeRect(-16,-24,13,15);
+      ctx.fillStyle="#fff"; ctx.fillRect(-13,-29,8,7); ctx.strokeRect(-13,-29,8,7);
+      ctx.restore();
+      // throw hint arrow toward active house (first nights only)
+      if(act && nightIdx<2 && !endless){
+        ctx.fillStyle="rgba(255,246,224,.9)"; ctx.font="700 12px 'IBM Plex Mono',monospace"; ctx.textAlign="center";
+        const dir = act.side<0 ? "◀ THROW" : "THROW ▶";
+        ctx.fillText(dir, roadCX, bikeY+52);
+      }
+    }
+    function drawPapers(){
+      for(const p of papers){
+        const t=p.t;
+        let x,y;
+        if(p.wild){ x=lerp(p.x0,p.x1,t)+Math.sin(t*22)*10; y=lerp(p.y0,p.y1,t)+Math.sin(t*Math.PI)*-14; }
+        else if(p.style==="curve"){
+          x=lerp(p.x0,p.x1,t); y=lerp(p.y0,p.y1,t);
+          const bend = Math.sin(t*Math.PI)*20*(1-t*0.4);
+          x += bend*0.55; y -= bend*0.25;
+        } else {
+          x=lerp(p.x0,p.x1,t); y=lerp(p.y0,p.y1,t)-Math.sin(t*Math.PI)*26;
+        }
+        ctx.save(); ctx.translate(x,y);
+        ctx.rotate(p.style==="circle" ? t*14 : Math.sin(t*9)*0.5 + (p.wild?t*7:0));
+        ctx.fillStyle="#fff"; ctx.fillRect(-8,-6,16,12);
+        ctx.strokeStyle="#0c0c16"; ctx.lineWidth=2; ctx.strokeRect(-8,-6,16,12);
+        ctx.fillStyle="#bbb"; ctx.fillRect(-5,-3,10,2); ctx.fillRect(-5,1,7,2);
+        if(p.style==="circle"){ ctx.fillStyle="#ffd23f"; for(let i=0;i<4;i++){ const a=t*6+i*1.7; ctx.fillRect(Math.cos(a)*13-1.5,Math.sin(a)*13-1.5,3,3); } }
+        ctx.restore();
+      }
+    }
+    function drawParticles(){
+      for(const pt of particles){
+        ctx.globalAlpha = 1-pt.t/pt.life;
+        ctx.fillStyle=pt.color; ctx.fillRect(pt.x-2.5,pt.y-2.5,5,5);
+      }
+      ctx.globalAlpha=1;
+    }
+    function drawTrail(){
+      if(!stroke || stroke.pts.length<2) return;
+      ctx.strokeStyle="rgba(255,210,63,.85)"; ctx.lineWidth=4; ctx.lineCap="round"; ctx.lineJoin="round";
+      ctx.setLineDash([2,9]);
+      ctx.beginPath();
+      stroke.pts.forEach((p,i)=> i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    function drawPopups(){
+      ctx.textAlign="center";
+      for(const pp of popups){
+        ctx.globalAlpha = clamp(1.4-pp.t,0,1);
+        ctx.font="900 17px Archivo,sans-serif";
+        ctx.lineWidth=4; ctx.strokeStyle="#0c0c16";
+        ctx.strokeText(pp.text, pp.x, pp.y);
+        ctx.fillStyle=pp.color; ctx.fillText(pp.text, pp.x, pp.y);
+      }
+      ctx.globalAlpha=1;
+    }
+    function drawZoneHint(act){
+      if(act.lit){
+        ctx.fillStyle="rgba(255,246,224,.92)"; ctx.font="700 12px 'IBM Plex Mono',monospace"; ctx.textAlign="center";
+        ctx.fillText("LIGHTS ON — TAP THE HOUSE TO DARKEN IT, OR LET IT PASS", roadCX, 26);
+      }
+    }
+
+    /* ================= input: gestures on the street ================= */
+    function canvasPos(e){
+      const r=cv.getBoundingClientRect();
+      return { x:e.clientX-r.left, y:e.clientY-r.top, t:performance.now() };
+    }
+    cv.addEventListener("pointerdown", e=>{
+      ac();
+      if(state!=="play"||paused) return;
+      cv.setPointerCapture(e.pointerId);
+      stroke={ pts:[canvasPos(e)] };
+    });
+    cv.addEventListener("pointermove", e=>{
+      if(!stroke) return;
+      const p=canvasPos(e);
+      const last=stroke.pts[stroke.pts.length-1];
+      if(segDist(last,p)>4) stroke.pts.push(p);
+    });
+    function houseAtPoint(x,y){
+      // topmost (closest to the bike) unresolved house under the point, if any
+      let best=null;
+      for(const h of houses){
+        if(h.resolved) continue;
+        const hx=houseX(h), top=h.y-h.h/2;
+        if(x>=hx-h.w/2-6 && x<=hx+h.w/2+6 && y>=top-6 && y<=top+h.h+6){
+          if(!best || h.y>best.y) best=h;
+        }
+      }
+      return best;
+    }
+    function toggleLights(h){
+      const cfg=nightCfg();
+      if(h.lit){
+        // lights off: it stops blocking the route — give it a throw so it can be served like any house
+        h.lit=false; h.userOff=true; h.hits=0;
+        if(!h.throwReq) h.throwReq = pick(cfg.throws);
+        sfx.quiet();
+        addPopup(houseX(h), h.y-h.h/2-16, "LIGHTS OUT", "#4cc9f0");
+      } else {
+        h.lit=true; h.userOff=false; h.hits=0;
+        tone(660,0.1,"square",0.10); tone(520,0.14,"square",0.09,0.09);
+        addPopup(houseX(h), h.y-h.h/2-16, "LIGHTS ON", "#ffd23f");
+      }
+      updateHUD();
+    }
+    function endStroke(){
+      if(!stroke) return;
+      const pts=stroke.pts; stroke=null;
+      trail=[];
+      if(state!=="play"||paused) return;
+      const gesture=classifyStroke(pts);
+      // tapping a lit (or player-darkened) house itself toggles its lights instead of throwing
+      if(gesture==="tap"){
+        const p = pts[pts.length-1];
+        const hit = houseAtPoint(p.x, p.y);
+        if(hit && (hit.lit || hit.userOff)){ toggleLights(hit); return; }
+      }
+      throwAt(activeHouse(), gesture);
+    }
+    cv.addEventListener("pointerup", endStroke);
+    cv.addEventListener("pointercancel", ()=>{ stroke=null; });
+
+    /* ================= overlays / UI ================= */
+    const OVS=["ovStory","ovHow","ovSpot","ovNight","ovFail","ovEnd","ovRules"];
+    function show(id){ OVS.forEach(o=>$(o).classList.toggle("show", o===id)); }
+    function hideAll(){ OVS.forEach(o=>$(o).classList.remove("show")); }
+    function updateHUD(){
+      const cfg=nightCfg();
+      $("nightVal").textContent = endless ? "∞ "+(endlessCount+1) : (nightIdx+1)+" / 7";
+      $("scoreVal").textContent = score;
+      const mult = 1+Math.min(3,Math.floor(combo/5));
+      $("comboVal").textContent = "×"+mult+(combo>=3?" · "+combo:"");
+      $("papersVal").textContent = (deliveredN+quietN)+"/"+cfg.houses;
+    }
+    function renderRouteMap(el){
+      el.innerHTML = routeResults.map((res,i)=>{
+        const cells = res.map(r=>'<span class="mh '+(r==="done"?"done":r==="quiet"?"quiet":r==="woke"?"woke":"miss")+'"></span>').join("");
+        return '<div class="maprow"><span class="nlab">'+(endless&&i>=7?"∞":(i+1))+'</span>'+cells+'</div>';
+      }).join("");
+    }
+    /* demo SVGs for spotlight */
+    const DEMO_PATHS = {
+      tap:   '<circle class="tapring" cx="50" cy="50" r="17"/><circle cx="50" cy="50" r="6" fill="#ffd23f"/>',
+      swipe: '<path class="pathdraw" d="M20,80 L74,26"/><path class="pathdraw" d="M56,24 L76,24 L76,44"/>',
+      curve: '<path class="pathdraw" d="M16,78 Q50,8 84,78"/>',
+      circle:'<path class="pathdraw" d="M50,14 a36,36 0 1,1 -0.01,0"/>'
+    };
+    let spotTarget=null, spotDone=false;
+    function showSpotlightThrow(key){
+      state="spot"; spotTarget=key; spotDone=false;
+      $("spotStamp").textContent = key==="tap" ? "Your first throw" : "New throw — night "+(nightIdx+1);
+      $("spotTitle").textContent = THROWS[key].name;
+      $("spotText").innerHTML = THROWS[key].blurb + " From tonight, some houses <b>only</b> take a " + THROWS[key].name.toLowerCase() + " — it's on their badge. Throws you know stay yours.";
+      $("spotDemoSvg").innerHTML = DEMO_PATHS[key];
+      $("spotDemoWrap").style.display="flex";
+      $("pracStat").textContent="Waiting…"; $("pracStat").className="pracStat";
+      $("spotGo").textContent = "Got it — ride";
+      show("ovSpot");
+    }
+    function showSpotlightRule(key){
+      state="spot"; spotTarget=null; spotDone=true;
+      $("spotStamp").textContent = "New rule — night "+(nightIdx+1);
+      if(key==="multi"){
+        $("spotTitle").textContent = "Some houses take more";
+        $("spotText").innerHTML = "From tonight, some houses need the <b>same throw more than once</b> — a tap house might want two taps, a swipe house two swipes. The badge shows <b>×2</b> (or ×3) and counts down with every good throw. Keep throwing that throw until the count runs out. This never goes away.";
+      } else if(key==="lit"){
+        $("spotTitle").textContent = "Lights on = skip";
+        $("spotText").innerHTML = "Some houses have their <b>lights on</b> — someone's awake in there. <b>Never throw at a lit house.</b> Let it roll past in peace and you earn +5 for quiet. In the way? <b>Tap the house itself</b> to turn its lights off — then it takes a paper like any house, and throws can pass it. Tap it again to turn the lights back on. This rule never goes away.";
+      } else {
+        $("spotTitle").textContent = "The teeth house";
+        $("spotText").innerHTML = "One house pays in teeth. Its badge shows a tooth — it needs <b>two</b> good throws of the throw it asks for before it passes. Hit it once, then hit it again. This rule never goes away.";
+      }
+      $("spotDemoWrap").style.display="none";
+      $("spotGo").textContent = "Got it — ride";
+      show("ovSpot");
+    }
+    function showNextSpot(){
+      const nxt = spotQueue.shift();
+      if(!nxt){ hideAll(); state="play"; updateHUD(); return; }
+      if(nxt.type==="throw") showSpotlightThrow(nxt.key);
+      else showSpotlightRule(nxt.key);
+    }
+    function advanceSpot(){
+      if(spotQueue.length) showNextSpot();
+      else { hideAll(); state="play"; updateHUD(); }
+    }
+    $("spotGo").addEventListener("click", ()=>{ ac(); advanceSpot(); });
+
+    /* practice pad */
+    const pc=$("practiceCanvas"), pctx=pc.getContext("2d");
+    let pStroke=null;
+    function pracPos(e){ const r=pc.getBoundingClientRect(); return { x:(e.clientX-r.left)*(208/r.width), y:(e.clientY-r.top)*(208/r.height), t:performance.now() }; }
+    pc.addEventListener("pointerdown", e=>{ pc.setPointerCapture(e.pointerId); pStroke=[pracPos(e)]; pctx.clearRect(0,0,208,208); });
+    pc.addEventListener("pointermove", e=>{
+      if(!pStroke) return;
+      const p=pracPos(e); pStroke.push(p);
+      pctx.strokeStyle="#ffd23f"; pctx.lineWidth=7; pctx.lineCap="round";
+      pctx.beginPath(); pctx.moveTo(pStroke[pStroke.length-2].x,pStroke[pStroke.length-2].y); pctx.lineTo(p.x,p.y); pctx.stroke();
+    });
+    function pracEnd(){
+      if(!pStroke) return;
+      const g=classifyStroke(pStroke); pStroke=null;
+      if(!spotTarget) return;
+      if(g===spotTarget){
+        spotDone=true;
+        $("pracStat").textContent="THAT'S IT — "+THROWS[spotTarget].name.toUpperCase()+" ✓";
+        $("pracStat").className="pracStat ok";
+        tone(740,0.12,"triangle",0.14); tone(1108,0.18,"triangle",0.12,0.07);
+        setTimeout(()=>{ if(state==="spot"){ advanceSpot(); } }, 650);
+      } else {
+        $("pracStat").textContent = "That read as "+g.toUpperCase()+" — try again.";
+        $("pracStat").className="pracStat";
+      }
+    }
+    pc.addEventListener("pointerup", pracEnd);
+    pc.addEventListener("pointercancel", ()=>{ pStroke=null; });
+
+    /* rules panel */
+    const RULE_ICONS = {
+      tap:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="#ffd23f" stroke-width="2.2"/><circle cx="12" cy="12" r="2.8" fill="#ffd23f"/></svg>',
+      swipe:'<svg viewBox="0 0 24 24"><path d="M4,20 L18,6" fill="none" stroke="#ffd23f" stroke-width="2.4"/><path d="M11,5 L19,5 L19,13" fill="none" stroke="#ffd23f" stroke-width="2.4"/></svg>',
+      curve:'<svg viewBox="0 0 24 24"><path d="M3,19 Q12,2 21,19" fill="none" stroke="#ffd23f" stroke-width="2.4"/><circle cx="21" cy="19" r="2.2" fill="#ffd23f"/></svg>',
+      circle:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="#ffd23f" stroke-width="2.4"/></svg>',
+      lit:'<svg viewBox="0 0 24 24"><path d="M3,12 Q12,4 21,12 Q12,20 3,12 Z" fill="none" stroke="#ffd23f" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="#ffd23f"/><path d="M5,5 L19,19" stroke="#ef476f" stroke-width="2.4"/></svg>',
+      teeth:'<svg viewBox="0 0 24 24"><path d="M6,4 Q12,2 18,4 Q20,9 17.5,13 Q16,20 13.5,19 Q12.5,14 11,14 Q9.5,14 8.5,19 Q6,20 4.5,13 Q2,9 6,4 Z" fill="#fff" stroke="#ffd23f" stroke-width="1.6"/></svg>',
+      multi:'<svg viewBox="0 0 24 24"><rect x="2" y="7" width="10" height="13" fill="none" stroke="#ffd23f" stroke-width="2"/><rect x="7" y="3" width="10" height="13" fill="#23233c" stroke="#ffd23f" stroke-width="2"/><text x="15" y="22" font-family="monospace" font-size="9" font-weight="700" fill="#ffd23f">×2</text></svg>'
+    };
+    const RULE_TEXT = {
+      multi:{ t:"Repeat throws", d:"Some houses need the same throw 2–3 times. The badge shows ×2 or ×3 and counts down with each good throw." },
+      teeth:{ t:"Teeth house", d:"Badge shows a tooth — it needs TWO good throws before it passes." },
+      lit:{ t:"Lights on = skip", d:"Never throw at a lit house — let it pass for +5 quiet. Or tap the house itself to turn its lights off: it takes a paper like any house and stops blocking your throws. Tap again to relight it." },
+      circle:{ t:"Circle throw", d:"Draw one full circle in a single stroke. Circle houses take nothing else." },
+      curve:{ t:"Curve throw", d:"A swipe that bends — one smooth arc, like a banana." },
+      swipe:{ t:"Swipe throw", d:"One straight swipe, any direction. A good hard flick." },
+      tap:{ t:"Tap throw", d:"Just tap — no drawing. The basic throw. Every house takes only the throw on its badge." }
+    };
+    function renderRules(){
+      const order=[];
+      // newest first: rules learned later sit on top; within same night, the rule above its throw is fine
+      const seq=[];
+      rulesLearned.slice().reverse().forEach(r=>seq.push(r));
+      learned.slice().reverse().forEach(t=>{ if(seq.indexOf(t)<0) seq.push(t); });
+      // interleave correctly by learn order overall: rebuild from a master learn log
+      seq.length=0;
+      learnLog.slice().reverse().forEach(k=>seq.push(k));
+      $("rulesList").innerHTML = seq.map(k=>{
+        const r=RULE_TEXT[k]; if(!r) return "";
+        return '<div class="rule"><div class="ric">'+RULE_ICONS[k]+'</div><div><b>'+r.t+'</b><span>'+r.d+'</span></div></div>';
+      }).join("");
+    }
+    let learnLog=[];
+    const _pushLearn = k => { if(learnLog.indexOf(k)<0) learnLog.push(k); };
+    // wrap the arrays' push points: record in startNight via polling each frame is overkill — hook into show functions
+    const _showThrow = showSpotlightThrow, _showRule = showSpotlightRule;
+    showSpotlightThrow = function(k){ _pushLearn(k); _showThrow(k); };
+    showSpotlightRule = function(k){ _pushLearn(k); _showRule(k); };
+
+    let rulesFrom=null;
+    $("rulesBtn").addEventListener("click", ()=>{
+      if(state!=="play" && state!=="spot") return;
+      rulesFrom = state; paused=true; renderRules(); show("ovRules");
+    });
+    $("rulesClose").addEventListener("click", ()=>{
+      paused=false;
+      if(rulesFrom==="spot"){ show("ovSpot"); }
+      else hideAll();
+      rulesFrom=null;
+    });
+    $("soundBtn").addEventListener("click", ()=>{
+      soundOn=!soundOn;
+      $("soundWaves").style.opacity = soundOn?1:0.4;
+      if(soundOn){ ac(); tone(660,0.1,"triangle",0.12); }
+    });
+
+    /* flow buttons */
+    $("storyNext").addEventListener("click", ()=>{ ac(); show("ovHow"); state="how"; });
+    $("howNext").addEventListener("click", ()=>{ ac(); hideAll(); startNight(); });
+    $("nightNext").addEventListener("click", ()=>{
+      ac(); hideAll();
+      if(endless){ startNight(); }
+      else { nightIdx++; if(nightIdx>=NIGHTS.length){ nightIdx=NIGHTS.length-1; } startNight(); }
+    });
+    $("failRetry").addEventListener("click", ()=>{ ac(); hideAll(); if(endless){ /* endless run ends */ score=0; endless=false; endlessCount=0; routeResults=[]; learned=[]; rulesLearned=[]; learnLog=[]; nightIdx=0; startNight(); } else startNight(); });
+    $("endEndless").addEventListener("click", ()=>{ ac(); hideAll(); endless=true; endlessCount=0; toast("ENDLESS ROUTE — the road goes down",2000); startNight(); });
+    $("endRestart").addEventListener("click", ()=>{ ac(); hideAll(); resetRun(); startNight(); });
+    function resetRun(){
+      score=0; combo=0; bestCombo=0; nightIdx=0; endless=false; endlessCount=0;
+      routeResults=[]; learned=[]; rulesLearned=[]; learnLog=[]; finaleDone=false;
+    }
+
+    /* ================= boot ================= */
+    resize();
+    updateHUD();
+    requestAnimationFrame(loop);
+    state="story";
+    show("ovStory");
+    </script>
+  </body>
+</html>

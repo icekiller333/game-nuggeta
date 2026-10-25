@@ -1,0 +1,1169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Gladiator Timing Combat — Turn-Based</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;700;900&family=Archivo+Narrow:wght@600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        --bg:#f0a832; --bg2:#e08e1a; --panel:#fffdf6; --panel2:#ffe9bd;
+        --ink:#171208; --line:#171208; --shadow:#171208;
+        --red:#e5383b; --red-dk:#8f1215; --teal:#0e9594; --gold:#ffb703;
+        --green:#58b531; --green-dk:#2c6414; --blue:#2f6fd0; --sand:#d98e2b; --barbg:#ffffff; --muted:#4d3b1a;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#191008; --bg2:#241708; --panel:#2e2113; --panel2:#3a2a16;
+          --ink:#f8ecd4; --line:#f8ecd4; --shadow:#000000; --muted:#e3cf9f;
+          --barbg:#171008; --sand:#6b4a1c; --red-dk:#ff9d9f; --green-dk:#a5e58a;
+        }
+      }
+      *{ box-sizing:border-box; }
+      html,body{ margin:0; padding:0; height:100%; }
+      body{
+        height:100dvh; overflow:hidden;
+        background:repeating-linear-gradient(0deg, var(--bg) 0 46px, var(--bg2) 46px 48px);
+        color:var(--ink); font-family:"Archivo", system-ui, sans-serif; -webkit-text-size-adjust:100%;
+      }
+      button{ font-family:inherit; cursor:pointer; }
+      /* ============ ONE-SCREEN FIGHT LAYOUT ============ */
+      .wrap{
+        height:100dvh; max-width:880px; margin:0 auto; padding:8px 10px 10px;
+        display:flex; flex-direction:column; gap:7px; overflow:hidden;
+      }
+      .micro{
+        font-size:10px; font-weight:900; letter-spacing:1.4px; color:var(--muted);
+        display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;
+      }
+      .group{
+        background:var(--panel); border:3px solid var(--line); box-shadow:4px 4px 0 var(--shadow);
+        padding:7px 9px;
+      }
+      /* ---------- top status line ---------- */
+      .status-row{ display:flex; gap:7px; align-items:stretch; }
+      .turn-banner{
+        flex:1 1 auto; font-family:"Archivo Black", sans-serif; font-size:13.5px;
+        padding:7px 10px; border:3px solid #171208; text-align:center;
+        display:flex; align-items:center; justify-content:center; line-height:1.15;
+      }
+      .turn-banner.decide{ background:var(--green); color:#0d2205; }
+      .turn-banner.flow{ background:var(--gold); color:#171208; }
+      .turn-banner.over{ background:var(--red); color:#fff; }
+      .kills-chip{
+        background:var(--red); color:#fff; border:3px solid #171208; font-weight:900; font-size:12.5px;
+        padding:5px 9px; display:flex; align-items:center; white-space:nowrap;
+      }
+      /* ---------- fighters row (tiny art) ---------- */
+      .fighters{ display:flex; align-items:center; gap:8px; }
+      .fighter{ flex:1 1 0; display:flex; align-items:center; gap:8px; min-width:0; position:relative; }
+      .fighter .sprite{ flex:0 0 auto; width:52px; height:52px; }
+      .fighter .sprite svg{ width:52px; height:52px; display:block; }
+      .fighter.wolf-side{ flex-direction:row-reverse; text-align:right; }
+      .fmeta{ flex:1 1 auto; min-width:0; }
+      .fname{ font-family:"Archivo Black", sans-serif; font-size:11px; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .fval{ font-family:"Archivo Narrow", monospace; font-weight:700; font-size:12px; }
+      .bar{ height:13px; border:2.5px solid #171208; background:var(--barbg); position:relative; overflow:hidden; margin:3px 0; }
+      .bar .fill{ height:100%; transition:width .45s ease, background-color .45s ease; }
+      .fill.hp, .fill.wolfhp{ background:var(--green); }
+      .spips{ display:inline-flex; gap:2px; vertical-align:middle; }
+      .spip{ width:8px; height:8px; border-radius:50%; border:2px solid #171208; background:var(--blue); display:inline-block; }
+      .spip.off{ background:transparent; }
+      .stam-lab{ font-size:9.5px; font-weight:900; letter-spacing:.8px; margin-right:4px; }
+      .vs{
+        font-family:"Archivo Black", sans-serif; font-size:13px; flex:0 0 auto;
+        background:var(--ink); color:var(--bg); padding:3px 7px; border:3px solid var(--line);
+      }
+      @media (prefers-color-scheme: dark){ .vs{ color:#171208; background:#ffb703; } }
+      .streak-tag{ font-size:10.5px; font-weight:900; color:var(--red-dk); white-space:nowrap; }
+      .lunge-r{ animation:lungeR .45s ease; }
+      .lunge-l{ animation:lungeL .45s ease; }
+      @keyframes lungeR{ 0%{transform:translateX(0)} 35%{transform:translateX(10px)} 100%{transform:translateX(0)} }
+      @keyframes lungeL{ 0%{transform:translateX(0)} 35%{transform:translateX(-10px)} 100%{transform:translateX(0)} }
+      .hitshake{ animation:hitshake .4s ease; }
+      @keyframes hitshake{ 0%{transform:translateX(0)} 25%{transform:translateX(-4px)} 55%{transform:translateX(4px)} 100%{transform:translateX(0)} }
+      .floater{
+        position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+        font-family:"Archivo Black", sans-serif; font-size:19px;
+        pointer-events:none; z-index:5; animation:floatUp 1s ease-out forwards;
+        text-shadow:2px 2px 0 #171208; white-space:nowrap;
+      }
+      @keyframes floatUp{ 0%{opacity:0; margin-top:8px} 15%{opacity:1} 100%{opacity:0; margin-top:-30px} }
+      /* ---------- next up strip ---------- */
+      .chips{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; min-height:30px; }
+      .chip{
+        display:inline-flex; align-items:center; gap:6px; border:2.5px solid #171208;
+        padding:4px 8px; font-weight:900; font-size:12px; color:#171208; line-height:1;
+      }
+      .chip.glad{ background:#b8f1ec; }
+      .chip.wolf{ background:#ffd3d6; }
+      .chip.landing{ outline:3px solid #171208; outline-offset:1px; }
+      .chip .cwho{ font-family:"Archivo Black", sans-serif; font-size:9.5px; padding:2px 5px; border:2px solid #171208; }
+      .chip.glad .cwho{ background:var(--teal); color:#fff; }
+      .chip.wolf .cwho{ background:var(--red); color:#fff; }
+      .pips{ display:inline-flex; gap:2px; }
+      .pip{ width:11px; height:11px; border:2px solid #171208; background:#171208; display:inline-block; }
+      .pip.spent{ background:transparent; }
+      .chips-empty{ font-weight:700; font-size:12px; color:var(--muted); }
+      /* ---------- last hit line ---------- */
+      .lasthit{
+        border:3px solid #171208; background:#171208; color:#fff3d6;
+        font-weight:700; font-size:13px; padding:6px 10px; line-height:1.3;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      }
+      /* ---------- attack buttons ---------- */
+      .attacks{ display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+      .atk{
+        border:3px solid #171208; box-shadow:3px 3px 0 #171208; text-align:left;
+        padding:7px 9px; color:#171208; position:relative; width:100%;
+        min-height:60px; overflow:hidden; display:block;
+      }
+      .atk:active:not(:disabled){ transform:translate(2px,2px); box-shadow:1px 1px 0 #171208; }
+      .atk:disabled{ cursor:not-allowed; }
+      .atk:disabled:not(.inflight){ opacity:.78; }
+      .atk .fillbar{
+        position:absolute; inset:0; width:0%; background:rgba(23,18,8,.34);
+        border-right:3px solid #171208; pointer-events:none;
+      }
+      .atk .fillnum{
+        position:absolute; top:4px; right:6px; z-index:2;
+        font-family:"Archivo Black", sans-serif; font-size:12px;
+        background:#171208; color:#ffb703; padding:1px 6px; display:none;
+      }
+      .atk.inflight{ outline:3px solid #171208; outline-offset:-7px; }
+      .atk.inflight .fillnum{ display:block; }
+      .atk .a-inner{ position:relative; z-index:1; }
+      .atk .a-top{ display:flex; align-items:baseline; gap:6px; }
+      .atk .aname{ font-family:"Archivo Black", sans-serif; font-size:14.5px; line-height:1.05; flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .atk .admg{ font-family:"Archivo Black", sans-serif; font-size:15px; white-space:nowrap; }
+      .atk .a-meta{ display:flex; align-items:center; gap:9px; margin-top:5px; flex-wrap:nowrap; }
+      .atk .mitem{ display:inline-flex; align-items:center; gap:3px; }
+      .atk .lab{ font-size:9px; font-weight:900; letter-spacing:.6px; }
+      .chunkpip{ width:12px; height:12px; border:2px solid #171208; background:#171208; display:inline-block; }
+      .stampip{ width:9px; height:9px; border-radius:50%; border:2px solid #171208; background:#12467c; display:inline-block; }
+      .stampip.off{ background:transparent; }
+      .stampip.gain{ background:var(--green); }
+      .atk .atag{
+        display:inline-block; font-size:9px; font-weight:900; letter-spacing:.8px;
+        border:2px solid #171208; padding:0 4px; background:#fffdf6; color:#171208; vertical-align:2px;
+      }
+      .atk.unafford{ opacity:.55; box-shadow:2px 2px 0 #171208; }
+      .atk.unafford .aname, .atk.unafford .admg{ opacity:.75; }
+      .atk.c-quick{ background:#5eead4; }
+      .atk.c-heavy{ background:#ff8fa3; }
+      .atk.c-combo{ background:#ffd23f; }
+      .atk.c-utility{ background:#a7e34d; }
+      /* ---------- utility row ---------- */
+      .util-row{ display:flex; gap:7px; align-items:stretch; }
+      .breath-btn{
+        flex:1 1 auto; border:3px solid #171208; box-shadow:3px 3px 0 #171208; background:#a7e34d; color:#171208;
+        font-family:"Archivo Black", sans-serif; font-size:13.5px; padding:7px 10px; text-align:left; min-height:46px;
+        display:flex; align-items:center; gap:8px; position:relative; overflow:hidden;
+      }
+      .breath-btn .bmeta{ font-family:"Archivo", sans-serif; font-weight:900; font-size:11px; display:inline-flex; gap:3px; align-items:center; }
+      .breath-btn:active:not(:disabled){ transform:translate(2px,2px); box-shadow:1px 1px 0 #171208; }
+      .breath-btn:disabled{ opacity:.5; cursor:not-allowed; }
+      .breath-btn .fillbar{ position:absolute; inset:0; width:0%; background:rgba(23,18,8,.34); border-right:3px solid #171208; pointer-events:none; }
+      .breath-btn .fillnum{ position:absolute; top:3px; right:5px; font-family:"Archivo Black", sans-serif; font-size:11px; background:#171208; color:#ffb703; padding:1px 5px; display:none; }
+      .breath-btn.inflight{ outline:3px solid #171208; outline-offset:-7px; }
+      .breath-btn.inflight .fillnum{ display:block; }
+      .util-btn{
+        flex:0 0 auto; border:3px solid #171208; box-shadow:3px 3px 0 #171208;
+        background:var(--gold); color:#171208; font-family:"Archivo Black", sans-serif; font-size:12.5px;
+        padding:7px 11px; min-height:46px; display:flex; align-items:center; gap:5px;
+      }
+      .util-btn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 #171208; }
+      .util-btn svg{ width:17px; height:17px; }
+      .util-btn.alt{ background:var(--panel2); color:var(--ink); }
+      .build-line{ font-weight:900; font-size:11.5px; color:var(--muted); }
+      /* ---------- sheets (log / tuning) ---------- */
+      .sheet{
+        position:fixed; inset:0; z-index:70; display:none;
+        background:var(--panel); color:var(--ink); flex-direction:column;
+      }
+      .sheet.open{ display:flex; }
+      .sheet-head{ display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:3px solid var(--line); }
+      .sheet-head h2{ font-family:"Archivo Black", sans-serif; font-size:16px; margin:0; flex:1 1 auto; }
+      .sheet-close{
+        background:var(--red); color:#fff; border:3px solid #171208; box-shadow:3px 3px 0 #171208;
+        font-family:"Archivo Black", sans-serif; font-size:13px; padding:6px 12px; min-height:44px;
+      }
+      .sheet-body{ flex:1 1 auto; overflow-y:auto; padding:10px 12px 18px; }
+      .log{ font-size:13.5px; line-height:1.5; }
+      .log div{ padding:3px 2px; border-bottom:2px dashed rgba(128,110,70,.4); }
+      .log .good{ font-weight:700; }
+      .log .bad{ font-weight:700; color:var(--red-dk); }
+      .tune-note{ font-size:12.5px; font-weight:700; color:var(--muted); margin:0 0 8px; }
+      .tune-group{ font-family:"Archivo Black", sans-serif; font-size:13px; margin:12px 0 5px; }
+      .tune-row{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:4px 0; border-bottom:2px dashed rgba(128,110,70,.4); }
+      .tune-row .tname{ font-weight:900; font-size:13px; min-width:118px; flex:1 1 118px; }
+      .tune-row label{ font-size:10px; font-weight:900; display:flex; flex-direction:column; gap:2px; }
+      .tune-row input{
+        width:58px; padding:5px 6px; font-family:"Archivo Narrow", monospace; font-weight:700; font-size:14px;
+        border:2.5px solid #171208; background:var(--barbg); color:var(--ink);
+      }
+      .reset-btn{
+        background:var(--red); color:#fff; border:3px solid #171208; box-shadow:4px 4px 0 #171208;
+        font-family:"Archivo Black", sans-serif; font-size:14px; padding:9px 16px; margin-top:14px; min-height:44px;
+      }
+      /* ---------- overlays ---------- */
+      .overlay{
+        position:fixed; inset:0; background:rgba(14,10,3,.78); z-index:80;
+        display:flex; align-items:center; justify-content:center; padding:10px;
+      }
+      .overlay.hidden{ display:none; }
+      .card{
+        background:var(--panel); border:4px solid #171208; box-shadow:8px 8px 0 #000;
+        max-width:620px; width:100%; padding:14px; max-height:calc(100dvh - 20px); overflow-y:auto; color:var(--ink);
+      }
+      .card h2{ font-family:"Archivo Black", sans-serif; margin:0 0 8px; font-size:clamp(18px,5vw,23px); line-height:1.15; }
+      .card p{ font-size:14.5px; line-height:1.5; margin:0 0 10px; font-weight:500; }
+      .card .howto{ background:var(--panel2); border:3px solid #171208; padding:9px 11px; font-weight:700; }
+      .big-btn{
+        background:var(--green); color:#0d2205; border:3px solid #171208; box-shadow:5px 5px 0 #171208;
+        font-family:"Archivo Black", sans-serif; font-size:16px; padding:11px 20px; width:100%; min-height:48px;
+      }
+      .big-btn:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 #171208; }
+      .over-stats{ display:flex; gap:10px; margin:0 0 12px; }
+      .over-stats div{ flex:1; border:3px solid #171208; background:var(--panel2); text-align:center; padding:7px 4px; }
+      .over-stats b{ display:block; font-family:"Archivo Black", sans-serif; font-size:23px; }
+      .over-stats span{ font-size:11px; font-weight:900; letter-spacing:.8px; }
+      /* ---------- picker (compact, one screen) ---------- */
+      .pick-tip{ background:var(--panel2); border:3px solid #171208; padding:7px 10px; font-weight:700; font-size:12.5px; margin-bottom:8px; line-height:1.35; }
+      .pick-sec{ font-family:"Archivo Black", sans-serif; font-size:11px; letter-spacing:.8px; margin:9px 0 5px; }
+      .pick-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+      @media (max-width:420px){ .pick-grid{ grid-template-columns:1fr 1fr; gap:5px; } }
+      .pick-row{
+        display:block; width:100%; text-align:left; position:relative; overflow:hidden;
+        border:3px solid #171208; padding:6px 8px; color:#171208; min-height:52px;
+        box-shadow:3px 3px 0 #171208; background:#fffdf6;
+      }
+      .pick-row:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 #171208; }
+      .pick-row.in{ outline:3px solid #171208; outline-offset:-7px; }
+      .pick-row .pname{ font-family:"Archivo Black", sans-serif; font-size:11px; display:block; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .pick-row .pmeta{ display:flex; align-items:center; gap:7px; margin-top:4px; }
+      .pick-row .pdmg{ font-family:"Archivo Black", sans-serif; font-size:12px; }
+      .pick-row .pstate{ font-size:9.5px; font-weight:900; letter-spacing:.5px; display:block; margin-top:3px; }
+      .pick-row.c-quick{ background:#5eead4; }
+      .pick-row.c-heavy{ background:#ff8fa3; }
+      .pick-row.c-combo{ background:#ffd23f; }
+      .picker-build{ font-weight:900; font-size:12px; margin-bottom:2px; }
+      /* ---------- offer / replace flow ---------- */
+      .tag-ico{ display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border:2.5px solid #171208; background:#fffdf6; flex:0 0 auto; }
+      .tag-ico svg{ width:13px; height:13px; display:block; }
+      .pick-row.chosen{ outline:4px solid #171208; outline-offset:-8px; box-shadow:5px 5px 0 #171208; }
+      .pick-row.dim{ opacity:.45; }
+      .pick-row.target{ animation:targetPulse 1s ease-in-out infinite; cursor:pointer; }
+      @keyframes targetPulse{ 0%,100%{ box-shadow:3px 3px 0 #171208; } 50%{ box-shadow:3px 3px 0 #171208, 0 0 0 4px var(--gold); } }
+      .swap-arrow{ display:flex; align-items:center; justify-content:center; gap:8px; margin:9px 0 2px; font-family:"Archivo Black", sans-serif; font-size:20px; color:var(--ink); }
+      .swap-arrow .arr-line{ flex:1 1 auto; border-top:3px dashed var(--line); }
+      .pick-steps{ display:flex; align-items:center; gap:7px; margin-bottom:9px; font-family:"Archivo Black", sans-serif; font-size:11.5px; }
+      .pick-steps .stepdot{ width:22px; height:22px; border-radius:50%; border:2.5px solid #171208; background:var(--panel2); color:var(--ink); display:inline-flex; align-items:center; justify-content:center; font-size:12px; flex:0 0 auto; }
+      .pick-steps .stepdot.on{ background:var(--green); color:#0d2205; }
+      .pick-steps .stepline{ flex:1 1 auto; border-top:3px solid var(--line); }
+      .keep-btn{ background:var(--panel2); color:var(--ink); border:3px solid #171208; box-shadow:4px 4px 0 #171208; font-family:"Archivo Black", sans-serif; font-size:13.5px; padding:9px 16px; width:100%; min-height:44px; margin-top:10px; }
+      .keep-btn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 #171208; }
+      /* ---------- spotlight ---------- */
+      #spotBlock{ position:fixed; inset:0; z-index:55; display:none; }
+      #spotFrame{
+        position:fixed; z-index:60; border:4px solid #ffb703; pointer-events:none; display:none;
+        box-shadow:0 0 0 9999px rgba(14,10,3,.72);
+      }
+      #spotTip{
+        position:fixed; z-index:61; display:none; max-width:320px; width:calc(100vw - 32px);
+        background:var(--panel); border:3px solid #171208; box-shadow:6px 6px 0 #000; padding:11px; color:var(--ink);
+      }
+      #spotTip p{ margin:0 0 9px; font-size:14px; font-weight:700; line-height:1.4; }
+      #spotTip .row{ display:flex; gap:8px; }
+      #spotTip button{ border:3px solid #171208; font-family:"Archivo Black", sans-serif; font-size:13px; padding:7px 14px; min-height:44px; }
+      #spotNext{ background:var(--green); color:#0d2205; box-shadow:3px 3px 0 #171208; }
+      #spotSkip{ background:var(--panel2); color:var(--ink); box-shadow:3px 3px 0 #171208; }
+      @media (max-height:740px){
+        .card{ padding:10px; }
+        .card h2{ font-size:18px; margin-bottom:5px; }
+        .pick-tip{ font-size:11.5px; padding:5px 8px; margin-bottom:5px; }
+        .pick-sec{ margin:6px 0 4px; }
+        .pick-row{ min-height:44px; padding:4px 7px; }
+        .pick-row .pmeta{ margin-top:2px; }
+        .pick-row .pstate{ margin-top:2px; }
+        .big-btn{ padding:8px 16px; min-height:44px; font-size:15px; }
+      }
+      @media (prefers-reduced-motion: reduce){
+        .lunge-r,.lunge-l,.hitshake,.floater,.pick-row.target{ animation:none !important; }
+        .bar .fill{ transition:none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <!-- STATUS -->
+      <div class="status-row">
+        <div class="turn-banner decide" id="turnBanner">YOUR MOVE — pick an attack.</div>
+        <div class="kills-chip">DOWN&nbsp;<span id="killsVal">0</span></div>
+      </div>
+
+      <!-- FIGHTERS -->
+      <section class="group" id="fightersGroup" aria-label="Fighters">
+        <div class="micro"><span>FIGHTERS</span><span class="streak-tag" id="streakLine"></span></div>
+        <div class="fighters">
+          <div class="fighter" id="gladFig">
+            <div class="sprite">
+              <svg viewBox="0 0 220 220" role="img" aria-label="Gladiator">
+                <path d="M64 26 Q104 -4 158 14 Q120 12 92 34 Q74 44 64 26Z" fill="#e5383b" stroke="#171208" stroke-width="6" stroke-linejoin="round"/>
+                <path d="M46 88 Q46 34 104 32 Q162 34 162 88 L162 100 L46 100 Z" fill="#c7cedb" stroke="#171208" stroke-width="6" stroke-linejoin="round"/>
+                <rect x="76" y="92" width="56" height="42" fill="#f2b27d" stroke="#171208" stroke-width="6"/>
+                <rect x="86" y="108" width="12" height="7" fill="#171208"/>
+                <rect x="110" y="108" width="12" height="7" fill="#171208"/>
+                <rect x="92" y="124" width="24" height="5" fill="#171208"/>
+                <path d="M66 134 L142 134 L152 176 L56 176 Z" fill="#0e9594" stroke="#171208" stroke-width="6" stroke-linejoin="round"/>
+                <rect x="60" y="150" width="88" height="9" fill="#ffb703" stroke="#171208" stroke-width="5"/>
+                <circle cx="36" cy="142" r="35" fill="#ffb703" stroke="#171208" stroke-width="6"/>
+                <circle cx="36" cy="142" r="13" fill="#e5383b" stroke="#171208" stroke-width="5"/>
+                <path d="M148 118 L186 92" stroke="#f2b27d" stroke-width="16" stroke-linecap="round"/>
+                <path d="M182 96 L214 58" stroke="#171208" stroke-width="8" stroke-linecap="round"/>
+                <polygon points="214,58 206,44 224,40" fill="#c7cedb" stroke="#171208" stroke-width="5" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="fmeta">
+              <div class="fname">YOU</div>
+              <div class="bar"><div class="fill hp" id="gladHpFill" style="width:100%"></div></div>
+              <div id="stamBarWrap"><span class="stam-lab">STAM</span><span class="spips" id="gladStamPips"></span><span class="fval" id="streakVal" style="display:none">0</span></div>
+            </div>
+          </div>
+          <div class="vs">VS</div>
+          <div class="fighter wolf-side" id="wolfFig">
+            <div class="sprite">
+              <svg viewBox="0 0 240 220" role="img" aria-label="Wolf">
+                <path d="M196 84 Q228 66 232 40 Q210 52 192 62 Z" fill="#8d99ae" stroke="#171208" stroke-width="6" stroke-linejoin="round"/>
+                <path d="M58 82 Q118 56 192 72 Q210 76 208 98 Q206 122 178 126 L86 128 Q56 124 52 100 Q50 88 58 82Z" fill="#8d99ae" stroke="#171208" stroke-width="6" stroke-linejoin="round"/>
+                <path d="M70 66 L84 78 L98 64 L112 76 L128 62 L142 74" fill="none" stroke="#171208" stroke-width="6" stroke-linecap="round"/>
+                <path d="M150 84 Q168 78 176 92 Q168 104 150 102 Z" fill="#6d7889" stroke="#171208" stroke-width="5"/>
+                <polygon points="58,58 76,66 62,84" fill="#8d99ae" stroke="#171208" stroke-width="6" stroke-linejoin="round"/>
+                <path d="M64 74 Q30 78 16 100 L24 116 Q44 118 66 106 Q78 88 64 74Z" fill="#a7b1c2" stroke="#171208" stroke-width="6" stroke-linejoin="round"/>
+                <polygon points="16,100 6,106 17,113" fill="#171208"/>
+                <circle cx="52" cy="90" r="6" fill="#171208"/>
+                <path d="M30 112 L52 110" stroke="#171208" stroke-width="5" stroke-linecap="round"/>
+                <g stroke="#171208" stroke-width="6">
+                  <rect x="76" y="126" width="15" height="52" fill="#8d99ae"/>
+                  <rect x="106" y="126" width="15" height="52" fill="#7c8798"/>
+                  <rect x="160" y="126" width="15" height="52" fill="#7c8798"/>
+                  <rect x="186" y="126" width="15" height="52" fill="#8d99ae"/>
+                </g>
+              </svg>
+            </div>
+            <div class="fmeta">
+              <div class="fname"><span id="wolfName">WOLF #1</span></div>
+              <div class="bar"><div class="fill wolfhp" id="wolfHpFill" style="width:100%"></div></div>
+              <div><span class="stam-lab">STAM</span><span class="spips" id="wolfStamPips"></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NEXT UP -->
+      <section class="group" id="queueGroup" aria-label="Landing order">
+        <div class="micro"><span>NEXT UP — LANDING ORDER</span></div>
+        <div class="chips" id="queue"></div>
+        <div class="chips-empty" id="queueEmpty" style="display:none">Nothing in flight — whatever you pick strikes first.</div>
+      </section>
+
+      <!-- LAST HIT -->
+      <div class="lasthit" id="lastHit">The gate slams. Wolf #1 pads out of the dark…</div>
+
+      <!-- ATTACKS -->
+      <section class="group" id="attacksGroup" aria-label="Attacks" style="flex:1 1 auto; display:flex; flex-direction:column;">
+        <div class="micro"><span>ATTACKS</span><span class="build-line" id="buildLine"></span></div>
+        <div class="attacks" id="attacks"></div>
+        <div style="flex:1 1 auto"></div>
+        <div class="util-row" style="margin-top:7px;">
+          <button class="breath-btn" id="breathBtn"><span class="fillbar" id="breathFill"></span><span style="position:relative;z-index:1;">CATCH BREATH</span><span class="bmeta" id="breathSub" style="position:relative;z-index:1;"></span><span class="fillnum" id="breathFillNum"></span></button>
+          <button class="util-btn" id="logBtn" aria-label="Open combat log">LOG</button>
+          <button class="util-btn" id="gearBtn" aria-label="Open tuning panel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#171208" stroke-width="2.4" stroke-linecap="square"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M18.8 5.2l-2.1 2.1M7.3 16.7l-2.1 2.1"/></svg>
+            TUNE
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- LOG SHEET -->
+    <section class="sheet" id="logPanel" aria-label="Combat log">
+      <div class="sheet-head"><h2>COMBAT LOG</h2><button class="sheet-close" data-close="logPanel">CLOSE</button></div>
+      <div class="sheet-body"><div class="log" id="log"></div></div>
+    </section>
+
+    <!-- TUNING SHEET -->
+    <section class="sheet" id="tuningPanel" aria-label="Tuning panel">
+      <div class="sheet-head"><h2>TUNING SHEET</h2><button class="sheet-close" data-close="tuningPanel">CLOSE</button></div>
+      <div class="sheet-body">
+        <p class="tune-note">Times are CHUNK costs. A faster fighter lands sooner: chunks shown in the fight = chunk cost ÷ speed, rounded up (min 1). Changes apply to the next attack picked.</p>
+        <div id="tuneBody"></div>
+        <button class="reset-btn" id="resetBtn">RESET TO DEFAULTS</button>
+      </div>
+    </section>
+
+    <!-- INTRO -->
+    <div class="overlay" id="introOverlay">
+      <div class="card">
+        <h2>THE WOLF PIT</h2>
+        <p>The pit gates are welded shut and the crowd is already chanting. There is no taking turns politely here — every swing takes chunks of time to land. A dagger flicks out in a single chunk. The great axe needs four… and ends arguments.</p>
+        <p class="howto">HOW TO PLAY: Pick an attack — the black bars are how many chunks it takes to land, the blue dots are the stamina it burns.</p>
+        <button class="big-btn" id="startBtn">ENTER THE PIT</button>
+      </div>
+    </div>
+
+    <!-- PICKER: random 2, pick 1, replace 1 of yours -->
+    <div class="overlay hidden" id="pickerOverlay">
+      <div class="card">
+        <h2 id="pickerTitle">NEW ATTACK!</h2>
+        <div class="pick-steps" aria-hidden="true">
+          <span class="stepdot on" id="stepDot1">1</span><span>PICK</span>
+          <span class="stepline"></span>
+          <span class="stepdot" id="stepDot2">2</span><span>SWAP</span>
+        </div>
+        <div class="pick-grid" id="pickerPool"></div>
+        <div class="swap-arrow" aria-hidden="true"><span class="arr-line"></span><span>&#8646;</span><span class="arr-line"></span></div>
+        <div class="pick-sec" style="margin-top:2px;">YOURS</div>
+        <div class="pick-grid" id="pickerLoadout"></div>
+        <div class="picker-build" id="pickerBuild" style="margin-top:8px;"></div>
+        <button class="keep-btn" id="pickerDone">KEEP BOTH</button>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="overlay hidden" id="overOverlay">
+      <div class="card">
+        <h2>THE CROWD GOES QUIET</h2>
+        <p>The wolves drag you down at last. The pit keeps your sword as a souvenir.</p>
+        <div class="over-stats">
+          <div><b id="overKills">0</b><span>WOLVES DOWN</span></div>
+          <div><b id="overChunks">0</b><span>CHUNKS SURVIVED</span></div>
+        </div>
+        <button class="big-btn" id="againBtn">FIGHT AGAIN</button>
+      </div>
+    </div>
+
+    <!-- SPOTLIGHT -->
+    <div id="spotBlock"></div>
+    <div id="spotFrame"></div>
+    <div id="spotTip">
+      <p id="spotText"></p>
+      <div class="row">
+        <button id="spotNext">NEXT</button>
+        <button id="spotSkip">SKIP TOUR</button>
+      </div>
+    </div>
+
+    <script>
+    "use strict";
+    /* ================= CONFIG (all tunable) =================
+       Time is CHUNKS. Effective chunks = max(1, ceil(chunks / speed)). */
+    var DEFAULTS = {
+      glad: { hp: 100, stamina: 100, speed: 1.0, regen: 3 },
+      wolf: { hp: 42, stamina: 100, speed: 1.0, regen: 3, hpGrowth: 8, dmgGrowth: 0 },
+      attacks: {
+        jab:      { name: "Dagger Jab",      tag: "QUICK", chunks: 1, stam: 20, dmg: 8,  restore: 0, kind: "single", note: "One chunk. Gone before they blink." },
+        slash:    { name: "Quick Slash",     tag: "QUICK", chunks: 2, stam: 12, dmg: 12, restore: 0, kind: "single", note: "Fast and cheap." },
+        flurry:   { name: "Flurry",          tag: "QUICK", chunks: 2, stam: 18, dmg: 4,  restore: 0, kind: "flurry", hits: 3, note: "Three little hits in one rush." },
+        axe:      { name: "Axe Swing",       tag: "HEAVY", chunks: 4, stam: 10, dmg: 24, restore: 0, kind: "single", note: "Slow. Enormous. Cheap to swing." },
+        hammer:   { name: "Hammer Smash",    tag: "HEAVY", chunks: 5, stam: 8,  dmg: 34, restore: 0, kind: "single", note: "The biggest number in the pit." },
+        cleave:   { name: "Overhead Cleave", tag: "HEAVY", chunks: 3, stam: 12, dmg: 18, restore: 0, kind: "single", note: "Heavy, but lands sooner." },
+        chain:    { name: "Chain Strike",    tag: "COMBO", chunks: 2, stam: 14, dmg: 10, restore: 0, kind: "chain", bonus: 6, note: "+6 damage if your last attack hit." },
+        twin:     { name: "Twin Fangs",      tag: "COMBO", chunks: 2, stam: 16, dmg: 6,  restore: 0, kind: "twin", second: 10, note: "Two hits — the second bites harder." },
+        momentum: { name: "Momentum Thrust", tag: "COMBO", chunks: 3, stam: 15, dmg: 14, restore: 0, kind: "momentum", perStreak: 4, note: "+4 damage per hit in your streak." },
+        breath:   { name: "Catch Breath",    tag: "UTILITY", chunks: 2, stam: 0, dmg: 0, restore: 35, kind: "rest", note: "Always available. Restores stamina." }
+      },
+      wolfAttacks: {
+        bite:  { name: "Bite",         chunks: 2, stam: 10, dmg: 6,  restore: 0 },
+        lunge: { name: "Lunge",        chunks: 3, stam: 20, dmg: 14, restore: 0 },
+        prowl: { name: "Prowl & Pant", chunks: 2, stam: 0,  dmg: 0,  restore: 35 }
+      }
+    };
+    var POOL = ["jab", "slash", "flurry", "axe", "hammer", "cleave", "chain", "twin", "momentum"];
+    function clone(o){ return JSON.parse(JSON.stringify(o)); }
+    var cfg = clone(DEFAULTS);
+
+    /* ================= STATE ================= */
+    var S = null;
+    var evtSeq = 0;
+
+    function wolfMaxHp(){ return cfg.wolf.hp + (S.wolfNum - 1) * cfg.wolf.hpGrowth; }
+    function wolfDmgBonus(){ return (S.wolfNum - 1) * cfg.wolf.dmgGrowth; }
+    function effChunks(base, speed){ return Math.max(1, Math.ceil(base / (speed || 1))); }
+    function stamPips(stam){ return Math.max(0, Math.round(stam / 4)); }
+
+    function newGame(){
+      S = {
+        chunk: 0,
+        gladHp: cfg.glad.hp,
+        gladStam: cfg.glad.stamina,
+        wolfNum: 1,
+        wolfHp: 0,
+        wolfStam: cfg.wolf.stamina,
+        kills: 0,
+        pending: [],
+        busy: false,
+        over: false,
+        loadout: ["jab", "axe"],
+        streak: 0,
+        prevHit: false,
+        pickerPending: 0,
+        offerCandidates: [],
+        offerSelected: null
+      };
+      S.wolfHp = wolfMaxHp();
+      document.getElementById("log").innerHTML = "";
+      document.getElementById("overOverlay").classList.add("hidden");
+      document.getElementById("pickerOverlay").classList.add("hidden");
+      setLastHit("The gate slams. Wolf #1 pads out of the dark…");
+      logLine("Wolf #1 pads out of the dark, already choosing its first move.", "");
+      scheduleWolf();
+      renderAll();
+    }
+
+    /* ================= SCHEDULING ================= */
+    function pushEvent(who, key, atk, speed){
+      var chunks = effChunks(atk.chunks, speed);
+      var ev = {
+        id: ++evtSeq, who: who, key: key, name: atk.name,
+        dmg: atk.dmg + (who === "wolf" ? wolfDmgBonus() : 0),
+        restore: atk.restore, stamCost: atk.stam, kind: atk.kind || "single",
+        hits: atk.hits || 1, second: atk.second || 0, bonus: atk.bonus || 0, perStreak: atk.perStreak || 0,
+        chosenAt: S.chunk, chunks: chunks, landsAt: S.chunk + chunks
+      };
+      S.pending.push(ev);
+      return ev;
+    }
+    function chooseWolfAttack(){
+      var wa = cfg.wolfAttacks;
+      var key;
+      if (S.wolfStam >= wa.lunge.stam && Math.random() < 0.45) key = "lunge";
+      else if (S.wolfStam >= wa.bite.stam) key = "bite";
+      else key = "prowl";
+      var atk = wa[key];
+      S.wolfStam = Math.max(0, S.wolfStam - atk.stam);
+      var ev = pushEvent("wolf", key, atk, cfg.wolf.speed);
+      logLine("Wolf #" + S.wolfNum + " commits to " + atk.name + " — lands in " + ev.chunks + (ev.chunks === 1 ? " chunk." : " chunks."), "");
+      return ev;
+    }
+    function scheduleWolf(){ chooseWolfAttack(); }
+
+    /* ================= PLAYER CHOICE ================= */
+    function chooseAttack(key){
+      if (!S || S.busy || S.over) return;
+      var atk = cfg.attacks[key];
+      if (!atk) return;
+      if (S.gladStam < atk.stam) return;
+      S.gladStam -= atk.stam;
+      var ev = pushEvent("glad", key, atk, cfg.glad.speed);
+      logLine("You commit to " + atk.name + " — lands in " + ev.chunks + (ev.chunks === 1 ? " chunk." : " chunks."), "");
+      S.busy = true;
+      renderAll();
+      setTimeout(function(){ resolveStep(ev.id); }, 420);
+    }
+
+    /* ================= RESOLUTION ================= */
+    function sortPending(){
+      S.pending.sort(function(a, b){
+        if (a.landsAt !== b.landsAt) return a.landsAt - b.landsAt;
+        if (a.who !== b.who) return a.who === "wolf" ? -1 : 1; /* ties: wolf first */
+        return a.id - b.id;
+      });
+    }
+    function advanceTo(chunk){
+      var dc = Math.max(0, chunk - S.chunk);
+      S.chunk = chunk;
+      if (dc > 0) {
+        S.gladStam = Math.min(cfg.glad.stamina, S.gladStam + cfg.glad.regen * dc);
+        S.wolfStam = Math.min(cfg.wolf.stamina, S.wolfStam + cfg.wolf.regen * dc);
+      }
+    }
+    function resolveStep(targetId){
+      if (S.over) { S.busy = false; renderAll(); return; }
+      sortPending();
+      if (!S.pending.length) { finishTurn(); return; }
+      var ev = S.pending[0];
+      if (ev.id !== targetId && ev.landsAt > targetLands(targetId)) {
+        ev = takeEvent(targetId);
+      } else {
+        S.pending.shift();
+      }
+      if (!ev) { finishTurn(); return; }
+      advanceTo(ev.landsAt);
+      applyEvent(ev);
+      renderAll(ev.id);
+      var done = (ev.id === targetId) || S.over;
+      if (done) {
+        setTimeout(finishTurn, 650);
+      } else {
+        setTimeout(function(){ resolveStep(targetId); }, 720);
+      }
+    }
+    function finishTurn(){
+      S.busy = false;
+      renderAll();
+      if (S.over) { showGameOver(); return; }
+      if (S.pickerPending > 0) {
+        S.pickerPending = 0;
+        openPicker();
+      }
+    }
+    function targetLands(id){
+      for (var i = 0; i < S.pending.length; i++) if (S.pending[i].id === id) return S.pending[i].landsAt;
+      return Infinity;
+    }
+    function takeEvent(id){
+      for (var i = 0; i < S.pending.length; i++) if (S.pending[i].id === id) return S.pending.splice(i, 1)[0];
+      return null;
+    }
+
+    function gladDamage(ev){
+      if (ev.kind === "flurry") {
+        var parts = [];
+        for (var i = 0; i < ev.hits; i++) parts.push(ev.dmg);
+        return { total: ev.dmg * ev.hits, parts: parts, note: "" };
+      }
+      if (ev.kind === "twin") {
+        return { total: ev.dmg + ev.second, parts: [ev.dmg, ev.second], note: "second fang bit harder" };
+      }
+      if (ev.kind === "chain") {
+        if (S.prevHit) return { total: ev.dmg + ev.bonus, parts: [ev.dmg + ev.bonus], note: "CHAIN BONUS +" + ev.bonus + "!" };
+        return { total: ev.dmg, parts: [ev.dmg], note: "" };
+      }
+      if (ev.kind === "momentum") {
+        var b = ev.perStreak * S.streak;
+        if (b > 0) return { total: ev.dmg + b, parts: [ev.dmg + b], note: "STREAK BONUS +" + b + "!" };
+        return { total: ev.dmg, parts: [ev.dmg], note: "" };
+      }
+      return { total: ev.dmg, parts: [ev.dmg], note: "" };
+    }
+
+    function applyEvent(ev){
+      if (ev.who === "glad") {
+        if (ev.restore > 0) {
+          S.gladStam = Math.min(cfg.glad.stamina, S.gladStam + ev.restore);
+          animateHit(ev, ["+" + ev.restore + " STAM"]);
+          setLastHit("You catch your breath — +" + ev.restore + " stamina back.");
+          logLine("Your " + ev.name + " lands — +" + ev.restore + " stamina back.", "good");
+          S.prevHit = false;
+        } else {
+          var res = gladDamage(ev);
+          S.wolfHp -= res.total;
+          S.streak++;
+          S.prevHit = true;
+          animateHit(ev, res.parts.map(function(p){ return "-" + p; }));
+          setLastHit("Your " + ev.name + " hits for " + res.total + " damage." + (res.note ? " " + res.note : ""));
+          logLine("Your " + ev.name + " lands — " + res.total + " damage to Wolf #" + S.wolfNum + "." + (res.note ? " (" + res.note + ")" : ""), "good");
+          if (S.wolfHp <= 0) wolfDies();
+        }
+      } else {
+        if (ev.restore > 0) {
+          S.wolfStam = Math.min(cfg.wolf.stamina, S.wolfStam + ev.restore);
+          animateHit(ev, ["+" + ev.restore + " STAM"]);
+          setLastHit("Wolf #" + S.wolfNum + " prowls and pants — it catches its breath.");
+          logLine("Wolf #" + S.wolfNum + "'s " + ev.name + " resolves — it catches its breath.", "");
+        } else {
+          S.gladHp -= ev.dmg;
+          if (S.streak > 0) logLine("Your streak breaks.", "");
+          S.streak = 0;
+          animateHit(ev, ["-" + ev.dmg]);
+          setLastHit("Wolf #" + S.wolfNum + "'s " + ev.name + " hits you for " + ev.dmg + " damage.");
+          logLine("Wolf #" + S.wolfNum + "'s " + ev.name + " lands — " + ev.dmg + " damage to you.", "bad");
+        }
+        if (S.gladHp <= 0) {
+          S.gladHp = 0;
+          S.over = true;
+          S.pending = [];
+          setLastHit("You go down. Anything you had in flight never lands.");
+          logLine("You go down. Anything you had in flight never lands.", "bad");
+          return;
+        }
+        if (!S.over) chooseWolfAttack();
+      }
+    }
+
+    function wolfDies(){
+      S.kills++;
+      logLine("Wolf #" + S.wolfNum + " is DOWN. The crowd roars. Another pads in…", "good");
+      setLastHit("Wolf #" + S.wolfNum + " is DOWN! The crowd roars.");
+      S.pending = S.pending.filter(function(e){ return e.who !== "wolf"; });
+      S.wolfNum++;
+      S.wolfHp = wolfMaxHp();
+      S.wolfStam = cfg.wolf.stamina;
+      if (S.kills === 1 || S.kills === 3) { S.pickerPending = 1; }
+      chooseWolfAttack();
+    }
+
+    /* ================= FX ================= */
+    function animateHit(ev, texts){
+      var glad = document.getElementById("gladFig");
+      var wolf = document.getElementById("wolfFig");
+      var attacker = ev.who === "glad" ? glad : wolf;
+      var target = ev.who === "glad" ? wolf : glad;
+      var lungeCls = ev.who === "glad" ? "lunge-r" : "lunge-l";
+      attacker.classList.remove("lunge-r", "lunge-l");
+      void attacker.offsetWidth;
+      attacker.classList.add(lungeCls);
+      target.classList.remove("hitshake");
+      void target.offsetWidth;
+      target.classList.add("hitshake");
+      texts.forEach(function(txt, i){
+        setTimeout(function(){
+          var f = document.createElement("div");
+          f.className = "floater";
+          f.textContent = txt;
+          f.style.color = txt.charAt(0) === "+" ? "#58b531" : (ev.who === "glad" ? "#ffb703" : "#ff5964");
+          f.style.left = (50 + (i - (texts.length - 1) / 2) * 16) + "%";
+          target.appendChild(f);
+          setTimeout(function(){ f.remove(); }, 1000);
+        }, i * 160);
+      });
+      setTimeout(function(){ attacker.classList.remove("lunge-r", "lunge-l"); target.classList.remove("hitshake"); }, 500);
+    }
+    function setLastHit(text){
+      var el = document.getElementById("lastHit");
+      el.textContent = text;
+      el.title = text;
+    }
+
+    /* ================= LOG ================= */
+    function logLine(text, cls){
+      var log = document.getElementById("log");
+      var d = document.createElement("div");
+      if (cls) d.className = cls;
+      d.textContent = text;
+      log.appendChild(d);
+      while (log.children.length > 60) log.removeChild(log.firstChild);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    /* ================= RENDER ================= */
+    function pipsHTML(n, cls){
+      var s = "";
+      for (var i = 0; i < n; i++) s += '<span class="' + cls + '"></span>';
+      return s;
+    }
+    function stamDotsHTML(cost){
+      /* Cost dots; the portion you cannot currently afford renders hollow. */
+      var total = stamPips(cost);
+      var have = stamPips(Math.min(S.gladStam, cost));
+      var s = "";
+      for (var i = 0; i < total; i++) s += '<span class="stampip' + (i < have ? "" : " off") + '"></span>';
+      return s;
+    }
+    function gainDotsHTML(amount){
+      /* Restore dots: all filled green — stamina you get back. */
+      var total = stamPips(amount);
+      var s = "";
+      for (var i = 0; i < total; i++) s += '<span class="stampip gain"></span>';
+      return s;
+    }
+    function gladEventFor(key){
+      for (var i = 0; i < S.pending.length; i++) {
+        if (S.pending[i].who === "glad" && S.pending[i].key === key) return S.pending[i];
+      }
+      return null;
+    }
+    function flightFill(ev){
+      if (!ev) return null;
+      var elapsed = Math.max(0, Math.min(ev.chunks, S.chunk - ev.chosenAt));
+      return { pct: Math.round(elapsed / ev.chunks * 100), remain: Math.max(0, ev.landsAt - S.chunk) };
+    }
+    function renderAll(landingId){
+      renderStats();
+      renderBanner();
+      renderQueue(landingId);
+      renderButtons();
+    }
+    function hpColor(ratio){
+      if (ratio > 0.55) return "#58b531";   /* healthy green */
+      if (ratio > 0.3) return "#ffb703";    /* hurt amber */
+      return "#e5383b";                     /* danger red */
+    }
+    function renderStats(){
+      var gladRatio = Math.max(0, S.gladHp / cfg.glad.hp);
+      var ghp = document.getElementById("gladHpFill");
+      ghp.style.width = gladRatio * 100 + "%";
+      ghp.style.backgroundColor = hpColor(gladRatio);
+      var pipsEl = document.getElementById("gladStamPips");
+      var on = Math.round(Math.max(0, S.gladStam) / cfg.glad.stamina * 10);
+      var ps = "";
+      for (var i = 0; i < 10; i++) ps += '<span class="spip' + (i < on ? "" : " off") + '"></span>';
+      pipsEl.innerHTML = ps;
+      pipsEl.title = "Stamina " + Math.floor(S.gladStam) + " / " + cfg.glad.stamina;
+      var wolfRatio = Math.max(0, S.wolfHp / wolfMaxHp());
+      var whp = document.getElementById("wolfHpFill");
+      whp.style.width = wolfRatio * 100 + "%";
+      whp.style.backgroundColor = hpColor(wolfRatio);
+      document.getElementById("wolfName").textContent = "WOLF #" + S.wolfNum;
+      document.getElementById("killsVal").textContent = S.kills;
+      document.getElementById("streakVal").textContent = S.streak;
+      document.getElementById("streakLine").textContent = S.streak >= 2 ? "STREAK x" + S.streak + " — COMBO HITS HARDER" : "";
+      var wpipsEl = document.getElementById("wolfStamPips");
+      var won = Math.round(Math.max(0, S.wolfStam) / cfg.wolf.stamina * 10);
+      var wps = "";
+      for (var k = 0; k < 10; k++) wps += '<span class="spip' + (k < won ? "" : " off") + '"></span>';
+      wpipsEl.innerHTML = wps;
+      wpipsEl.title = "Wolf stamina " + Math.floor(S.wolfStam) + " / " + cfg.wolf.stamina;
+    }
+    function renderBanner(){
+      var b = document.getElementById("turnBanner");
+      if (S.over) { b.className = "turn-banner over"; b.textContent = "DOWN — the pit claims another."; }
+      else if (S.busy) { b.className = "turn-banner flow"; b.textContent = "TIME FLOWS — hits land in order…"; }
+      else { b.className = "turn-banner decide"; b.textContent = "YOUR MOVE — pick an attack."; }
+    }
+    function renderQueue(landingId){
+      var q = document.getElementById("queue");
+      q.innerHTML = "";
+      var empty = document.getElementById("queueEmpty");
+      sortPending();
+      if (!S.pending.length) { empty.style.display = "block"; q.style.display = "none"; return; }
+      empty.style.display = "none";
+      q.style.display = "flex";
+      S.pending.forEach(function(e){
+        var remain = Math.max(0, e.landsAt - S.chunk);
+        var elapsed = Math.max(0, e.chunks - remain);
+        var chip = document.createElement("span");
+        chip.className = "chip " + e.who + (e.id === landingId ? " landing" : "");
+        var pips = "";
+        for (var i = 0; i < e.chunks; i++) pips += '<span class="pip' + (i < elapsed ? " spent" : "") + '"></span>';
+        chip.innerHTML = '<span class="cwho">' + (e.who === "glad" ? "YOU" : "WOLF") + "</span><span>" + e.name + '</span><span class="pips">' + pips + "</span>";
+        chip.title = e.name + " — lands in " + remain + (remain === 1 ? " chunk" : " chunks");
+        q.appendChild(chip);
+      });
+    }
+    function dmgLabel(atk){
+      if (atk.kind === "flurry") return atk.dmg + "×" + atk.hits;
+      if (atk.kind === "twin") return atk.dmg + "+" + atk.second;
+      if (atk.kind === "chain") return atk.dmg + "(+" + atk.bonus + ")";
+      if (atk.kind === "momentum") return atk.dmg + "(+" + atk.perStreak + "/★)";
+      if (atk.restore > 0) return "+" + atk.restore + " ST";
+      return "" + atk.dmg;
+    }
+    function dmgTitle(atk){
+      if (atk.kind === "flurry") return "Damage " + atk.dmg + " x" + atk.hits + " hits";
+      if (atk.kind === "twin") return "Damage " + atk.dmg + " + " + atk.second;
+      if (atk.kind === "chain") return "Damage " + atk.dmg + ", +" + atk.bonus + " if your last attack hit";
+      if (atk.kind === "momentum") return "Damage " + atk.dmg + ", +" + atk.perStreak + " per hit in your streak";
+      if (atk.restore > 0) return "Restores " + atk.restore + " stamina";
+      return "Damage " + atk.dmg;
+    }
+    function buildLean(){
+      var counts = { QUICK: 0, HEAVY: 0, COMBO: 0 };
+      S.loadout.forEach(function(k){ var t = cfg.attacks[k].tag; if (counts[t] !== undefined) counts[t]++; });
+      var best = null, bestN = 0, tie = false;
+      Object.keys(counts).forEach(function(t){
+        if (counts[t] > bestN) { best = t; bestN = counts[t]; tie = false; }
+        else if (counts[t] === bestN && counts[t] > 0) { tie = true; }
+      });
+      if (!best || bestN === 0) return "";
+      if (tie) return "BUILD: MIXED";
+      return "BUILD LEANS " + best;
+    }
+    function renderButtons(){
+      var wrap = document.getElementById("attacks");
+      wrap.innerHTML = "";
+      S.loadout.forEach(function(key){
+        var atk = cfg.attacks[key];
+        var b = document.createElement("button");
+        var chunks = effChunks(atk.chunks, cfg.glad.speed);
+        var cantAfford = S.gladStam < atk.stam;
+        var ev = gladEventFor(key);
+        var fl = flightFill(ev);
+        b.className = "atk c-" + atk.tag.toLowerCase() + (cantAfford ? " unafford" : "") + (ev ? " inflight" : "");
+        b.id = "atk-" + key;
+        b.disabled = S.busy || S.over || cantAfford;
+        b.title = atk.name + " — " + atk.tag + ", " + chunks + (chunks === 1 ? " chunk" : " chunks") + ", " + atk.stam + " stamina, " + dmgTitle(atk) + (cantAfford ? ". Not enough stamina." : "");
+        b.innerHTML =
+          (fl ? '<span class="fillbar" style="width:' + fl.pct + '%"></span><span class="fillnum">' + fl.remain + ' LEFT</span>' : "") +
+          '<span class="a-inner"><span class="a-top"><span class="aname">' + atk.name + ' <span class="atag">' + atk.tag + '</span></span>' +
+          '<span class="admg">' + dmgLabel(atk) + "</span></span>" +
+          '<span class="a-meta"><span class="mitem"><span class="lab">TIME</span><span class="pips">' + pipsHTML(chunks, "chunkpip") + '</span></span>' +
+          '<span class="mitem"><span class="lab">STAM</span><span class="pips">' + stamDotsHTML(atk.stam) + "</span></span></span></span>";
+        b.addEventListener("click", function(){ chooseAttack(key); });
+        wrap.appendChild(b);
+      });
+      var breath = cfg.attacks.breath;
+      var bb = document.getElementById("breathBtn");
+      var bev = gladEventFor("breath");
+      var bfl = flightFill(bev);
+      bb.disabled = S.busy || S.over;
+      bb.className = "breath-btn" + (bev ? " inflight" : "");
+      document.getElementById("breathFill").style.width = bfl ? bfl.pct + "%" : "0%";
+      document.getElementById("breathFillNum").textContent = bfl ? bfl.remain + " LEFT" : "";
+      document.getElementById("breathSub").innerHTML =
+        '<span class="pips">' + pipsHTML(effChunks(breath.chunks, cfg.glad.speed), "chunkpip") + '</span><span class="pips">' + gainDotsHTML(breath.restore) + "</span>";
+      bb.title = "Catch Breath — " + effChunks(breath.chunks, cfg.glad.speed) + " chunks, restores " + breath.restore + " stamina. Always available.";
+      document.getElementById("buildLine").textContent = buildLean();
+    }
+
+    /* ================= PICKER: random 2, pick 1, replace 1 ================= */
+    var TAG_ICONS = {
+      QUICK: '<svg viewBox="0 0 24 24" fill="none" stroke="#171208" stroke-width="3" stroke-linecap="square"><path d="M3 6h11M3 12h14M3 18h9"/></svg>',
+      HEAVY: '<svg viewBox="0 0 24 24" fill="#171208"><rect x="5" y="5" width="14" height="14"/></svg>',
+      COMBO: '<svg viewBox="0 0 24 24" fill="none" stroke="#171208" stroke-width="3"><circle cx="8" cy="12" r="4.5"/><circle cx="16" cy="12" r="4.5"/></svg>',
+      UTILITY: '<svg viewBox="0 0 24 24" fill="none" stroke="#171208" stroke-width="3" stroke-linecap="square"><path d="M4 14c3-5 13-5 16 0M4 19c3-5 13-5 16 0"/></svg>'
+    };
+    function attackCardInner(key){
+      var atk = cfg.attacks[key];
+      var chunks = effChunks(atk.chunks, cfg.glad.speed);
+      return '<span class="pname" style="display:flex; align-items:center; gap:6px;"><span class="tag-ico">' + (TAG_ICONS[atk.tag] || "") + "</span>" + atk.name + "</span>" +
+        '<span class="pmeta"><span class="pips">' + pipsHTML(chunks, "chunkpip") + '</span><span class="pdmg">' + dmgLabel(atk) + '</span><span class="pips">' + stamDotsHTML(atk.stam) + "</span></span>";
+    }
+    function candidateRow(key){
+      var atk = cfg.attacks[key];
+      var row = document.createElement("button");
+      row.className = "pick-row c-" + atk.tag.toLowerCase() +
+        (S.offerSelected === key ? " chosen" : "") +
+        (S.offerSelected && S.offerSelected !== key ? " dim" : "");
+      row.title = atk.name + " — " + atk.tag + ". " + atk.note;
+      row.innerHTML = attackCardInner(key);
+      row.addEventListener("click", function(){
+        S.offerSelected = (S.offerSelected === key) ? null : key;
+        renderPicker();
+      });
+      return row;
+    }
+    function replaceRow(key){
+      var atk = cfg.attacks[key];
+      var row = document.createElement("button");
+      row.className = "pick-row c-" + atk.tag.toLowerCase() + " in" + (S.offerSelected ? " target" : " dim");
+      row.title = S.offerSelected
+        ? "Replace " + atk.name + " with " + cfg.attacks[S.offerSelected].name
+        : atk.name + " — " + atk.tag + ". " + atk.note;
+      row.innerHTML = attackCardInner(key) +
+        (S.offerSelected ? '<span class="pstate">&#8646; SWAP IN ' + cfg.attacks[S.offerSelected].name.toUpperCase() + "</span>" : "");
+      row.addEventListener("click", function(){
+        if (!S.offerSelected) return;
+        var idx = S.loadout.indexOf(key);
+        if (idx < 0) return;
+        var incoming = S.offerSelected;
+        S.loadout[idx] = incoming;
+        logLine(cfg.attacks[incoming].name + " replaces " + atk.name + ".", "good");
+        S.offerCandidates = [];
+        S.offerSelected = null;
+        document.getElementById("pickerOverlay").classList.add("hidden");
+        renderAll();
+      });
+      return row;
+    }
+    function renderPicker(){
+      var pool = document.getElementById("pickerPool");
+      pool.innerHTML = "";
+      S.offerCandidates.forEach(function(k){ pool.appendChild(candidateRow(k)); });
+      var lo = document.getElementById("pickerLoadout");
+      lo.innerHTML = "";
+      S.loadout.forEach(function(k){ lo.appendChild(replaceRow(k)); });
+      document.getElementById("stepDot1").className = "stepdot" + (!S.offerSelected ? " on" : "");
+      document.getElementById("stepDot2").className = "stepdot" + (S.offerSelected ? " on" : "");
+      document.getElementById("pickerBuild").textContent = buildLean();
+    }
+    function drawOffer(){
+      var unowned = POOL.filter(function(k){ return S.loadout.indexOf(k) < 0; });
+      for (var i = unowned.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = unowned[i]; unowned[i] = unowned[j]; unowned[j] = t;
+      }
+      return unowned.slice(0, 2);
+    }
+    function openPicker(){
+      S.offerCandidates = drawOffer();
+      S.offerSelected = null;
+      if (S.offerCandidates.length < 1) return; /* owns everything — no offer */
+      document.getElementById("pickerTitle").textContent = "NEW ATTACK!";
+      renderPicker();
+      document.getElementById("pickerOverlay").classList.remove("hidden");
+    }
+
+    /* ================= GAME OVER ================= */
+    function showGameOver(){
+      document.getElementById("overKills").textContent = S.kills;
+      document.getElementById("overChunks").textContent = S.chunk;
+      document.getElementById("overOverlay").classList.remove("hidden");
+    }
+
+    /* ================= TUNING PANEL ================= */
+    var TUNE_GROUPS = [
+      { title: "GLADIATOR", rows: [
+        { path: "glad.hp", label: "Max HP" },
+        { path: "glad.stamina", label: "Max Stamina" },
+        { path: "glad.speed", label: "Speed (chunks ÷ this)", step: "0.25" },
+        { path: "glad.regen", label: "Stamina regen / chunk", step: "0.5" }
+      ]},
+      { title: "YOUR ATTACKS (POOL + BREATH)", attackSet: "attacks" },
+      { title: "WOLF", rows: [
+        { path: "wolf.hp", label: "Base HP" },
+        { path: "wolf.hpGrowth", label: "HP growth / wolf" },
+        { path: "wolf.stamina", label: "Max Stamina" },
+        { path: "wolf.speed", label: "Speed (chunks ÷ this)", step: "0.25" },
+        { path: "wolf.regen", label: "Stamina regen / chunk", step: "0.5" },
+        { path: "wolf.dmgGrowth", label: "Damage growth / wolf" }
+      ]},
+      { title: "WOLF ATTACKS", attackSet: "wolfAttacks" }
+    ];
+    function getPath(path){
+      var parts = path.split("."); var o = cfg;
+      for (var i = 0; i < parts.length; i++) o = o[parts[i]];
+      return o;
+    }
+    function setPath(path, val){
+      var parts = path.split("."); var o = cfg;
+      for (var i = 0; i < parts.length - 1; i++) o = o[parts[i]];
+      o[parts[parts.length - 1]] = val;
+    }
+    function tuneInput(path, step){
+      var inp = document.createElement("input");
+      inp.type = "number";
+      inp.min = "0";
+      inp.step = step || "1";
+      inp.value = getPath(path);
+      inp.setAttribute("data-path", path);
+      inp.addEventListener("input", function(){
+        var v = parseFloat(inp.value);
+        if (isNaN(v) || v < 0) return;
+        setPath(path, v);
+        if (S) {
+          S.gladHp = Math.min(S.gladHp, cfg.glad.hp);
+          S.gladStam = Math.min(S.gladStam, cfg.glad.stamina);
+          S.wolfStam = Math.min(S.wolfStam, cfg.wolf.stamina);
+          renderAll();
+        }
+      });
+      return inp;
+    }
+    function tuneField(path, label, step, aria){
+      var lab = document.createElement("label");
+      lab.appendChild(document.createTextNode(label));
+      var inp = tuneInput(path, step);
+      inp.setAttribute("aria-label", aria || label);
+      lab.appendChild(inp);
+      return lab;
+    }
+    function buildTuning(){
+      var body = document.getElementById("tuneBody");
+      body.innerHTML = "";
+      TUNE_GROUPS.forEach(function(g){
+        var h = document.createElement("div");
+        h.className = "tune-group";
+        h.textContent = g.title;
+        body.appendChild(h);
+        if (g.rows) {
+          g.rows.forEach(function(r){
+            var row = document.createElement("div");
+            row.className = "tune-row";
+            var nm = document.createElement("span");
+            nm.className = "tname";
+            nm.textContent = r.label;
+            row.appendChild(nm);
+            row.appendChild(tuneField(r.path, "VALUE", r.step, r.label));
+            body.appendChild(row);
+          });
+        }
+        if (g.attackSet) {
+          Object.keys(cfg[g.attackSet]).forEach(function(key){
+            var atk = cfg[g.attackSet][key];
+            var row = document.createElement("div");
+            row.className = "tune-row";
+            var nm = document.createElement("span");
+            nm.className = "tname";
+            nm.textContent = atk.name;
+            row.appendChild(nm);
+            row.appendChild(tuneField(g.attackSet + "." + key + ".chunks", "CHUNKS", null, atk.name + " chunk cost"));
+            row.appendChild(tuneField(g.attackSet + "." + key + ".stam", "STAMINA", null, atk.name + " stamina cost"));
+            row.appendChild(tuneField(g.attackSet + "." + key + ".dmg", "DAMAGE", null, atk.name + " damage"));
+            row.appendChild(tuneField(g.attackSet + "." + key + ".restore", "RESTORE", null, atk.name + " stamina restore"));
+            body.appendChild(row);
+          });
+        }
+      });
+    }
+
+    /* ================= ONBOARDING SPOTLIGHT ================= */
+    var SPOT_STEPS = [
+      { sel: "#attacksGroup", text: "You carry exactly two attacks. Black bars = chunks of time until the hit lands: the Dagger Jab takes 1, the Axe takes 4. Blue dots = stamina it burns. Down wolves and you'll be offered new attacks to swap in." },
+      { sel: "#queueGroup", text: "NEXT UP shows every hit already in flight — yours and the wolf's — as chips. The squares empty chunk by chunk. Nothing moves until you pick." },
+      { sel: "#stamBarWrap", text: "Stamina pips, right under your health. Fast attacks burn lots, heavy ones barely any. CATCH BREATH tops it up — but the wolf keeps swinging while you rest." }
+    ];
+    var spotIdx = 0;
+    function showSpot(i){
+      var block = document.getElementById("spotBlock");
+      var frame = document.getElementById("spotFrame");
+      var tip = document.getElementById("spotTip");
+      if (i >= SPOT_STEPS.length) {
+        block.style.display = "none"; frame.style.display = "none"; tip.style.display = "none";
+        return;
+      }
+      spotIdx = i;
+      var step = SPOT_STEPS[i];
+      var el = document.querySelector(step.sel);
+      if (!el) { showSpot(i + 1); return; }
+      requestAnimationFrame(function(){
+        var r = el.getBoundingClientRect();
+        block.style.display = "block";
+        frame.style.display = "block";
+        frame.style.left = (r.left - 6) + "px";
+        frame.style.top = (r.top - 6) + "px";
+        frame.style.width = (r.width + 12) + "px";
+        frame.style.height = (r.height + 12) + "px";
+        document.getElementById("spotText").textContent = step.text;
+        document.getElementById("spotNext").textContent = i === SPOT_STEPS.length - 1 ? "FIGHT!" : "NEXT";
+        tip.style.display = "block";
+        var tipH = tip.offsetHeight;
+        var below = r.bottom + 14;
+        var top = (below + tipH < window.innerHeight) ? below : Math.max(10, r.top - tipH - 14);
+        tip.style.top = top + "px";
+        tip.style.left = Math.min(window.innerWidth - tip.offsetWidth - 10, Math.max(10, r.left)) + "px";
+      });
+    }
+
+    /* ================= WIRING ================= */
+    document.getElementById("gearBtn").addEventListener("click", function(){
+      document.getElementById("tuningPanel").classList.add("open");
+    });
+    document.getElementById("logBtn").addEventListener("click", function(){
+      document.getElementById("logPanel").classList.add("open");
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-close]"), function(btn){
+      btn.addEventListener("click", function(){
+        document.getElementById(btn.getAttribute("data-close")).classList.remove("open");
+      });
+    });
+    document.getElementById("resetBtn").addEventListener("click", function(){
+      cfg = clone(DEFAULTS);
+      buildTuning();
+      if (S) {
+        S.loadout = S.loadout.filter(function(k){ return cfg.attacks[k]; });
+        if (!S.loadout.length) S.loadout = ["jab", "axe"];
+        S.gladHp = Math.min(S.gladHp, cfg.glad.hp);
+        S.gladStam = Math.min(S.gladStam, cfg.glad.stamina);
+        renderAll();
+      }
+      logLine("Tuning reset to defaults.", "");
+    });
+    document.getElementById("startBtn").addEventListener("click", function(){
+      document.getElementById("introOverlay").classList.add("hidden");
+      showSpot(0);
+    });
+    document.getElementById("spotNext").addEventListener("click", function(){ showSpot(spotIdx + 1); });
+    document.getElementById("spotSkip").addEventListener("click", function(){ showSpot(SPOT_STEPS.length); });
+    document.getElementById("breathBtn").addEventListener("click", function(){ chooseAttack("breath"); });
+    document.getElementById("pickerDone").addEventListener("click", function(){
+      S.offerCandidates = [];
+      S.offerSelected = null;
+      document.getElementById("pickerOverlay").classList.add("hidden");
+      renderAll();
+    });
+    document.getElementById("againBtn").addEventListener("click", function(){ newGame(); });
+    window.addEventListener("resize", function(){
+      if (document.getElementById("spotFrame").style.display === "block") showSpot(spotIdx);
+    });
+
+    buildTuning();
+    newGame();
+    </script>
+  </body>
+</html>

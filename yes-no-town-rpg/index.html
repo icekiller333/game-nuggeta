@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>Yes/No Town — Millbrook</title>
+<style>
+:root{
+  --ink:#14100c; --paper:#fff6e3; --card:#fffdf6;
+  --sun:#ffd23f; --coral:#ff6b4a; --teal:#2ec4b6; --sky:#7bd3f7;
+  --pink:#ff9fb2; --grape:#9b5de5; --leaf:#7ac74f; --red:#e63946;
+  --bg:#ffe9c9; --bg2:#ffd9a0;
+  --shadow:6px 6px 0 var(--ink);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#241a2e; --bg2:#171021; --paper:#2e2140; --card:#352a4d; --ink:#fdf3d8; --shadow:6px 6px 0 #000; }
+}
+/* ---------- chapter light: the day darkens as it turns ---------- */
+body[data-ch="MIDDAY"]{ --bg:#ffe0a1; --bg2:#ffb877; }
+body[data-ch="DUSK"]{ --bg:#dd8a5c; --bg2:#7c4a6d; }
+body[data-ch="THE NIGHT"]{ --bg:#2a1e3e; --bg2:#120b20; }
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:"Avenir Next","Trebuchet MS",Verdana,sans-serif;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255,210,63,.35) 0 60px, transparent 61px),
+    radial-gradient(circle at 85% 80%, rgba(46,196,182,.30) 0 80px, transparent 81px),
+    linear-gradient(160deg, var(--bg), var(--bg2));
+  color:var(--ink); min-height:100vh; min-height:100dvh;
+  display:flex; flex-direction:column; align-items:center;
+  overflow-x:hidden;
+}
+button{font-family:inherit; cursor:pointer;}
+/* ---------- top HUD ---------- */
+/* ---------- slim top strip: chapter + journal only ---------- */
+#topstrip{ width:min(480px,100%); padding:10px 12px 2px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+#chapname{ font-weight:900; font-size:14px; letter-spacing:1px; background:var(--ink); color:var(--paper); padding:5px 12px; }
+#journalBtn{ font-weight:900; font-size:14px; letter-spacing:.5px; background:var(--sun); color:#14100c;
+  border:3px solid var(--ink); box-shadow:3px 3px 0 var(--ink); padding:5px 12px; }
+#journalBtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+/* ---------- journal ---------- */
+.jrow{ display:flex; align-items:center; gap:8px; padding:6px 0; font-weight:700; font-size:15px;
+  border-bottom:2px dashed color-mix(in srgb, currentColor 30%, transparent); }
+.jrow .jname{ flex:1; }
+.jrow .jst{ font-size:11px; font-weight:900; border:2px solid currentColor; padding:1px 6px; white-space:nowrap; }
+.jrow.done .jst{ background:var(--sun); color:#14100c; }
+.jrow.gone{ opacity:.5; }
+#jfinale{ background:var(--ink); color:var(--sun); font-weight:900; padding:9px 11px; font-size:14px; line-height:1.35; margin:10px 0 4px; }
+.jpock{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+.jlabel{ font-weight:900; font-size:13px; letter-spacing:.5px; margin-top:14px; }
+.slot{ width:38px; height:38px; border:3px solid var(--ink); background:var(--paper);
+  display:flex; align-items:center; justify-content:center; box-shadow:3px 3px 0 var(--ink); position:relative;}
+.slot.empty{ opacity:.28; box-shadow:none; }
+.slot svg{ width:26px; height:26px; }
+.slot .tip{ position:absolute; top:42px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--paper);
+  font-size:10px; font-weight:800; padding:2px 6px; white-space:nowrap; display:none; z-index:5;}
+.slot:hover .tip,.slot:active .tip{ display:block; }
+/* ---------- stage ---------- */
+#stage{ width:min(480px,100%); flex:1; display:flex; flex-direction:column; align-items:center;
+  padding:8px 14px 0; position:relative; }
+#cardwrap{ width:100%; max-width:400px; perspective:900px; touch-action:pan-y; }
+#card{
+  background:var(--card); border:4px solid var(--ink); box-shadow:8px 8px 0 var(--ink);
+  padding:0; user-select:none; -webkit-user-select:none; position:relative;
+  will-change:transform; touch-action:none;
+}
+#card.noanim{ transition:none !important; }
+#card.settle{ transition:transform .18s ease-out; }
+#artbox{ border-bottom:4px solid var(--ink); height:238px; overflow:hidden; position:relative; }
+#artbox svg{ width:100%; height:100%; display:block; }
+#speaker{ position:absolute; left:10px; bottom:8px; background:var(--sun); border:3px solid var(--ink);
+  font-weight:900; font-size:14px; padding:3px 10px; box-shadow:3px 3px 0 var(--ink); }
+#questtag{ position:absolute; right:10px; top:8px; background:var(--coral); color:#fff; border:3px solid var(--ink);
+  font-weight:900; font-size:11px; padding:3px 8px; box-shadow:3px 3px 0 var(--ink); max-width:60%; text-align:center;}
+.peek{ position:absolute; top:12px; font-weight:900; font-size:30px; padding:2px 14px;
+  border:4px solid var(--ink); opacity:0; pointer-events:none; z-index:4; letter-spacing:1px;}
+#peekYes{ left:12px; background:var(--teal); color:var(--ink); transform:rotate(-8deg); }
+#peekNo{ right:12px; background:var(--coral); color:#fff; transform:rotate(8deg); }
+#cardtext{ padding:16px 18px 18px; font-size:19px; line-height:1.38; font-weight:600; min-height:104px; }
+#cardtext .small{ font-size:15px; }
+#stamp{ position:absolute; left:50%; top:38%; transform:translate(-50%,-50%) rotate(-10deg);
+  font-weight:900; font-size:24px; border:5px solid var(--red); color:var(--red);
+  padding:4px 14px; background:rgba(255,253,246,.92); display:none; z-index:6; text-align:center;}
+/* ---------- controls ---------- */
+#controls{ width:min(480px,100%); padding:14px 16px calc(16px + env(safe-area-inset-bottom));
+  display:flex; gap:14px; justify-content:center; align-items:stretch;}
+.ynbtn{ flex:1; max-width:190px; border:4px solid var(--ink); font-weight:900; font-size:24px;
+  padding:14px 0; box-shadow:5px 5px 0 var(--ink); letter-spacing:1px; }
+.ynbtn:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 var(--ink); }
+#btnNo{ background:var(--coral); color:#fff; }
+#btnYes{ background:var(--teal); color:var(--ink); }
+#btnNext{ flex:1; max-width:300px; border:4px solid var(--ink); font-weight:900; font-size:21px;
+  padding:14px 0; box-shadow:5px 5px 0 var(--ink); background:var(--sun); color:#14100c; display:none;}
+#btnNext:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 var(--ink); }
+/* ---------- overlays ---------- */
+.overlay{ position:fixed; inset:0; background:rgba(10,6,16,.72); display:none;
+  align-items:center; justify-content:center; z-index:50; padding:18px;}
+.overlay.show{ display:flex; }
+.sheet{ background:var(--paper); border:4px solid var(--ink); box-shadow:8px 8px 0 #000;
+  max-width:420px; width:100%; padding:22px; color:var(--ink); max-height:88dvh; overflow:auto;}
+.sheet h2{ margin:0 0 8px; font-size:26px; line-height:1.1; }
+.sheet p{ font-size:17px; line-height:1.45; font-weight:600; margin:6px 0; }
+.sheet .bigbtn{ width:100%; margin-top:14px; border:4px solid var(--ink); background:var(--sun);
+  color:#14100c; font-weight:900; font-size:20px; padding:13px 0; box-shadow:5px 5px 0 var(--ink);}
+.sheet .bigbtn:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 var(--ink);}
+.sheet .ghostbtn{ width:100%; margin-top:10px; border:3px solid var(--ink); background:var(--card);
+  color:var(--ink); font-weight:900; font-size:16px; padding:10px 0; }
+#endart{ height:180px; border:3px solid var(--ink); margin-bottom:12px; overflow:hidden;}
+#endart svg{ width:100%; height:100%; display:block; }
+.spot{ outline:5px solid var(--red) !important; outline-offset:3px; position:relative; z-index:60; }
+#coach{ position:fixed; left:50%; transform:translateX(-50%); bottom:110px; z-index:70;
+  width:min(420px,92vw); background:var(--ink); color:var(--paper); border:3px solid var(--paper);
+  padding:14px 16px; display:none; box-shadow:6px 6px 0 rgba(0,0,0,.5);}
+#coach.show{ display:block; }
+#coach p{ margin:0 0 10px; font-size:16px; font-weight:700; line-height:1.4;}
+#coach button{ background:var(--sun); color:#14100c; border:3px solid var(--paper); font-weight:900;
+  font-size:16px; padding:8px 22px; float:right;}
+#toast{ position:fixed; top:14px; left:50%; transform:translate(-50%,-90px); z-index:80;
+  background:var(--ink); color:var(--sun); border:3px solid var(--sun); font-weight:900;
+  font-size:16px; padding:10px 18px; transition:transform .3s; max-width:92vw; text-align:center;}
+#toast.show{ transform:translate(-50%,0); }
+@media (max-width:380px){ #cardtext{ font-size:17px; } #artbox{ height:208px; } }
+@media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+
+<div id="topstrip">
+  <span id="chapname">CHAPTER · PROLOGUE</span>
+  <button id="journalBtn" aria-label="Open journal">JOURNAL ▤</button>
+</div>
+
+<div id="stage">
+  <div id="cardwrap">
+    <div id="card">
+      <div id="artbox">
+        <div id="art"></div>
+        <div id="questtag" style="display:none"></div>
+        <div id="speaker" style="display:none"></div>
+        <div class="peek" id="peekYes">YES</div>
+        <div class="peek" id="peekNo">NO</div>
+        <div id="stamp"></div>
+      </div>
+      <div id="cardtext"></div>
+    </div>
+  </div>
+</div>
+
+<div id="controls">
+  <button class="ynbtn" id="btnNo" aria-label="No">✕ NO</button>
+  <button id="btnNext">NEXT ▸</button>
+  <button class="ynbtn" id="btnYes" aria-label="Yes">YES ✓</button>
+</div>
+
+<div id="coach"><p id="coachtext"></p><button id="coachbtn">NEXT</button></div>
+<div id="toast"></div>
+
+<div class="overlay" id="journalOverlay">
+  <div class="sheet">
+    <h2>JOURNAL</h2>
+    <div id="jfinale"></div>
+    <div class="jlabel">THE TOWN'S QUESTS</div>
+    <div id="jquests"></div>
+    <div class="jlabel">YOUR POCKETS</div>
+    <div class="jpock" id="jpockets"></div>
+    <button class="bigbtn" id="btnJournalClose">BACK TO THE DAY</button>
+  </div>
+</div>
+
+<div class="overlay" id="startOverlay">
+  <div class="sheet">
+    <h2>MILLBROOK</h2>
+    <p>One town. One day. One bell that should not be able to ring.</p>
+    <button class="bigbtn" id="btnStart">BEGIN · DAWN</button>
+  </div>
+</div>
+
+<div class="overlay" id="endOverlay">
+  <div class="sheet">
+    <div id="endart"></div>
+    <h2 id="endtitle"></h2>
+    <p id="endtext"></p>
+    <p id="endstats" style="font-size:14px;"></p>
+    <button class="bigbtn" id="btnRestart">PLAY AGAIN</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   YES/NO TOWN — MILLBROOK. A swipe-card RPG.
+   State = items + flags only. Endings designed first.
+   ============================================================ */
+
+/* ---------- PORTRAITS: 8 speaking characters, drawn distinct ---------- */
+function P(name){
+  var S = {
+  mabel:'<svg viewBox="0 0 200 200" role="img" aria-label="Mabel the baker"><rect width="200" height="200" fill="#ffd9a0"/><circle cx="100" cy="205" r="72" fill="#e63946"/><rect x="52" y="148" width="96" height="14" fill="#fff" opacity=".85"/><circle cx="100" cy="98" r="56" fill="#ffcf9e"/><circle cx="100" cy="46" r="24" fill="#8a5a2b"/><circle cx="78" cy="52" r="15" fill="#8a5a2b"/><circle cx="124" cy="52" r="15" fill="#8a5a2b"/><circle cx="76" cy="96" r="6" fill="#14100c"/><circle cx="124" cy="96" r="6" fill="#14100c"/><ellipse cx="66" cy="114" rx="11" ry="7" fill="#ff9fb2"/><ellipse cx="134" cy="114" rx="11" ry="7" fill="#ff9fb2"/><path d="M82 122 Q100 136 118 122" stroke="#14100c" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="58" cy="76" r="5" fill="#fff"/><circle cx="140" cy="70" r="4" fill="#fff"/><circle cx="100" cy="60" r="4" fill="#fff"/><path d="M70 158 L130 158 L122 200 L78 200 Z" fill="#fff6e3"/><rect x="86" y="168" width="28" height="20" fill="#ffd23f" stroke="#14100c" stroke-width="3"/></svg>',
+  garrick:'<svg viewBox="0 0 200 200" role="img" aria-label="Garrick the guard captain"><rect width="200" height="200" fill="#7bd3f7"/><rect x="168" y="20" width="7" height="150" fill="#8a8f98" stroke="#14100c" stroke-width="3"/><path d="M160 20 L182 20 L171 48 Z" fill="#c0c6ce" stroke="#14100c" stroke-width="3"/><path d="M40 200 L56 128 L144 128 L160 200 Z" fill="#2456c8"/><rect x="88" y="140" width="24" height="60" fill="#173a8a"/><path d="M62 96 L100 62 L138 96 L138 118 L62 118 Z" fill="#ffd9a0"/><rect x="60" y="88" width="80" height="14" fill="#5b6470"/><circle cx="84" cy="118" r="5" fill="#14100c"/><circle cx="118" cy="118" r="5" fill="#14100c"/><path d="M72 106 L94 100" stroke="#14100c" stroke-width="5" stroke-linecap="round"/><path d="M108 100 L130 106" stroke="#14100c" stroke-width="5" stroke-linecap="round"/><path d="M118 76 L106 96" stroke="#e63946" stroke-width="4" stroke-linecap="round"/><path d="M84 140 L116 140" stroke="#14100c" stroke-width="5" stroke-linecap="round"/><rect x="90" y="52" width="20" height="12" fill="#ffd23f" stroke="#14100c" stroke-width="3"/></svg>',
+  fen:'<svg viewBox="0 0 200 200" role="img" aria-label="Old Fen the ferryman"><rect width="200" height="200" fill="#2e6f6a"/><path d="M0 168 Q50 156 100 168 T200 168 L200 200 L0 200 Z" fill="#17423f"/><path d="M118 200 L132 128 L168 128 L178 200 Z" fill="#3f6212"/><rect x="146" y="104" width="20" height="26" fill="#ffd23f" stroke="#14100c" stroke-width="3"/><circle cx="156" cy="98" r="6" fill="#14100c"/><circle cx="88" cy="94" r="50" fill="#e8b98a"/><path d="M40 88 Q44 40 92 38 Q132 40 138 82 L124 84 Q120 56 90 54 Q58 56 54 86 Z" fill="#5c6670"/><circle cx="70" cy="94" r="13" fill="#14100c"/><text x="70" y="101" font-size="15" text-anchor="middle" fill="#ffd23f" font-weight="900">?</text><circle cx="112" cy="94" r="6" fill="#14100c"/><path d="M58 140 Q88 168 122 138 L118 168 Q88 184 64 166 Z" fill="#e8e4da"/><path d="M78 122 Q90 128 100 122" stroke="#14100c" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M30 200 L44 150 L74 150 L84 200 Z" fill="#3f6212"/></svg>',
+  pell:'<svg viewBox="0 0 200 200" role="img" aria-label="Sister Pell the bell-ringer"><rect width="200" height="200" fill="#c9ced6"/><path d="M52 200 L64 132 L136 132 L148 200 Z" fill="#6b7280"/><rect x="94" y="140" width="12" height="34" fill="#4b5563"/><circle cx="100" cy="88" r="46" fill="#f2c79b"/><path d="M56 74 Q100 30 144 74 Q144 52 100 48 Q56 52 56 74" fill="#9aa1ab"/><circle cx="82" cy="88" r="5" fill="#14100c"/><circle cx="118" cy="88" r="5" fill="#14100c"/><ellipse cx="82" cy="100" rx="8" ry="4" fill="#8d99ae"/><ellipse cx="118" cy="100" rx="8" ry="4" fill="#8d99ae"/><path d="M88 116 Q100 112 112 116" stroke="#14100c" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="152" cy="150" r="15" fill="none" stroke="#14100c" stroke-width="5"/><circle cx="140" cy="132" r="6" fill="none" stroke="#14100c" stroke-width="4"/><rect x="158" y="158" width="6" height="16" fill="#14100c"/><rect x="146" y="166" width="6" height="13" fill="#14100c"/></svg>',
+  wren:'<svg viewBox="0 0 200 200" role="img" aria-label="Wren the street kid"><rect width="200" height="200" fill="#ffb3c7"/><path d="M48 200 L60 140 L116 140 L128 200 Z" fill="#2ec4b6"/><rect x="66" y="146" width="44" height="10" fill="#14100c"/><path d="M126 200 L132 148 L168 156 L172 200 Z" fill="#b08954" stroke="#14100c" stroke-width="3"/><circle cx="88" cy="94" r="44" fill="#ffcf9e"/><path d="M46 88 Q40 40 84 38 L82 58 Q58 60 58 92 Z" fill="#5b3413"/><path d="M130 88 Q134 44 96 38 L96 58 Q122 62 120 94 Z" fill="#5b3413"/><path d="M70 44 Q88 26 108 44 L100 58 Q86 48 76 58 Z" fill="#5b3413"/><circle cx="72" cy="92" r="5" fill="#14100c"/><circle cx="106" cy="92" r="5" fill="#14100c"/><circle cx="60" cy="106" r="3" fill="#c46a3d"/><circle cx="66" cy="112" r="3" fill="#c46a3d"/><circle cx="114" cy="106" r="3" fill="#c46a3d"/><path d="M68 114 Q89 132 110 114 L106 126 Q89 136 72 126 Z" fill="#fff" stroke="#14100c" stroke-width="3"/><rect x="85" y="118" width="7" height="12" fill="#ffb3c7" stroke="#14100c" stroke-width="2"/></svg>',
+  odde:'<svg viewBox="0 0 200 200" role="img" aria-label="Master Odde the apothecary"><rect width="200" height="200" fill="#d7b8ff"/><path d="M58 200 L68 146 L132 146 L142 200 Z" fill="#5b21b6"/><circle cx="100" cy="100" r="42" fill="#f2c79b"/><path d="M58 82 Q52 44 84 40 L80 56 Q66 60 66 84 Z" fill="#e8e4da"/><path d="M142 82 Q148 44 116 40 L120 56 Q134 60 134 84 Z" fill="#e8e4da"/><circle cx="82" cy="98" r="17" fill="rgba(255,255,255,.35)" stroke="#14100c" stroke-width="5"/><circle cx="120" cy="98" r="17" fill="rgba(255,255,255,.35)" stroke="#14100c" stroke-width="5"/><path d="M99 98 L103 98" stroke="#14100c" stroke-width="5"/><circle cx="82" cy="98" r="4" fill="#14100c"/><circle cx="120" cy="98" r="4" fill="#14100c"/><path d="M88 126 Q101 134 114 126" stroke="#14100c" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="62" cy="140" r="9" fill="#9b5de5"/><circle cx="140" cy="146" r="11" fill="#9b5de5"/><circle cx="100" cy="66" r="4" fill="#9b5de5"/><rect x="150" y="128" width="14" height="34" fill="#7ac74f" stroke="#14100c" stroke-width="3"/><rect x="154" y="118" width="6" height="10" fill="#14100c"/></svg>',
+  vane:'<svg viewBox="0 0 200 200" role="img" aria-label="The Widow Vane, mill owner"><rect width="200" height="200" fill="#3a3f4a"/><path d="M56 200 L72 130 L128 130 L144 200 Z" fill="#14100c"/><rect x="94" y="140" width="12" height="26" fill="#2b2f38"/><circle cx="100" cy="156" r="5" fill="#c0c6ce"/><circle cx="100" cy="92" r="44" fill="#f2c79b"/><path d="M58 88 Q54 34 100 32 Q146 34 142 88 L132 88 Q134 52 100 50 Q66 52 68 88 Z" fill="#e8e4da"/><circle cx="100" cy="34" r="13" fill="#e8e4da"/><circle cx="82" cy="90" r="5" fill="#14100c"/><circle cx="118" cy="90" r="5" fill="#14100c"/><path d="M70 78 L94 74" stroke="#14100c" stroke-width="4" stroke-linecap="round"/><path d="M106 74 L130 78" stroke="#14100c" stroke-width="4" stroke-linecap="round"/><path d="M86 118 L114 118" stroke="#8e2f38" stroke-width="5" stroke-linecap="round"/><path d="M52 60 L40 44" stroke="#c0c6ce" stroke-width="4"/><circle cx="38" cy="42" r="4" fill="#ffd23f"/></svg>',
+  guest:'<svg viewBox="0 0 200 200" role="img" aria-label="The Pale Guest"><rect width="200" height="200" fill="#585d66"/><path d="M50 200 L64 132 L136 132 L150 200 Z" fill="#6b7280"/><rect x="92" y="138" width="16" height="40" fill="#4b5563"/><circle cx="100" cy="92" r="46" fill="#e9e2d2"/><path d="M100 46 A46 46 0 0 1 100 138 Z" fill="#2b2f38" opacity=".88"/><rect x="48" y="52" width="104" height="12" fill="#14100c"/><path d="M64 52 L72 20 L128 20 L136 52 Z" fill="#14100c"/><circle cx="80" cy="92" r="5" fill="#14100c"/><circle cx="120" cy="92" r="5" fill="#ffd23f"/><path d="M84 120 Q100 126 116 118" stroke="#14100c" stroke-width="4" fill="none" stroke-linecap="round"/><rect x="142" y="150" width="22" height="30" fill="#9aa1ab" stroke="#14100c" stroke-width="3"/><rect x="30" y="156" width="22" height="30" fill="#9aa1ab" stroke="#14100c" stroke-width="3"/></svg>'
+  };
+  return S[name] || S.guest;
+}
+/* ---------- SCENES (no speaker: places & things) ---------- */
+function SC(name){
+  var S = {
+  tower:'<svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#7bd3f7"/><rect x="70" y="30" width="60" height="170" fill="#c9ced6" stroke="#14100c" stroke-width="4"/><path d="M60 34 L100 6 L140 34 Z" fill="#e63946" stroke="#14100c" stroke-width="4"/><path d="M84 62 Q100 44 116 62 L116 92 Q100 104 84 92 Z" fill="#ffd23f" stroke="#14100c" stroke-width="4"/><rect x="94" y="98" width="12" height="26" fill="#8a5a2b" stroke="#14100c" stroke-width="3"/><rect x="0" y="188" width="200" height="12" fill="#7ac74f"/></svg>',
+  bell:'<svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#2e2140"/><rect x="20" y="18" width="160" height="12" fill="#8a5a2b"/><path d="M62 130 Q62 62 100 62 Q138 62 138 130 L148 146 L52 146 Z" fill="#ffd23f" stroke="#14100c" stroke-width="4"/><circle cx="100" cy="52" r="10" fill="#c0c6ce" stroke="#14100c" stroke-width="3"/><rect x="96" y="146" width="8" height="18" fill="#8a5a2b"/><text x="100" y="196" font-size="13" text-anchor="middle" fill="#ffd23f" font-weight="900">… SILENCE …</text></svg>',
+  bakery:'<svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#ffe9c9"/><rect x="30" y="60" width="140" height="110" fill="#fff6e3" stroke="#14100c" stroke-width="4"/><path d="M20 62 L100 22 L180 62 Z" fill="#e63946" stroke="#14100c" stroke-width="4"/><rect x="86" y="118" width="28" height="52" fill="#8a5a2b" stroke="#14100c" stroke-width="3"/><rect x="42" y="82" width="30" height="24" fill="#7bd3f7" stroke="#14100c" stroke-width="3"/><rect x="128" y="82" width="30" height="24" fill="#7bd3f7" stroke="#14100c" stroke-width="3"/><ellipse cx="100" cy="196" rx="90" ry="8" fill="#ffd9a0"/></svg>',
+  river:'<svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#a8e6ff"/><path d="M0 110 Q50 96 100 110 T200 110 L200 200 L0 200 Z" fill="#2a9d8f"/><path d="M0 132 Q50 120 100 132 T200 132" stroke="#7bd3f7" stroke-width="6" fill="none"/><path d="M30 108 L170 108 L156 138 L46 138 Z" fill="#8a5a2b" stroke="#14100c" stroke-width="3"/><rect x="96" y="76" width="8" height="32" fill="#14100c"/><circle cx="150" cy="52" r="20" fill="#ffd23f" stroke="#14100c" stroke-width="3"/></svg>',
+  mill:'<svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#ffd9a0"/><rect x="52" y="70" width="96" height="118" fill="#b08954" stroke="#14100c" stroke-width="4"/><path d="M42 72 L100 34 L158 72 Z" fill="#5b3413" stroke="#14100c" stroke-width="4"/><circle cx="100" cy="118" r="26" fill="#8a8f98" stroke="#14100c" stroke-width="4"/><circle cx="100" cy="118" r="7" fill="#14100c"/><path d="M100 92 L100 66 M100 144 L100 170 M74 118 L48 118 M126 118 L152 118" stroke="#14100c" stroke-width="5"/><rect x="86" y="160" width="28" height="28" fill="#5b3413" stroke="#14100c" stroke-width="3"/></svg>',
+  chapel:'<svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#d7b8ff"/><rect x="55" y="70" width="90" height="118" fill="#e8e4da" stroke="#14100c" stroke-width="4"/><path d="M45 72 L100 30 L155 72 Z" fill="#6b7280" stroke="#14100c" stroke-width="4"/><rect x="96" y="8" width="8" height="26" fill="#14100c"/><rect x="89" y="16" width="22" height="7" fill="#14100c"/><path d="M86 188 L86 128 Q100 112 114 128 L114 188 Z" fill="#8a5a2b" stroke="#14100c" stroke-width="3"/><circle cx="100" cy="92" r="13" fill="#ffd23f" stroke="#14100c" stroke-width="3"/></svg>',
+  street:'<svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#ffb3c7"/><rect x="8" y="70" width="52" height="100" fill="#ff9fb2" stroke="#14100c" stroke-width="3"/><rect x="140" y="60" width="52" height="110" fill="#7bd3f7" stroke="#14100c" stroke-width="3"/><rect x="66" y="86" width="68" height="84" fill="#ffd23f" stroke="#14100c" stroke-width="3"/><path d="M0 170 L200 170 L200 200 L0 200 Z" fill="#9aa1ab"/><rect x="88" y="120" width="24" height="50" fill="#8a5a2b" stroke="#14100c" stroke-width="3"/><circle cx="168" cy="34" r="16" fill="#ffd23f" stroke="#14100c" stroke-width="3"/></svg>',
+  cellar:'<svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#241a2e"/><rect x="60" y="40" width="80" height="130" fill="#3a2c22" stroke="#c9ced6" stroke-width="4"/><circle cx="128" cy="108" r="6" fill="#ffd23f"/><rect x="20" y="150" width="34" height="40" fill="#5b3413" stroke="#14100c" stroke-width="3"/><rect x="150" y="150" width="34" height="40" fill="#5b3413" stroke="#14100c" stroke-width="3"/><path d="M84 66 L116 66 L110 96 L90 96 Z" fill="#ffd23f" opacity=".28"/></svg>',
+  night:'<svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#171021"/><circle cx="158" cy="38" r="20" fill="#e8e4da"/><circle cx="150" cy="32" r="17" fill="#171021"/><circle cx="40" cy="50" r="3" fill="#fff"/><circle cx="90" cy="26" r="3" fill="#fff"/><circle cx="120" cy="70" r="2" fill="#fff"/><circle cx="60" cy="96" r="2" fill="#fff"/><path d="M70 200 L78 90 L122 90 L130 200 Z" fill="#241a2e" stroke="#000" stroke-width="3"/><path d="M84 118 Q100 100 116 118 L116 140 Q100 150 84 140 Z" fill="#3a2f16"/></svg>',
+  shop:'<svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#d7b8ff"/><rect x="26" y="66" width="148" height="104" fill="#fff6e3" stroke="#14100c" stroke-width="4"/><path d="M18 68 L182 68 L168 40 L32 40 Z" fill="#9b5de5" stroke="#14100c" stroke-width="4"/><rect x="40" y="92" width="34" height="30" fill="#7ac74f" stroke="#14100c" stroke-width="3"/><rect x="126" y="92" width="34" height="30" fill="#ffd23f" stroke="#14100c" stroke-width="3"/><rect x="84" y="128" width="32" height="42" fill="#8a5a2b" stroke="#14100c" stroke-width="3"/></svg>',
+  well:'<svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#a8e6ff"/><ellipse cx="100" cy="150" rx="62" ry="20" fill="#8a8f98" stroke="#14100c" stroke-width="4"/><ellipse cx="100" cy="146" rx="44" ry="13" fill="#171021"/><rect x="52" y="70" width="8" height="80" fill="#8a5a2b"/><rect x="140" y="70" width="8" height="80" fill="#8a5a2b"/><rect x="44" y="58" width="112" height="10" fill="#8a5a2b" stroke="#14100c" stroke-width="3"/><path d="M100 68 L100 128" stroke="#14100c" stroke-width="3" stroke-dasharray="5 4"/><rect x="88" y="126" width="24" height="18" fill="#b08954" stroke="#14100c" stroke-width="3"/></svg>',
+  door:'<svg viewBox="0 0 200 200"><rect width="200" height="200" fill="#5b4a3a"/><rect x="62" y="22" width="76" height="178" fill="#8a5a2b" stroke="#14100c" stroke-width="5"/><rect x="76" y="38" width="48" height="58" fill="none" stroke="#14100c" stroke-width="3"/><rect x="76" y="112" width="48" height="58" fill="none" stroke="#14100c" stroke-width="3"/><circle cx="126" cy="106" r="6" fill="#ffd23f" stroke="#14100c" stroke-width="2"/></svg>'
+  };
+  return S[name] || S.street;
+}
+/* ---------- ITEM ICONS ---------- */
+var ITEMS = {
+  knife:{ name:"Bread Knife", svg:'<svg viewBox="0 0 40 40"><path d="M6 30 L24 12 L34 6 L30 16 L12 34 Z" fill="#c0c6ce" stroke="#14100c" stroke-width="2.5"/><rect x="4" y="28" width="10" height="7" rx="2" fill="#8a5a2b" stroke="#14100c" stroke-width="2.5" transform="rotate(-45 9 31)"/></svg>' },
+  coin:{ name:"Silver Coin", svg:'<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="14" fill="#ffd23f" stroke="#14100c" stroke-width="3"/><circle cx="20" cy="20" r="8" fill="none" stroke="#14100c" stroke-width="2"/><text x="20" y="26" font-size="13" text-anchor="middle" font-weight="900" fill="#14100c">1</text></svg>' },
+  tonic:{ name:"Tonic Vial", svg:'<svg viewBox="0 0 40 40"><rect x="16" y="4" width="8" height="7" fill="#14100c"/><path d="M15 11 L25 11 L28 22 L28 32 Q28 36 24 36 L16 36 Q12 36 12 32 L12 22 Z" fill="#7ac74f" stroke="#14100c" stroke-width="2.5"/><path d="M13 24 L27 24" stroke="#14100c" stroke-width="2"/></svg>' },
+  key:{ name:"Mill Key", svg:'<svg viewBox="0 0 40 40"><circle cx="13" cy="13" r="8" fill="none" stroke="#14100c" stroke-width="3.5"/><path d="M19 19 L33 33" stroke="#14100c" stroke-width="4"/><path d="M27 27 L33 24 M24 24 L29 21" stroke="#14100c" stroke-width="3.5"/></svg>' },
+  rope:{ name:"Bell Rope", svg:'<svg viewBox="0 0 40 40"><path d="M20 3 L20 22" stroke="#8a5a2b" stroke-width="5"/><ellipse cx="20" cy="29" rx="9" ry="7" fill="none" stroke="#8a5a2b" stroke-width="4"/><path d="M16 6 L24 10 M16 12 L24 16" stroke="#5b3413" stroke-width="2"/></svg>' },
+  marble:{ name:"Wren's Marble", svg:'<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="14" fill="#2ec4b6" stroke="#14100c" stroke-width="3"/><path d="M10 16 Q20 8 30 16 Q20 24 10 16" fill="#ff6b4a"/><circle cx="15" cy="14" r="4" fill="#fff" opacity=".8"/></svg>' },
+  clapper:{ name:"Bell Clapper", svg:'<svg viewBox="0 0 40 40"><rect x="17" y="3" width="6" height="14" fill="#8a5a2b" stroke="#14100c" stroke-width="2"/><circle cx="20" cy="26" r="11" fill="#5b6470" stroke="#14100c" stroke-width="3"/><circle cx="16" cy="22" r="3" fill="#c0c6ce"/></svg>' }
+};
+var ITEM_ORDER = ["knife","coin","tonic","key","rope","marble","clapper"];
+
+
+/* ============================================================
+   STATE
+   ============================================================ */
+var S; // state
+function newState(){
+  return {
+    items:{}, flags:{}, lies:0,
+    quests:{}, // id -> 'done' | 'failed' | 'skipped'
+    doneCount:0, cardsSeen:0, started:false,
+    chapter:"PROLOGUE", onboarded:false, journalSeen:false
+  };
+}
+var QUEST_META = [
+  {id:"q1", icon:"🔔", name:"The Silent Bell"},
+  {id:"q2", icon:"🥖", name:"Mabel's Missing Flour"},
+  {id:"q3", icon:"⛴", name:"The Ferryman's Fare"},
+  {id:"q4", icon:"📜", name:"Garrick's List"},
+  {id:"q5", icon:"🧪", name:"Odde's Tonic"},
+  {id:"q6", icon:"📕", name:"The Widow's Ledger"},
+  {id:"q7", icon:"🚪", name:"Wren's Game"},
+  {id:"q8", icon:"✉", name:"The Guest's Errand"},
+  {id:"q9", icon:"🐀", name:"Rats in the Mill"},
+  {id:"q10", icon:"🌊", name:"A Name for the River"}
+];
+function has(item){ return !!S.items[item]; }
+function give(item){ if(!S.items[item]){ S.items[item]=true; toast("GOT: "+ITEMS[item].name.toUpperCase()+" — it's in your JOURNAL"); renderHUD(); } }
+function lose(item){ delete S.items[item]; renderHUD(); }
+function completeQuest(id){ if(S.quests[id]!=="done"){ S.quests[id]="done"; S.doneCount++; renderHUD(); } }
+function failQuest(id){ if(!S.quests[id]){ S.quests[id]="failed"; renderHUD(); } }
+function skipQuest(id){ if(!S.quests[id]){ S.quests[id]="skipped"; renderHUD(); } }
+
+/* ============================================================
+   CARD LIBRARY
+   kind: 'yn' (default) | 'auto' (NEXT) | 'death' | 'end'
+   fx(s, choice) runs on answering. next can be fn(s,choice)->id
+   itemGate: {item, has, lacks} auto-picks next id by inventory
+   ============================================================ */
+var CARDS = {
+/* ---------- PROLOGUE: four story cards, CONTINUE only, no choices ---------- */
+intro1:{ art:"river", text:"Dawn. The ferry leaves you on Millbrook's dock with one bag, one letter, and one job: ring the chapel bell. The old bell-keeper is gone. So is his apprentice.",
+  yes:"intro2", no:"intro2", kind:"auto" },
+intro2:{ art:"street", text:"The town is dressing itself for tomorrow's Bell Festival — bunting, stalls, fresh paint. But every decoration stops at the chapel door. Nobody hangs anything past it.",
+  yes:"intro3", no:"intro3", kind:"auto" },
+intro3:{ art:"bell", text:"Last night, at 3am, the chapel bell rang itself. Once. The whole town heard it. The bell has no clapper. It has not had one for a year.",
+  yes:"intro4", no:"intro4", kind:"auto" },
+intro4:{ sp:"pell", art:"pell", text:"Sister Pell waits at the chapel door. “You are the new apprentice. The last one heard the bell too. He was gone by morning.”",
+  yes:"snack1", no:"snack1", kind:"auto" },
+
+/* ---------- CHAPTER INTERSTITIALS: the day turns ---------- */
+inter_midday:{ art:"street", text:function(){ return S.flags.clapperBack ? "MIDDAY. The sun stands straight up and the bunting casts no shadow. The bell can ring again now — you saw to that — and somehow that makes the quiet worse. A stranger came in on the morning ferry, asking about the bell." : "MIDDAY. The sun stands straight up and the bunting casts no shadow. Above it all the bell hangs silent and clapperless. A stranger came in on the morning ferry, asking about the bell."; },
+  yes:"q3_offer", no:"q3_offer", kind:"auto" },
+inter_dusk:{ art:"street", text:function(){ return S.flags.wrenSecret ? "DUSK. The light goes the colour of old pennies. You are carrying at least one of this town's secrets now, and the town can tell — it watches you the way it watches the chapel door." : "DUSK. The light goes the colour of old pennies. Lanterns come on early. Nobody in Millbrook likes being out after dark this week, though nobody will say why."; },
+  yes:"q6_offer", no:"q6_offer", kind:"auto" },
+inter_night:{ art:"night", text:"NIGHT. The festival is tomorrow. Tonight the river is too still, the streets too empty, and somewhere above the rooftops a bell with no clapper is waiting to be rung — or to ring itself.",
+  yes:"e_riverwalk", no:"e_riverwalk", kind:"auto" },
+
+/* ---------- EVERYDAY: the snack (BREAD KNIFE source) ---------- */
+snack1:{ sp:"mabel", art:"mabel", quest:null, text:"“You look half-starved, love. Festival's tomorrow — if that bell lets anyone sleep tonight. Hot snack before you start? On the house.”",
+  yes:"snack2", no:"e_carter" },
+snack2:{ art:"bakery", text:"Two choices on the counter: a bunch of grapes, or warm bread with a knife beside it. Take the bread?",
+  yes:{ goto:"snack3", fx:function(){ give("knife"); S.flags.ateBread=true; } },
+  no:{ goto:"snack4", fx:function(){ S.flags.ateGrapes=true; } } },
+snack3:{ art:"bakery", text:"You pocket the little bread knife without thinking. It feels… useful. Mabel winks.",
+  yes:"e_carter", no:"e_carter", kind:"auto" },
+snack4:{ art:"bakery", text:"The grapes burst sweet and cold. Lovely. Nothing for your pockets, though.",
+  yes:"e_carter", no:"e_carter", kind:"auto" },
+
+/* ---------- EVERYDAY: the carter (SILVER COIN source) ---------- */
+e_carter:{ art:"street", text:"Festival bunting sags over the street. Beneath it, an unnamed carter is stuck, wheel deep in mud, straining alone. Stop and push?",
+  yes:{ goto:"e_carter2", fx:function(){ give("coin"); } },
+  no:"q1_offer" },
+e_carter2:{ art:"street", text:"The wheel pops free. The carter presses a silver coin into your palm. “Town pays its debts.”",
+  yes:"q1_offer", no:"q1_offer", kind:"auto" },
+
+/* ============ Q1 — THE SILENT BELL (Pell) ============ */
+q1_offer:{ sp:"pell", art:"pell", quest:"q1", qtag:"QUEST 1 · THE SILENT BELL",
+  text:"“The bell's clapper is gone. Stolen, I think. Will you climb the tower and look?”",
+  yes:"q1_a", no:{ goto:"e_shift", fx:function(){ skipQuest("q1"); } } },
+q1_a:{ art:"tower", quest:"q1", text:"Dust. Pigeon feathers. Deep scratch marks circle the bell — from the inside. Search the floorboards?",
+  yes:"q1_b", no:"q1_b" },
+q1_b:{ art:"bell", quest:"q1", text:"Under a loose board: drag marks, and a nun's grey mitten. Confront Pell with it — gently?",
+  yes:{ goto:"q1_c", fx:function(){ S.flags.pellGentle=true; } },
+  no:{ goto:"q1_c2", fx:function(){ S.flags.pellGentle=false; } } },
+q1_c:{ sp:"pell", art:"pell", quest:"q1", text:"Pell sits down hard. “I took it. The bell was ringing itself at night. I had to sleep.”",
+  yes:"q1_d", no:"q1_d" },
+q1_c2:{ sp:"garrick", art:"garrick", quest:"q1", text:"You show Garrick the mitten. He sighs. “Then it is true. She took it. The bell rang itself, she says.”",
+  yes:"q1_d", no:"q1_d" },
+q1_d:{ sp:"pell", art:"pell", quest:"q1", text:"“Keep my secret, and I will give the clapper back tonight. Tell no one why.” Agree?",
+  yes:{ goto:"q1_end_good", fx:function(){ give("clapper"); give("rope"); S.flags.clapperBack=true; completeQuest("q1"); } },
+  no:{ goto:"q1_end_plain", fx:function(){ S.flags.clapperBack=true; completeQuest("q1"); } } },
+q1_end_good:{ art:"tower", quest:"q1", text:"Pell hands you the clapper — and her spare bell rope. “You may need these. Things ring here.” QUEST DONE.",
+  yes:"e_shift", no:"e_shift", kind:"auto" },
+q1_end_plain:{ art:"tower", quest:"q1", text:"Pell returns the clapper herself, red-eyed. The town whispers. But the bell can ring again. QUEST DONE.",
+  yes:"e_shift", no:"e_shift", kind:"auto" },
+
+/* ---------- EVERYDAY: bakery shift (second coin source) ---------- */
+e_shift:{ sp:"mabel", art:"mabel",
+  text:function(){ return S.flags.ateBread ? "Mabel beams at you. “My bread-knife keeper! Half the town's heard you chose the bread.” She pushes a dough mound at you. “Knead an hour, earn a coin?”" : S.flags.ateGrapes ? "Mabel winks. “The grape thief returns. Too good for pockets, that one.” She pushes a dough mound at you. “Knead an hour, earn a coin?”" : "“Knead dough for an hour, love? I pay in coin, not compliments.” Work the shift?"; },
+  yes:{ goto:"e_shift2", fx:function(){ if(!has("coin")) give("coin"); else S.flags.extraCoin=true; } },
+  no:"q2_offer" },
+e_shift2:{ art:"bakery", text:"Your arms ache. Your pockets jingle. Millbrook is starting to feel like a place. ",
+  yes:"q2_offer", no:"q2_offer", kind:"auto" },
+
+/* ============ Q2 — MABEL'S MISSING FLOUR (Mabel → Wren) ============ */
+q2_offer:{ sp:"mabel", art:"mabel", quest:"q2", qtag:"QUEST 2 · MISSING FLOUR",
+  text:"“A flour sack vanishes every night. Every night! Will you watch the bakery after dark?”",
+  yes:"q2_a", no:{ goto:"e_sample", fx:function(){ skipQuest("q2"); } } },
+q2_a:{ art:"night", quest:"q2", text:"Midnight. The back door creaks. A small shape slips in, dragging a sack. Follow it?",
+  yes:"q2_b", no:"q2_end_sleep" },
+q2_b:{ art:"street", quest:"q2", text:"It is Wren, hauling flour to a lean-to where unnamed mill orphans sleep. She freezes. “Don't tell.”",
+  yes:"q2_c", no:"q2_c" },
+q2_c:{ sp:"wren", art:"wren", quest:"q2", text:"“They get nothing since the mill cut pay. I take one sack. The small one. Mostly.” Promise her silence?",
+  yes:{ goto:"q2_end_good", fx:function(){ S.flags.wrenSecret=true; completeQuest("q2"); } },
+  no:{ goto:"q2_end_tell", fx:function(){ completeQuest("q2"); } } },
+q2_end_good:{ sp:"mabel", art:"mabel", quest:"q2", text:"Next morning Mabel smiles. “Funny. I started leaving a small sack out. For the mice.” She knew. QUEST DONE.",
+  yes:"e_sample", no:"e_sample", kind:"auto" },
+q2_end_tell:{ sp:"mabel", art:"mabel", quest:"q2", text:"Mabel listens, then laughs. “Orphans? I have left extra out for weeks, love.” She knew all along. QUEST DONE.",
+  yes:"e_sample", no:"e_sample", kind:"auto" },
+q2_end_sleep:{ art:"bakery", quest:"q2", text:"You sleep. The sack vanishes anyway. Some mysteries keep themselves. QUEST SLIPS AWAY.",
+  yes:"e_sample", no:"e_sample", kind:"auto", fx:function(){ failQuest("q2"); } },
+
+/* ---------- EVERYDAY: Odde's free sample (TONIC VIAL source) ---------- */
+e_sample:{ sp:"odde", art:"odde", text:"“Free sample! New tonic! Tastes like pennies and courage!” Take a vial to keep?",
+  yes:{ goto:"e_sample2", fx:function(){ give("tonic"); } },
+  no:"inter_midday" },
+e_sample2:{ art:"shop", text:"Odde beams. “For emergencies. Or curiosity. Those are the same thing, medically.”",
+  yes:"inter_midday", no:"inter_midday", kind:"auto" },
+
+/* ============ Q3 — THE FERRYMAN'S FARE (Fen) ============ */
+q3_offer:{ sp:"fen", art:"fen", quest:"q3", qtag:"QUEST 3 · THE FERRYMAN'S FARE",
+  text:"“Carry this box across the river. Sealed. No questions. …Well?”",
+  yes:"q3_a", no:{ goto:"e_gossip", fx:function(){ skipQuest("q3"); } } },
+q3_a:{ art:"river", quest:"q3", text:"The box is heavier than it should be. Your fingers find the lid's edge. Peek inside?",
+  yes:{ goto:"q3_b", fx:function(){ S.flags.openedBox=true; } },
+  no:"q3_c" },
+q3_b:{ art:"cellar", quest:"q3", text:"Inside: a bell rope, tied in a noose — and a wrapped sandwich. Whose lunch? Whose rope? You shut the lid.",
+  yes:"q3_c", no:"q3_c", kind:"auto" },
+q3_c:{ sp:"fen", art:"fen", quest:"q3", text:"At the bank, Fen names his fare: one silver coin. The river is black and fast behind him. Pay the coin?",
+  yes:function(){ return has("coin") ? "q3_pay" : "q3_nocoin"; },
+  no:"q3_nocoin" },
+q3_pay:{ art:"river", quest:"q3", text:"Fen pockets the coin and rows you over, dry and safe, humming something old.",
+  yes:"q3_end", no:"q3_end", kind:"auto", fx:function(){ lose("coin"); } },
+q3_nocoin:{ sp:"fen", art:"fen", quest:"q3", text:"“No coin? Then swim beside the boat. The river… likes company.” Swim?",
+  yes:"death_swim", no:"q3_bridge" },
+q3_bridge:{ art:"river", quest:"q3", text:"You take the long bridge instead, box on your back, boots soaked by rain. Slow. Alive. Fen shrugs approval.",
+  yes:"q3_end", no:"q3_end", kind:"auto" },
+q3_end:{ sp:"fen", art:"fen", quest:"q3",
+  text:function(){ return S.flags.openedBox ? "Fen looks at the lid, then at you. “You looked. …So did he, every night.” QUEST DONE." : "Fen takes the box. “You didn't look. He never could resist. You might last.” QUEST DONE."; },
+  yes:"e_gossip", no:"e_gossip", kind:"auto", fx:function(){ completeQuest("q3"); } },
+
+/* ---------- EVERYDAY: gossip at the well ---------- */
+e_gossip:{ sp:"mabel", art:"mabel", text:"“That Guest at the inn asks about the bell, love. Every night. Same questions.” Stay and hear more?",
+  yes:{ goto:"e_gossip2", fx:function(){ S.flags.guestHint=true; } },
+  no:"q4_offer" },
+e_gossip2:{ art:"well", text:"“He arrived the night the old bell-keeper vanished. Funny, the river gave back no body.” The well is very dark.",
+  yes:"q4_offer", no:"q4_offer", kind:"auto" },
+
+/* ============ Q4 — GARRICK'S LIST (Garrick) ============ */
+q4_offer:{ sp:"garrick", art:"garrick", quest:"q4", qtag:"QUEST 4 · GARRICK'S LIST",
+  text:"“I need eyes I can trust. Watch three people on this list. Tell me everything. Start tonight?”",
+  yes:"q4_a", no:{ goto:"e_stone", fx:function(){ skipQuest("q4"); } } },
+q4_a:{ art:"street", quest:"q4", text:"The list: the Widow Vane. Sister Pell. The Pale Guest. All three were out last night. Follow the Widow first?",
+  yes:"q4_b", no:"q4_b" },
+q4_b:{ sp:"wren", art:"wren", quest:"q4",
+  text:function(){ return S.flags.wrenSecret ? "Wren pops out of a barrel. “You kept my secret, so secrets are safe with you. You're Garrick's spy now? Tell me what you saw — I won't tell.” Lie to her anyway?" : "Wren pops out of a barrel. “You're Garrick's spy now? What did you see? Tell me, tell me!” Lie to her?"; },
+  yes:{ goto:"q4_c", fx:function(){ S.lies++; } },
+  no:{ goto:"q4_c", fx:function(){ S.flags.honestWren=true; } } },
+q4_c:{ sp:"garrick", art:"garrick", quest:"q4", text:"Garrick waits in the rain. “Report. And tell me straight — did the kid get anything out of you?” Lie to Garrick?",
+  yes:function(){ S.lies++; return S.lies>=2 ? "death_cell" : "q4_d"; },
+  no:"q4_d" },
+q4_d:{ sp:"garrick", art:"garrick", quest:"q4", text:"Garrick closes his eyes. “These three aren't suspects. They're the ones still here. The list is everyone already gone.”",
+  yes:"q4_end", no:"q4_end" },
+q4_end:{ sp:"garrick", art:"garrick", quest:"q4", text:"“I'm not hunting a thief, apprentice. I'm guarding what's left.” His hand shakes. QUEST DONE.",
+  yes:"e_sighting", no:"e_sighting", kind:"auto", fx:function(){ completeQuest("q4"); } },
+
+/* ---------- EVERYDAY: the Guest, watching (midday) ---------- */
+e_sighting:{ sp:"guest", art:"guest",
+  text:function(){ return S.lies>0 ? "Across the square, the Pale Guest watches you over a cup he never drinks from. “Careful, apprentice. This town counts its lies the way it counts its bells.” Talk a while?" : "Across the square, the Pale Guest watches you over a cup he never drinks from. “Busy day,” he says, pleasantly. “It will be a busier night.” Talk a while?"; },
+  yes:{ goto:"e_sighting2", fx:function(){ S.flags.guestMet=true; } },
+  no:"e_stone" },
+e_sighting2:{ sp:"guest", art:"guest", text:"“A year ago tonight, another apprentice stood where you're standing. He asked better questions than you. He still vanished.” The Guest smiles, and is gone into the crowd.",
+  yes:"e_stone", no:"e_stone", kind:"auto" },
+
+/* ---------- EVERYDAY: stones with Wren ---------- */
+e_stone:{ sp:"wren", art:"wren", text:"“Skip stones at the river? Loser buys nothing. Winner also buys nothing. It's a great game.” Play?",
+  yes:{ goto:"e_stone2", fx:function(){ S.flags.wrenFriend=true; } },
+  no:"q5_offer" },
+e_stone2:{ art:"river", text:"Your stone skips seven times. Wren nods like a judge. “You throw like someone who stays.”",
+  yes:"q5_offer", no:"q5_offer", kind:"auto" },
+
+/* ============ Q5 — ODDE'S TONIC (Odde) ============ */
+q5_offer:{ sp:"odde", art:"odde", quest:"q5", qtag:"QUEST 5 · ODDE'S TONIC",
+  text:"“New tonic! Untested! I usually test on myself, but I am… mostly tested already. Drink?”",
+  yes:"q5_a", no:"q5_sort" },
+q5_sort:{ art:"shop", quest:"q5", text:"You label forty bottles instead. Odde sighs, impressed. “Fine. Science survives another day.” QUEST DONE.",
+  yes:"e_polish", no:"e_polish", kind:"auto", fx:function(){ completeQuest("q5"); if(!has("tonic")) give("tonic"); } },
+q5_a:{ art:"shop", quest:"q5", text:"The room tilts. The shop's floorboards glow like coals. Beneath them: a cellar you have never seen. Real? Follow the glow?",
+  yes:{ goto:"q5_b", fx:function(){ S.flags.cellarKnown=true; } },
+  no:"q5_b" },
+q5_b:{ sp:"odde", art:"odde", quest:"q5", text:"You blink awake on the floor. Odde holds up a second, darker bottle. “Again? Double dose, double data!” Drink again?",
+  yes:"death_tonic",
+  no:{ goto:"q5_end", fx:function(){ completeQuest("q5"); if(!has("tonic")) give("tonic"); } } },
+q5_end:{ sp:"odde", art:"odde", quest:"q5", text:"“Sensible! Take a vial for the road. And whatever you saw downstairs… the town has layers.” QUEST DONE.",
+  yes:"e_polish", no:"e_polish", kind:"auto" },
+
+/* ---------- EVERYDAY: polish the silent bell ---------- */
+e_polish:{ sp:"pell", art:"pell",
+  text:function(){ return S.flags.pellGentle ? "Pell is polishing the silent bell, alone. She looks up, almost smiling. “You were gentle about the clapper. Nobody is gentle here.” Take a cloth and help?" : "Pell is polishing the silent bell, alone. “It helps me think.” Take a cloth and help?"; },
+  yes:{ goto:"e_polish2", fx:function(){ S.flags.pellTrust=true; } },
+  no:"inter_dusk" },
+e_polish2:{ art:"bell", text:"“He polished it too. Every night. Even the night he—” She stops. The bronze shines like a moon.",
+  yes:"inter_dusk", no:"inter_dusk", kind:"auto" },
+
+/* ============ Q6 — THE WIDOW'S LEDGER (Vane) ============ */
+q6_offer:{ sp:"vane", art:"vane", quest:"q6", qtag:"QUEST 6 · THE WIDOW'S LEDGER",
+  text:"“A ledger. Burn it tonight, unread, and I pay well. Ask nothing. …Deal?”",
+  yes:"q6_a", no:{ goto:"e_well", fx:function(){ skipQuest("q6"); } } },
+q6_a:{ art:"mill", quest:"q6", text:"The ledger is heavy, the fire is lit. Your thumb finds the cover's edge. Read it first?",
+  yes:{ goto:"q6_b", fx:function(){ S.flags.readLedger=true; } },
+  no:{ goto:"q6_burn", fx:function(){ completeQuest("q6"); } } },
+q6_b:{ art:"cellar", quest:"q6", text:"Names. Debts. The whole town owes the mill — even the bell tower. Even you, somehow. Burn it anyway?",
+  yes:{ goto:"q6_burn", fx:function(){ completeQuest("q6"); } },
+  no:{ goto:"q6_return", fx:function(){ completeQuest("q6"); give("key"); } } },
+q6_burn:{ sp:"vane", art:"vane", quest:"q6", text:"It burns blue at the edges. Vane watches your face, not the fire. “Good. The town breathes easier.” QUEST DONE.",
+  yes:"e_well", no:"e_well", kind:"auto" },
+q6_return:{ sp:"vane", art:"vane", quest:"q6", text:"You hand it back. A pause. Then, almost a smile: “Take the mill key. Honest people are so rare here.” QUEST DONE.",
+  yes:"e_well", no:"e_well", kind:"auto" },
+
+/* ---------- EVERYDAY: the well ---------- */
+e_well:{ art:"well", text:"Something glints at the bottom of the well. Climb down and get it?",
+  yes:function(){ return has("rope") ? "e_well_rope" : "e_well_slip"; },
+  no:"q7_offer" },
+e_well_rope:{ art:"well", text:"On the bell rope you descend safely. A wishing coin! Someone wished hard down here. You take it.",
+  yes:"q7_offer", no:"q7_offer", kind:"auto", fx:function(){ if(!has("coin")) give("coin"); } },
+e_well_slip:{ art:"well", text:"You slip, catch the chain, and haul yourself out shaking. The glint stays. Some wishes stay down there.",
+  yes:"q7_offer", no:"q7_offer", kind:"auto" },
+
+/* ============ Q7 — WREN'S GAME (Wren) — the bread knife lives here ============ */
+q7_offer:{ sp:"wren", art:"wren", quest:"q7", qtag:"QUEST 7 · WREN'S GAME",
+  text:"“Dare you. Three locked doors, one evening, no crying. Winner gets my best marble. Play?”",
+  yes:"q7_a", no:{ goto:"e_guest", fx:function(){ skipQuest("q7"); } } },
+q7_a:{ art:"door", quest:"q7", text:"Door one: the bakery cellar. Wren picks it with a hairpin in four seconds flat. Easy. Keep going?",
+  yes:"q7_b", no:"q7_quit" },
+q7_b:{ art:"cellar", quest:"q7",
+  text:function(){ return S.flags.cellarKnown ? "Door two: a black doorway — the cellar from your tonic vision. A hand shoots out and grabs your wrist!" : "Door two: a black doorway under the chapel. A cold hand shoots out and grabs your wrist!"; },
+  yes:function(){ return has("knife") ? "q7_knife" : "q7_grabbed"; },
+  no:function(){ return has("knife") ? "q7_knife" : "q7_grabbed"; } },
+q7_knife:{ art:"cellar", quest:"q7", text:"Your pocket! The bread knife! You slice the sleeve — the hand lets go. Behind the door: the chapel cellar, empty. Barely.",
+  yes:"q7_cellar", no:"q7_cellar", kind:"auto" },
+q7_cellar:{ art:"cellar", quest:"q7", text:"Behind the shelves, a second door hums like a throat. Something scratches at it — slow, polite. Open it?",
+  yes:"death_cellar", no:"q7_c" },
+q7_grabbed:{ sp:"garrick", art:"garrick", quest:"q7", text:"You are dragged back into the light — by Garrick, furious. “That door stays shut.” The dare is over. QUEST FAILED.",
+  yes:"e_guest", no:"e_guest", kind:"auto", fx:function(){ failQuest("q7"); } },
+q7_c:{ sp:"wren", art:"wren", quest:"q7", text:"Door three is the mill loft, jammed tight. Wren grins. “Nobody gets door three.” Try it anyway?",
+  yes:function(){ return has("key") ? "q7_end_key" : "q7_end_push"; },
+  no:"q7_end_push" },
+q7_end_key:{ art:"mill", quest:"q7", text:"The mill key turns like it was waiting. Inside: only sacks, and Wren's respect. She hands over her marble. QUEST DONE.",
+  yes:"e_guest", no:"e_guest", kind:"auto", fx:function(){ completeQuest("q7"); give("marble"); } },
+q7_end_push:{ sp:"wren", art:"wren", quest:"q7", text:"The door won't budge — but Wren laughs. “Two doors is the record!” She hands you her marble anyway. QUEST DONE.",
+  yes:"e_guest", no:"e_guest", kind:"auto", fx:function(){ completeQuest("q7"); give("marble"); } },
+q7_quit:{ sp:"wren", art:"wren", quest:"q7", text:"“Chicken!” Wren calls it, but she shares her stolen plums anyway. The dare keeps for another night. QUEST SLIPS AWAY.",
+  yes:"e_guest", no:"e_guest", kind:"auto", fx:function(){ failQuest("q7"); } },
+
+/* ---------- EVERYDAY: the Guest at the inn ---------- */
+e_guest:{ sp:"guest", art:"guest",
+  text:function(){ return S.flags.clapperBack ? "The Pale Guest finds you by the inn door. “You gave Pell back her silence. Kind. The bell dislikes kindness — it makes the waiting longer.” Talk a while?" : S.flags.openedBox ? "The Pale Guest finds you by the inn door. “You carry other people's boxes, apprentice, and other people's secrets. I carried the bell rope once. Heavy, isn't it?” Talk a while?" : "The Pale Guest finds you by the inn door. “Do you sleep well here, apprentice? …Does the bell let you?” Talk a while?"; },
+  yes:{ goto:"e_guest2", fx:function(){ S.flags.guestMet=true; } },
+  no:"q8_offer" },
+e_guest2:{ sp:"guest", art:"guest", text:"“I knew this town when the river had another name.” His glove brushes the doorframe, almost fond. Then he goes.",
+  yes:"q8_offer", no:"q8_offer", kind:"auto" },
+
+/* ============ Q8 — THE GUEST'S ERRAND (Pale Guest) ============ */
+q8_offer:{ sp:"guest", art:"guest", quest:"q8", qtag:"QUEST 8 · THE GUEST'S ERRAND",
+  text:"“A letter. To the chapel. Sealed. Before dark, if you please.” He holds it like it weighs more than paper. Take it?",
+  yes:"q8_a", no:{ goto:"e_trade", fx:function(){ skipQuest("q8"); } } },
+q8_a:{ art:"street", quest:"q8", text:"The seal is wax, stamped with a bell. The chapel is ten minutes away. Sun is still up. Steam it open?",
+  yes:{ goto:"q8_b", fx:function(){ S.flags.openedLetter=true; } },
+  no:"q8_c" },
+q8_b:{ art:"chapel", quest:"q8", text:"Inside, one line: “The tower. Midnight. Come home.” No name. Your hands shake resealing it. Hurry on?",
+  yes:"q8_c", no:"q8_c" },
+q8_c:{ sp:"wren", art:"wren", quest:"q8", text:"“Race you to the chapel! Loser carries my sack!” Wren is already running. Race her?",
+  yes:"death_dark", no:"q8_d" },
+q8_d:{ art:"chapel", quest:"q8", text:"The chapel door's lock is broken — the keyhole is just a round, marble-sized hole. Try the door?",
+  yes:function(){ return has("marble") ? "q8_end_marble" : "q8_end_door"; },
+  no:function(){ return has("marble") ? "q8_end_marble" : "q8_end_door"; } },
+q8_end_marble:{ art:"chapel", quest:"q8", text:"Wren's marble fits the hole perfectly. Click. Inside, you leave the letter on the altar, where a candle is already lit. QUEST DONE.",
+  yes:"e_trade", no:"e_trade", kind:"auto", fx:function(){ completeQuest("q8"); S.flags.letterInside=true; } },
+q8_end_door:{ art:"chapel", quest:"q8", text:"Locked out, you slide the letter beneath the door. Something inside shifts it away at once. …Something was waiting. QUEST DONE.",
+  yes:"e_trade", no:"e_trade", kind:"auto", fx:function(){ completeQuest("q8"); } },
+
+/* ---------- EVERYDAY: Wren's trade ---------- */
+e_trade:{ sp:"wren", art:"wren",
+  text:function(){ return has("coin") && !has("marble") ? "“Trade you. My best marble for that shiny coin. It fits things. Locks. Holes. Fate.” Trade?" : "Wren shows you her sack of “found” things. Bottle tops. A spoon. Nothing you need. Move on?"; },
+  yes:function(){ if(has("coin") && !has("marble")){ lose("coin"); give("marble"); return "e_trade2"; } return "inter_night"; },
+  no:"inter_night" },
+e_trade2:{ sp:"wren", art:"wren", text:"The marble is warm. “Don't lose it,” Wren says, suddenly serious. “It's the town's spare key.”",
+  yes:"inter_night", no:"inter_night", kind:"auto" },
+
+/* ============ Q9 — RATS IN THE MILL (Vane / Wren) ============ */
+q9_offer:{ sp:"vane", art:"vane", quest:"q9", qtag:"QUEST 9 · RATS IN THE MILL",
+  text:"“Rats in my mill. Grain everywhere. Clear them out tonight and I will owe you. …Well?”",
+  yes:"q9_a", no:{ goto:"q10_offer", fx:function(){ skipQuest("q9"); } } },
+q9_a:{ art:"mill", quest:"q9", text:"Mill dust hangs thick. Your throat burns — the dust is wrong, bitter, old. Push deeper in?",
+  yes:function(){ return has("tonic") ? "q9_tonic" : "q9_dust"; },
+  no:"q9_retreat" },
+q9_tonic:{ art:"mill", quest:"q9", text:"The tonic! One sip and the burning stops cold. Odde's label said “emergencies.” This counted.",
+  yes:"q9_b", no:"q9_b", kind:"auto", fx:function(){ lose("tonic"); S.flags.curedDust=true; } },
+q9_dust:{ art:"mill", quest:"q9", text:"You push on, coughing black dust into your sleeve. It will sit in your chest for days. Worth it? Probably.",
+  yes:"q9_b", no:"q9_b", kind:"auto", fx:function(){ S.flags.dustChest=true; } },
+q9_retreat:{ sp:"vane", art:"vane", quest:"q9", text:"You back out. Vane's eyes narrow. “The last apprentice finished his jobs.” QUEST SLIPS AWAY.",
+  yes:"q10_offer", no:"q10_offer", kind:"auto", fx:function(){ failQuest("q9"); } },
+q9_b:{ art:"mill", quest:"q9", text:"The loft ladder is rotted. Above: scratching, and grain shifting like water. Climb to the loft?",
+  yes:function(){ return has("key") ? "q9_end_key" : "death_loft_prompt"; },
+  no:"q9_end_floor" },
+death_loft_prompt:{ art:"mill", quest:"q9", text:"No mill key for the loft hatch. The only way up is the crumbling grain pipe. It creaks like a warning. Climb it?",
+  yes:"death_loft", no:"q9_end_floor" },
+q9_end_key:{ art:"mill", quest:"q9", text:"The key opens the loft. No rats. Just grain — stacked by tiny hands into a perfect, towering BELL. QUEST DONE.",
+  yes:"q10_offer", no:"q10_offer", kind:"auto", fx:function(){ completeQuest("q9"); S.flags.grainBell=true; } },
+q9_end_floor:{ art:"mill", quest:"q9", text:"Through the loft boards you glimpse it: grain piled into a perfect bell shape. The “rats” are artists. QUEST DONE.",
+  yes:"q10_offer", no:"q10_offer", kind:"auto", fx:function(){ completeQuest("q9"); S.flags.grainBell=true; } },
+
+/* ---------- EVERYDAY: river walk ---------- */
+e_riverwalk:{ sp:"fen", art:"fen", text:"Old Fen mends nets by lantern light. “River's restless tonight. It wants its name back.” Sit with him a while?",
+  yes:{ goto:"e_riverwalk2", fx:function(){ S.flags.fenTrust=true; } },
+  no:"q9_offer" },
+e_riverwalk2:{ sp:"fen", art:"fen", text:"“I ferried him out, the night he vanished. I never ferried him back. That's the whole story, and it's enough.” He stares at the water.",
+  yes:"q9_offer", no:"q9_offer", kind:"auto" },
+
+/* ============ Q10 — A NAME FOR THE RIVER (Fen / Pell) ============ */
+q10_offer:{ sp:"fen", art:"fen", quest:"q10", qtag:"QUEST 10 · A NAME FOR THE RIVER",
+  text:"Fen grips your sleeve. “I'm dying, and I owe the river its name. It's in Pell's chapel book. Fetch it for me?”",
+  yes:"q10_a", no:{ goto:"finale_gate", fx:function(){ skipQuest("q10"); } } },
+q10_a:{ sp:"pell", art:"pell", quest:"q10", text:"“The founders' book? It is chained in the chapel. Fen is truly asking?” Pell's hands tremble. Open the book with her?",
+  yes:"q10_b", no:"q10_refuse" },
+q10_refuse:{ sp:"pell", art:"pell", quest:"q10", text:"“Then the river keeps its secret.” Pell closes the book gently, like a coffin lid. QUEST SLIPS AWAY.",
+  yes:"finale_gate", no:"finale_gate", kind:"auto", fx:function(){ failQuest("q10"); } },
+q10_b:{ art:"chapel", quest:"q10", text:"The first page: “ALDER — founder of this town. Alder, the river. Alder, who will return for his bell.” Read it aloud?",
+  yes:{ goto:"q10_end", fx:function(){ S.flags.knowsName=true; completeQuest("q10"); } },
+  no:{ goto:"q10_end", fx:function(){ S.flags.knowsName=true; completeQuest("q10"); } } },
+q10_end:{ sp:"fen", art:"fen", quest:"q10", text:"“Alder,” Fen whispers, and sleeps smiling. The river, outside, goes very quiet. The founder's name. The Guest's name. QUEST DONE.",
+  yes:"finale_gate", no:"finale_gate", kind:"auto" },
+
+/* ============ FINALE GATE ============ */
+finale_gate:{ art:"night",
+  text:function(){ return S.doneCount>=4 ? "Night comes down. Somewhere above Millbrook, the silent bell begins — very softly — to sway. Go to the tower?" : "You have done "+S.doneCount+" of the town's quests. The bell tower waits. The town still needs you. (Finale opens at 4 quests.)"; },
+  yes:function(){ return S.doneCount>=4 ? "fin_1" : "loop_back"; },
+  no:function(){ return S.doneCount>=4 ? "fin_1" : "loop_back"; } },
+loop_back:{ art:"street", text:"Dawn again. The unfinished quests of Millbrook are still waiting where you left them.",
+  yes:function(){ return nextUnfinished(); }, no:function(){ return nextUnfinished(); }, kind:"auto" },
+
+/* ============ FINALE — THE NIGHT THE BELL RINGS ITSELF ============ */
+fin_1:{ art:"night", text:"Midnight. The bell rings itself — slow, huge, patient. Doors open all over Millbrook. Nobody speaks. Climb the tower?",
+  yes:"fin_2", no:"fin_2" },
+fin_2:{ sp:"guest", art:"guest", text:"The Pale Guest waits by the bell. “You kept my town well, apprentice. Better than I did.”",
+  yes:"fin_3", no:"fin_3" },
+fin_3:{ sp:"guest", art:"guest",
+  text:function(){ return S.flags.knowsName ? "“Say my name, and I can go.” His grey glove hovers over the bell rope that isn't there. Say it — ALDER?" : "“I was the bell-keeper. The river lent me back. It wants its keeper — or a new one.”"; },
+  yes:"fin_check", no:"fin_check" },
+fin_check:{ art:"bell",
+  text:function(){ return has("tonic") ? "Your tonic vial is warm in your pocket. One sip showed you a hidden cellar. What would it show you now? Drink it?" : "The bell sways above you, clapperless and waiting."; },
+  yes:function(){ return has("tonic") ? "end_ferryman" : finaleByGear(); },
+  no:function(){ return finaleByGear(); } },
+
+/* ---------- DEATHS ---------- */
+death_swim:{ kind:"death", art:"river", title:"THE RIVER KEEPS ITS FARE",
+  text:"The current takes the box. Then your boots. Then the rest. Fen rows home alone, and does not look back." },
+death_tonic:{ kind:"death", art:"shop", title:"DOUBLE DATA",
+  text:"The second tonic tastes like midnight. Odde writes something down, sadly, in a very small notebook." },
+death_loft:{ kind:"death", art:"mill", title:"THE SHORT WAY DOWN",
+  text:"The grain pipe folds like paper. The mill dust settles over everything, soft as snow, soft as flour." },
+death_dark:{ kind:"death", art:"night", title:"AFTER DARK",
+  text:"You win the race. It is full dark when you reach the chapel — and something tall is waiting by the door, holding it open." },
+death_cellar:{ kind:"death", art:"cellar", title:"THE CELLAR DOOR",
+  text:"It opens inward. So do you. The scratching stops, pleased, and the dark learns your name by heart." },
+death_cell:{ kind:"death", art:"cellar", title:"GARRICK'S CELL",
+  text:"Two lies. Garrick is almost gentle locking the cell. “Everyone in this town lies once.” The river sounds close, underground." }
+};
+function finaleByGear(){
+  if(has("rope") && S.flags.clapperBack){ return "end_bellkeeper"; }
+  return "fin_hand";
+}
+CARDS.fin_hand = { sp:"pell", art:"pell", text:"No rope. No way to ring it true. Someone must climb and strike the bell by hand — and stay in the tower. Send Pell up?",
+  yes:"end_pell", no:"end_you" };
+
+/* ---------- ENDINGS ---------- */
+var ENDINGS = {
+end_bellkeeper:{ title:"ENDING · THE BELL, RUNG TRUE", art:"tower",
+  text:"Clapper restored, rope in hand, you ring one clear note over the river. The Guest smiles with both eyes. “Thank you.” He walks into the water, and it takes him kindly. You are the bell-keeper now." },
+end_pell:{ title:"ENDING · THE ONE WHO STAYS", art:"bell",
+  text:"Pell climbs, serene at last. “I took the clapper. I will answer the bell.” She strikes the bronze all night. By dawn the tower is empty, the bell still, the town free — at her price alone." },
+end_you:{ title:"ENDING · YOUR HAND ON THE BRONZE", art:"bell",
+  text:"You strike the bell by hand until your arms give out and the sun rises. The Guest is gone. There was no trick — every bell needs a keeper. Now it's you." },
+end_ferryman:{ title:"ENDING · THE GUEST'S TRUE FACE", art:"river",
+  text:"The tonic burns. The Guest's face unfolds — old, kind, drowned, patient. He sees you seeing it. “Then you understand the job.” He offers his lantern and his boat. The river has you now." }
+};
+
+/* ============================================================
+   ENGINE
+   ============================================================ */
+var NAMES = { mabel:"MABEL · BAKER", garrick:"CAPTAIN GARRICK · GUARD", fen:"OLD FEN · FERRYMAN",
+  pell:"SISTER PELL · BELL-RINGER", wren:"WREN · STREET KID", odde:"MASTER ODDE · APOTHECARY",
+  vane:"THE WIDOW VANE · MILL OWNER", guest:"THE PALE GUEST" };
+var OFFERS = { q1:"q1_offer", q2:"q2_offer", q3:"q3_offer", q4:"q4_offer", q5:"q5_offer",
+  q6:"q6_offer", q7:"q7_offer", q8:"q8_offer", q9:"q9_offer", q10:"q10_offer" };
+function nextUnfinished(){
+  for(var i=0;i<QUEST_META.length;i++){
+    var id = QUEST_META[i].id;
+    if(S.quests[id] !== "done"){ delete S.quests[id]; renderHUD(); return OFFERS[id]; }
+  }
+  return "fin_1";
+}
+var currentId = null, animating = false, coachQueue = [], coachActive = false;
+function $(id){ return document.getElementById(id); }
+
+function renderHUD(){
+  /* The play screen stays clean: quests + pockets render into the JOURNAL. */
+  var list = "";
+  QUEST_META.forEach(function(q){
+    var st = S.quests[q.id];
+    var cls = st==="done" ? "jrow done" : st ? "jrow gone" : "jrow";
+    var label = st==="done" ? "✓ DONE" : st ? "✕ SLIPPED AWAY" : "· NOT YET";
+    list += '<div class="'+cls+'"><span>'+q.icon+'</span><span class="jname">'+q.name+'</span><span class="jst">'+label+'</span></div>';
+  });
+  $("jquests").innerHTML = list;
+  $("jfinale").textContent = S.doneCount >= 4
+    ? "★ THE FINALE IS OPEN. When night falls, go to the tower."
+    : "THE FINALE — the night the bell rings itself — opens at 4 quests done. You have "+S.doneCount+".";
+  var html = "";
+  ITEM_ORDER.forEach(function(k){
+    html += '<div class="slot'+(has(k)?"":" empty")+'">'+ITEMS[k].svg+'<span class="tip">'+ITEMS[k].name+'</span></div>';
+  });
+  $("jpockets").innerHTML = html;
+}
+$("journalBtn").addEventListener("click", function(){
+  if(coachActive) return;
+  renderHUD();
+  $("journalOverlay").classList.add("show");
+  if(!S.journalSeen){ S.journalSeen = true; toast("Finish any 4 quests to open the FINALE."); }
+});
+$("btnJournalClose").addEventListener("click", function(){ $("journalOverlay").classList.remove("show"); });
+var toastTimer = null;
+function toast(msg){
+  var t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 1900);
+}
+/* ---------- coach / spotlight onboarding ---------- */
+function queueCoach(target, text){ coachQueue.push({target:target, text:text}); if(!coachActive) nextCoach(); }
+function nextCoach(){
+  var step = coachQueue.shift();
+  document.querySelectorAll(".spot").forEach(function(e){ e.classList.remove("spot"); });
+  if(!step){ coachActive = false; $("coach").classList.remove("show"); return; }
+  coachActive = true;
+  var el = $(step.target); if(el) el.classList.add("spot");
+  $("coachtext").textContent = step.text;
+  $("coach").classList.add("show");
+}
+$("coachbtn").addEventListener("click", nextCoach);
+
+/* ---------- chapters: one day, in order ---------- */
+function chapterFor(id){
+  if(id.indexOf("intro") === 0) return "PROLOGUE";
+  if(id === "inter_midday" || id.indexOf("q3") === 0 || id === "e_gossip" || id === "e_gossip2" ||
+     id.indexOf("q4") === 0 || id === "e_sighting" || id === "e_sighting2" ||
+     id === "e_stone" || id === "e_stone2" || id.indexOf("q5") === 0 ||
+     id === "e_polish" || id === "e_polish2") return "MIDDAY";
+  if(id === "inter_dusk" || id.indexOf("q6") === 0 || id.indexOf("e_well") === 0 ||
+     id.indexOf("q7") === 0 || id === "e_guest" || id === "e_guest2" ||
+     id.indexOf("q8") === 0 || id === "e_trade" || id === "e_trade2") return "DUSK";
+  if(id === "inter_night" || id === "e_riverwalk" || id === "e_riverwalk2" ||
+     id.indexOf("q9") === 0 || id.indexOf("q10") === 0 || id.indexOf("fin") === 0 ||
+     id === "finale_gate" || id === "loop_back" || id.indexOf("death") === 0) return "THE NIGHT";
+  return "MORNING";
+}
+
+/* ---------- card display ---------- */
+function cardArt(card){
+  if(card.sp) return P(card.sp);
+  return SC(card.art || "street");
+}
+function showCard(id){
+  var card = CARDS[id];
+  if(!card){ showEnding("end_you"); return; }
+  currentId = id; S.cardsSeen++;
+  var c = $("card");
+  c.classList.add("noanim"); c.style.transform = "none";
+  $("art").innerHTML = cardArt(card);
+  var sp = $("speaker");
+  if(card.sp){ sp.style.display = "block"; sp.textContent = NAMES[card.sp]; }
+  else sp.style.display = "none";
+  var qt = $("questtag");
+  if(card.qtag){ qt.style.display = "block"; qt.textContent = card.qtag; }
+  else if(card.quest){ var m = QUEST_META.filter(function(q){return q.id===card.quest;})[0]; qt.style.display="block"; qt.textContent = m ? m.name.toUpperCase() : ""; }
+  else qt.style.display = "none";
+  var txt = typeof card.text === "function" ? card.text() : card.text;
+  $("cardtext").textContent = txt;
+  var stamp = $("stamp");
+  if(card.kind === "death"){ stamp.style.display = "block"; stamp.textContent = "✝ " + (card.title || "YOU DIED"); }
+  else stamp.style.display = "none";
+  var isAuto = card.kind === "auto" || card.kind === "death";
+  $("btnYes").style.display = isAuto ? "none" : "block";
+  $("btnNo").style.display = isAuto ? "none" : "block";
+  var bn = $("btnNext");
+  bn.style.display = isAuto ? "block" : "none";
+  bn.textContent = card.kind === "death" ? "THE TOWN GOES ON — RESTART" :
+    (id.indexOf("intro") === 0 || id.indexOf("inter_") === 0) ? "CONTINUE ▸" : "NEXT ▸";
+  var ch = chapterFor(id);
+  if(ch !== S.chapter){ S.chapter = ch; }
+  document.body.setAttribute("data-ch", ch);
+  $("chapname").textContent = "CHAPTER · " + ch;
+  if(id === "snack1" && !S.onboarded){
+    S.onboarded = true;
+    queueCoach("card", "This is your day. Read what is asked.");
+    queueCoach("controls", "Swipe the card right for YES, left for NO — or tap. There are no other buttons.");
+    queueCoach("journalBtn", "Your quests and pockets live here. Finish any 4 quests to open the finale.");
+  }
+  $("peekYes").style.opacity = 0; $("peekNo").style.opacity = 0;
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ c.classList.remove("noanim"); }); });
+}
+function resolveChoice(card, choice){
+  var c = (card.kind === "auto" || card.kind === "death") ? (card.yes || card.no) : card[choice];
+  if(typeof c === "function") c = c();
+  return c;
+}
+function goNext(raw){
+  if(raw == null) return;
+  var goto = raw, fx = null;
+  if(typeof raw === "object"){ goto = raw.goto; fx = raw.fx; }
+  if(fx) fx();
+  if(ENDINGS[goto]){ showEnding(goto); return; }
+  showCard(goto);
+}
+function answer(choice){
+  if(animating || coachActive || !currentId) return;
+  var card = CARDS[currentId];
+  if(card.kind === "death"){ restartGame(); return; }
+  animating = true;
+  var c = $("card");
+  var dir = choice === "yes" ? 1 : -1;
+  if(card.kind !== "auto"){ c.classList.add("settle"); c.style.transform = "translateX("+(dir*130)+"%) rotate("+(dir*10)+"deg)"; }
+  setTimeout(function(){
+    animating = false;
+    var raw = resolveChoice(card, choice);
+    if(card.fx) card.fx();
+    goNext(raw);
+  }, card.kind === "auto" ? 30 : 180);
+}
+$("btnYes").addEventListener("click", function(){ answer("yes"); });
+$("btnNo").addEventListener("click", function(){ answer("no"); });
+$("btnNext").addEventListener("click", function(){ answer("yes"); });
+
+/* ---------- swipe ---------- */
+(function(){
+  var card = $("card"), startX = 0, dx = 0, dragging = false;
+  card.addEventListener("pointerdown", function(e){
+    if(coachActive || animating) return;
+    var cur = CARDS[currentId];
+    if(!cur || cur.kind){ return; } /* only plain yes/no cards swipe */
+    dragging = true; startX = e.clientX; dx = 0;
+    card.classList.add("noanim");
+    try{ card.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  card.addEventListener("pointermove", function(e){
+    if(!dragging) return;
+    dx = e.clientX - startX;
+    card.style.transform = "translateX("+dx+"px) rotate("+(dx/16)+"deg)";
+    $("peekYes").style.opacity = dx > 8 ? Math.min(dx/70, 1) : 0;
+    $("peekNo").style.opacity = dx < -8 ? Math.min(-dx/70, 1) : 0;
+  });
+  function endDrag(){
+    if(!dragging) return;
+    dragging = false;
+    card.classList.remove("noanim"); card.classList.add("settle");
+    if(dx > 70){ answer("yes"); }
+    else if(dx < -70){ answer("no"); }
+    else { card.style.transform = "none"; $("peekYes").style.opacity = 0; $("peekNo").style.opacity = 0; }
+    setTimeout(function(){ card.classList.remove("settle"); }, 200);
+  }
+  card.addEventListener("pointerup", endDrag);
+  card.addEventListener("pointercancel", endDrag);
+})();
+
+/* ---------- endings & restart ---------- */
+function showEnding(id){
+  var e = ENDINGS[id]; if(!e) return;
+  $("endart").innerHTML = SC(e.art);
+  $("endtitle").textContent = e.title;
+  $("endtext").textContent = e.text;
+  $("endstats").textContent = "Quests completed: "+S.doneCount+" of 10 · Cards seen: "+S.cardsSeen+" · Lies told: "+S.lies;
+  $("endOverlay").classList.add("show");
+  currentId = null;
+}
+function restartGame(){
+  S = newState();
+  $("endOverlay").classList.remove("show");
+  $("journalOverlay").classList.remove("show");
+  renderHUD();
+  showCard("intro1");
+}
+$("btnRestart").addEventListener("click", restartGame);
+$("btnStart").addEventListener("click", function(){
+  $("startOverlay").classList.remove("show");
+  S.started = true;
+  showCard("intro1");
+});
+
+/* ---------- boot ---------- */
+S = newState();
+renderHUD();
+$("startOverlay").classList.add("show");
+/* render a teaser card behind the start sheet */
+(function(){ var keep = currentId; $("art").innerHTML = SC("bell"); $("cardtext").textContent = "Last night, at 3am, the bell rang itself. It has no clapper."; })();
+</script>
+</body>
+</html>

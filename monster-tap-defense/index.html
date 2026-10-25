@@ -1,0 +1,1761 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Monster Tap Defense</title>
+    <style>
+      :root {
+        --ink: #141414;
+        --paper: #ffffff;
+        --field: #b8f0a0;
+        --field-dot: #9fe184;
+        --field-dawn: #ffe0a1;
+        --night: #12141f;
+        --chip: #ffffff;
+        --accent: #ffd21f;
+        --danger: #ff4757;
+        --hud-text: #141414;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --field: #274d2d;
+          --field-dot: #2f5c35;
+          --field-dawn: #8a6a34;
+          --chip: #1d1d24;
+          --hud-text: #ffffff;
+        }
+      }
+      * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+        color: var(--ink);
+        overflow: hidden;
+        background: var(--night);
+      }
+      #game {
+        position: fixed; inset: 0;
+        background:
+          radial-gradient(circle, rgba(255,255,255,.4) 1.2px, transparent 1.7px) 0 0 / 90px 90px,
+          radial-gradient(circle, rgba(255,255,255,.22) 1px, transparent 1.4px) 37px 53px / 130px 130px,
+          var(--night);
+        overflow: hidden;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #game.shake { animation: shake .32s linear; }
+      @keyframes shake {
+        0%,100% { transform: translate(0,0); }
+        20% { transform: translate(-9px,5px); }
+        40% { transform: translate(8px,-6px); }
+        60% { transform: translate(-6px,-4px); }
+        80% { transform: translate(6px,4px); }
+      }
+      /* ---------- Boxed play field ---------- */
+      #field {
+        position: absolute;
+        left: 10px; right: 10px;
+        top: calc(62px + env(safe-area-inset-top));
+        bottom: calc(12px + env(safe-area-inset-bottom) + 5vh);
+        border: 5px solid var(--ink);
+        box-shadow: 7px 7px 0 rgba(0,0,0,.55);
+        background:
+          radial-gradient(circle, var(--field-dot) 2.2px, transparent 2.6px) 0 0 / 34px 34px,
+          var(--field);
+        overflow: hidden;
+        transition: background-color 1.4s ease;
+        z-index: 5;
+      }
+      #field.dawn { background-color: var(--field-dawn); }
+      #land {
+        position: absolute; left: 50%; top: 50%;
+        width: 176%; height: 176%;
+        transform: translate(-50%,-50%) scale(1);
+        transition: transform 1.1s ease;
+        pointer-events: none; opacity: .55; z-index: 1;
+      }
+      #land svg { width: 100%; height: 100%; display: block; }
+      /* ---------- HUD ---------- */
+      #hud {
+        position: absolute; top: calc(8px + env(safe-area-inset-top)); left: 8px; right: 8px;
+        display: flex; align-items: flex-start; gap: 6px;
+        z-index: 40; pointer-events: none;
+      }
+      .chip {
+        background: var(--chip); color: var(--hud-text);
+        border: 3px solid var(--ink);
+        box-shadow: 3px 3px 0 var(--ink);
+        padding: 3px 8px;
+        font-weight: 900; font-size: 14px; letter-spacing: .4px;
+        line-height: 1.15; white-space: nowrap;
+      }
+      .chip small { display: block; font-size: 9px; letter-spacing: 1.5px; opacity: .75; }
+      #hearts { display: flex; gap: 1px; align-items: center; padding: 5px 6px; }
+      #hearts svg { width: 18px; height: 16px; display: block; }
+      #hearts .lost { filter: grayscale(1); opacity: .28; }
+      #hudSpacer { flex: 1; }
+      #comboChip {
+        position: absolute; top: 52px; right: 0;
+        background: var(--accent); color: #141414;
+        visibility: hidden; transform: rotate(-2deg);
+      }
+      #comboChip.on { visibility: visible; }
+      /* ---------- Base ---------- */
+      #base {
+        position: absolute; left: 50%; top: 50%;
+        width: 118px; height: 118px;
+        transform: translate(-50%,-58%);
+        z-index: 10; pointer-events: none;
+        filter: drop-shadow(5px 6px 0 rgba(20,20,20,.55));
+        transition: width 1.1s ease, height 1.1s ease;
+      }
+      #base.hit { animation: baseHit .3s linear; }
+      @keyframes baseHit {
+        0%,100% { transform: translate(-50%,-58%) scale(1); }
+        30% { transform: translate(-50%,-58%) scale(.88) rotate(-3deg); }
+        65% { transform: translate(-50%,-58%) scale(1.06) rotate(2deg); }
+      }
+      #dangerRing {
+        position: absolute; left: 50%; top: 50%;
+        width: 150px; height: 150px; border: 4px dashed var(--danger);
+        border-radius: 50%;
+        transform: translate(-50%,-58%);
+        z-index: 9; pointer-events: none; opacity: 0;
+        transition: width 1.1s ease, height 1.1s ease;
+      }
+      #dangerRing.on { opacity: .85; animation: spin 7s linear infinite; }
+      @keyframes spin { to { transform: translate(-50%,-58%) rotate(360deg); } }
+      /* ---------- Monsters ---------- */
+      #monsters { position: absolute; inset: 0; z-index: 20; }
+      .monster {
+        position: absolute; left: 0; top: 0;
+        z-index: 20; cursor: pointer;
+        will-change: transform;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .monster .art { display: block; pointer-events: none; flex: none; }
+      .monster .pips {
+        position: absolute; left: 50%; top: -13px; transform: translateX(-50%);
+        display: flex; gap: 3px; pointer-events: none;
+      }
+      .monster .pips i {
+        width: 9px; height: 9px; background: var(--accent);
+        border: 2px solid var(--ink); display: block;
+      }
+      .monster .pips i.spent { background: #fff; opacity: .45; }
+      .monster .pips i.g2 { background: #c77dff; }
+      .monster .pips i.g3 { background: #ff5964; }
+      .monster.squash .art { animation: squash .13s linear; }
+      @keyframes squash {
+        0% { transform: scale(1,1); }
+        40% { transform: scale(1.22,.72); }
+        100% { transform: scale(1,1); }
+      }
+      .monster.wobble .art { animation: wob .5s ease-in-out infinite alternate; }
+      @keyframes wob { from { transform: rotate(-3.5deg); } to { transform: rotate(3.5deg); } }
+      .monster .shieldDome { transition: transform .18s ease-out; transform-origin: 50% 88%; }
+      .monster.open .shieldDome { transform: translateY(-16px) rotate(-14deg); }
+      .monster .belly { opacity: 0; transition: opacity .15s; }
+      .monster.open .belly { opacity: 1; }
+      /* ---------- Banjo player states ---------- */
+      .monster .banjoG { transition: transform .18s ease; transform-box: fill-box; transform-origin: 50% 50%; }
+      .monster.hushed .banjoG { transform: translateY(11px) rotate(22deg); }
+      .monster .notes { transition: opacity .15s; animation: noteBob .55s ease-in-out infinite alternate; transform-box: fill-box; }
+      @keyframes noteBob { from { transform: translateY(1.5px); } to { transform: translateY(-2.5px); } }
+      .monster.hushed .notes { opacity: 0; animation: none; }
+      .monster .eyeShut { opacity: 0; }
+      .monster.hushed .eyeShut { opacity: 1; }
+      .monster.hushed .eyeOpen { opacity: 0; }
+      .monster.hushed { filter: saturate(.45) brightness(.94); }
+      /* ---------- Field hazards: pools + cones ---------- */
+      .pool { position: absolute; transform: translate(-50%,-50%); z-index: 2; pointer-events: none; }
+      .cone { position: absolute; z-index: 2; pointer-events: none; }
+      .boostMark {
+        position: absolute; right: -8px; top: -10px; font-size: 19px; font-weight: 900; color: #0fb5d9;
+        text-shadow: 1.5px 1.5px 0 #141414, -1px -1px 0 #141414, 1px -1px 0 #141414, -1px 1px 0 #141414;
+        pointer-events: none;
+      }
+      .hpMark {
+        position: absolute; left: -8px; top: -11px; font-size: 12px; font-weight: 900; color: #c21807;
+        background: #fff; border: 2px solid var(--ink); padding: 0 4px; pointer-events: none; white-space: nowrap;
+      }
+      .monster.boosted .art { filter: drop-shadow(0 0 7px rgba(23,227,194,.95)); }
+      /* ---------- FX ---------- */
+      #fx { position: absolute; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; }
+      .floater {
+        position: absolute; font-weight: 900; font-size: 19px; color: var(--ink);
+        text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;
+        transform: translate(-50%,-50%); animation: floatUp .7s ease-out forwards;
+        white-space: nowrap;
+      }
+      .floater.big { font-size: 26px; color: #c21807; }
+      .floater.clank { color: #444; font-size: 15px; }
+      @keyframes floatUp {
+        0% { opacity: 1; margin-top: 0; }
+        100% { opacity: 0; margin-top: -52px; }
+      }
+      .bit {
+        position: absolute; width: 10px; height: 10px; border: 2px solid var(--ink);
+        transform: translate(-50%,-50%); pointer-events: none;
+      }
+      /* ---------- Banner ---------- */
+      #banner {
+        position: absolute; left: 50%; top: 17%; transform: translate(-50%,-50%) rotate(-2deg);
+        z-index: 45; pointer-events: none; text-align: center;
+        opacity: 0; transition: opacity .18s, transform .18s;
+      }
+      #banner.show { opacity: 1; transform: translate(-50%,-50%) rotate(-2deg) scale(1.04); }
+      #banner .card {
+        background: var(--accent); color: #141414;
+        border: 4px solid var(--ink); box-shadow: 6px 6px 0 var(--ink);
+        padding: 10px 20px 12px;
+      }
+      #banner h2 { margin: 0; font-size: clamp(24px, 6.4vw, 38px); font-weight: 900; letter-spacing: .5px; }
+      #banner p { margin: 3px 0 0; font-size: clamp(14px, 3.8vw, 17px); font-weight: 700; }
+      #banner .bArt { margin: 2px auto 0; width: 74px; height: 74px; }
+      /* ---------- Screens / cards ---------- */
+      .screen {
+        position: absolute; inset: 0; z-index: 60;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(20,20,20,.45); padding: 18px;
+      }
+      .screen[hidden] { display: none; }
+      .panel {
+        background: var(--paper); color: #141414;
+        border: 4px solid var(--ink); box-shadow: 8px 8px 0 var(--ink);
+        max-width: 430px; width: 100%; padding: 22px 22px 20px;
+        text-align: center;
+      }
+      .panel h1 { margin: 0 0 6px; font-size: clamp(27px, 7vw, 36px); font-weight: 900; line-height: 1.05; }
+      .panel p { margin: 8px 0; font-size: 17px; font-weight: 600; line-height: 1.35; }
+      .panel .artRow { margin: 4px auto 2px; width: 120px; height: 110px; }
+      .panel .artRow.small { width: 84px; height: 78px; }
+      .beatKicker { font-weight: 900; font-size: 12px; letter-spacing: 2px; opacity: .65; margin-bottom: 2px; }
+      .btn {
+        display: inline-block; margin-top: 14px;
+        background: var(--accent); color: #141414;
+        border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink);
+        font: inherit; font-weight: 900; font-size: 19px; letter-spacing: .5px;
+        padding: 11px 26px; cursor: pointer;
+      }
+      .btn:active { transform: translate(3px,3px); box-shadow: 1px 1px 0 var(--ink); }
+      .btn.small { font-size: 15px; padding: 9px 16px; }
+      .choiceRow { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
+      .choiceRow .btn { margin-top: 6px; }
+      .skipLink {
+        display: inline-block; margin-top: 12px; background: none; border: none;
+        font: inherit; font-size: 13px; font-weight: 800; letter-spacing: 1px;
+        color: #141414; opacity: .55; text-decoration: underline; cursor: pointer; padding: 4px 8px;
+      }
+      .statsRow { display: flex; gap: 8px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+      .statsRow .chip { box-shadow: 3px 3px 0 var(--ink); }
+      /* ---------- Dawn Star shop ---------- */
+      .panel { max-height: calc(100dvh - 30px); overflow-y: auto; }
+      /* Start screen: just a balance chip + one SHOP button. */
+      .startShopRow { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 18px; border-top: 3px dashed rgba(20,20,20,.4); padding-top: 16px; }
+      .startShopRow .btn { margin-top: 0; }
+      .starBal { background: var(--accent); color: #141414; border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); padding: 4px 12px; font-weight: 900; font-size: 17px; white-space: nowrap; }
+      /* Shop sheet: its own panel with its own internal scroll. */
+      .shopPanel { text-align: left; max-height: calc(100dvh - 36px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+      .shopHead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+      .shopTitle { font-weight: 900; font-size: 20px; letter-spacing: .5px; }
+      .shopNote { margin: 8px 0 2px !important; font-size: 14px !important; opacity: .75; line-height: 1.35; }
+      .upg { display: flex; flex-direction: column; gap: 12px; border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 14px; margin-top: 14px; background: #fff; }
+      .upgInfo b { font-size: 17px; letter-spacing: .3px; }
+      .upgInfo .owned { font-size: 11px; font-weight: 900; background: #141414; color: #fff; padding: 2px 7px; margin-left: 5px; white-space: nowrap; vertical-align: 2px; }
+      .upgInfo small { display: block; font-size: 14px; font-weight: 700; opacity: .72; margin-top: 4px; line-height: 1.3; }
+      .upgRow { display: flex; align-items: center; gap: 14px; }
+      .upgRow .btn { margin-top: 0; flex: 1; padding: 13px 10px; font-size: 17px; }
+      #shopCloseBtn { display: block; width: 100%; margin-top: 18px; }
+      .btn[disabled] { opacity: .38; cursor: default; }
+      .btn[disabled]:active { transform: none; box-shadow: 4px 4px 0 var(--ink); }
+      .tglWrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+      .tgl { position: relative; width: 52px; height: 28px; border: 3px solid var(--ink); background: #d8d8d8; cursor: pointer; padding: 0; flex: none; }
+      .tgl .knob { position: absolute; top: 1px; left: 1px; width: 20px; height: 20px; background: #fff; border: 3px solid var(--ink); transition: left .15s ease; }
+      .tgl.on { background: #58cc02; }
+      .tgl.on .knob { left: 25px; }
+      .tgl[disabled] { opacity: .35; cursor: default; }
+      .tglState { font-size: 10.5px; font-weight: 900; letter-spacing: 1px; }
+      #hearts { flex-wrap: wrap; }
+      #hearts .bonus svg path { fill: #ffd21f; }
+      /* ---------- Roast / pure win ---------- */
+      .roast { margin-top: 14px; border: 4px dashed #c21807; background: #ffe9e4; color: #141414; padding: 10px 12px; }
+      .roast p { margin: 4px 0 !important; font-size: 15.5px !important; }
+      .pureBadge { margin-top: 14px; background: var(--accent); color: #141414; border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); padding: 7px 10px; font-weight: 900; letter-spacing: .5px; line-height: 1.3; }
+      /* ---------- Onboarding spotlight ---------- */
+      #spot {
+        position: absolute; border: 4px solid var(--accent);
+        box-shadow: 0 0 0 9999px rgba(20,20,20,.55), 5px 5px 0 rgba(0,0,0,.35);
+        z-index: 50; pointer-events: none; display: none;
+      }
+      #coach {
+        position: absolute; z-index: 55; display: none;
+        background: var(--paper); color: #141414;
+        border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink);
+        padding: 10px 14px; max-width: min(320px, 86vw);
+        font-weight: 800; font-size: 16px; line-height: 1.3; text-align: center;
+      }
+      #coach .btn { margin-top: 9px; font-size: 16px; padding: 8px 20px; pointer-events: auto; }
+      #vignette {
+        position: absolute; inset: 0; z-index: 35; pointer-events: none; opacity: 0;
+        box-shadow: inset 0 0 90px 34px rgba(255,40,40,.55);
+        transition: opacity .15s;
+      }
+      #vignette.on { opacity: 1; }
+      @media (prefers-reduced-motion: reduce) {
+        #game.shake, #base.hit, .monster.squash .art, .monster .notes { animation: none; }
+        #land, #base, #dangerRing, #field { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="game" aria-label="Monster Tap Defense game field">
+      <div id="field">
+        <div id="land" aria-hidden="true"></div>
+        <div id="dangerRing"></div>
+        <div id="base" aria-hidden="true"></div>
+        <div id="monsters"></div>
+        <div id="fx"></div>
+        <div id="vignette"></div>
+      </div>
+
+      <div id="hud">
+        <div class="chip" id="hearts" aria-label="Base health"></div>
+        <div class="chip"><small id="hourLabel">HOUR</small><span id="waveNum">1</span><span id="ofHours"> OF 10</span></div>
+        <div class="chip" id="dmgChip" style="display:none"><small>TAP DMG</small><span id="dmgNum">1</span></div>
+        <div id="hudSpacer"></div>
+        <div class="chip" id="comboChip">COMBO ×<span id="comboNum">1</span></div>
+        <div class="chip"><small>SCORE</small><span id="scoreNum">0</span></div>
+      </div>
+
+      <div id="banner"><div class="card">
+        <div class="bArt" id="bannerArt"></div>
+        <h2 id="bannerTitle"></h2>
+        <p id="bannerText"></p>
+      </div></div>
+
+      <div id="spot"></div>
+      <div id="coach"><span id="coachText"></span><br /><button class="btn" id="coachBtn">GOT IT</button></div>
+
+      <!-- Story / start -->
+      <div class="screen" id="storyScreen">
+        <div class="panel">
+          <div class="artRow" id="storyArt"></div>
+          <h1 id="storyTitle">THE GLITTERING THING</h1>
+          <p id="storyText">This morning, down by the fence, you found something glittering in the grass: a singing stone — warm, smooth, with one tiny shut eye. You brought it home. Of course you did.</p>
+          <button class="btn" id="storyBtn">NEXT ▸</button>
+          <div class="startShopRow">
+            <span class="starBal" aria-label="Dawn Star balance">★ <span id="starChip">0</span></span>
+            <button class="btn" id="shopOpenBtn">★ SHOP</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dawn Star shop sheet (scrolls internally) -->
+      <div class="screen" id="shopScreen" hidden>
+        <div class="panel shopPanel">
+          <div class="shopHead">
+            <span class="shopTitle">DAWN STAR SHOP</span>
+            <span class="starBal">★ <span id="starBal">0</span></span>
+          </div>
+          <p class="shopNote">Bank ★ for every hour you survive. Spend them on permanent boosts — and switch a boost off before a run if you're feeling brave.</p>
+          <div class="upg">
+            <div class="upgInfo">
+              <b>EXTRA HEART</b><span class="owned" id="heartOwned">OWNED ×0</span>
+              <small id="heartFx">Next run max hearts: 5</small>
+            </div>
+            <div class="upgRow">
+              <button class="btn" id="heartBuy">BUY · 5★</button>
+              <div class="tglWrap">
+                <button class="tgl" id="heartTgl" aria-label="Toggle extra heart boost"><span class="knob"></span></button>
+                <span class="tglState" id="heartTglState">NOT OWNED</span>
+              </div>
+            </div>
+          </div>
+          <div class="upg">
+            <div class="upgInfo">
+              <b>EXTRA TAP DAMAGE</b><span class="owned" id="dmgOwned">OWNED ×0</span>
+              <small id="dmgFx">Next run tap damage: 1</small>
+            </div>
+            <div class="upgRow">
+              <button class="btn" id="dmgBuy">BUY · 10★</button>
+              <div class="tglWrap">
+                <button class="tgl" id="dmgTgl" aria-label="Toggle extra tap damage boost"><span class="knob"></span></button>
+                <span class="tglState" id="dmgTglState">NOT OWNED</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn" id="shopCloseBtn">◂ BACK</button>
+        </div>
+      </div>
+
+      <!-- Story beat between hours -->
+      <div class="screen" id="beatScreen" hidden>
+        <div class="panel">
+          <div class="artRow small" id="beatArt"></div>
+          <div class="beatKicker" id="beatKicker">HOUR 2 OF 10</div>
+          <p id="beatText"></p>
+          <button class="btn" id="beatBtn">CONTINUE ▸</button>
+          <br /><button class="skipLink" id="beatSkip">SKIP STORY ▸▸</button>
+        </div>
+      </div>
+
+      <!-- Win -->
+      <div class="screen" id="winScreen" hidden>
+        <div class="panel">
+          <div class="artRow small" id="winArt"></div>
+          <h1>DAWN BREAKS</h1>
+          <p id="winText">The song stops. The stone's eye closes — slowly, like it's only resting. The valley is just a valley again. You survived the night.</p>
+          <div id="winChoice">
+            <p style="font-weight:900">The stone is yours. What do you do with it?</p>
+            <div class="choiceRow">
+              <button class="btn small" data-ending="bury">BURY IT</button>
+              <button class="btn small" data-ending="keep">KEEP IT</button>
+              <button class="btn small" data-ending="sky">THROW IT BACK</button>
+            </div>
+          </div>
+          <p id="winEnding" hidden></p>
+          <div class="statsRow">
+            <div class="chip"><small>SCORE</small><span id="winScore">0</span></div>
+            <div class="chip"><small>SMASHED</small><span id="winKills">0</span></div>
+            <div class="chip"><small>★ EARNED</small><span id="winStars">+0</span></div>
+            <div class="chip"><small>★ BALANCE</small><span id="winBal">0</span></div>
+          </div>
+          <div class="roast" id="roastBox" hidden>
+            <p><b>DAWN BREAKS… ON TRAINING WHEELS.</b></p>
+            <p>Let's be honest: you are a giant big fat baby who can't even beat the game without these improvements. Extra hearts? Extra damage? The monsters are embarrassed for you — the Collector is telling the others.</p>
+            <p><b>Think you're not a baby? PROVE IT.</b> One clean night, every boost OFF. We'll wait.</p>
+            <button class="btn" id="proveBtn">PROVE IT — NO BOOSTS</button>
+          </div>
+          <div class="pureBadge" id="pureBadge" hidden>★ TRUE DAWN ★<br />WON WITH EVERY BOOST OFF — NO ROAST FOR YOU</div>
+          <div id="winModes" hidden>
+            <button class="btn" id="endlessBtn">ENDLESS NIGHT ▸</button>
+            <button class="btn" id="newNightBtn">NEW NIGHT</button>
+            <button class="btn" id="winShopBtn">★ STAR SHOP</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game over -->
+      <div class="screen" id="overScreen" hidden>
+        <div class="panel">
+          <div class="artRow" id="overArt"></div>
+          <h1 id="overTitle">THE SONG WINS</h1>
+          <p id="overText">The monsters got into the house. Somewhere out in the dark, the stone is still singing — to them now.</p>
+          <div class="statsRow">
+            <div class="chip"><small>HOUR</small><span id="finalWave">1</span></div>
+            <div class="chip"><small>SCORE</small><span id="finalScore">0</span></div>
+            <div class="chip"><small>SMASHED</small><span id="finalKills">0</span></div>
+            <div class="chip"><small>★ EARNED</small><span id="overStars">+0</span></div>
+            <div class="chip"><small>★ BALANCE</small><span id="overBal">0</span></div>
+          </div>
+          <button class="btn" id="againBtn">TRY ANOTHER NIGHT</button>
+          <br /><button class="skipLink" id="overShopBtn">SPEND DAWN STARS ▸</button>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      "use strict";
+      /* ================= Art (distinct hand-drawn SVG silhouettes) ================= */
+      var ART = {
+        base:
+          '<svg viewBox="0 0 120 120" width="100%" height="100%" aria-hidden="true">' +
+          '<rect x="18" y="52" width="84" height="56" fill="#ffb03a" stroke="#141414" stroke-width="5"/>' +
+          '<rect x="10" y="38" width="100" height="18" fill="#ff5964" stroke="#141414" stroke-width="5"/>' +
+          '<rect x="26" y="24" width="14" height="16" fill="#ffe74c" stroke="#141414" stroke-width="4"/>' +
+          '<rect x="80" y="24" width="14" height="16" fill="#ffe74c" stroke="#141414" stroke-width="4"/>' +
+          '<rect x="50" y="72" width="20" height="36" fill="#7b4b2a" stroke="#141414" stroke-width="5"/>' +
+          '<circle cx="65" cy="90" r="2.6" fill="#141414"/>' +
+          '<rect x="28" y="66" width="13" height="13" fill="#bfefff" stroke="#141414" stroke-width="4"/>' +
+          '<rect x="79" y="66" width="13" height="13" fill="#bfefff" stroke="#141414" stroke-width="4"/>' +
+          '<circle cx="60" cy="47" r="5" fill="#fff" stroke="#141414" stroke-width="3"/></svg>',
+        stone:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<path d="M50 12 C72 12 88 30 88 52 C88 74 70 88 50 88 C30 88 12 74 12 52 C12 30 28 12 50 12Z" fill="#9aa7b8" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M32 55 Q50 44 68 55" fill="none" stroke="#141414" stroke-width="5" stroke-linecap="round"/>' +
+          '<path d="M22 26 L25 33 L32 36 L25 39 L22 46 L19 39 L12 36 L19 33Z" fill="#ffd21f" stroke="#141414" stroke-width="2.5" stroke-linejoin="round"/>' +
+          '<path d="M76 62 L78 67 L83 69 L78 71 L76 76 L74 71 L69 69 L74 67Z" fill="#ffd21f" stroke="#141414" stroke-width="2" stroke-linejoin="round"/>' +
+          '<circle cx="66" cy="26" r="3.4" fill="#ffd21f" stroke="#141414" stroke-width="2"/></svg>',
+        stoneOpen:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<path d="M50 12 C72 12 88 30 88 52 C88 74 70 88 50 88 C30 88 12 74 12 52 C12 30 28 12 50 12Z" fill="#8b98ab" stroke="#141414" stroke-width="5"/>' +
+          '<ellipse cx="50" cy="54" rx="19" ry="12" fill="#fff" stroke="#141414" stroke-width="4"/>' +
+          '<circle cx="50" cy="54" r="6" fill="#141414"/><circle cx="52" cy="52" r="2" fill="#fff"/>' +
+          '<path d="M22 24 L25 31 L32 34 L25 37 L22 44 L19 37 L12 34 L19 31Z" fill="#ffd21f" stroke="#141414" stroke-width="2.5" stroke-linejoin="round"/>' +
+          '<path d="M78 66 L80 71 L85 73 L80 75 L78 80 L76 75 L71 73 L76 71Z" fill="#ffd21f" stroke="#141414" stroke-width="2" stroke-linejoin="round"/></svg>',
+        chomper:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<ellipse cx="50" cy="54" rx="38" ry="34" fill="#58cc02" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M20 58 Q50 92 80 58 Q72 50 66 58 Q60 50 53 58 Q47 50 40 58 Q33 50 27 58 Z" fill="#fff" stroke="#141414" stroke-width="4"/>' +
+          '<path d="M22 60 Q50 34 78 60 Q50 76 22 60Z" fill="#8f1d22" stroke="#141414" stroke-width="3"/>' +
+          '<circle cx="36" cy="38" r="9" fill="#fff" stroke="#141414" stroke-width="4"/><circle cx="36" cy="39" r="4" fill="#141414"/>' +
+          '<circle cx="64" cy="38" r="9" fill="#fff" stroke="#141414" stroke-width="4"/><circle cx="64" cy="39" r="4" fill="#141414"/>' +
+          '<ellipse cx="30" cy="90" rx="10" ry="5" fill="#46a801" stroke="#141414" stroke-width="3.5"/>' +
+          '<ellipse cx="70" cy="90" rx="10" ry="5" fill="#46a801" stroke="#141414" stroke-width="3.5"/></svg>',
+        dartling:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<path d="M50 12 L84 78 L50 66 L16 78 Z" fill="#ff5964" stroke="#141414" stroke-width="5" stroke-linejoin="round"/>' +
+          '<path d="M26 20 L14 4 L38 12 Z" fill="#ffd21f" stroke="#141414" stroke-width="4" stroke-linejoin="round"/>' +
+          '<path d="M74 20 L86 4 L62 12 Z" fill="#ffd21f" stroke="#141414" stroke-width="4" stroke-linejoin="round"/>' +
+          '<circle cx="41" cy="46" r="6" fill="#fff" stroke="#141414" stroke-width="3.5"/><circle cx="41" cy="47" r="3" fill="#141414"/>' +
+          '<circle cx="59" cy="46" r="6" fill="#fff" stroke="#141414" stroke-width="3.5"/><circle cx="59" cy="47" r="3" fill="#141414"/>' +
+          '<path d="M40 60 L46 55 L50 61 L54 55 L60 60" fill="none" stroke="#141414" stroke-width="3.5" stroke-linecap="round"/></svg>',
+        brute:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<rect x="16" y="26" width="68" height="58" rx="10" fill="#9b5de5" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M16 44 Q4 52 10 66" fill="none" stroke="#141414" stroke-width="9" stroke-linecap="round"/>' +
+          '<path d="M84 44 Q96 52 90 66" fill="none" stroke="#141414" stroke-width="9" stroke-linecap="round"/>' +
+          '<path d="M28 16 L38 28 L50 14 L62 28 L72 16 L72 30 L28 30 Z" fill="#5a2d91" stroke="#141414" stroke-width="4" stroke-linejoin="round"/>' +
+          '<path d="M32 48 L44 44 M68 48 L56 44" stroke="#141414" stroke-width="4" stroke-linecap="round"/>' +
+          '<circle cx="39" cy="55" r="4" fill="#141414"/><circle cx="61" cy="55" r="4" fill="#141414"/>' +
+          '<path d="M36 72 L42 66 L47 72 L52 66 L57 72 L63 66 L64 74 L36 74Z" fill="#fff" stroke="#141414" stroke-width="3"/>' +
+          '<rect x="30" y="84" width="14" height="9" fill="#5a2d91" stroke="#141414" stroke-width="3.5"/>' +
+          '<rect x="56" y="84" width="14" height="9" fill="#5a2d91" stroke="#141414" stroke-width="3.5"/></svg>',
+        zigzagger:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<path d="M14 74 L34 56 L26 44 L48 30 L42 16 L66 8 L64 24 L84 20 L74 36 L88 44 L68 52 L78 66 L56 64 L52 82 L38 66 Z" fill="#00bbf9" stroke="#141414" stroke-width="4.5" stroke-linejoin="round"/>' +
+          '<circle cx="52" cy="42" r="7.5" fill="#fff" stroke="#141414" stroke-width="3.5"/><circle cx="53" cy="43" r="3.4" fill="#141414"/>' +
+          '<circle cx="68" cy="50" r="7.5" fill="#fff" stroke="#141414" stroke-width="3.5"/><circle cx="69" cy="51" r="3.4" fill="#141414"/>' +
+          '<path d="M48 58 Q60 66 72 58" fill="none" stroke="#141414" stroke-width="3.5" stroke-linecap="round"/></svg>',
+        splitter:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<path d="M50 10 C74 10 88 30 88 52 C88 76 72 90 50 90 C28 90 12 76 12 52 C12 30 26 10 50 10Z" fill="#f15bb5" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M50 12 L50 88" stroke="#141414" stroke-width="3" stroke-dasharray="6 6"/>' +
+          '<circle cx="34" cy="42" r="7" fill="#fff" stroke="#141414" stroke-width="3.5"/><circle cx="34" cy="43" r="3.2" fill="#141414"/>' +
+          '<circle cx="66" cy="42" r="7" fill="#fff" stroke="#141414" stroke-width="3.5"/><circle cx="66" cy="43" r="3.2" fill="#141414"/>' +
+          '<path d="M26 62 Q34 68 42 62 M58 62 Q66 68 74 62" fill="none" stroke="#141414" stroke-width="3.5" stroke-linecap="round"/>' +
+          '<circle cx="50" cy="24" r="5" fill="#ffd21f" stroke="#141414" stroke-width="3"/></svg>',
+        mini:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<ellipse cx="50" cy="54" rx="36" ry="32" fill="#ff8fab" stroke="#141414" stroke-width="6"/>' +
+          '<path d="M24 58 Q50 86 76 58 Q68 50 62 58 Q56 50 50 58 Q44 50 38 58 Q32 50 24 58Z" fill="#fff" stroke="#141414" stroke-width="4"/>' +
+          '<circle cx="50" cy="38" r="10" fill="#fff" stroke="#141414" stroke-width="4"/><circle cx="50" cy="39" r="4.6" fill="#141414"/></svg>',
+        shieldback:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<g class="belly"><ellipse cx="50" cy="58" rx="26" ry="24" fill="#ffe9a8" stroke="#141414" stroke-width="4"/>' +
+          '<circle cx="41" cy="52" r="5.5" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="41" cy="53" r="2.6" fill="#141414"/>' +
+          '<circle cx="59" cy="52" r="5.5" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="59" cy="53" r="2.6" fill="#141414"/>' +
+          '<path d="M42 66 Q50 61 58 66" fill="none" stroke="#141414" stroke-width="3" stroke-linecap="round"/></g>' +
+          '<g class="shieldDome"><path d="M14 66 C14 30 32 14 50 14 C68 14 86 30 86 66 L72 66 C72 44 63 32 50 32 C37 32 28 44 28 66 Z" fill="#00c2a8" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M50 14 L50 32 M28 24 L38 38 M72 24 L62 38" stroke="#141414" stroke-width="3.5"/></g>' +
+          '<ellipse cx="24" cy="86" rx="10" ry="5" fill="#009e87" stroke="#141414" stroke-width="3.5"/>' +
+          '<ellipse cx="76" cy="86" rx="10" ry="5" fill="#009e87" stroke="#141414" stroke-width="3.5"/></svg>',
+        boss:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<ellipse cx="50" cy="56" rx="42" ry="36" fill="#3fae02" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M22 8 L34 20 L50 4 L66 20 L78 8 L74 26 L26 26 Z" fill="#ffd21f" stroke="#141414" stroke-width="4" stroke-linejoin="round"/>' +
+          '<path d="M16 62 Q50 98 84 62 Q75 52 68 62 Q61 52 54 62 Q47 52 40 62 Q33 52 25 62 Z" fill="#fff" stroke="#141414" stroke-width="4"/>' +
+          '<path d="M18 64 Q50 38 82 64 Q50 82 18 64Z" fill="#8f1d22" stroke="#141414" stroke-width="3"/>' +
+          '<circle cx="35" cy="42" r="9" fill="#fff" stroke="#141414" stroke-width="4"/><circle cx="35" cy="43" r="4.2" fill="#141414"/>' +
+          '<circle cx="65" cy="42" r="9" fill="#fff" stroke="#141414" stroke-width="4"/><circle cx="65" cy="43" r="4.2" fill="#141414"/>' +
+          '<path d="M28 32 L42 36 M72 32 L58 36" stroke="#141414" stroke-width="4" stroke-linecap="round"/></svg>',
+        collector:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<ellipse cx="50" cy="58" rx="44" ry="36" fill="#1e5941" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M30 26 Q14 8 6 12 Q16 22 24 34 M70 26 Q86 8 94 12 Q84 22 76 34" fill="none" stroke="#141414" stroke-width="5" stroke-linecap="round"/>' +
+          '<g class="belly"><ellipse cx="50" cy="62" rx="27" ry="21" fill="#cfe8b8" stroke="#141414" stroke-width="3.5"/>' +
+          '<circle cx="38" cy="56" r="5" fill="#fff" stroke="#141414" stroke-width="2.6"/><circle cx="38" cy="57" r="2.4" fill="#141414"/>' +
+          '<circle cx="52" cy="52" r="6" fill="#fff" stroke="#141414" stroke-width="2.6"/><circle cx="52" cy="53" r="2.8" fill="#141414"/>' +
+          '<circle cx="63" cy="59" r="4.4" fill="#fff" stroke="#141414" stroke-width="2.6"/><circle cx="63" cy="60" r="2" fill="#141414"/>' +
+          '<circle cx="46" cy="68" r="3.8" fill="#fff" stroke="#141414" stroke-width="2.4"/><circle cx="46" cy="69" r="1.7" fill="#141414"/>' +
+          '<path d="M36 76 Q50 70 64 76" fill="none" stroke="#141414" stroke-width="3" stroke-linecap="round"/></g>' +
+          '<g class="shieldDome"><path d="M10 64 C10 28 30 12 50 12 C70 12 90 28 90 64 L76 64 C76 42 66 30 50 30 C34 30 24 42 24 64 Z" fill="#123c2b" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M50 12 L50 30 M26 22 L37 36 M74 22 L63 36 M50 30 L42 44 M50 30 L58 44" stroke="#ffd21f" stroke-width="2.6" fill="none"/>' +
+          '<path d="M50 15 L55 21 L50 27 L45 21 Z" fill="#ffd21f" stroke="#141414" stroke-width="2.4" stroke-linejoin="round"/></g>' +
+          '<path d="M18 66 Q50 96 82 66 Q74 58 68 66 Q62 58 56 66 Q50 58 44 66 Q38 58 32 66 Q25 58 18 66Z" fill="#fff" stroke="#141414" stroke-width="3.5"/>' +
+          '<ellipse cx="20" cy="90" rx="11" ry="5" fill="#14402d" stroke="#141414" stroke-width="3.5"/>' +
+          '<ellipse cx="80" cy="90" rx="11" ry="5" fill="#14402d" stroke="#141414" stroke-width="3.5"/></svg>',
+        banjo:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<path d="M30 24 L23 5 L39 12 L41 26 Z" fill="#e8873a" stroke="#141414" stroke-width="4" stroke-linejoin="round"/>' +
+          '<path d="M70 24 L77 5 L61 12 L59 26 Z" fill="#e8873a" stroke="#141414" stroke-width="4" stroke-linejoin="round"/>' +
+          '<ellipse cx="50" cy="47" rx="34" ry="32" fill="#f39c3d" stroke="#141414" stroke-width="5"/>' +
+          '<g class="eyeOpen"><circle cx="38" cy="41" r="4.6" fill="#141414"/><circle cx="62" cy="41" r="4.6" fill="#141414"/>' +
+          '<path d="M40 55 Q50 63 60 55" fill="none" stroke="#141414" stroke-width="3.5" stroke-linecap="round"/></g>' +
+          '<g class="eyeShut"><path d="M32 41 Q38 46 44 41 M56 41 Q62 46 68 41" fill="none" stroke="#141414" stroke-width="3.5" stroke-linecap="round"/>' +
+          '<path d="M44 57 L56 57" stroke="#141414" stroke-width="3.5" stroke-linecap="round"/></g>' +
+          '<g class="banjoG">' +
+          '<rect x="59" y="28" width="7" height="32" rx="3" transform="rotate(38 62 44)" fill="#8a5a2b" stroke="#141414" stroke-width="3"/>' +
+          '<circle cx="46" cy="67" r="17" fill="#c98a3d" stroke="#141414" stroke-width="4.5"/>' +
+          '<circle cx="46" cy="67" r="10.5" fill="#f6e7c1" stroke="#141414" stroke-width="2.5"/>' +
+          '<path d="M40 61 L52 74 M52 61 L40 74" stroke="#141414" stroke-width="1.8"/></g>' +
+          '<g class="notes" fill="#141414">' +
+          '<g><ellipse cx="19" cy="31" rx="4.6" ry="3.4" transform="rotate(-20 19 31)"/><rect x="22.6" y="15" width="2.8" height="16"/><path d="M25.4 15 Q32 18 29.5 25 Q27.5 19 25.4 20Z"/></g>' +
+          '<g><ellipse cx="82" cy="25" rx="4.2" ry="3.1" transform="rotate(-20 82 25)"/><rect x="85.4" y="10" width="2.6" height="15"/><path d="M88 10 Q94 13 92 19 Q90 14 88 15Z"/></g>' +
+          '</g>' +
+          '<ellipse cx="32" cy="91" rx="10" ry="5" fill="#d97c26" stroke="#141414" stroke-width="3.5"/>' +
+          '<ellipse cx="68" cy="91" rx="10" ry="5" fill="#d97c26" stroke="#141414" stroke-width="3.5"/></svg>',
+        knockback:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<path d="M36 71 L64 76 L36 82 L64 87 L38 94" fill="none" stroke="#54687a" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>' +
+          '<ellipse cx="50" cy="41" rx="36" ry="33" fill="#39c2d7" stroke="#141414" stroke-width="5"/>' +
+          '<circle cx="15" cy="47" r="10" fill="#ff5964" stroke="#141414" stroke-width="4"/>' +
+          '<circle cx="85" cy="47" r="10" fill="#ff5964" stroke="#141414" stroke-width="4"/>' +
+          '<circle cx="38" cy="37" r="8.5" fill="#fff" stroke="#141414" stroke-width="3.5"/><circle cx="38" cy="38" r="3.8" fill="#141414"/>' +
+          '<circle cx="62" cy="37" r="8.5" fill="#fff" stroke="#141414" stroke-width="3.5"/><circle cx="62" cy="38" r="3.8" fill="#141414"/>' +
+          '<path d="M36 57 L44 52 L50 57 L56 52 L64 57" fill="none" stroke="#141414" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<path d="M30 20 Q50 12 70 20" fill="none" stroke="#141414" stroke-width="3.5" stroke-linecap="round"/></svg>',
+        pooler:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<ellipse cx="29" cy="79" rx="8" ry="12" fill="#17b890" stroke="#141414" stroke-width="4"/>' +
+          '<ellipse cx="52" cy="83" rx="9" ry="13" fill="#17b890" stroke="#141414" stroke-width="4"/>' +
+          '<ellipse cx="73" cy="79" rx="8" ry="11" fill="#17b890" stroke="#141414" stroke-width="4"/>' +
+          '<ellipse cx="50" cy="47" rx="37" ry="34" fill="#17b890" stroke="#141414" stroke-width="5"/>' +
+          '<ellipse cx="33" cy="30" rx="11" ry="6" fill="#7fe8cd" opacity=".75"/>' +
+          '<circle cx="38" cy="44" r="7.5" fill="#fff" stroke="#141414" stroke-width="3.5"/><circle cx="38" cy="45" r="3.4" fill="#141414"/>' +
+          '<circle cx="62" cy="44" r="7.5" fill="#fff" stroke="#141414" stroke-width="3.5"/><circle cx="62" cy="45" r="3.4" fill="#141414"/>' +
+          '<ellipse cx="50" cy="60" rx="7" ry="4.6" fill="#0b6e63" stroke="#141414" stroke-width="2.6"/></svg>',
+        coner:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<ellipse cx="50" cy="59" rx="33" ry="30" fill="#8d99ae" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M50 4 L65 35 L35 35 Z" fill="#ff7b00" stroke="#141414" stroke-width="4" stroke-linejoin="round"/>' +
+          '<path d="M41.4 22 L58.6 22 L60.9 27.5 L39.1 27.5 Z" fill="#fff"/>' +
+          '<circle cx="39" cy="55" r="6.5" fill="#fff" stroke="#141414" stroke-width="3.2"/><circle cx="39" cy="56" r="3" fill="#141414"/>' +
+          '<circle cx="61" cy="55" r="6.5" fill="#fff" stroke="#141414" stroke-width="3.2"/><circle cx="61" cy="56" r="3" fill="#141414"/>' +
+          '<path d="M41 71 Q50 66 59 71" fill="none" stroke="#141414" stroke-width="3.2" stroke-linecap="round"/>' +
+          '<ellipse cx="30" cy="90" rx="10" ry="5" fill="#6c7889" stroke="#141414" stroke-width="3.5"/>' +
+          '<ellipse cx="70" cy="90" rx="10" ry="5" fill="#6c7889" stroke="#141414" stroke-width="3.5"/></svg>',
+        heart:
+          '<svg viewBox="0 0 24 22"><path d="M12 20 C4 14 2 9 2 6 C2 2.5 4.8 1 7 1 C9 1 11 2.4 12 4.4 C13 2.4 15 1 17 1 C19.2 1 22 2.5 22 6 C22 9 20 14 12 20Z" fill="#ff4757" stroke="#141414" stroke-width="2"/></svg>',
+        land:
+          '<svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" width="100%" height="100%" aria-hidden="true">' +
+          '<defs>' +
+          '<g id="ltree"><rect x="-5" y="0" width="10" height="18" fill="#7b4b2a"/><circle cx="0" cy="-16" r="19" fill="#2e7d32" stroke="#141414" stroke-width="3"/><circle cx="-14" cy="-7" r="12" fill="#35853a" stroke="#141414" stroke-width="3"/><circle cx="14" cy="-7" r="12" fill="#35853a" stroke="#141414" stroke-width="3"/></g>' +
+          '<g id="lpost"><rect x="-3.5" y="-13" width="7" height="26" fill="#8a5a2b" stroke="#141414" stroke-width="2"/></g>' +
+          '<g id="lbush"><ellipse cx="0" cy="0" rx="17" ry="11" fill="#4c9a44" stroke="#141414" stroke-width="3"/><ellipse cx="-11" cy="3" rx="10" ry="7" fill="#57ab4e" stroke="#141414" stroke-width="2.5"/></g>' +
+          '</defs>' +
+          '<path d="M0 128 Q250 44 500 112 T1000 92 V0 H0 Z" fill="#8fd07a"/>' +
+          '<path d="M1040 590 C820 690 770 820 705 1040" stroke="#d9b380" stroke-width="54" fill="none"/>' +
+          '<path d="M1040 590 C820 690 770 820 705 1040" stroke="#fff8e7" stroke-width="5" stroke-dasharray="18 24" fill="none" opacity=".65"/>' +
+          '<path d="M40 306 H960 M40 700 H960" stroke="#8a5a2b" stroke-width="7"/>' +
+          '<use href="#lpost" x="60" y="306"/><use href="#lpost" x="152" y="306"/><use href="#lpost" x="244" y="306"/><use href="#lpost" x="336" y="306"/><use href="#lpost" x="428" y="306"/><use href="#lpost" x="520" y="306"/><use href="#lpost" x="612" y="306"/><use href="#lpost" x="704" y="306"/><use href="#lpost" x="796" y="306"/><use href="#lpost" x="888" y="306"/>' +
+          '<use href="#lpost" x="60" y="700"/><use href="#lpost" x="152" y="700"/><use href="#lpost" x="244" y="700"/><use href="#lpost" x="336" y="700"/><use href="#lpost" x="428" y="700"/><use href="#lpost" x="520" y="700"/><use href="#lpost" x="612" y="700"/><use href="#lpost" x="704" y="700"/><use href="#lpost" x="796" y="700"/><use href="#lpost" x="888" y="700"/>' +
+          '<ellipse cx="200" cy="640" rx="96" ry="46" fill="#7fd4ff" stroke="#141414" stroke-width="4"/>' +
+          '<path d="M120 645 Q200 628 280 645" stroke="#fff" stroke-width="4" fill="none" opacity=".7"/>' +
+          '<g stroke="#6db35a" stroke-width="7"><path d="M620 190 L890 168"/><path d="M625 228 L895 206"/><path d="M630 266 L900 244"/><path d="M635 304 L905 282"/></g>' +
+          '<g><rect x="742" y="792" width="98" height="68" fill="#e05252" stroke="#141414" stroke-width="4"/><path d="M732 792 L791 748 L850 792 Z" fill="#a83232" stroke="#141414" stroke-width="4" stroke-linejoin="round"/><rect x="776" y="818" width="30" height="42" fill="#7b4b2a" stroke="#141414" stroke-width="3.5"/></g>' +
+          '<use href="#ltree" transform="translate(150 190) scale(1.25)"/><use href="#ltree" transform="translate(848 158)"/><use href="#ltree" transform="translate(118 838) scale(1.35)"/><use href="#ltree" transform="translate(522 96) scale(.9)"/><use href="#ltree" transform="translate(908 472) scale(1.15)"/><use href="#ltree" transform="translate(92 472)"/><use href="#ltree" transform="translate(330 884) scale(.95)"/><use href="#ltree" transform="translate(946 880) scale(1.2)"/>' +
+          '<use href="#lbush" transform="translate(268 408)"/><use href="#lbush" transform="translate(742 420) scale(1.2)"/><use href="#lbush" transform="translate(420 838)"/><use href="#lbush" transform="translate(180 560) scale(.85)"/><use href="#lbush" transform="translate(858 610)"/>' +
+          '<ellipse cx="585" cy="872" rx="17" ry="10" fill="#a8b0ba" stroke="#141414" stroke-width="3"/><ellipse cx="392" cy="150" rx="13" ry="8" fill="#a8b0ba" stroke="#141414" stroke-width="3"/>' +
+          '</svg>'
+      };
+
+      /* ================= Types ================= */
+      var TYPES = {
+        chomper:   { hp: 1, speed: 0.105, size: 62, score: 10,  dmg: 1, art: "chomper",   name: "CHOMPER",    tip: "One tap pops it." },
+        dartling:  { hp: 1, speed: 0.205, size: 48, score: 15,  dmg: 1, art: "dartling",  name: "DARTLING",   tip: "Tiny and FAST — tap it first!" },
+        brute:     { hp: 5, speed: 0.058, size: 96, score: 50,  dmg: 2, art: "brute",     name: "BRUTE",      tip: "Five taps. Costs 2 hearts if it lands!" },
+        zigzagger: { hp: 2, speed: 0.120, size: 66, score: 25,  dmg: 1, art: "zigzagger", name: "ZIGZAGGER",  tip: "It weaves side to side. Lead your tap!" },
+        splitter:  { hp: 2, speed: 0.088, size: 76, score: 30,  dmg: 1, art: "splitter",  name: "SPLITTER",   tip: "Pops into two fast minis!" },
+        mini:      { hp: 1, speed: 0.225, size: 40, score: 5,   dmg: 1, art: "mini",      name: "MINI",       tip: "" },
+        shieldback:{ hp: 3, speed: 0.075, size: 82, score: 40,  dmg: 1, art: "shieldback",name: "SHIELDBACK", tip: "Only tap when its shell pops OPEN!" },
+        boss:      { hp: 14, speed: 0.042, size: 138, score: 300, dmg: 2, art: "boss",    name: "KING CHOMPER", tip: "Huge! Keep tapping — don't let it land!" },
+        collector: { hp: 45, speed: 0.032, size: 168, score: 1000, dmg: 3, art: "collector", name: "THE COLLECTOR", tip: "Every trick you learned. All at once." },
+        banjo:     { hp: 3, speed: 0.082, size: 74, score: 40,  dmg: 1, art: "banjo",     name: "BANJO PLAYER", tip: "Tap him to hush him — 3 hushes and he leaves. While he's quiet, taps do nothing." },
+        knockback: { hp: 1, speed: 0.078, size: 86, score: 60,  dmg: 1, art: "knockback", name: "KNOCKBACK",   tip: "Taps don't hurt him — they shove him back. Shove him off the screen to beat him." },
+        pooler:    { hp: 1, speed: 0.100, size: 58, score: 20,  dmg: 1, art: "pooler",    name: "POOL MONSTER", tip: "One tap kills it — but it leaves a pool that SPEEDS UP anything that touches it. Kill it somewhere lonely!" },
+        coner:     { hp: 2, speed: 0.090, size: 72, score: 35,  dmg: 1, art: "coner",     name: "CONE MONSTER", tip: "When it dies, its cone gives +1 HP to monsters ahead of it, toward the house. Mind your kill order!" }
+      };
+      var INTRO_WAVE = { dartling: 2, brute: 3, zigzagger: 4, boss: 5, splitter: 6, shieldback: 7, banjo: 13, knockback: 15, pooler: 16, coner: 18, collector: 20 };
+      var TOTAL_HOURS = 20;
+
+      /* Story beats shown BEFORE the hour they key (never mid-wave). */
+      var BEATS = {
+        2:  "The stone hums louder when the moon is up. Something out there hums back.",
+        3:  "The eye in the stone opened in the night. It was looking at the door. It is always looking at the door.",
+        4:  "You buried it in a coffee tin. By midnight it had dug itself out. It likes the windowsill. It likes being expected.",
+        5:  "Something big is coming tonight. The stone is singing the loudest it has all week.",
+        6:  "In your dreams the stone showed you a field with no house in it. Just the stone, singing, forever.",
+        7:  "The monsters aren't hungry. Watch them — they move like they're listening. Like they're coming to a concert.",
+        8:  "The stone whispered your name at 3 a.m. You did not teach it your name.",
+        9:  "There is a second hum now, far off, answering. It is getting closer every hour.",
+        10: "Half the night gone. The answering hum has a shape now, and the shape has too many legs.",
+        11: "The stone's eye follows you around the room. You have started saying goodnight to it. Stop that.",
+        12: "Whatever is coming is not coming FOR the stone. The stone is coming to IT. Your house is just the meeting place.",
+        13: "The grass around the house is flattened in a ring, like something enormous sat down here once. A long time ago. Or tonight.",
+        14: "You can see the whole valley now. Every field, every fence, every road — and on every road, eyes, coming this way.",
+        15: "The stone sang a new note and every window in the house cracked in the same pattern. A star. A door. A mouth.",
+        16: "It showed you the sky in a dream. The sky had a ceiling. Something was knocking on it from the other side.",
+        17: "The answering hum is under the floor now. The stone is harmonizing. Your house is an instrument, and tonight it gets played.",
+        18: "Dawn is close. The stone knows. It's singing like it wants to be heard by exactly one thing.",
+        19: "One hour of dark left after this one. Hold the house. Whatever collects the stone is almost here.",
+        20: "It is here. It has every face you've fought tonight — the teeth, the shell, the speed, the splitting skin. It came for the stone. Give it a concert it won't forget.",
+        21: "The stone sleeps. The valley doesn't. Again!"
+      };
+      var ENDINGS = {
+        bury: "You bury it under the fence where you found it. Some nights, the grass there hums. You hum along. You know the words now.",
+        keep: "You keep it on the windowsill. It sings you to sleep. Your dreams have an audience now, but the rent is cheap.",
+        sky:  "You throw it back to the sky at dawn. Mid-arc, something catches it. The sky says thank you in a voice like weather."
+      };
+
+      /* ================= Dawn Stars save (localStorage) ================= */
+      var SAVE_KEY = "mtd_save_v1";
+      var SAVE = { stars: 0, heartsBought: 0, dmgBought: 0, heartsOn: true, dmgOn: true };
+      try {
+        var rawSave = localStorage.getItem(SAVE_KEY);
+        if (rawSave) {
+          var parsedSave = JSON.parse(rawSave);
+          if (parsedSave) {
+            SAVE.stars = parsedSave.stars | 0;
+            SAVE.heartsBought = parsedSave.heartsBought | 0;
+            SAVE.dmgBought = parsedSave.dmgBought | 0;
+            SAVE.heartsOn = parsedSave.heartsOn !== false;
+            SAVE.dmgOn = parsedSave.dmgOn !== false;
+          }
+        }
+      } catch (e) { /* storage unavailable — run with an in-memory save */ }
+      function saveSave() {
+        try { localStorage.setItem(SAVE_KEY, JSON.stringify(SAVE)); } catch (e) { /* in-memory only */ }
+      }
+      function heartCost() { return 5 * (SAVE.heartsBought + 1); }
+      function dmgCost() { return 10 * (SAVE.dmgBought + 1); }
+
+      /* ================= State ================= */
+      var gameEl = document.getElementById("game");
+      var fieldEl = document.getElementById("field");
+      var landEl = document.getElementById("land");
+      var monstersEl = document.getElementById("monsters");
+      var fxEl = document.getElementById("fx");
+      var baseEl = document.getElementById("base");
+      var heartsEl = document.getElementById("hearts");
+      var waveNumEl = document.getElementById("waveNum");
+      var hourLabelEl = document.getElementById("hourLabel");
+      var ofHoursEl = document.getElementById("ofHours");
+      var scoreNumEl = document.getElementById("scoreNum");
+      var comboChipEl = document.getElementById("comboChip");
+      var comboNumEl = document.getElementById("comboNum");
+      var dmgChipEl = document.getElementById("dmgChip");
+      var dmgNumEl = document.getElementById("dmgNum");
+      var bannerEl = document.getElementById("banner");
+      var vignetteEl = document.getElementById("vignette");
+      var dangerRingEl = document.getElementById("dangerRing");
+      baseEl.innerHTML = ART.base;
+      landEl.innerHTML = ART.land;
+      document.getElementById("storyArt").innerHTML = ART.stone;
+      document.getElementById("overArt").innerHTML = ART.stone;
+      document.getElementById("winArt").innerHTML = ART.stone;
+
+      var SEEN = {};       // debut banners already shown (kept across restarts)
+      var SKIP_BEATS = false;
+      var S = null;
+      function newState() {
+        var hb = SAVE.heartsOn ? SAVE.heartsBought : 0;
+        var db = SAVE.dmgOn ? SAVE.dmgBought : 0;
+        return {
+          mode: "story", // story | coach | play | beat | win | over
+          hearts: 5 + hb, maxHearts: 5 + hb,
+          tapDmg: 1 + db, boostHearts: hb, boostDmg: db, anyBoostOn: hb > 0 || db > 0,
+          bankedThrough: 0, lastEarned: 0, extended: false,
+          wave: 0, score: 0, kills: 0,
+          combo: 0, comboT: 0,
+          monsters: [], spawnQueue: [], spawnT: 0, spawnEvery: 1.2,
+          waveState: "idle", // idle | spawning | fighting | between | dying
+          betweenT: 0, pendingHour: 0, time: 0,
+          endless: false, bossTookIt: false, winT: 0,
+          pools: [], cones: [],
+          coachStep: 0, coachMonster: null
+        };
+      }
+
+      function field() {
+        return { w: fieldEl.clientWidth, h: fieldEl.clientHeight, cx: fieldEl.clientWidth / 2, cy: fieldEl.clientHeight / 2 };
+      }
+      function zoomFor(hour) {
+        return Math.max(0.5, Math.pow(0.95, Math.max(0, hour - 1)));
+      }
+      function currentZoom() { return zoomFor(Math.max(1, S ? S.wave : 1)); }
+      // Hours 11+: ~20% fewer monsters on screen at once (14 → 11); totals unchanged.
+      function maxOnScreen() { return S && S.wave >= 11 ? 11 : 14; }
+      function applyZoom(hour) {
+        var z = zoomFor(hour);
+        baseEl.style.width = (118 * z) + "px";
+        baseEl.style.height = (118 * z) + "px";
+        dangerRingEl.style.width = (150 * z) + "px";
+        dangerRingEl.style.height = (150 * z) + "px";
+        var p = (1 - z) / 0.5; // 0 at hour 1 → 1 at full zoom-out
+        var landScale = 1 - 0.429 * p;
+        landEl.style.transform = "translate(-50%,-50%) scale(" + landScale.toFixed(3) + ")";
+      }
+      function spawnDist(angle) {
+        var f = field();
+        var dx = Math.cos(angle), dy = Math.sin(angle);
+        var tx = dx > 0.001 ? (f.w / 2) / dx : dx < -0.001 ? (-f.w / 2) / dx : 1e9;
+        var ty = dy > 0.001 ? (f.h / 2) / dy : dy < -0.001 ? (-f.h / 2) / dy : 1e9;
+        return Math.min(tx, ty) + 46;
+      }
+
+      /* ================= Audio (tiny synth blips) ================= */
+      var AC = null;
+      function beep(freq, dur, type, vol, slide) {
+        try {
+          if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+          if (AC.state === "suspended") AC.resume();
+          var o = AC.createOscillator(), g = AC.createGain();
+          o.type = type || "square"; o.frequency.setValueAtTime(freq, AC.currentTime);
+          if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), AC.currentTime + dur);
+          g.gain.setValueAtTime(vol || 0.08, AC.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + dur);
+          o.connect(g); g.connect(AC.destination);
+          o.start(); o.stop(AC.currentTime + dur);
+        } catch (e) { /* audio is decoration only */ }
+      }
+
+      /* ================= HUD ================= */
+      function drawHearts() {
+        var html = "";
+        for (var i = 0; i < S.maxHearts; i++) {
+          var hcls = (i >= 5 ? "bonus" : "") + (i < S.hearts ? "" : " lost");
+          html += '<span class="' + hcls.trim() + '">' + ART.heart + "</span>";
+        }
+        heartsEl.innerHTML = html;
+      }
+      function drawHud() {
+        waveNumEl.textContent = Math.max(1, S.wave);
+        hourLabelEl.textContent = S.endless ? "ENDLESS · HOUR" : "HOUR";
+        ofHoursEl.style.display = S.endless ? "none" : "inline";
+        ofHoursEl.textContent = " OF " + (S.extended || S.wave > 10 ? 20 : 10);
+        scoreNumEl.textContent = S.score;
+        dmgNumEl.textContent = S.tapDmg;
+        dmgChipEl.style.display = S.tapDmg > 1 ? "" : "none";
+        var mult = comboMult();
+        comboNumEl.textContent = mult;
+        comboChipEl.classList.toggle("on", S.combo >= 3);
+      }
+      function comboMult() { return Math.min(5, 1 + Math.floor(S.combo / 5)); }
+
+      /* ================= Monsters ================= */
+      var uid = 0;
+      function bossPhase(m) {
+        var f = m.hp / m.maxHp;
+        return f > 2 / 3 ? 1 : f > 1 / 3 ? 2 : 3;
+      }
+      function makeMonster(type, opts) {
+        opts = opts || {};
+        var t = TYPES[type];
+        var z = currentZoom();
+        var angle = opts.angle != null ? opts.angle : Math.random() * Math.PI * 2;
+        var el = document.createElement("div");
+        el.className = "monster wobble";
+        el.dataset.type = type;
+        el.setAttribute("role", "button");
+        el.setAttribute("aria-label", t.name + " — tap to smash");
+        var box = Math.max(30, t.size * z * 1.25);
+        el.style.width = box + "px"; el.style.height = box + "px";
+        var pips = "";
+        if (t.hp > 1) {
+          var n = type === "collector" ? 15 : t.hp;
+          pips = '<span class="pips">';
+          for (var i = 0; i < n; i++) {
+            var cls = "";
+            if (type === "collector") cls = i < 5 ? "g3" : i < 10 ? "g2" : "";
+            pips += '<i class="' + cls + '"></i>';
+          }
+          pips += "</span>";
+        }
+        el.innerHTML = pips + '<span class="art" style="width:' + (t.size * z) + 'px;height:' + (t.size * z) + 'px">' + ART[t.art] + "</span>";
+        if (type === "banjo") {
+          // Hush dots start empty and fill one per hush.
+          el.querySelectorAll(".pips i").forEach(function (d) { d.classList.add("spent"); });
+        }
+        var m = {
+          id: ++uid, type: type, el: el, hp: t.hp, maxHp: t.hp,
+          angle: angle, prog: opts.prog != null ? opts.prog : 0, // 0 at edge → 1 at base
+          speed: t.speed * (0.9 + Math.random() * 0.2),
+          dist0: spawnDist(angle),
+          lat: opts.lat || 0, phase0: Math.random() * Math.PI * 2,
+          shieldT: Math.random() * 1.2, open: false,
+          phase: 1, spitT: 3.5, burstT: 0, burstCd: 2.2,
+          playing: true, hushes: 0, hushT: 0,
+          boosted: false, coneBonus: false,
+          x: 0, y: 0, dead: false
+        };
+        el.addEventListener("pointerdown", function (ev) {
+          ev.preventDefault(); ev.stopPropagation();
+          tapMonster(m);
+        });
+        monstersEl.appendChild(el);
+        S.monsters.push(m);
+        positionMonster(m);
+        return m;
+      }
+      function positionMonster(m) {
+        var f = field();
+        var dist = (1 - m.prog) * m.dist0;
+        var px = Math.cos(m.angle), py = Math.sin(m.angle);
+        var lat = m.lat;
+        if (m.type === "zigzagger") lat += Math.sin(m.prog * 14 + m.phase0) * 46;
+        if (m.type === "collector") {
+          if (m.phase === 1) lat += Math.sin(m.prog * 10 + m.phase0) * 38;
+          else if (m.phase === 3) lat += Math.sin(m.prog * 16 + m.phase0) * 30;
+        }
+        m.x = f.cx + px * dist + (-py) * lat;
+        m.y = f.cy + py * dist + px * lat;
+        var scale = 0.8 + 0.42 * m.prog;
+        m.el.style.transform = "translate(" + (m.x - m.el.offsetWidth / 2) + "px," + (m.y - m.el.offsetHeight / 2) + "px) scale(" + scale.toFixed(3) + ")";
+        m.el.style.zIndex = String(20 + Math.round(m.prog * 40));
+      }
+      function removeMonster(m) {
+        m.dead = true;
+        if (m.el.parentNode) m.el.parentNode.removeChild(m.el);
+        S.monsters = S.monsters.filter(function (x) { return x !== m; });
+      }
+      function burst(x, y, color, n) {
+        for (var i = 0; i < (n || 8); i++) {
+          var b = document.createElement("div");
+          b.className = "bit"; b.style.background = color;
+          b.style.left = x + "px"; b.style.top = y + "px";
+          fxEl.appendChild(b);
+          var a = Math.random() * Math.PI * 2, d = 26 + Math.random() * 46;
+          var bx = Math.cos(a) * d, by = Math.sin(a) * d - 14;
+          b.animate(
+            [{ transform: "translate(-50%,-50%) rotate(0deg)", opacity: 1 },
+             { transform: "translate(calc(-50% + " + bx + "px), calc(-50% + " + by + "px)) rotate(" + (Math.random() * 260 - 130) + "deg)", opacity: 0 }],
+            { duration: 420 + Math.random() * 200, easing: "cubic-bezier(.2,.7,.3,1)" }
+          );
+          setTimeout((function (node) { return function () { if (node.parentNode) node.parentNode.removeChild(node); }; })(b), 680);
+        }
+      }
+      function floater(x, y, text, cls) {
+        var s = document.createElement("span");
+        s.className = "floater" + (cls ? " " + cls : "");
+        s.textContent = text;
+        s.style.left = x + "px"; s.style.top = y + "px";
+        fxEl.appendChild(s);
+        setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 720);
+      }
+
+      function tapMonster(m) {
+        if (m.dead) return;
+        if (S.mode === "coach") {
+          if (S.coachStep === 2 && m === S.coachMonster) { hitMonster(m); }
+          return;
+        }
+        if (S.mode !== "play") return;
+        hitMonster(m);
+      }
+      function hitMonster(m) {
+        var t = TYPES[m.type];
+        if (m.type === "banjo") {
+          if (!m.playing) {
+            // Hushed and invulnerable — a dull puff so the tap never feels broken.
+            floater(m.x, m.y - 42, "…", "clank");
+            beep(140, 0.05, "square", 0.035);
+            return;
+          }
+          m.hushes += 1;
+          m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
+          if (m.hushes >= 3) {
+            floater(m.x, m.y - 48, "HE PACKS UP!", "");
+            killMonster(m);
+            return;
+          }
+          m.playing = false;
+          m.hushT = 2 + Math.random() * 3; // resumes in a random 2–5s
+          m.el.classList.add("hushed");
+          m.el.classList.remove("wobble");
+          var dots = m.el.querySelectorAll(".pips i");
+          if (dots[m.hushes - 1]) dots[m.hushes - 1].classList.remove("spent");
+          floater(m.x, m.y - 48, "HUSHED! " + m.hushes + "/3", "");
+          beep(220, 0.12, "triangle", 0.08, -80);
+          return;
+        }
+        if (m.type === "knockback") {
+          // Taps never hurt him — they shove him back toward his edge.
+          m.prog -= 0.17;
+          m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
+          floater(m.x, m.y - 48, "BOING!", "");
+          burst(m.x, m.y, "#39c2d7", 4);
+          beep(170, 0.09, "square", 0.07, 300);
+          positionMonster(m);
+          return;
+        }
+        var shelled = (m.type === "shieldback" || (m.type === "collector" && bossPhase(m) === 2)) && !m.open;
+        if (shelled) {
+          floater(m.x, m.y - 40, "CLANK!", "clank");
+          beep(190, 0.07, "square", 0.06);
+          m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
+          return;
+        }
+        m.hp -= S.tapDmg;
+        beep(320 + Math.random() * 120, 0.06, "square", 0.07, -140);
+        m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
+        var pips = m.el.querySelectorAll(".pips i");
+        var lit = m.type === "collector" ? Math.ceil(m.hp / 3) : m.hp;
+        for (var i = 0; i < pips.length; i++) pips[i].classList.toggle("spent", i >= lit);
+        if (m.hp > 0) { floater(m.x, m.y - t.size * currentZoom() * 0.55, "WHACK!", ""); return; }
+        killMonster(m);
+      }
+      function killMonster(m) {
+        var t = TYPES[m.type];
+        var x = m.x, y = m.y;
+        removeMonster(m);
+        S.kills += 1;
+        S.combo += 1; S.comboT = 1.25;
+        var pts = t.score * comboMult();
+        S.score += pts;
+        floater(x, y - 16, "+" + pts, pts >= 100 ? "big" : "");
+        burst(x, y, m.type === "brute" ? "#9b5de5" : m.type === "collector" ? "#ffd21f" : m.type === "dartling" ? "#ff5964" : "#58cc02", m.type === "collector" ? 30 : m.type === "boss" ? 22 : 9);
+        beep(m.type === "boss" || m.type === "collector" ? 130 : 520, 0.12, "triangle", 0.1, -260);
+        if (m.type === "pooler") spawnPool(x, y);
+        if (m.type === "coner") spawnCone(x, y);
+        if (m.type === "splitter") {
+          for (var k = 0; k < 2; k++) {
+            var mini = makeMonster("mini", { angle: m.angle, prog: Math.max(0, m.prog - 0.03), lat: k === 0 ? -34 : 34 });
+            mini.dist0 = m.dist0;
+            positionMonster(mini);
+          }
+          floater(x, y - 44, "IT SPLIT!", "");
+        }
+        if (m.type === "collector" && !S.endless) beginWin();
+        if (S.mode === "coach" && m === S.coachMonster) { S.coachMonster = null; coachStep(3); }
+        drawHud();
+      }
+      /* ================= Field hazards: pools + cones ================= */
+      function spawnPool(x, y) {
+        var d = Math.round(70 * currentZoom()) + 26;
+        var el = document.createElement("div");
+        el.className = "pool";
+        el.style.width = d + "px"; el.style.height = Math.round(d * 0.74) + "px";
+        el.style.left = x + "px"; el.style.top = y + "px";
+        el.innerHTML =
+          '<svg viewBox="0 0 100 74" width="100%" height="100%">' +
+          '<ellipse cx="50" cy="39" rx="45" ry="28" fill="#17d3c5" stroke="#0b6e63" stroke-width="4"/>' +
+          '<ellipse cx="35" cy="31" rx="13" ry="6" fill="#a7f3ea" opacity=".8"/>' +
+          '<ellipse class="poolRing" cx="50" cy="37" rx="47" ry="31" fill="none" stroke="#ffd21f" stroke-width="5" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/></svg>';
+        monstersEl.appendChild(el);
+        S.pools.push({ x: x, y: y, r: d * 0.44, t: 10, el: el, ring: el.querySelector(".poolRing") });
+      }
+      function spawnCone(x, y) {
+        var f = field();
+        var dx = f.cx - x, dy = f.cy - y;
+        var dl = Math.hypot(dx, dy) || 1;
+        dx /= dl; dy /= dl;
+        var len = Math.round(200 * currentZoom()) + 70;
+        var el = document.createElement("div");
+        el.className = "cone";
+        el.style.width = len + "px"; el.style.height = len + "px";
+        el.style.left = x + "px"; el.style.top = y + "px";
+        el.style.opacity = "0.66";
+        el.style.transform = "translate(-50%,-50%) rotate(" + Math.atan2(dy, dx) + "rad)";
+        el.innerHTML =
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<path d="M50 50 L99 23 Q105 50 99 77 Z" fill="rgba(255,123,0,.5)" stroke="#ff7b00" stroke-width="2"/></svg>';
+        monstersEl.appendChild(el);
+        S.cones.push({ x: x, y: y, dx: dx, dy: dy, len: len * 0.94, cos: Math.cos(0.5), t: 15, el: el, hit: {} });
+      }
+      function hazardTick(dt) {
+        var i, j, k;
+        for (i = S.pools.length - 1; i >= 0; i--) {
+          var p = S.pools[i];
+          p.t -= dt;
+          if (p.t <= 0) {
+            if (p.el.parentNode) p.el.parentNode.removeChild(p.el);
+            S.pools.splice(i, 1);
+            continue;
+          }
+          p.ring.style.strokeDashoffset = (100 * (1 - p.t / 10)).toFixed(1);
+          p.el.style.opacity = p.t < 2 ? (0.3 + 0.7 * (p.t / 2)).toFixed(2) : "1";
+          for (j = 0; j < S.monsters.length; j++) {
+            var m = S.monsters[j];
+            if (m.dead || m.boosted) continue; // one boost per monster — pools never stack
+            if (Math.hypot(m.x - p.x, m.y - p.y) < p.r + 14) {
+              m.boosted = true;
+              m.speed *= 1.5;
+              var badge = document.createElement("span");
+              badge.className = "boostMark";
+              badge.textContent = "≫";
+              m.el.appendChild(badge);
+              m.el.classList.add("boosted");
+              floater(m.x, m.y - 42, "SPEED UP!", "");
+              beep(880, 0.07, "square", 0.05, 220);
+            }
+          }
+        }
+        for (i = S.cones.length - 1; i >= 0; i--) {
+          var c = S.cones[i];
+          c.t -= dt;
+          if (c.t <= 0) {
+            if (c.el.parentNode) c.el.parentNode.removeChild(c.el);
+            S.cones.splice(i, 1);
+            continue;
+          }
+          c.el.style.opacity = (0.14 + 0.52 * (c.t / 15)).toFixed(2);
+          for (j = 0; j < S.monsters.length; j++) {
+            var mm = S.monsters[j];
+            if (mm.dead || c.hit[mm.id]) continue;
+            if (mm.type === "banjo" || mm.type === "knockback") { c.hit[mm.id] = 1; continue; } // their defeats aren't HP — a cone can't change them
+            var vx = mm.x - c.x, vy = mm.y - c.y;
+            var dd = Math.hypot(vx, vy);
+            if (dd > c.len) continue;
+            if (dd >= 16 && (vx * c.dx + vy * c.dy) / dd < c.cos) continue;
+            c.hit[mm.id] = 1; // at most +1 HP from this cone, ever
+            mm.hp += 1; mm.maxHp += 1; mm.coneBonus = true;
+            var pips = mm.el.querySelectorAll(".pips i");
+            var lit = mm.type === "collector" ? Math.ceil(mm.hp / 3) : mm.hp;
+            for (k = 0; k < pips.length; k++) pips[k].classList.toggle("spent", k >= lit);
+            if (!mm.el.querySelector(".hpMark")) {
+              var hb = document.createElement("span");
+              hb.className = "hpMark";
+              hb.textContent = "+1♥";
+              mm.el.appendChild(hb);
+            }
+            floater(mm.x, mm.y - 46, "+1 HP!", "");
+            beep(700, 0.07, "triangle", 0.06, 120);
+          }
+        }
+      }
+
+      function monsterReachesBase(m) {
+        if (S.mode === "coach" && m === S.coachMonster) { m.prog = 0.15; positionMonster(m); return; }
+        var t = TYPES[m.type];
+        var x = m.x, y = m.y;
+        removeMonster(m);
+        if (m.type === "collector") S.bossTookIt = true;
+        S.hearts -= t.dmg;
+        if (m.type === "collector") S.hearts = 0; // it takes the stone — the night is lost either way
+        S.combo = 0; S.comboT = 0;
+        floater(x, y, "CHOMP! −" + t.dmg + " ♥", "big");
+        burst(x, y, "#ff4757", 10);
+        beep(110, 0.22, "sawtooth", 0.11, -60);
+        baseEl.classList.remove("hit"); void baseEl.offsetWidth; baseEl.classList.add("hit");
+        gameEl.classList.remove("shake"); void gameEl.offsetWidth; gameEl.classList.add("shake");
+        vignetteEl.classList.add("on");
+        setTimeout(function () { vignetteEl.classList.remove("on"); }, 240);
+        drawHearts(); drawHud();
+        if (S.hearts <= 0) gameOver();
+      }
+
+      /* ================= Hours (waves) ================= */
+      function rawComp(n) {
+        var q = [];
+        function add(type, count) { for (var i = 0; i < count; i++) q.push(type); }
+        if (n === TOTAL_HOURS && !S.endless) { add("collector", 1); return q; }
+        if (n === 5 || n === 10 || n === 15 || n % 10 === 0) {
+          add("boss", 1); add("chomper", 3 + Math.floor(n / 2));
+          if (n >= 10) { add("dartling", 3); add("zigzagger", 2); }
+          return shuffle(q);
+        }
+        add("chomper", 4 + n);
+        if (n >= 2) add("dartling", 1 + Math.floor(n * 0.8));
+        if (n >= 3) add("brute", Math.floor((n - 1) / 2));
+        if (n >= 4) add("zigzagger", Math.floor(n / 2));
+        if (n >= 6) add("splitter", Math.floor((n - 4) / 2) + 1);
+        if (n >= 7) add("shieldback", Math.floor((n - 5) / 2) + 1);
+        if (n >= 9) add("brute", 1);
+        if (n >= 13) add("banjo", Math.min(3, 1 + Math.floor((n - 13) / 3)));
+        if (n >= 15) add("knockback", Math.min(2, 1 + Math.floor((n - 15) / 4)));
+        if (n >= 16) add("pooler", Math.min(3, 1 + Math.floor((n - 16) / 3)));
+        if (n >= 18) add("coner", Math.min(3, 1 + Math.floor((n - 18) / 3)));
+        // Trim the tail of the night so late hours stay playable and the field stays light.
+        var CAP = 46;
+        while (q.length > CAP) {
+          var idx = q.lastIndexOf("chomper");
+          if (idx === -1) idx = q.lastIndexOf("dartling");
+          if (idx === -1) break;
+          q.splice(idx, 1);
+        }
+        return shuffle(q);
+      }
+      function waveComp(n) {
+        var q = rawComp(n);
+        if (n <= 5) {
+          // Early hours run ~20% busier — extra bodies before the hour ends.
+          var extra = Math.round(q.length * 0.2);
+          for (var i = 0; i < extra; i++) q.push(n >= 2 && i % 2 === 1 ? "dartling" : "chomper");
+          q = shuffle(q);
+        }
+        return q;
+      }
+      function shuffle(a) {
+        for (var i = a.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+      }
+      function startWave(n, force) {
+        // Hours only ever move forward within a run — a stray or duplicated
+        // transition can never restart the night or skip an hour.
+        if (!force && n !== S.wave + 1) return;
+        S.wave = n;
+        if (n >= 11) S.extended = true; // past the broken dawn, the night is out of 20
+        applyZoom(n);
+        S.spawnQueue = waveComp(n);
+        Object.keys(INTRO_WAVE).forEach(function (type) {
+          if (INTRO_WAVE[type] === n && S.spawnQueue.indexOf(type) === -1) S.spawnQueue.push(type);
+        });
+        // Hours 11+: same total count, but spawns land ~20% more slowly.
+        S.spawnEvery = Math.max(0.5, 1.35 - n * 0.07) * (n >= 11 ? 1.2 : 1);
+        S.spawnT = 0.7;
+        S.waveState = "spawning";
+        var debut = null;
+        Object.keys(INTRO_WAVE).forEach(function (type) { if (INTRO_WAVE[type] === n && !SEEN[type]) debut = type; });
+        if (debut) {
+          SEEN[debut] = true;
+          showBanner("NEW MONSTER: " + TYPES[debut].name, TYPES[debut].tip, TYPES[debut].art);
+        } else if (n === 1) {
+          showBanner("HOUR 1 OF 10", "Here they come — hold till dawn!", null);
+        } else if (S.endless) {
+          showBanner("HOUR " + n, "The night refuses to end…", null);
+        } else {
+          showBanner("HOUR " + n + " OF " + (n > 10 ? 20 : 10), n % 5 === 0 ? "Something BIG is coming…" : "They're getting hungrier…", null);
+        }
+        drawHud();
+      }
+      var bannerTimer = 0;
+      function showBanner(title, text, art) {
+        document.getElementById("bannerTitle").textContent = title;
+        document.getElementById("bannerText").textContent = text;
+        var ba = document.getElementById("bannerArt");
+        ba.innerHTML = art ? ART[art] : "";
+        ba.style.display = art ? "block" : "none";
+        bannerEl.classList.add("show");
+        clearTimeout(bannerTimer);
+        bannerTimer = setTimeout(function () { bannerEl.classList.remove("show"); }, 1900);
+      }
+
+      /* ================= Story beats between hours ================= */
+      var beatScreenEl = document.getElementById("beatScreen");
+      var TWIST_BEAT = "The sun should have risen. This should be over… what's happening? The sky stays black as pitch. On the windowsill, the stone is humming louder than it ever has — pleased with itself. The night isn't ending. The night is being KEPT. Ten more hours of it, if the stone has its way. Hold the house.";
+      function showBeatOrStart(next) {
+        if (next === 11 && !S.extended && !S.endless) {
+          // THE TWIST — dawn was promised at hour 10. It does not come.
+          S.pendingHour = next;
+          S.mode = "beat";
+          applyZoom(next);
+          document.getElementById("beatArt").innerHTML = ART.stoneOpen;
+          document.getElementById("beatKicker").textContent = "HOUR 10 CLEARED — WHERE IS THE SUN?";
+          document.getElementById("beatText").textContent = TWIST_BEAT;
+          beatScreenEl.hidden = false;
+          beep(196, 0.3, "sine", 0.07, -60);
+          return;
+        }
+        if (!SKIP_BEATS && BEATS[next]) {
+          S.pendingHour = next;
+          S.mode = "beat";
+          applyZoom(next);
+          document.getElementById("beatArt").innerHTML = next >= 16 ? ART.stoneOpen : ART.stone;
+          document.getElementById("beatKicker").textContent = S.endless ? "ENDLESS · HOUR " + next : "HOUR " + next + " OF " + (next > 10 ? 20 : 10);
+          document.getElementById("beatText").textContent = BEATS[next];
+          beatScreenEl.hidden = false;
+          beep(440, 0.09, "sine", 0.05);
+        } else {
+          startWave(next);
+        }
+      }
+      function leaveBeat(start) {
+        beatScreenEl.hidden = true;
+        S.mode = "play";
+        if (start) startWave(S.pendingHour);
+        S.pendingHour = 0;
+      }
+      document.getElementById("beatBtn").addEventListener("click", function () {
+        beep(560, 0.06, "square", 0.06);
+        leaveBeat(true);
+      });
+      document.getElementById("beatSkip").addEventListener("click", function () {
+        SKIP_BEATS = true;
+        beep(560, 0.06, "square", 0.06);
+        leaveBeat(true);
+      });
+
+      /* ================= The Collector (final boss) ================= */
+      function collectorTick(m, dt) {
+        var ph = bossPhase(m);
+        if (ph !== m.phase) {
+          m.phase = ph;
+          if (ph === 2) {
+            m.open = false; m.shieldT = 0.9; m.spitT = 1.4;
+            m.el.classList.remove("open");
+            floater(m.x, m.y - 90, "ITS SHELL SLAMS SHUT!", "big");
+          } else if (ph === 3) {
+            m.open = true; m.spitT = 1.4;
+            m.el.classList.remove("open");
+            floater(m.x, m.y - 90, "THE SHELL SHATTERS — IT'S CHARGING!", "big");
+          }
+          burst(m.x, m.y, "#ffd21f", 14);
+          beep(90, 0.3, "sawtooth", 0.1, -30);
+        }
+        if (m.phase === 2) {
+          m.shieldT -= dt;
+          if (m.shieldT <= 0) {
+            m.open = !m.open;
+            m.shieldT = m.open ? 1.15 : 1.55 + Math.random() * 0.5;
+            m.el.classList.toggle("open", m.open);
+            if (m.open) beep(760, 0.06, "sine", 0.05);
+          }
+          m.spitT -= dt;
+          if (m.spitT <= 0 && S.monsters.length < 10) {
+            m.spitT = 4.2;
+            var mini = makeMonster("mini", { angle: m.angle, prog: Math.max(0, m.prog - 0.03), lat: Math.random() < 0.5 ? -38 : 38 });
+            mini.dist0 = m.dist0;
+            positionMonster(mini);
+            floater(m.x, m.y - 70, "IT SPITS!", "");
+          }
+        } else if (m.phase === 3) {
+          if (m.burstT > 0) { m.burstT -= dt; }
+          else {
+            m.burstCd -= dt;
+            if (m.burstCd <= 0) { m.burstT = 0.7; m.burstCd = 2.4; beep(980, 0.08, "square", 0.05, 300); }
+          }
+          m.spitT -= dt;
+          if (m.spitT <= 0 && S.monsters.length < 10) {
+            m.spitT = 5.5;
+            var dart = makeMonster("dartling", { angle: m.angle, prog: Math.max(0, m.prog - 0.02), lat: Math.random() < 0.5 ? -30 : 30 });
+            dart.dist0 = m.dist0;
+            positionMonster(dart);
+            floater(m.x, m.y - 70, "IT SPITS!", "");
+          }
+        }
+      }
+
+      /* ================= Game loop (single-loop token: a stale loop can never run) ================= */
+      var LOOP_TOKEN = 0;
+      function startLoop() {
+        var tok = ++LOOP_TOKEN;
+        var lastTs = 0;
+        function frame(ts) {
+          if (tok !== LOOP_TOKEN || !S) return;
+          S.raf = requestAnimationFrame(frame);
+          var dt = Math.min(0.05, (ts - lastTs) / 1000 || 0);
+          lastTs = ts;
+          tick(dt);
+        }
+        S.raf = requestAnimationFrame(frame);
+      }
+      function tick(dt) {
+        if (S.mode !== "play" && S.mode !== "coach") return;
+        S.time += dt;
+
+        if (S.comboT > 0) {
+          S.comboT -= dt;
+          if (S.comboT <= 0) { S.combo = 0; drawHud(); }
+        }
+
+        if (S.mode === "play") {
+          if (S.waveState === "dying") {
+            S.winT -= dt;
+            if (S.winT <= 0) showWin();
+          } else if (S.waveState === "spawning") {
+            S.spawnT -= dt;
+            if (S.spawnT <= 0 && S.spawnQueue.length) {
+              if (S.monsters.length < maxOnScreen()) {
+                var type = S.spawnQueue.shift();
+                var m = makeMonster(type);
+                m.speed *= 1 + (S.wave - 1) * 0.035;
+                S.spawnT = S.spawnEvery * (0.6 + Math.random() * 0.8);
+                if (!S.spawnQueue.length) S.waveState = "fighting";
+              } else {
+                S.spawnT = 0.25; // field is full — hold the rest at the tree line
+              }
+            }
+          } else if (S.waveState === "fighting") {
+            // An hour is cleared only when the queue is spent AND the field is
+            // empty — splitter children keep the hour alive until they're gone.
+            if (!S.spawnQueue.length && !S.monsters.length) { S.waveState = "between"; S.betweenT = 1.4; }
+          } else if (S.waveState === "between") {
+            S.betweenT -= dt;
+            if (S.betweenT <= 0) {
+              S.waveState = "idle";
+              showBeatOrStart(S.wave + 1);
+            }
+          }
+        }
+
+        var anyClose = false;
+        S.monsters.slice().forEach(function (m) {
+          var sp = m.speed;
+          if (m.type === "collector" && m.phase === 3 && m.burstT > 0) sp *= 2.3;
+          if (m.type === "banjo") {
+            if (!m.playing) {
+              sp = 0; // hushed: he stands perfectly still until the music restarts
+              m.hushT -= dt;
+              if (m.hushT <= 0) {
+                m.playing = true;
+                m.el.classList.remove("hushed");
+                m.el.classList.add("wobble");
+                floater(m.x, m.y - 48, "♪ PLAYING AGAIN!", "");
+                beep(540, 0.1, "triangle", 0.06, 180);
+              }
+            }
+          }
+          if (S.mode === "coach") sp = m === S.coachMonster ? 0.035 : 0;
+          m.prog += sp * dt;
+          // The practice chomper parks at snack-smelling distance until tapped — onboarding can't be lost.
+          if (S.mode === "coach" && m === S.coachMonster && m.prog > 0.62) m.prog = 0.62;
+          if (m.type === "shieldback") {
+            m.shieldT -= dt;
+            if (m.shieldT <= 0) {
+              m.open = !m.open;
+              m.shieldT = m.open ? 1.15 : 1.55 + Math.random() * 0.5;
+              m.el.classList.toggle("open", m.open);
+              if (m.open) beep(760, 0.06, "sine", 0.05);
+            }
+          }
+          if (m.type === "collector") collectorTick(m, dt);
+          positionMonster(m);
+          if (m.type === "knockback" && m.prog <= -0.1) {
+            // Shoved completely off the edge he came from — the only way he falls.
+            var fw = field();
+            m.x = Math.max(26, Math.min(fw.w - 26, m.x));
+            m.y = Math.max(26, Math.min(fw.h - 26, m.y));
+            floater(m.x, m.y - 10, "SHOVED OFF!", "big");
+            killMonster(m);
+            return;
+          }
+          if (m.prog > 0.8) anyClose = true;
+          var f = field();
+          var dCenter = Math.hypot(m.x - f.cx, m.y - f.cy);
+          if (m.prog >= 1 || dCenter < 52 * currentZoom() + 14) monsterReachesBase(m);
+        });
+        hazardTick(dt);
+        dangerRingEl.classList.toggle("on", anyClose && S.mode === "play");
+      }
+
+      /* ================= Story + onboarding ================= */
+      var storyStep = 0;
+      document.getElementById("storyBtn").addEventListener("click", function () {
+        beep(500, 0.06, "square", 0.06);
+        if (storyStep === 0) {
+          storyStep = 1;
+          document.getElementById("storyTitle").textContent = "IT SINGS AT NIGHT";
+          document.getElementById("storyText").textContent = "All day it hummed on your windowsill. Now the sun is down, the hum is a song — and everything in the dark is coming to hear it. Survive the night: 10 hours till dawn. Tap monsters to smash them before they reach your house.";
+          document.getElementById("storyArt").innerHTML = ART.base;
+          document.getElementById("storyBtn").textContent = "DEFEND THE HOUSE!";
+        } else {
+          document.getElementById("storyScreen").hidden = true;
+          startCoaching();
+        }
+      });
+
+      var spotEl = document.getElementById("spot");
+      var coachEl = document.getElementById("coach");
+      var coachTextEl = document.getElementById("coachText");
+      var coachBtn = document.getElementById("coachBtn");
+      function spotlight(rect, text, btnLabel, above) {
+        spotEl.style.display = "block";
+        spotEl.style.left = (rect.left - 8) + "px"; spotEl.style.top = (rect.top - 8) + "px";
+        spotEl.style.width = (rect.width + 16) + "px"; spotEl.style.height = (rect.height + 16) + "px";
+        coachEl.style.display = "block";
+        coachTextEl.textContent = text;
+        coachBtn.textContent = btnLabel;
+        coachBtn.style.display = btnLabel ? "inline-block" : "none";
+        var cw = Math.min(320, window.innerWidth * 0.86);
+        var cx = Math.max(10, Math.min(window.innerWidth - cw - 10, rect.left + rect.width / 2 - cw / 2));
+        coachEl.style.left = cx + "px";
+        coachEl.style.width = cw + "px";
+        coachEl.style.top = above ? Math.max(10, rect.top - 128) + "px" : Math.min(window.innerHeight - 130, rect.bottom + 20) + "px";
+      }
+      function endSpotlight() { spotEl.style.display = "none"; coachEl.style.display = "none"; }
+
+      function startCoaching() {
+        S.mode = "coach";
+        coachStep(1);
+      }
+      function coachStep(n) {
+        S.coachStep = n;
+        if (n === 1) {
+          spotlight(baseEl.getBoundingClientRect(), "This is your HOUSE. The singing stone is inside — and everything out there is coming for it.", "OK", false);
+        } else if (n === 2) {
+          endSpotlight();
+          S.coachMonster = makeMonster("chomper", { angle: -Math.PI / 2.4 });
+          S.coachMonster.prog = 0.25;
+          positionMonster(S.coachMonster);
+          var r = S.coachMonster.el.getBoundingClientRect();
+          spotlight(r, "A CHOMPER! Tap it to smash it!", "", true);
+          // Keep the spotlight glued to the creeping chomper.
+          var glue = setInterval(function () {
+            if (!S || S.coachStep !== 2 || !S.coachMonster) { clearInterval(glue); return; }
+            var rr = S.coachMonster.el.getBoundingClientRect();
+            spotEl.style.left = (rr.left - 8) + "px"; spotEl.style.top = (rr.top - 8) + "px";
+            spotEl.style.width = (rr.width + 16) + "px"; spotEl.style.height = (rr.height + 16) + "px";
+            coachEl.style.top = Math.max(10, rr.top - 118) + "px";
+          }, 60);
+        } else if (n === 3) {
+          spotlight(heartsEl.getBoundingClientRect(), "These are your hearts. A monster that reaches the house eats one. Lose them all before dawn and the song wins!", "START HOUR 1", false);
+        }
+      }
+      coachBtn.addEventListener("click", function () {
+        beep(560, 0.06, "square", 0.06);
+        if (S.coachStep === 1) coachStep(2);
+        else if (S.coachStep === 3) {
+          endSpotlight();
+          S.mode = "play";
+          startWave(1);
+        }
+      });
+
+      /* ================= Dawn Stars banking ================= */
+      function pointsForHour(h) { return h <= 10 ? 1 : h <= 20 ? 2 : 5; }
+      function bankRun(upToHour) {
+        var from = S.bankedThrough || 0;
+        var earned = 0;
+        for (var h = from + 1; h <= upToHour; h++) earned += pointsForHour(h);
+        if (earned > 0) { SAVE.stars += earned; saveSave(); }
+        S.bankedThrough = Math.max(from, upToHour);
+        S.lastEarned = earned;
+        return earned;
+      }
+
+      /* ================= Win / game over / restart ================= */
+      function beginWin() {
+        if (S.waveState === "dying") return;
+        S.waveState = "dying";
+        S.winT = 1.2;
+        S.monsters.slice().forEach(function (m) { burst(m.x, m.y, "#ffd21f", 6); removeMonster(m); });
+        S.spawnQueue = [];
+        showBanner("THE COLLECTOR FALLS!", "The song is ending…", null);
+        beep(660, 0.35, "triangle", 0.1, 220);
+      }
+      function showWin() {
+        bankRun(TOTAL_HOURS);
+        S.mode = "win";
+        S.waveState = "idle";
+        dangerRingEl.classList.remove("on");
+        fieldEl.classList.add("dawn");
+        document.getElementById("winChoice").hidden = false;
+        document.getElementById("winEnding").hidden = true;
+        document.getElementById("winModes").hidden = true;
+        document.getElementById("winScore").textContent = S.score;
+        document.getElementById("winKills").textContent = S.kills;
+        document.getElementById("winStars").textContent = "+" + S.lastEarned;
+        document.getElementById("winBal").textContent = SAVE.stars;
+        var boosted = !!S.anyBoostOn;
+        document.getElementById("roastBox").hidden = !boosted;
+        document.getElementById("pureBadge").hidden = boosted;
+        document.getElementById("winScreen").hidden = false;
+      }
+      document.querySelectorAll("#winChoice .btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          beep(620, 0.07, "triangle", 0.07);
+          document.getElementById("winChoice").hidden = true;
+          var endEl = document.getElementById("winEnding");
+          endEl.textContent = ENDINGS[btn.dataset.ending];
+          endEl.hidden = false;
+          document.getElementById("winModes").hidden = false;
+        });
+      });
+      document.getElementById("endlessBtn").addEventListener("click", function () {
+        document.getElementById("winScreen").hidden = true;
+        fieldEl.classList.remove("dawn");
+        S.endless = true;
+        S.hearts = S.maxHearts; // dawn rested the house — endless starts whole
+        drawHearts();
+        S.mode = "play";
+        drawHud();
+        showBeatOrStart(TOTAL_HOURS + 1);
+      });
+      document.getElementById("newNightBtn").addEventListener("click", function () {
+        document.getElementById("winScreen").hidden = true;
+        reset();
+      });
+
+      function gameOver() {
+        bankRun(Math.max(0, S.wave - 1));
+        S.mode = "over";
+        dangerRingEl.classList.remove("on");
+        if (S.bossTookIt) {
+          document.getElementById("overTitle").textContent = "IT TOOK THE STONE";
+          document.getElementById("overText").textContent = "The Collector reached the house and lifted the singing stone out like an egg from a nest. The night goes very quiet.";
+        } else {
+          document.getElementById("overTitle").textContent = "THE SONG WINS";
+          document.getElementById("overText").textContent = "The monsters got into the house. Somewhere out in the dark, the stone is still singing — to them now.";
+        }
+        document.getElementById("finalWave").textContent = S.endless ? S.wave + " ENDLESS" : S.wave + " OF " + (S.extended || S.wave > 10 ? 20 : 10);
+        document.getElementById("finalScore").textContent = S.score;
+        document.getElementById("finalKills").textContent = S.kills;
+        document.getElementById("overStars").textContent = "+" + S.lastEarned;
+        document.getElementById("overBal").textContent = SAVE.stars;
+        document.getElementById("overScreen").hidden = false;
+        beep(90, 0.5, "sawtooth", 0.1, -40);
+      }
+      function reset() {
+        monstersEl.innerHTML = ""; fxEl.innerHTML = "";
+        fieldEl.classList.remove("dawn");
+        beatScreenEl.hidden = true;
+        document.getElementById("winScreen").hidden = true;
+        var fresh = newState();
+        fresh.mode = "play";
+        S = fresh;
+        uid = 0;
+        drawHearts(); drawHud();
+        startLoop();
+        startWave(1);
+      }
+      document.getElementById("againBtn").addEventListener("click", function () {
+        document.getElementById("overScreen").hidden = true;
+        reset();
+      });
+
+      /* ================= Dawn Star shop ================= */
+      function updateShop() {
+        document.getElementById("starBal").textContent = SAVE.stars;
+        document.getElementById("starChip").textContent = SAVE.stars;
+        var hb = document.getElementById("heartBuy");
+        hb.textContent = "BUY · " + heartCost() + "★";
+        hb.disabled = SAVE.stars < heartCost();
+        document.getElementById("heartOwned").textContent = "OWNED ×" + SAVE.heartsBought;
+        document.getElementById("heartFx").textContent = "Next run max hearts: " + (5 + (SAVE.heartsOn ? SAVE.heartsBought : 0));
+        var ht = document.getElementById("heartTgl");
+        ht.classList.toggle("on", SAVE.heartsOn && SAVE.heartsBought > 0);
+        ht.disabled = SAVE.heartsBought === 0;
+        document.getElementById("heartTglState").textContent = SAVE.heartsBought === 0 ? "NOT OWNED" : SAVE.heartsOn ? "ACTIVE" : "OFF";
+        var db = document.getElementById("dmgBuy");
+        db.textContent = "BUY · " + dmgCost() + "★";
+        db.disabled = SAVE.stars < dmgCost();
+        document.getElementById("dmgOwned").textContent = "OWNED ×" + SAVE.dmgBought;
+        document.getElementById("dmgFx").textContent = "Next run tap damage: " + (1 + (SAVE.dmgOn ? SAVE.dmgBought : 0));
+        var dt = document.getElementById("dmgTgl");
+        dt.classList.toggle("on", SAVE.dmgOn && SAVE.dmgBought > 0);
+        dt.disabled = SAVE.dmgBought === 0;
+        document.getElementById("dmgTglState").textContent = SAVE.dmgBought === 0 ? "NOT OWNED" : SAVE.dmgOn ? "ACTIVE" : "OFF";
+      }
+      function refreshStartState() {
+        // Shop changes apply to the NEXT run — rebuild the idle state so the
+        // HUD preview (hearts, tap damage) matches what will actually run.
+        var keepMode = S.mode;
+        S = newState();
+        S.mode = keepMode === "play" || keepMode === "coach" ? keepMode : "story";
+        drawHearts(); drawHud(); updateShop();
+      }
+      function buyUpgrade(kind) {
+        if (kind === "heart") {
+          if (SAVE.stars < heartCost()) return false;
+          SAVE.stars -= heartCost(); SAVE.heartsBought += 1; SAVE.heartsOn = true;
+        } else {
+          if (SAVE.stars < dmgCost()) return false;
+          SAVE.stars -= dmgCost(); SAVE.dmgBought += 1; SAVE.dmgOn = true;
+        }
+        saveSave();
+        beep(740, 0.08, "triangle", 0.07, 160);
+        refreshStartState();
+        return true;
+      }
+      document.getElementById("heartBuy").addEventListener("click", function () { buyUpgrade("heart"); });
+      document.getElementById("dmgBuy").addEventListener("click", function () { buyUpgrade("dmg"); });
+      document.getElementById("heartTgl").addEventListener("click", function () {
+        if (!SAVE.heartsBought) return;
+        SAVE.heartsOn = !SAVE.heartsOn; saveSave(); beep(500, 0.05, "square", 0.05);
+        refreshStartState();
+      });
+      document.getElementById("dmgTgl").addEventListener("click", function () {
+        if (!SAVE.dmgBought) return;
+        SAVE.dmgOn = !SAVE.dmgOn; saveSave(); beep(500, 0.05, "square", 0.05);
+        refreshStartState();
+      });
+      /* Shop sheet open/close — the start screen itself never scrolls. */
+      var shopScreenEl = document.getElementById("shopScreen");
+      function openShop() {
+        updateShop();
+        shopScreenEl.hidden = false;
+        shopScreenEl.querySelector(".shopPanel").scrollTop = 0;
+        beep(560, 0.06, "square", 0.06);
+      }
+      function closeShop() {
+        shopScreenEl.hidden = true;
+        beep(500, 0.05, "square", 0.05);
+      }
+      document.getElementById("shopOpenBtn").addEventListener("click", openShop);
+      document.getElementById("shopCloseBtn").addEventListener("click", closeShop);
+      function showStartScreen() {
+        shopScreenEl.hidden = true;
+        document.getElementById("winScreen").hidden = true;
+        document.getElementById("overScreen").hidden = true;
+        beatScreenEl.hidden = true;
+        monstersEl.innerHTML = ""; fxEl.innerHTML = "";
+        fieldEl.classList.remove("dawn");
+        storyStep = 0;
+        document.getElementById("storyTitle").textContent = "THE GLITTERING THING";
+        document.getElementById("storyText").textContent = "This morning, down by the fence, you found something glittering in the grass: a singing stone — warm, smooth, with one tiny shut eye. You brought it home. Of course you did.";
+        document.getElementById("storyArt").innerHTML = ART.stone;
+        document.getElementById("storyBtn").textContent = "NEXT ▸";
+        document.getElementById("storyScreen").hidden = false;
+        S = newState();
+        uid = 0;
+        applyZoom(1);
+        drawHearts(); drawHud(); updateShop();
+        startLoop();
+      }
+      document.getElementById("winShopBtn").addEventListener("click", function () { showStartScreen(); openShop(); });
+      document.getElementById("overShopBtn").addEventListener("click", function () { showStartScreen(); openShop(); });
+      document.getElementById("proveBtn").addEventListener("click", function () {
+        // The dare: every boost OFF, fresh night, no excuses.
+        SAVE.heartsOn = false; SAVE.dmgOn = false; saveSave();
+        document.getElementById("winScreen").hidden = true;
+        beep(660, 0.09, "triangle", 0.08, 200);
+        reset();
+      });
+
+      /* ================= Boot ================= */
+      S = newState();
+      drawHearts(); drawHud(); updateShop();
+      applyZoom(1);
+      startLoop();
+
+      // Probe/debug surface (harmless; lets verification drive the real game).
+      window.__MTD = {
+        state: function () {
+          var fr = fieldEl.getBoundingClientRect();
+          return { mode: S.mode, hearts: S.hearts, wave: S.wave, score: S.score, kills: S.kills,
+                   endless: S.endless, zoom: +currentZoom().toFixed(3), pendingHour: S.pendingHour,
+                   fieldBox: { top: Math.round(fr.top), bottom: Math.round(fr.bottom), vh: window.innerHeight },
+                   monsters: S.monsters.map(function (m) { return { type: m.type, hp: m.hp, prog: +m.prog.toFixed(3), open: !!m.open, phase: m.phase || 1, x: Math.round(m.x), y: Math.round(m.y), playing: m.playing !== false, hushes: m.hushes || 0, boosted: !!m.boosted, coneBonus: !!m.coneBonus, speed: +m.speed.toFixed(4) }; }),
+                   pools: S.pools.map(function (p) { return { x: Math.round(p.x), y: Math.round(p.y), t: +p.t.toFixed(1) }; }),
+                   cones: S.cones.map(function (c) { return { x: Math.round(c.x), y: Math.round(c.y), t: +c.t.toFixed(1) }; }),
+                   queue: S.spawnQueue.length, waveState: S.waveState, coachStep: S.coachStep,
+                   stars: SAVE.stars, heartsBought: SAVE.heartsBought, dmgBought: SAVE.dmgBought,
+                   heartsOn: SAVE.heartsOn, dmgOn: SAVE.dmgOn, tapDmg: S.tapDmg, maxHearts: S.maxHearts,
+                   anyBoostOn: !!S.anyBoostOn, extended: !!S.extended, ofHours: ofHoursEl.textContent.trim(),
+                   lastEarned: S.lastEarned || 0, bankedThrough: S.bankedThrough || 0,
+                   spawnEvery: +S.spawnEvery.toFixed(3), maxOnScreen: maxOnScreen(),
+                   roastShown: !document.getElementById("roastBox").hidden,
+                   pureShown: !document.getElementById("pureBadge").hidden,
+                   beatShown: !beatScreenEl.hidden, beatText: document.getElementById("beatText").textContent,
+                   winShown: !document.getElementById("winScreen").hidden };
+        },
+        spawn: function (type) { var m = makeMonster(type); m.speed *= 1 + (Math.max(1, S.wave) - 1) * 0.035; return m.id; },
+        tapFirst: function () { if (S.monsters[0]) tapMonster(S.monsters[0]); },
+        tapType: function (type) { var m = S.monsters.filter(function (x) { return x.type === type; })[0]; if (m) tapMonster(m); },
+        setProg: function (type, p) { var m = S.monsters.filter(function (x) { return x.type === type; })[0]; if (m) { m.prog = p; positionMonster(m); } },
+        dropPool: function (x, y) { spawnPool(x, y); },
+        dropCone: function (x, y) { spawnCone(x, y); },
+        startPlay: function () {
+          document.getElementById("storyScreen").hidden = true;
+          endSpotlight();
+          S.mode = "play";
+          if (S.wave === 0) startWave(1);
+        },
+        skipToHour: function (n) {
+          document.getElementById("storyScreen").hidden = true;
+          beatScreenEl.hidden = true;
+          document.getElementById("winScreen").hidden = true;
+          document.getElementById("overScreen").hidden = true;
+          endSpotlight();
+          S.monsters.slice().forEach(removeMonster);
+          S.spawnQueue = [];
+          S.mode = "play";
+          startWave(n, true);
+        },
+        beat: function () { if (S.mode === "play" && S.waveState === "between") { S.waveState = "idle"; showBeatOrStart(S.wave + 1); } },
+        compLen: function (n) { return waveComp(n).length; },
+        rawLen: function (n) { return rawComp(n).length; },
+        grantStars: function (n) { SAVE.stars += n; saveSave(); updateShop(); },
+        buyHeart: function () { return buyUpgrade("heart"); },
+        buyDmg: function () { return buyUpgrade("dmg"); },
+        setTgl: function (kind, on) { if (kind === "heart") SAVE.heartsOn = !!on; else SAVE.dmgOn = !!on; saveSave(); refreshStartState(); },
+        hitType: function (type, n) { for (var i = 0; i < (n || 1); i++) { var m = S.monsters.filter(function (x) { return x.type === type; })[0]; if (!m) break; tapMonster(m); } },
+        reachBase: function (type) { var m = S.monsters.filter(function (x) { return x.type === type; })[0]; if (m) monsterReachesBase(m); },
+        clearField: function () { S.monsters.slice().forEach(removeMonster); S.spawnQueue = []; if (S.waveState === "spawning" || S.waveState === "fighting") { S.waveState = "between"; S.betweenT = 0.05; } },
+        continueBeat: function () { if (S.mode === "beat") leaveBeat(true); },
+        showWinNow: function () { showWin(); },
+        toStart: function () { showStartScreen(); }
+      };
+    </script>
+  </body>
+</html>

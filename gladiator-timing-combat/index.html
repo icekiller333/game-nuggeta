@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Gladiator Timing Combat · Live Action</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        --bg:#f6cf6b; --panel:#fff7e0; --panel2:#ffe9ad; --ink:#191407; --edge:#191407; --shadowc:#191407;
+        --red:#e23b2e; --teal:#0f9594; --amber:#ffb703; --sky:#56ccf2; --green:#5fd068; --orange:#ff7b54;
+        --wolf:#79839b; --dim:rgba(25,20,7,.62); --track:#fff2cd; --overlay:rgba(20,14,2,.66);
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#211809; --panel:#2e2312; --panel2:#3a2c16; --ink:#f8ecd2; --edge:#f0dfba; --shadowc:#000;
+          --track:#241b0d; --dim:rgba(248,236,210,.66); --overlay:rgba(0,0,0,.72);
+        }
+      }
+      *{ box-sizing:border-box; }
+      html,body{ margin:0; padding:0; }
+      body{
+        background:var(--bg); color:var(--ink);
+        font-family:"Archivo",system-ui,sans-serif; font-weight:500;
+        -webkit-font-smoothing:antialiased;
+      }
+      button{ font-family:inherit; cursor:pointer; }
+      .wrap{ max-width:880px; margin:0 auto; padding:10px 12px 28px; }
+      .disp{ font-family:"Archivo Black","Archivo",sans-serif; letter-spacing:.02em; }
+
+      /* ---------- top bar ---------- */
+      .topbar{ display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+      .stat-chip{
+        background:var(--panel); border:3px solid var(--edge); box-shadow:3px 3px 0 var(--shadowc);
+        padding:5px 10px; font-weight:800; font-size:15px; display:flex; align-items:center; gap:6px;
+      }
+      .stat-chip .lbl{ font-size:10px; font-weight:800; letter-spacing:.12em; color:var(--dim); }
+      .topbar .spacer{ flex:1; }
+      .icon-btn{
+        width:44px; height:44px; display:grid; place-items:center; background:var(--panel);
+        border:3px solid var(--edge); box-shadow:3px 3px 0 var(--shadowc); padding:0;
+      }
+      .icon-btn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadowc); }
+      .icon-btn svg{ width:24px; height:24px; fill:var(--ink); }
+      .icon-btn[aria-pressed="true"]{ background:var(--amber); }
+      #pausedChip{ display:none; background:var(--red); color:#fff; }
+      #pausedChip.on{ display:flex; }
+
+      /* ---------- arena ---------- */
+      .arena{ display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:stretch; }
+      .fighter{
+        background:var(--panel); border:3px solid var(--edge); box-shadow:5px 5px 0 var(--shadowc);
+        padding:8px; position:relative; overflow:hidden;
+      }
+      .fighter .stage{ height:118px; display:grid; place-items:end center; position:relative; }
+      .fighter .stage svg{ height:112px; width:auto; max-width:100%; }
+      .fighter .fname{ font-size:15px; display:flex; justify-content:space-between; align-items:baseline; gap:6px; }
+      .fighter .fname .sub{ font-size:11px; font-weight:800; color:var(--dim); letter-spacing:.08em; }
+      .vs{
+        align-self:center; background:var(--red); color:#fff; border:3px solid var(--edge);
+        box-shadow:3px 3px 0 var(--shadowc); font-size:15px; padding:5px 7px; transform:rotate(-6deg);
+      }
+      .bar{ border:3px solid var(--edge); background:var(--track); height:20px; position:relative; margin-top:6px; }
+      .bar .fill{ position:absolute; inset:0; width:100%; transform-origin:left; transition:none; }
+      .bar .val{
+        position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+        font-size:12px; font-weight:800; color:#191407; text-shadow:0 1px 0 rgba(255,255,255,.45);
+      }
+      .bar.hp .fill{ background:var(--red); }
+      .bar.hp .val{ color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.5); }
+      .bar.stam{ height:26px; }
+      .bar.stam .fill{ background:var(--amber); }
+      .bar.wolfhp .fill{ background:#5b6478; }
+      .bar.wolfhp .val{ color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.5); }
+      .bar .barlbl{ position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:10px; font-weight:800; letter-spacing:.1em; color:#191407; z-index:2; }
+      .bar.hp .barlbl, .bar.wolfhp .barlbl{ color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.5); }
+      .bar .val{ padding-left:44px; }
+      .nextline{ margin-top:7px; font-size:13px; font-weight:800; min-height:18px; }
+      .nextline .cd{ color:var(--red); }
+      #wolfCard.dead .stage svg{ filter:grayscale(1); opacity:.35; }
+
+      @keyframes lungeR{ 0%{transform:translateX(0)} 35%{transform:translateX(16px) rotate(2deg)} 100%{transform:translateX(0)} }
+      @keyframes lungeL{ 0%{transform:translateX(0)} 35%{transform:translateX(-16px) rotate(-2deg)} 100%{transform:translateX(0)} }
+      @keyframes shakeCard{ 0%,100%{transform:translate(0)} 25%{transform:translate(-4px,2px)} 50%{transform:translate(4px,-2px)} 75%{transform:translate(-3px,-1px)} }
+      @keyframes popIn{ 0%{transform:scale(.6)} 60%{transform:scale(1.08)} 100%{transform:scale(1)} }
+      .lunge-r{ animation:lungeR .32s ease-out; }
+      .lunge-l{ animation:lungeL .32s ease-out; }
+      .hitshake{ animation:shakeCard .3s linear; }
+      .flashred::after{
+        content:""; position:absolute; inset:0; background:var(--red); opacity:.45; pointer-events:none;
+      }
+      .popin{ animation:popIn .3s ease-out; }
+
+      .dmgnum{
+        position:absolute; font-family:"Archivo Black",sans-serif; font-size:26px; color:var(--red);
+        -webkit-text-stroke:1.5px #191407; pointer-events:none; z-index:5;
+        animation:dmgFloat .8s ease-out forwards;
+      }
+      .dmgnum.heal{ color:var(--teal); }
+      @keyframes dmgFloat{ 0%{ transform:translateY(0) scale(.7); opacity:0 } 20%{opacity:1; transform:translateY(-8px) scale(1.15)} 100%{ transform:translateY(-46px) scale(1); opacity:0 } }
+      @keyframes bigShake{ 0%,100%{transform:translate(0)} 20%{transform:translate(-6px,3px)} 40%{transform:translate(6px,-3px)} 60%{transform:translate(-5px,-2px)} 80%{transform:translate(5px,2px)} }
+      .bigshake{ animation:bigShake .34s linear; }
+
+      /* ---------- timeline ---------- */
+      .timeline-box{
+        margin-top:12px; background:var(--panel); border:3px solid var(--edge); box-shadow:5px 5px 0 var(--shadowc);
+        padding:8px 10px 6px;
+      }
+      .tl-head{ display:flex; justify-content:space-between; align-items:baseline; }
+      .tl-head .t{ font-size:13px; letter-spacing:.06em; }
+      .tl-head .hint{ font-size:11px; font-weight:800; color:var(--dim); }
+      .tl-lanes{ position:relative; margin-top:6px; }
+      .tl-lane{ position:relative; height:40px; border-top:2px dashed var(--dim); }
+      .tl-lane:first-child{ border-top:none; }
+      .tl-lane .lane-lbl{
+        position:absolute; left:0; top:2px; font-size:10px; font-weight:800; letter-spacing:.12em; color:var(--dim); z-index:1;
+      }
+      .hitline{
+        position:absolute; top:0; bottom:16px; left:34px; width:5px; background:var(--red); z-index:3;
+      }
+      .hitline::before{
+        content:"HIT"; position:absolute; top:-1px; left:8px; font-size:10px; font-weight:800;
+        letter-spacing:.12em; color:var(--red);
+      }
+      .tl-ticks{ position:relative; height:16px; margin-left:34px; }
+      .tl-ticks span{ position:absolute; transform:translateX(-50%); font-size:10px; font-weight:800; color:var(--dim); }
+      .chip{
+        position:absolute; top:13px; transform:translateX(-50%); z-index:2; white-space:nowrap;
+        border:2.5px solid var(--edge); padding:2px 7px; font-size:12px; font-weight:800; color:#191407;
+        box-shadow:2px 2px 0 var(--shadowc);
+      }
+      .chip small{ font-weight:800; opacity:.75; }
+      .chip.glad{ background:var(--teal); color:#fff; }
+      .chip.wolfc{ background:var(--wolf); color:#fff; }
+      .chip.breath{ background:var(--green); color:#191407; }
+
+      /* ---------- status + attacks ---------- */
+      .statusline{
+        margin-top:12px; font-size:16px; min-height:24px; display:flex; align-items:center; gap:8px;
+      }
+      .statusline .dot{ width:12px; height:12px; background:var(--green); border:2.5px solid var(--edge); flex:none; }
+      .statusline.busy .dot{ background:var(--amber); }
+      .atk-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+      .atk{
+        border:3px solid var(--edge); box-shadow:4px 4px 0 var(--shadowc); padding:9px 10px 8px;
+        text-align:left; color:#191407; position:relative; background:var(--panel);
+      }
+      .atk:active:not(:disabled){ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--shadowc); }
+      .atk:disabled{ cursor:not-allowed; filter:grayscale(.75); opacity:.55; box-shadow:2px 2px 0 var(--shadowc); }
+      .atk .aname{ font-size:16px; display:flex; align-items:center; gap:7px; }
+      .atk .aname svg{ width:22px; height:22px; flex:none; }
+      .atk .astats{ margin-top:4px; font-size:13px; font-weight:800; display:flex; gap:10px; flex-wrap:wrap; }
+      .atk .astats .need{ color:var(--red); }
+      .atk.jab{ background:var(--sky); } .atk.slash{ background:var(--green); }
+      .atk.axe{ background:var(--orange); } .atk.breath{ background:#efe8d2; }
+      @media (prefers-color-scheme: dark){ .atk.breath{ background:#d9cf9f; } }
+
+      /* ---------- log ---------- */
+      .log-box{
+        margin-top:12px; background:var(--panel); border:3px solid var(--edge); box-shadow:5px 5px 0 var(--shadowc);
+        padding:8px 10px;
+      }
+      .log-box .t{ font-size:12px; letter-spacing:.08em; margin-bottom:4px; }
+      #log{ list-style:none; margin:0; padding:0; height:118px; overflow-y:auto; font-size:13.5px; font-weight:500; }
+      #log li{ padding:2.5px 0; border-bottom:1px dashed var(--dim); line-height:1.35; }
+      #log li:last-child{ border-bottom:none; }
+      #log .lt{ font-weight:800; color:var(--dim); font-size:11.5px; margin-right:5px; }
+      #log li.kill{ font-weight:800; }
+      #log li.hurt{ color:var(--red); font-weight:700; }
+
+      /* ---------- overlays ---------- */
+      .overlay{
+        position:fixed; inset:0; background:var(--overlay); display:none; z-index:40;
+        align-items:center; justify-content:center; padding:16px;
+      }
+      .overlay.on{ display:flex; }
+      .modal{
+        background:var(--panel); border:3.5px solid var(--edge); box-shadow:7px 7px 0 var(--shadowc);
+        max-width:520px; width:100%; padding:20px; max-height:92vh; overflow-y:auto;
+      }
+      .modal h2{ font-family:"Archivo Black",sans-serif; margin:0 0 10px; font-size:24px; line-height:1.15; }
+      .modal p{ font-size:16px; line-height:1.5; margin:0 0 10px; }
+      .modal .howto{
+        background:var(--panel2); border:3px solid var(--edge); padding:10px 12px; font-weight:700; font-size:15.5px;
+      }
+      .big-btn{
+        display:block; width:100%; margin-top:14px; background:var(--red); color:#fff; border:3px solid var(--edge);
+        box-shadow:4px 4px 0 var(--shadowc); font-family:"Archivo Black",sans-serif; font-size:18px; padding:13px;
+      }
+      .big-btn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--shadowc); }
+      .big-score{ font-family:"Archivo Black",sans-serif; font-size:52px; text-align:center; margin:6px 0 0; }
+      .big-score-sub{ text-align:center; font-weight:800; color:var(--dim); margin-bottom:6px; }
+
+      /* ---------- tuning sheet ---------- */
+      .sheet{
+        position:fixed; inset:0; background:var(--overlay); display:none; z-index:50; justify-content:flex-end;
+      }
+      .sheet.on{ display:flex; }
+      .sheet-inner{
+        background:var(--panel); border-left:3.5px solid var(--edge); width:min(430px,100%); height:100%;
+        overflow-y:auto; padding:16px 16px 30px;
+      }
+      .sheet-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+      .sheet-head h2{ font-family:"Archivo Black",sans-serif; font-size:21px; margin:0; }
+      .tune-section{
+        margin-top:18px; font-family:"Archivo Black",sans-serif; font-size:14px; letter-spacing:.05em;
+        background:var(--ink); color:var(--bg); padding:5px 9px;
+      }
+      .tune-row{
+        display:flex; align-items:center; gap:7px; padding:8px 0; border-bottom:2px dashed var(--dim);
+      }
+      .tune-row .tl{ flex:1; font-weight:700; font-size:14.5px; line-height:1.25; }
+      .tune-row .tl small{ display:block; font-weight:500; color:var(--dim); font-size:12px; }
+      .stepper{ display:flex; align-items:stretch; border:3px solid var(--edge); background:var(--track); }
+      .stepper button{
+        width:34px; font-size:18px; font-weight:800; background:var(--panel2); border:none; color:var(--ink); padding:0;
+      }
+      .stepper input{
+        width:62px; border:none; background:transparent; text-align:center; font-size:16px; font-weight:800;
+        color:var(--ink); font-family:inherit; padding:6px 0; -moz-appearance:textfield; appearance:textfield;
+      }
+      .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button{ -webkit-appearance:none; }
+      .reset-btn{
+        width:100%; margin-top:22px; background:var(--amber); color:#191407; border:3px solid var(--edge);
+        box-shadow:4px 4px 0 var(--shadowc); font-family:"Archivo Black",sans-serif; font-size:16px; padding:12px;
+      }
+
+      /* ---------- onboarding spotlight ---------- */
+      #spotOverlay{ position:fixed; inset:0; display:none; z-index:60; }
+      #spotOverlay.on{ display:block; }
+      #spotBox{
+        position:absolute; border:4px solid var(--amber); box-shadow:0 0 0 9999px rgba(15,10,0,.62);
+        pointer-events:none;
+      }
+      #spotCard{
+        position:absolute; background:var(--panel); border:3.5px solid var(--edge); box-shadow:6px 6px 0 var(--shadowc);
+        padding:14px; width:min(330px, calc(100vw - 24px));
+      }
+      #spotCard p{ margin:0 0 10px; font-size:15.5px; font-weight:700; line-height:1.45; }
+      #spotCard .step-n{ font-size:11px; font-weight:800; letter-spacing:.14em; color:var(--dim); margin-bottom:5px; }
+      #spotNext{
+        background:var(--teal); color:#fff; border:3px solid var(--edge); box-shadow:3px 3px 0 var(--shadowc);
+        font-family:"Archivo Black",sans-serif; font-size:15px; padding:9px 18px; width:100%;
+      }
+      @media (prefers-reduced-motion: reduce){
+        .lunge-r,.lunge-l,.hitshake,.bigshake,.dmgnum,.popin{ animation:none !important; }
+      }
+      @media (max-width:430px){
+        .fighter .stage{ height:96px; } .fighter .stage svg{ height:92px; }
+        .fighter .fname{ font-size:13.5px; }
+        .vs{ font-size:12px; padding:4px 5px; }
+        .atk .aname{ font-size:14.5px; } .atk .astats{ font-size:12px; gap:7px; }
+        .stat-chip{ font-size:13.5px; padding:4px 8px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap" id="wrap">
+      <!-- top bar -->
+      <div class="topbar">
+        <div class="stat-chip" style="background:var(--red); color:#fff;"><span class="disp" style="font-size:12.5px; letter-spacing:.06em;">GLADIATOR · TIMING COMBAT — LIVE ACTION</span></div>
+        <div class="stat-chip"><span class="lbl">KILLS</span><span id="killCount">0</span></div>
+        <div class="stat-chip"><span class="lbl">TIME</span><span id="fightClock">0:00</span></div>
+        <div class="stat-chip" id="pausedChip">PAUSED</div>
+        <div class="spacer"></div>
+        <button class="icon-btn" id="pauseBtn" aria-label="Pause or resume the fight" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path id="pauseIcon" d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+        </button>
+        <button class="icon-btn" id="gearBtn" aria-label="Open tuning panel">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.7 7.7 0 0 0-1.7-1L14.9 3H9.1L8.7 6a7.7 7.7 0 0 0-1.7 1L4.6 6 2.6 9.4 4.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.7 7.7 0 0 0 1.7 1l.4 3h5.8l.4-3a7.7 7.7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+        </button>
+      </div>
+
+      <!-- arena -->
+      <div class="arena" id="arena">
+        <div class="fighter" id="gladCard">
+          <div class="stage" id="gladStage">
+            <svg viewBox="0 0 120 132" role="img" aria-label="The gladiator">
+              <!-- sword -->
+              <g stroke="#191407" stroke-width="3" stroke-linejoin="round">
+                <path d="M88 62 L112 22 L117 27 L97 68 Z" fill="#d7dee6"/>
+                <rect x="84" y="62" width="12" height="6" rx="2" fill="#8a5a2b" transform="rotate(38 90 65)"/>
+                <!-- arm -->
+                <path d="M74 74 Q86 70 90 62 L97 68 Q92 80 78 84 Z" fill="#f0b27a"/>
+                <!-- crest -->
+                <path d="M42 26 Q60 6 78 26 L74 34 Q60 20 46 34 Z" fill="#e23b2e"/>
+                <!-- helmet -->
+                <path d="M33 54 Q35 28 60 28 Q85 28 87 54 L87 60 L33 60 Z" fill="#cfd6dd"/>
+                <rect x="33" y="56" width="54" height="6" fill="#aeb8c2"/>
+                <!-- face -->
+                <path d="M46 60 L74 60 L72 80 Q60 86 48 80 Z" fill="#f0b27a"/>
+                <rect x="51" y="66" width="6" height="4" fill="#191407"/>
+                <rect x="63" y="66" width="6" height="4" fill="#191407"/>
+                <path d="M55 76 L65 76" stroke-width="2.5"/>
+                <!-- torso + strap -->
+                <path d="M42 84 L78 84 L83 106 L37 106 Z" fill="#f0b27a"/>
+                <path d="M44 84 L80 102 L78 108 L42 90 Z" fill="#7a4a21"/>
+                <!-- belt + skirt -->
+                <rect x="36" y="104" width="48" height="8" fill="#8a5a2b"/>
+                <path d="M38 112 h9 v10 l-4.5 4 l-4.5 -4 Z" fill="#a03a30"/>
+                <path d="M51 112 h9 v10 l-4.5 4 l-4.5 -4 Z" fill="#a03a30"/>
+                <path d="M64 112 h9 v10 l-4.5 4 l-4.5 -4 Z" fill="#a03a30"/>
+                <!-- shield -->
+                <circle cx="22" cy="86" r="17" fill="#0f9594"/>
+                <circle cx="22" cy="86" r="6" fill="#ffb703"/>
+                <!-- legs -->
+                <rect x="45" y="122" width="9" height="8" fill="#f0b27a"/>
+                <rect x="66" y="122" width="9" height="8" fill="#f0b27a"/>
+              </g>
+            </svg>
+          </div>
+          <div class="fname disp"><span>GLADIATOR</span><span class="sub">SPD <span id="gladSpd">1.00</span></span></div>
+          <div class="bar hp"><div class="fill" id="gladHpFill"></div><span class="barlbl">HP</span><span class="val" id="gladHpVal">100 / 100</span></div>
+          <div class="bar stam" id="stamBar"><div class="fill" id="gladStamFill"></div><span class="barlbl">STA</span><span class="val" id="gladStamVal">100 / 100</span></div>
+          <div class="nextline" id="gladNext">Ready — pick a move!</div>
+        </div>
+
+        <div class="vs disp">VS</div>
+
+        <div class="fighter" id="wolfCard">
+          <div class="stage" id="wolfStage">
+            <svg viewBox="0 0 150 104" role="img" aria-label="A wolf">
+              <g stroke="#191407" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+                <!-- tail -->
+                <path d="M24 44 Q4 38 8 18 Q20 26 28 34 Z" fill="#79839b"/>
+                <!-- legs -->
+                <rect x="38" y="62" width="9" height="26" fill="#5f687c"/>
+                <rect x="56" y="64" width="9" height="24" fill="#79839b"/>
+                <rect x="94" y="64" width="9" height="24" fill="#79839b"/>
+                <rect x="110" y="62" width="9" height="26" fill="#5f687c"/>
+                <!-- body -->
+                <path d="M22 52 Q24 32 56 30 L98 32 Q118 34 120 48 Q121 60 104 64 L44 66 Q24 64 22 52 Z" fill="#79839b"/>
+                <!-- back spikes -->
+                <path d="M40 31 L46 22 L52 30 L62 21 L68 30 L80 22 L86 31" fill="none" stroke-width="3.5"/>
+                <!-- head -->
+                <path d="M104 26 L112 10 L122 24 L138 34 L142 44 L124 50 Q108 52 102 42 Q100 32 104 26 Z" fill="#8d99ae"/>
+                <circle cx="139" cy="41" r="4" fill="#191407" stroke="none"/>
+                <circle cx="118" cy="34" r="3.4" fill="#e23b2e" stroke="none"/>
+                <path d="M126 47 L130 52 L134 47" fill="#fff" stroke-width="2"/>
+              </g>
+            </svg>
+          </div>
+          <div class="fname disp"><span id="wolfName">WOLF #1</span><span class="sub">SPD <span id="wolfSpd">1.00</span></span></div>
+          <div class="bar wolfhp"><div class="fill" id="wolfHpFill"></div><span class="barlbl">HP</span><span class="val" id="wolfHpVal">34 / 34</span></div>
+          <div class="nextline" id="wolfNext">Circling…</div>
+        </div>
+      </div>
+
+      <!-- timeline -->
+      <div class="timeline-box" id="timelineBox">
+        <div class="tl-head"><span class="t disp">TIMELINE</span><span class="hint">attacks slide left → they hit at the line</span></div>
+        <div class="tl-lanes" id="tlLanes">
+          <div class="tl-lane"><span class="lane-lbl">YOU</span><div id="chipGlad"></div></div>
+          <div class="tl-lane"><span class="lane-lbl">WOLF</span><div id="chipWolf"></div></div>
+          <div class="hitline"></div>
+        </div>
+        <div class="tl-ticks" id="tlTicks"></div>
+      </div>
+
+      <!-- status + attacks -->
+      <div class="statusline disp" id="statusLine"><span class="dot"></span><span id="statusText">Your move — pick an attack.</span></div>
+      <div class="atk-grid" id="atkGrid">
+        <button class="atk jab" data-atk="jab">
+          <span class="aname disp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 L14 10 M14 10 L20 3 L21 4 L16 12 L13 13 Z" fill="#191407"/><path d="M3 21 L8 16" stroke="#191407" stroke-width="2.6"/></svg>DAGGER JAB</span>
+          <span class="astats" data-stats></span>
+        </button>
+        <button class="atk slash" data-atk="slash">
+          <span class="aname disp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21 L15 9 M15 9 L21 2 L22 3 L17 12 L14 12 Z" fill="#191407"/><path d="M2 22 L7 17" stroke="#191407" stroke-width="2.6"/></svg>SWORD SLASH</span>
+          <span class="astats" data-stats></span>
+        </button>
+        <button class="atk axe" data-atk="axe">
+          <span class="aname disp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21 L15 6" stroke="#191407" stroke-width="3"/><path d="M13 3 Q21 4 21 11 Q16 9 13 10 Q15 6 13 3 Z" fill="#191407"/></svg>AXE SWING</span>
+          <span class="astats" data-stats></span>
+        </button>
+        <button class="atk breath" data-atk="breath">
+          <span class="aname disp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8 Q8 5 13 8 T23 8 M3 13 Q8 10 13 13 T23 13 M3 18 Q8 15 13 18 T23 18" fill="none" stroke="#191407" stroke-width="2.4" stroke-linecap="round"/></svg>CATCH BREATH</span>
+          <span class="astats" data-stats></span>
+        </button>
+      </div>
+
+      <!-- log -->
+      <div class="log-box">
+        <div class="t disp">COMBAT LOG</div>
+        <ul id="log"></ul>
+      </div>
+    </div>
+
+    <!-- story modal -->
+    <div class="overlay on" id="storyModal">
+      <div class="modal">
+        <h2>The Wolf Pit</h2>
+        <p>The pit master owes you your freedom — one purse of gold, earned the only way this place pays out: wolf pelts. The gate is up, the crowd is drunk, and the wolves are already hungry.</p>
+        <p>There's no last wolf. There's always a next one.</p>
+        <div class="howto">Pick a move and it lands after its wind-up time — fast moves hit sooner but burn more stamina, and the wolves are winding up too.</div>
+        <button class="big-btn" id="storyBtn">ENTER THE ARENA</button>
+      </div>
+    </div>
+
+    <!-- game over modal -->
+    <div class="overlay" id="overModal">
+      <div class="modal">
+        <h2 style="text-align:center">THE CROWD GOES QUIET</h2>
+        <div class="big-score" id="finalKills">0</div>
+        <div class="big-score-sub">WOLVES FELLED · SURVIVED <span id="finalTime">0:00</span></div>
+        <p style="text-align:center">The pit master keeps the purse. The gate, however, is already lifting again…</p>
+        <button class="big-btn" id="againBtn">FIGHT AGAIN</button>
+      </div>
+    </div>
+
+    <!-- tuning sheet -->
+    <div class="sheet" id="tuneSheet" role="dialog" aria-label="Tuning panel">
+      <div class="sheet-inner">
+        <div class="sheet-head">
+          <h2>TUNING</h2>
+          <button class="icon-btn" id="tuneClose" aria-label="Close tuning panel">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4 L19 19 M19 4 L5 19" stroke="currentColor" stroke-width="3.4" fill="none" stroke-linecap="square"/></svg>
+          </button>
+        </div>
+        <p style="font-weight:700; font-size:14px; line-height:1.45; margin:10px 0 0;">Every number applies the moment you change it — including attacks already in flight. The fight pauses while this is open.</p>
+        <div id="tuneBody"></div>
+        <button class="reset-btn" id="resetBtn">RESET TO DEFAULTS</button>
+      </div>
+    </div>
+
+    <!-- onboarding spotlight -->
+    <div id="spotOverlay">
+      <div id="spotBox"></div>
+      <div id="spotCard">
+        <div class="step-n" id="spotStep">STEP 1 OF 4</div>
+        <p id="spotText"></p>
+        <button id="spotNext">NEXT</button>
+      </div>
+    </div>
+
+    <script>
+    "use strict";
+    /* ============================================================
+       GLADIATOR TIMING COMBAT — continuous-timeline combat sandbox
+       No rounds. Every fighter has at most ONE attack in flight.
+       An attack lands at  startAt + baseTime / speed.  On landing
+       it deals its damage and only then does that fighter choose
+       the next one. All numbers live in CFG and are editable live
+       from the tuning sheet (gear button).
+       ============================================================ */
+
+    var DEFAULTS = {
+      glad: { maxHp: 100, maxStam: 100, speed: 1.0, regen: 2.0 },
+      wolf: { baseHp: 34, speed: 1.0 },
+      attacks: {
+        jab:    { name: "Dagger Jab",   time: 2.0, stam: 20, dmg: 8  },
+        slash:  { name: "Sword Slash",  time: 3.5, stam: 15, dmg: 14 },
+        axe:    { name: "Axe Swing",    time: 5.0, stam: 10, dmg: 24 },
+        breath: { name: "Catch Breath", time: 2.0, stam: 0,  restore: 30 },
+        bite:   { name: "Bite",         time: 2.2, dmg: 6  },
+        lunge:  { name: "Lunge",        time: 4.6, dmg: 13 }
+      }
+    };
+    function clone(o){ return JSON.parse(JSON.stringify(o)); }
+    var CFG = clone(DEFAULTS);
+
+    /* ---------- state ---------- */
+    var state = "story";           // story → onboard → fighting → over
+    var paused = false;            // manual pause or tuning sheet open
+    var gameTime = 0;              // seconds on the fight clock
+    var kills = 0;
+    var glad = { hp: CFG.glad.maxHp, stam: CFG.glad.maxStam, pending: null };
+    var wolf = null;               // { num, hp, maxHp, speed, pending }
+
+    function effTime(atkKey, speed){ return CFG.attacks[atkKey].time / speed; }
+
+    function spawnWolf(first){
+      var n = kills + 1;
+      var hp = CFG.wolf.baseHp + (n - 1) * 5;
+      var spd = CFG.wolf.speed * (1 + Math.min(0.25, (n - 1) * 0.015)) * (0.94 + Math.random() * 0.12);
+      wolf = { num: n, hp: hp, maxHp: hp, speed: spd, pending: null };
+      scheduleWolf(first ? 0.5 : 0.4);
+      el.wolfCard.classList.remove("dead");
+      el.wolfStage.classList.remove("popin"); void el.wolfStage.offsetWidth; el.wolfStage.classList.add("popin");
+      el.wolfName.textContent = "WOLF #" + n;
+    }
+
+    function scheduleWolf(delay){
+      var atk = Math.random() < 0.65 ? "bite" : "lunge";
+      var start = gameTime + (delay || 0);
+      wolf.pending = { atk: atk, startAt: start, landAt: start + effTime(atk, wolf.speed) };
+    }
+
+    /* ---------- choosing ---------- */
+    function chooseGladAttack(key){
+      if (state !== "fighting" || paused || glad.pending) return;
+      var a = CFG.attacks[key];
+      if (glad.stam < a.stam) return;
+      glad.stam -= a.stam;
+      glad.pending = { atk: key, startAt: gameTime, landAt: gameTime + effTime(key, CFG.glad.speed) };
+      refreshButtons();
+    }
+
+    /* ---------- landing resolution ---------- */
+    function resolveLandings(){
+      var due = [];
+      if (glad.pending && glad.pending.landAt <= gameTime) due.push({ who: "glad", p: glad.pending });
+      if (wolf && wolf.pending && wolf.pending.landAt <= gameTime) due.push({ who: "wolf", p: wolf.pending });
+      due.sort(function(a, b){ return a.p.landAt - b.p.landAt; });
+      for (var i = 0; i < due.length; i++){
+        if (state !== "fighting") return;
+        if (due[i].who === "glad") landGlad(due[i].p); else landWolf(due[i].p);
+      }
+    }
+
+    function landGlad(p){
+      glad.pending = null;
+      var a = CFG.attacks[p.atk];
+      var windup = p.landAt - p.startAt;
+      if (p.atk === "breath"){
+        var before = glad.stam;
+        glad.stam = Math.min(CFG.glad.maxStam, glad.stam + (a.restore || 0));
+        logLine("You CATCH BREATH — +" + Math.round(glad.stam - before) + " stamina (" + windup.toFixed(1) + "s).");
+        spawnDmgNum(el.gladStage, "+" + Math.round(glad.stam - before) + " STA", true);
+      } else {
+        wolf.hp -= a.dmg;
+        juice(el.gladStage, el.wolfCard, a.dmg);
+        spawnDmgNum(el.wolfStage, "-" + a.dmg, false);
+        logLine("Your " + a.name.toUpperCase() + " hits Wolf #" + wolf.num + " for " + a.dmg + " — " + windup.toFixed(1) + "s after you chose it.");
+        if (wolf.hp <= 0){ wolfDies(); refreshButtons(); return; }
+      }
+      refreshButtons();
+    }
+
+    function landWolf(p){
+      if (!wolf || wolf.pending !== p) return;
+      wolf.pending = null;
+      var a = CFG.attacks[p.atk];
+      var windup = p.landAt - p.startAt;
+      glad.hp -= a.dmg;
+      juice(el.wolfStage, el.gladCard, a.dmg);
+      spawnDmgNum(el.gladStage, "-" + a.dmg, false);
+      logLine("Wolf #" + wolf.num + "'s " + a.name.toUpperCase() + " hits you for " + a.dmg + " — " + windup.toFixed(1) + "s wind-up.", "hurt");
+      if (glad.hp <= 0){ gameOver(); return; }
+      scheduleWolf(0);
+    }
+
+    function wolfDies(){
+      kills++;
+      el.killCount.textContent = kills;
+      el.wolfCard.classList.add("dead");
+      logLine("Wolf #" + wolf.num + " is down! Kill #" + kills + ".", "kill");
+      var n = wolf.num;
+      spawnWolf(false);
+      if (n >= 1) logLine("Wolf #" + wolf.num + " charges in — bigger, a touch faster.");
+    }
+
+    function gameOver(){
+      state = "over";
+      glad.pending = null;
+      el.finalKills.textContent = kills;
+      el.finalTime.textContent = fmtClock(gameTime);
+      el.overModal.classList.add("on");
+      refreshButtons();
+    }
+
+    function resetRun(){
+      gameTime = 0; kills = 0;
+      glad.hp = CFG.glad.maxHp; glad.stam = CFG.glad.maxStam; glad.pending = null;
+      el.killCount.textContent = "0";
+      el.log.innerHTML = "";
+      spawnWolf(true);
+      logLine("The gate lifts. Wolf #1 pads in, teeth first.");
+      refreshButtons();
+    }
+
+    /* ---------- juice ---------- */
+    function juice(attackerStage, victimCard, dmg){
+      var atkCls = attackerStage === el.gladStage ? "lunge-r" : "lunge-l";
+      attackerStage.classList.remove("lunge-r", "lunge-l"); void attackerStage.offsetWidth;
+      attackerStage.classList.add(atkCls);
+      victimCard.classList.remove("hitshake", "flashred"); void victimCard.offsetWidth;
+      victimCard.classList.add("hitshake", "flashred");
+      setTimeout(function(){ victimCard.classList.remove("flashred"); }, 180);
+      if (dmg >= 15){
+        el.wrap.classList.remove("bigshake"); void el.wrap.offsetWidth; el.wrap.classList.add("bigshake");
+      }
+    }
+    function spawnDmgNum(stage, text, heal){
+      var s = document.createElement("span");
+      s.className = "dmgnum" + (heal ? " heal" : "");
+      s.textContent = text;
+      s.style.left = (30 + Math.random() * 40) + "%";
+      s.style.top = "6px";
+      stage.appendChild(s);
+      setTimeout(function(){ s.remove(); }, 850);
+    }
+
+    /* ---------- log ---------- */
+    function fmtClock(t){
+      var m = Math.floor(t / 60), s = Math.floor(t % 60);
+      return m + ":" + (s < 10 ? "0" : "") + s;
+    }
+    function logLine(text, cls){
+      var li = document.createElement("li");
+      if (cls) li.className = cls;
+      var lt = document.createElement("span");
+      lt.className = "lt"; lt.textContent = fmtClock(gameTime);
+      li.appendChild(lt);
+      li.appendChild(document.createTextNode(text));
+      el.log.appendChild(li);
+      while (el.log.children.length > 40) el.log.removeChild(el.log.firstChild);
+      el.log.scrollTop = el.log.scrollHeight;
+    }
+</script>
+
+    <script>
+    "use strict";
+    /* ---------- DOM refs ---------- */
+    var el = {};
+    ["wrap","killCount","fightClock","pausedChip","pauseBtn","pauseIcon","gearBtn",
+     "gladCard","gladStage","gladHpFill","gladHpVal","stamBar","gladStamFill","gladStamVal","gladNext","gladSpd",
+     "wolfCard","wolfStage","wolfName","wolfSpd","wolfHpFill","wolfHpVal","wolfNext",
+     "timelineBox","tlLanes","tlTicks","chipGlad","chipWolf",
+     "statusLine","statusText","atkGrid","log","storyModal","storyBtn","overModal","finalKills","finalTime","againBtn",
+     "tuneSheet","tuneClose","tuneBody","resetBtn","spotOverlay","spotBox","spotCard","spotText","spotStep","spotNext"
+    ].forEach(function(id){ el[id] = document.getElementById(id); });
+    el.atkBtns = Array.prototype.slice.call(el.atkGrid.querySelectorAll(".atk"));
+
+    /* ---------- attack buttons ---------- */
+    el.atkBtns.forEach(function(btn){
+      btn.addEventListener("click", function(){ chooseGladAttack(btn.getAttribute("data-atk")); });
+    });
+
+    function refreshButtons(){
+      var busy = !!glad.pending || state !== "fighting";
+      el.atkBtns.forEach(function(btn){
+        var key = btn.getAttribute("data-atk");
+        var a = CFG.attacks[key];
+        var stats = btn.querySelector("[data-stats]");
+        var timeStr = (a.time / CFG.glad.speed).toFixed(1) + "s";
+        if (key === "breath"){
+          stats.innerHTML = "<span>" + timeStr + "</span><span>+" + a.restore + " STA back</span><span>no dmg</span>";
+        } else {
+          var need = glad.stam < a.stam;
+          stats.innerHTML = "<span>" + timeStr + "</span>" +
+            "<span class=\"" + (need && !busy ? "need" : "") + "\">" + (need && !busy ? "NEED " : "") + a.stam + " STA</span>" +
+            "<span>" + a.dmg + " DMG</span>";
+        }
+        btn.disabled = busy || glad.stam < a.stam;
+      });
+      /* status line */
+      if (state === "fighting"){
+        if (glad.pending){
+          el.statusLine.classList.add("busy");
+          var pa = CFG.attacks[glad.pending.atk];
+          el.statusText.textContent = pa.name.toUpperCase() + " in flight — lands in " +
+            Math.max(0, glad.pending.landAt - gameTime).toFixed(1) + "s…";
+        } else {
+          el.statusLine.classList.remove("busy");
+          el.statusText.textContent = "Your move — pick an attack.";
+        }
+      } else if (state === "over"){
+        el.statusLine.classList.add("busy");
+        el.statusText.textContent = "Down. The wolves win this one.";
+      }
+    }
+
+    /* ---------- HUD + timeline ---------- */
+    var TL_MIN = 34; // px offset of the HIT line inside the lanes
+    var tlWindow = 6;
+    var lastHudSec = -1;
+
+    function refreshHud(){
+      el.gladHpFill.style.width = Math.max(0, glad.hp / CFG.glad.maxHp * 100) + "%";
+      el.gladHpVal.textContent = Math.max(0, Math.ceil(glad.hp)) + " / " + CFG.glad.maxHp;
+      el.gladStamFill.style.width = Math.max(0, glad.stam / CFG.glad.maxStam * 100) + "%";
+      el.gladStamVal.textContent = Math.floor(glad.stam) + " / " + CFG.glad.maxStam;
+      el.gladSpd.textContent = CFG.glad.speed.toFixed(2);
+      if (wolf){
+        el.wolfHpFill.style.width = Math.max(0, wolf.hp / wolf.maxHp * 100) + "%";
+        el.wolfHpVal.textContent = Math.max(0, Math.ceil(wolf.hp)) + " / " + wolf.maxHp;
+        el.wolfSpd.textContent = wolf.speed.toFixed(2);
+      }
+      if (glad.pending){
+        var pa = CFG.attacks[glad.pending.atk];
+        el.gladNext.innerHTML = "Next: <b>" + pa.name.toUpperCase() + "</b> in <span class=\"cd\">" +
+          Math.max(0, glad.pending.landAt - gameTime).toFixed(1) + "s</span>";
+      } else {
+        el.gladNext.textContent = state === "fighting" ? "Ready — pick a move!" : "—";
+      }
+      if (wolf && wolf.pending){
+        var wa = CFG.attacks[wolf.pending.atk];
+        el.wolfNext.innerHTML = "Next: <b>" + wa.name.toUpperCase() + " (" + wa.dmg + ")</b> in <span class=\"cd\">" +
+          Math.max(0, wolf.pending.landAt - gameTime).toFixed(1) + "s</span>";
+      } else if (wolf){
+        el.wolfNext.textContent = "Choosing its next move…";
+      }
+    }
+
+    function makeChip(container, pending, speed, cls){
+      container.innerHTML = "";
+      if (!pending) return;
+      var a = CFG.attacks[pending.atk];
+      var chip = document.createElement("div");
+      chip.className = "chip " + cls;
+      var label = pending.atk === "breath" ? "+" + a.restore + " STA" : a.dmg + " dmg";
+      chip.innerHTML = a.name.toUpperCase() + " <small>" + label + " · " +
+        Math.max(0, pending.landAt - gameTime).toFixed(1) + "s</small>";
+      container.appendChild(chip);
+    }
+
+    function renderTimeline(){
+      var maxRem = 0;
+      if (glad.pending) maxRem = Math.max(maxRem, glad.pending.landAt - gameTime);
+      if (wolf && wolf.pending) maxRem = Math.max(maxRem, wolf.pending.landAt - gameTime);
+      var target = Math.min(12, Math.max(5, Math.ceil(maxRem + 0.4)));
+      tlWindow += (target - tlWindow) * 0.12;
+      if (Math.abs(target - tlWindow) < 0.05) tlWindow = target;
+
+      var laneW = el.tlLanes.clientWidth - TL_MIN;
+      function place(container, pending, cls){
+        makeChip(container, pending, 1, cls);
+        if (!pending) return;
+        var rem = Math.max(0, pending.landAt - gameTime);
+        var x = TL_MIN + (rem / tlWindow) * laneW;
+        x = Math.max(TL_MIN + 26, Math.min(el.tlLanes.clientWidth - 30, x));
+        container.firstChild.style.left = x + "px";
+      }
+      place(el.chipGlad, glad.pending, glad.pending && glad.pending.atk === "breath" ? "breath" : "glad");
+      place(el.chipWolf, wolf ? wolf.pending : null, "wolfc");
+
+      /* second ticks */
+      var ticks = "";
+      for (var s = 0; s <= Math.floor(tlWindow); s++){
+        ticks += "<span style=\"left:" + (s / tlWindow * 100) + "%\">" + s + "s</span>";
+      }
+      if (el.tlTicks.getAttribute("data-w") !== String(Math.floor(tlWindow))){
+        el.tlTicks.setAttribute("data-w", String(Math.floor(tlWindow)));
+        el.tlTicks.innerHTML = ticks;
+      }
+    }
+
+    /* stamina buttons need a periodic refresh (stamina trickles back) */
+    var lastBtnCheck = 0;
+
+    /* ---------- main loop ---------- */
+    var lastT = performance.now();
+    function frame(now){
+      requestAnimationFrame(frame);
+      var dt = Math.min(0.1, (now - lastT) / 1000);
+      lastT = now;
+      if (state === "fighting" && !paused){
+        gameTime += dt;
+        glad.stam = Math.min(CFG.glad.maxStam, glad.stam + CFG.glad.regen * dt);
+        resolveLandings();
+        el.fightClock.textContent = fmtClock(gameTime);
+        if (now - lastBtnCheck > 200){ lastBtnCheck = now; refreshButtons(); }
+      }
+      if (state === "fighting" || state === "over"){
+        refreshHud();
+        renderTimeline();
+      }
+    }
+
+    /* ---------- pause / gear ---------- */
+    function setPaused(p){
+      paused = p;
+      el.pausedChip.classList.toggle("on", p && state === "fighting");
+      el.pauseBtn.setAttribute("aria-pressed", p ? "true" : "false");
+      el.pauseIcon.setAttribute("d", p ? "M7 4 L20 12 L7 20 Z" : "M6 4h4v16H6zM14 4h4v16h-4z");
+    }
+    el.pauseBtn.addEventListener("click", function(){
+      if (state !== "fighting") return;
+      setPaused(!paused);
+    });
+    el.gearBtn.addEventListener("click", function(){
+      el.tuneSheet.classList.add("on");
+      if (state === "fighting") setPaused(true);
+    });
+    el.tuneClose.addEventListener("click", function(){
+      el.tuneSheet.classList.remove("on");
+      setPaused(false);
+    });
+
+    /* ---------- tuning panel ---------- */
+    function getPath(path){
+      var parts = path.split("."), o = CFG;
+      for (var i = 0; i < parts.length; i++) o = o[parts[i]];
+      return o;
+    }
+    function setPath(path, v){
+      var parts = path.split("."), o = CFG;
+      for (var i = 0; i < parts.length - 1; i++) o = o[parts[i]];
+      o[parts[parts.length - 1]] = v;
+    }
+    var TUNE_SCHEMA = [
+      { section: "GLADIATOR" },
+      { key: "glad.speed",   label: "Speed",            hint: "divides every wind-up time", step: 0.05, min: 0.2, max: 3 },
+      { key: "glad.maxHp",   label: "Max HP",           step: 5, min: 10, max: 999 },
+      { key: "glad.maxStam", label: "Max stamina",      step: 5, min: 10, max: 999 },
+      { key: "glad.regen",   label: "Stamina regen /s", hint: "the slow trickle, always on", step: 0.5, min: 0, max: 50 },
+      { section: "DAGGER JAB — fast, pricey" },
+      { key: "attacks.jab.time", label: "Wind-up (s)", step: 0.1, min: 0.2, max: 15 },
+      { key: "attacks.jab.stam", label: "Stamina cost", step: 1, min: 0, max: 200 },
+      { key: "attacks.jab.dmg",  label: "Damage",       step: 1, min: 0, max: 500 },
+      { section: "SWORD SLASH — the middle" },
+      { key: "attacks.slash.time", label: "Wind-up (s)", step: 0.1, min: 0.2, max: 15 },
+      { key: "attacks.slash.stam", label: "Stamina cost", step: 1, min: 0, max: 200 },
+      { key: "attacks.slash.dmg",  label: "Damage",       step: 1, min: 0, max: 500 },
+      { section: "AXE SWING — slow, cheap, huge" },
+      { key: "attacks.axe.time", label: "Wind-up (s)", step: 0.1, min: 0.2, max: 15 },
+      { key: "attacks.axe.stam", label: "Stamina cost", step: 1, min: 0, max: 200 },
+      { key: "attacks.axe.dmg",  label: "Damage",       step: 1, min: 0, max: 500 },
+      { section: "CATCH BREATH" },
+      { key: "attacks.breath.time",    label: "Wind-up (s)",     step: 0.1, min: 0.2, max: 15 },
+      { key: "attacks.breath.restore", label: "Stamina restored", step: 5, min: 0, max: 300 },
+      { section: "WOLVES" },
+      { key: "wolf.speed",  label: "Wolf speed", hint: "each wolf also rolls a little variance", step: 0.05, min: 0.2, max: 3 },
+      { key: "wolf.baseHp", label: "Wolf base HP", hint: "later wolves gain +5 per kill before this", step: 1, min: 1, max: 999 },
+      { key: "attacks.bite.time",  label: "Bite wind-up (s)",  step: 0.1, min: 0.2, max: 15 },
+      { key: "attacks.bite.dmg",   label: "Bite damage",       step: 1, min: 0, max: 500 },
+      { key: "attacks.lunge.time", label: "Lunge wind-up (s)", step: 0.1, min: 0.2, max: 15 },
+      { key: "attacks.lunge.dmg",  label: "Lunge damage",      step: 1, min: 0, max: 500 }
+    ];
+
+    function reschedulePending(){
+      /* live-edit: in-flight attacks keep their start, re-derive landing */
+      if (glad.pending){
+        glad.pending.landAt = Math.max(gameTime + 0.05,
+          glad.pending.startAt + effTime(glad.pending.atk, CFG.glad.speed));
+      }
+      if (wolf && wolf.pending){
+        wolf.pending.landAt = Math.max(gameTime + 0.05,
+          wolf.pending.startAt + effTime(wolf.pending.atk, wolf.speed));
+      }
+    }
+
+    function applyTune(key){
+      if (key === "glad.maxHp"){ if (glad.hp > CFG.glad.maxHp) glad.hp = CFG.glad.maxHp; }
+      if (key === "glad.maxStam"){ if (glad.stam > CFG.glad.maxStam) glad.stam = CFG.glad.maxStam; }
+      reschedulePending();
+      refreshButtons(); refreshHud();
+    }
+
+    function buildTuning(){
+      el.tuneBody.innerHTML = "";
+      TUNE_SCHEMA.forEach(function(row){
+        if (row.section){
+          var h = document.createElement("div");
+          h.className = "tune-section"; h.textContent = row.section;
+          el.tuneBody.appendChild(h);
+          return;
+        }
+        var div = document.createElement("div");
+        div.className = "tune-row";
+        var lab = document.createElement("div");
+        lab.className = "tl";
+        lab.innerHTML = row.label + (row.hint ? "<small>" + row.hint + "</small>" : "");
+        var st = document.createElement("div");
+        st.className = "stepper";
+        var minus = document.createElement("button"); minus.textContent = "−"; minus.setAttribute("aria-label", "Decrease " + row.label);
+        var input = document.createElement("input");
+        input.type = "number"; input.step = row.step; input.min = row.min; input.max = row.max;
+        input.value = getPath(row.key); input.setAttribute("data-key", row.key);
+        var plus = document.createElement("button"); plus.textContent = "+"; plus.setAttribute("aria-label", "Increase " + row.label);
+        function commit(v){
+          v = parseFloat(v);
+          if (isNaN(v)) { input.value = getPath(row.key); return; }
+          v = Math.min(row.max, Math.max(row.min, v));
+          v = Math.round(v * 100) / 100;
+          setPath(row.key, v);
+          input.value = v;
+          applyTune(row.key);
+        }
+        minus.addEventListener("click", function(){ commit(getPath(row.key) - row.step); });
+        plus.addEventListener("click", function(){ commit(getPath(row.key) + row.step); });
+        input.addEventListener("change", function(){ commit(input.value); });
+        input.addEventListener("input", function(){
+          var v = parseFloat(input.value);
+          if (!isNaN(v) && v >= row.min && v <= row.max){ setPath(row.key, Math.round(v*100)/100); applyTune(row.key); }
+        });
+        st.appendChild(minus); st.appendChild(input); st.appendChild(plus);
+        div.appendChild(lab); div.appendChild(st);
+        el.tuneBody.appendChild(div);
+      });
+    }
+    el.resetBtn.addEventListener("click", function(){
+      CFG = clone(DEFAULTS);
+      buildTuning();
+      applyTune("all");
+      logLine("Tuning reset to defaults.");
+    });
+
+    /* ---------- story + onboarding ---------- */
+    var SPOT_STEPS = [
+      { el: "atkGrid", text: "These are your moves. Pick one and it flies — it lands after its wind-up time, then you pick again. Fast moves cost more stamina: speed is bought, not free." },
+      { el: "timelineBox", text: "The timeline shows every attack in flight sliding toward the HIT line — yours and the wolf's. Watch the wolf's bite coming and plan your move around it." },
+      { el: "stamBar", text: "Stamina pays for speed. It trickles back slowly, and CATCH BREATH restores a chunk — but while you breathe, the wolf doesn't." },
+      { el: "gearBtn", text: "The gear opens the tuning sheet. Every number in the system — wind-ups, costs, damage, speeds — is editable live. Break it, rebalance it, make it yours." }
+    ];
+    var spotIdx = 0;
+
+    function positionSpot(){
+      var step = SPOT_STEPS[spotIdx];
+      var target = el[step.el];
+      var r = target.getBoundingClientRect();
+      var pad = 6;
+      el.spotBox.style.left = (r.left - pad) + "px";
+      el.spotBox.style.top = (r.top - pad) + "px";
+      el.spotBox.style.width = (r.width + pad * 2) + "px";
+      el.spotBox.style.height = (r.height + pad * 2) + "px";
+      el.spotText.textContent = step.text;
+      el.spotStep.textContent = "STEP " + (spotIdx + 1) + " OF " + SPOT_STEPS.length;
+      el.spotNext.textContent = spotIdx === SPOT_STEPS.length - 1 ? "START FIGHTING" : "NEXT";
+      var cardH = 170;
+      var top = r.bottom + pad + 14;
+      if (top + cardH > window.innerHeight - 10) top = Math.max(10, r.top - pad - cardH - 8);
+      el.spotCard.style.top = top + "px";
+      el.spotCard.style.left = Math.max(10, Math.min(window.innerWidth - el.spotCard.offsetWidth - 10, r.left)) + "px";
+    }
+    function showSpot(i){
+      spotIdx = i;
+      el.spotOverlay.classList.add("on");
+      requestAnimationFrame(positionSpot);
+    }
+    el.spotNext.addEventListener("click", function(){
+      if (spotIdx < SPOT_STEPS.length - 1){ showSpot(spotIdx + 1); }
+      else {
+        el.spotOverlay.classList.remove("on");
+        state = "fighting";
+        resetRun();
+        refreshButtons(); refreshHud();
+      }
+    });
+    el.storyBtn.addEventListener("click", function(){
+      el.storyModal.classList.remove("on");
+      state = "onboard";
+      resetRun();               // sets the scene behind the spotlight (clock not running)
+      state = "onboard";
+      refreshButtons(); refreshHud(); renderTimeline();
+      showSpot(0);
+    });
+    window.addEventListener("resize", function(){
+      if (el.spotOverlay.classList.contains("on")) positionSpot();
+    });
+
+    el.againBtn.addEventListener("click", function(){
+      el.overModal.classList.remove("on");
+      setPaused(false);
+      state = "fighting";
+      resetRun();
+      refreshButtons(); refreshHud();
+    });
+
+    /* ---------- boot ---------- */
+    buildTuning();
+    refreshButtons();
+    requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

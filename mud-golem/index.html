@@ -1,0 +1,1217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>Mud Golem</title>
+<style>
+  :root{
+    --bg:#f6ead2; --panel:#fff8ea; --ink:#1c1408; --muted:#5a4a2f;
+    --mud:#8a5a24; --mud-d:#5f3c14; --mud-l:#c98d45; --wet:#4a2f0e;
+    --accent:#ffcf3f; --teal:#1fb6a6; --pink:#ff6b8a; --red:#e23b2e; --green:#3fae4a;
+    --water:#3aa7e8; --card:#ffffff; --shadow:#1c1408;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#17110a; --panel:#241a0f; --ink:#f6ead2;
+      --muted:#cdbb96; --card:#2d2013; --shadow:#000000;
+      --mud:#a06a2c; --mud-d:#7a4e1c; --mud-l:#d99a4e;
+    }
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Trebuchet MS","Segoe UI",Verdana,sans-serif;
+    height:100dvh; overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  button{font-family:inherit; cursor:pointer; color:var(--ink);}
+  button:disabled{cursor:not-allowed; opacity:.55;}
+  .wrap{flex:1; min-height:0; width:100%; max-width:560px; margin:0 auto; padding:8px 10px 0; display:flex; flex-direction:column;}
+
+  /* ---------- VIEWS / TABS ---------- */
+  .view{display:none; flex:1; min-height:0; flex-direction:column; overflow:hidden;}
+  .view.active{display:flex;}
+  /* Shop / skills are long lists: they scroll INSIDE their own view box. */
+  #viewShop, #viewSkills{overflow-y:auto; overflow-x:hidden;}
+  .tabbar{display:flex; gap:8px; padding-top:8px; padding-bottom:calc(8px + env(safe-area-inset-bottom)); flex:none;}
+  .tabBtn{
+    flex:1; background:var(--card); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
+    font-size:15px; font-weight:900; padding:10px 4px;
+  }
+  .tabBtn.on{background:var(--accent);}
+  .tabBtn .tabBadge{
+    display:inline-block; background:var(--pink); border:2px solid var(--ink); color:#2b0713;
+    font-size:11px; padding:0 5px; margin-left:4px; vertical-align:2px;
+  }
+  .viewHead{display:flex; align-items:baseline; gap:10px; margin-bottom:6px;}
+  .viewHead .vhTitle{font-size:16px; font-weight:900; text-transform:uppercase; letter-spacing:.04em;}
+  .viewHead .vhSub{font-size:12px; font-weight:800; color:var(--muted);}
+
+  /* ---------- HUD ---------- */
+  .hud{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:6px; flex:none;}
+  .stat{
+    background:var(--card); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
+    padding:4px 2px; text-align:center;
+  }
+  .stat .num{font-size:18px; font-weight:900; line-height:1.05;}
+  .stat .lab{font-size:9px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--muted);}
+  .stat.mana .num{color:#7a3fd1;}
+  @media (prefers-color-scheme: dark){ .stat.mana .num{color:#c99aff;} }
+
+  .hint{
+    background:var(--accent); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
+    padding:6px 8px; font-weight:800; font-size:13px; margin-bottom:8px; min-height:36px;
+    display:flex; align-items:center; gap:8px; flex:none; overflow:hidden;
+  }
+  .hint .step{
+    background:var(--ink); color:var(--accent); font-size:10px; font-weight:900;
+    padding:2px 6px; white-space:nowrap;
+  }
+
+  /* Every panel is a fixed box in the layout: content clips inside it
+     (overflow hidden) and never spills over a neighbour. */
+  .panel{background:var(--panel); border:3px solid var(--ink); box-shadow:4px 4px 0 var(--shadow); padding:8px; margin-bottom:8px; overflow:hidden; flex:none;}
+  /* The pit panel is the ONE flexible element on the main view: it absorbs
+     tall/short viewports so nothing else ever has to move or stretch. */
+  .pitPanel{flex:1 1 auto; min-height:140px; display:flex; flex-direction:column;}
+  .panelLab{font-size:11px; font-weight:900; letter-spacing:.05em; text-transform:uppercase; margin-bottom:6px;}
+
+  /* ---------- PIT ---------- */
+  .pitScene{display:flex; gap:10px; align-items:stretch; flex:1; min-height:0; overflow:hidden;}
+  .pit{
+    flex:1.2; position:relative; min-height:0; overflow:hidden;
+    background:linear-gradient(180deg,#7ec8e3 0 34%, #6db35a 34% 46%, var(--mud) 46% 100%);
+    border:3px solid var(--ink); cursor:pointer; user-select:none; -webkit-user-select:none; touch-action:none;
+  }
+  .pit .hole{
+    position:absolute; left:50%; bottom:8px; transform:translateX(-50%);
+    width:72%; height:46px; background:var(--wet); border:3px solid var(--ink);
+    border-radius:50%;
+  }
+  .pit .hole::after{
+    content:""; position:absolute; inset:7px 12px; background:#6b4423; border-radius:50%;
+  }
+  .pit .digLabel{
+    position:absolute; top:6px; left:0; right:0; text-align:center;
+    font-weight:900; font-size:14px; color:#10240c;
+    text-shadow:0 1px 0 #ffffff88;
+  }
+  .splat{
+    position:absolute; width:16px; height:16px; border-radius:50%;
+    background:var(--mud-d); border:2px solid var(--ink); pointer-events:none;
+    animation:splatFly .55s ease-out forwards; z-index:3;
+  }
+  @keyframes splatFly{
+    0%{transform:translate(0,0) scale(1); opacity:1;}
+    100%{transform:translate(var(--dx),var(--dy)) scale(.4); opacity:0;}
+  }
+  @media (prefers-reduced-motion: reduce){ .splat{animation:none; opacity:0;} }
+  .pileBox{flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column; gap:6px;}
+  .pileVisual{
+    flex:1; min-height:0; overflow:hidden; border:3px solid var(--ink); background:var(--card);
+    display:flex; flex-direction:column; align-items:center; padding:6px 4px 4px;
+  }
+  /* Fixed-size track for the pile graphic: the mound's height is a % OF
+     THIS BOX and clips at its edges — growing the pile can never grow
+     the panel or push anything below it. */
+  .pileTrack{flex:1; min-height:0; width:100%; display:flex; align-items:flex-end; justify-content:center; overflow:hidden;}
+  .pileMound{
+    width:70%; max-height:100%; min-height:6px; background:var(--mud); border:3px solid var(--ink); border-bottom:none;
+    border-radius:50% 50% 0 0 / 100% 100% 0 0; transition:height .25s;
+  }
+  .pileLab{font-size:11px; font-weight:800; text-align:center; margin-top:4px; flex:none;}
+  .digBtn{
+    background:var(--mud-l); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
+    font-size:16px; font-weight:900; padding:11px 6px; width:100%; flex:none;
+    user-select:none; -webkit-user-select:none; touch-action:none;
+  }
+  .digBtn:active, .digBtn.holding{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadow); background:var(--mud); color:#fff;}
+  .autoLine{font-size:11px; font-weight:700; color:var(--muted); text-align:center; min-height:14px; flex:none;}
+
+  /* ---------- DRYING RACK — the ball IS the button ---------- */
+  /* Fixed 4 columns: tiles shrink to fit the row, never wrap early —
+     4 balls always make one full row, 5–8 make two rows of four. */
+  .rack{display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;}
+  .ballTile{display:flex; flex-direction:column; align-items:stretch;}
+  .ballTap{
+    position:relative; width:100%; aspect-ratio:1/1; min-height:72px;
+    background:var(--card); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
+    display:flex; align-items:center; justify-content:center; padding:4px;
+  }
+  .ballTap .ballSvg{line-height:0; pointer-events:none;}
+  .ballPct{font-size:15px; font-weight:900; text-align:center; margin-top:3px; line-height:1.1;}
+  /* too wet: dimmed, not clickable — just wait */
+  .ballTile.wet .ballTap{opacity:.45; filter:grayscale(.45); cursor:default;}
+  /* ready: glow + wiggle — tap stacks it */
+  .ballTile.ready .ballTap{
+    border-color:var(--green);
+    box-shadow:0 0 0 3px var(--green), 0 0 16px 5px rgba(63,174,74,.55), 3px 3px 0 var(--shadow);
+    animation:ballWiggle .8s ease-in-out infinite;
+  }
+  .ballTile.ready .ballPct{color:var(--green);}
+  @keyframes ballWiggle{0%,100%{transform:rotate(0deg);}25%{transform:rotate(-4deg);}75%{transform:rotate(4deg);}}
+  @media (prefers-reduced-motion: reduce){ .ballTile.ready .ballTap{animation:none;} }
+  /* too dry: droplet badge — tap adds water */
+  .dropBadge{
+    position:absolute; top:2px; right:5px; font-size:17px; display:none; pointer-events:none;
+    filter:drop-shadow(0 1px 0 #fff);
+  }
+  .ballTile.dry .dropBadge{display:block;}
+  .ballTile.dry .ballTap{border-color:var(--water);}
+  .emptyNote{font-size:12px; font-weight:700; color:var(--muted); text-align:center; padding:8px 4px;}
+
+  /* ---------- STACK & SUMMON ---------- */
+  .stackScene{display:flex; gap:10px; align-items:center;}
+  .stackVisual{
+    flex:0 0 104px; height:64px; overflow:hidden; border:3px solid var(--ink); background:var(--card);
+    display:flex; flex-wrap:wrap-reverse; align-content:flex-start; justify-content:center;
+    padding:5px 4px; gap:2px;
+  }
+  .stackBall{width:17px; height:17px; border-radius:50%; background:radial-gradient(circle at 35% 30%, var(--mud-l), var(--mud) 65%); border:2px solid var(--ink);}
+  .stackInfo{flex:1; min-width:0;}
+  .costBig{font-size:21px; font-weight:900; line-height:1.1;}
+  .summonBtn{
+    background:var(--pink); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
+    font-size:14px; font-weight:900; padding:9px 8px; width:100%; margin-top:5px; color:#2b0713;
+  }
+  .summonBtn:disabled{background:#bdbdbd; color:#555;}
+
+  /* ---------- PILLAGE STRIP ---------- */
+  /* Capped strip: extra golem chips scroll inside the strip's own box
+     instead of pushing the rest of the screen down. */
+  .pillStrip{display:none; flex-direction:column; gap:5px; margin-bottom:8px; flex:none; max-height:148px; overflow-y:auto; overflow-x:hidden;}
+  .pillStrip.has{display:flex;}
+  .pillChip{
+    display:flex; align-items:center; gap:8px; background:var(--card);
+    border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow); padding:4px 8px 4px 4px;
+  }
+  .pillChip .pcFig{line-height:0; flex:0 0 auto;}
+  .pillChip .pcMid{flex:1; min-width:0;}
+  .pillChip .pcHpWrap{height:11px; border:2px solid var(--ink); background:#e8dcc2; position:relative;}
+  .pillChip .pcHp{position:absolute; top:0; bottom:0; left:0; background:var(--green); transition:width .3s;}
+  .pillChip .pcLab{font-size:11px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .watchBtn{
+    background:var(--teal); border:2px solid var(--ink); box-shadow:2px 2px 0 var(--shadow);
+    font-weight:900; font-size:11px; padding:6px 8px; color:#04211d; flex:0 0 auto;
+  }
+  .lifeLine{font-size:11px; color:var(--muted); font-weight:700; text-align:center; flex:none; padding:2px 0 4px;}
+
+  /* ---------- TOAST ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:86px; transform:translateX(-50%) translateY(16px);
+    background:var(--ink); color:var(--accent); border:3px solid var(--accent);
+    font-weight:900; font-size:14px; padding:9px 14px; z-index:60; opacity:0; pointer-events:none;
+    transition:opacity .25s, transform .25s; max-width:92vw; text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* ---------- SHOP / SKILLS ---------- */
+  .shopGroup{margin-bottom:8px;}
+  .shopGroup h3{margin:0 0 4px; font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.05em;}
+  .upg{
+    display:flex; gap:8px; align-items:center; border:3px solid var(--ink); background:var(--card);
+    box-shadow:3px 3px 0 var(--shadow); padding:5px 8px; margin-bottom:5px;
+  }
+  .upg .uInfo{flex:1; min-width:0;}
+  .upg .uName{font-weight:900; font-size:13px;}
+  .upg .uDesc{font-size:11px; color:var(--muted); font-weight:700; line-height:1.3;}
+  .upg .uLvl{font-size:10px; font-weight:900;}
+  .buyBtn{
+    background:var(--accent); border:3px solid var(--ink); box-shadow:2px 2px 0 var(--shadow);
+    font-weight:900; font-size:12px; padding:7px 9px; white-space:nowrap;
+  }
+  .buyBtn:disabled{background:#bdbdbd;}
+  .skill{border:3px solid var(--ink); background:var(--card); box-shadow:3px 3px 0 var(--shadow); padding:5px 8px; margin-bottom:5px; display:flex; gap:8px; align-items:center;}
+  .skill.locked{opacity:.88;}
+  .skill .sInfo{flex:1; min-width:0;}
+  .skill .sName{font-weight:900; font-size:13px;}
+  .skill .sDesc{font-size:11px; color:var(--muted); font-weight:700; line-height:1.3;}
+  .toggleBtn{
+    border:3px solid var(--ink); font-weight:900; font-size:12px; padding:7px 9px; min-width:66px;
+    box-shadow:2px 2px 0 var(--shadow); background:#d8d8d8;
+  }
+  .toggleBtn.on{background:var(--green); color:#fff;}
+  .skillNote{font-size:12px; font-weight:800; background:var(--panel); border:3px solid var(--ink); padding:6px 8px; margin-bottom:8px; line-height:1.35;}
+
+  /* ---------- OVERLAYS ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(10,6,2,.72); z-index:50;
+    display:none; align-items:center; justify-content:center; padding:14px;
+  }
+  .overlay.open{display:flex;}
+  .sheet{
+    background:var(--bg); border:4px solid var(--ink); box-shadow:6px 6px 0 #000;
+    max-width:520px; width:100%; max-height:92dvh; overflow:auto; padding:16px;
+  }
+  .sheet h2{margin:0 0 8px; font-size:21px; font-weight:900;}
+  .sheet p{font-size:15px; line-height:1.45; font-weight:600;}
+  .bigBtn{
+    background:var(--accent); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
+    font-size:15px; font-weight:900; padding:11px 16px; width:100%; margin-top:10px;
+  }
+
+  /* ritual */
+  .ritualWrap{position:relative; width:300px; height:300px; margin:8px auto;}
+  .ritualCenter{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:110px; height:110px; text-align:center;
+  }
+  .ritualStack{display:flex; flex-wrap:wrap-reverse; justify-content:center; gap:2px; max-height:64px; overflow:hidden;}
+  .ritualStack .stackBall{width:16px; height:16px;}
+  .ritualCenter .rcLab{font-size:11px; font-weight:900; margin-top:4px;}
+  .pentaBtn{
+    position:absolute; width:64px; height:64px; border-radius:50%;
+    border:4px solid var(--ink); box-shadow:3px 3px 0 var(--shadow);
+    font-size:22px; font-weight:900; color:#101010;
+  }
+  .pentaBtn.flash{filter:brightness(1.7); transform:scale(1.15);}
+  .pentaBtn.good{outline:5px solid var(--green);}
+  .pentaBtn.bad{outline:5px solid var(--red);}
+  .ritualStatus{text-align:center; font-weight:900; font-size:15px; min-height:21px;}
+  .progressDots{text-align:center; font-size:17px; letter-spacing:4px; font-weight:900; min-height:22px;}
+
+  /* pillage watch */
+  .townScene{
+    position:relative; border:3px solid var(--ink); background:linear-gradient(180deg,#ffd98a 0 55%, #8a6b45 55% 100%);
+    min-height:180px; overflow:hidden; margin-bottom:8px;
+  }
+  .golemFig{position:absolute; bottom:8px; left:8px; transition:left .5s; z-index:2;}
+  .building{
+    position:absolute; bottom:34px; width:44px; background:#e8e0cc; border:3px solid var(--ink);
+    display:flex; align-items:flex-start; justify-content:center; padding-top:2px;
+  }
+  .building::before{content:""; position:absolute; top:-14px; left:-4px; right:-4px; height:12px; background:var(--red); border:3px solid var(--ink); border-bottom:none;}
+  .building .bHp{font-size:10px; font-weight:900; background:#fff; border:2px solid var(--ink); padding:0 3px;}
+  .building.dead{background:#555; transform:rotate(-4deg) translateY(8px); opacity:.75;}
+  .building.dead::before{background:#333;}
+  .hpBarWrap{height:20px; border:3px solid var(--ink); background:#e8dcc2; position:relative; margin:6px 0;}
+  .hpBar{position:absolute; inset:0; right:auto; background:var(--green); transition:width .3s;}
+  .hpBarWrap .hpLab{position:absolute; inset:0; text-align:center; font-size:12px; font-weight:900; line-height:17px; color:#10240c;}
+  .pillageStats{display:flex; gap:8px; flex-wrap:wrap; font-weight:900; font-size:13px;}
+  .pillageStats span{background:var(--card); border:3px solid var(--ink); padding:4px 8px;}
+  .shake{animation:shakeAnim .3s;}
+  @keyframes shakeAnim{0%,100%{transform:translate(0,0);}25%{transform:translate(-4px,2px);}75%{transform:translate(4px,-2px);}}
+  @media (prefers-reduced-motion: reduce){ .shake{animation:none;} .golemFig{transition:none;} }
+  .rise{animation:riseAnim .8s ease-out;}
+  @keyframes riseAnim{from{transform:translateY(60px) scale(.6); opacity:0;} to{transform:translateY(0) scale(1); opacity:1;}}
+  @media (prefers-reduced-motion: reduce){ .rise{animation:none;} }
+</style>
+</head>
+<body>
+
+<!-- STORY OVERLAY -->
+<div class="overlay open" id="storyOverlay" role="dialog" aria-label="Story intro">
+  <div class="sheet">
+    <div id="storyCard1">
+      <h2>The pit behind the hill</h2>
+      <p>You live by a swamp the town over the hill pretends not to smell. They take your firewood, your frogs, your quiet — and never share a thing back.</p>
+      <p>But the mud here is old. The mud remembers being walked on. Scoop enough of it together, dry it just right… and it might just walk back.</p>
+      <button class="bigBtn" id="storyNext">Next →</button>
+    </div>
+    <div id="storyCard2" style="display:none">
+      <h2>How to raise a golem</h2>
+      <p><strong>Dig mud. Shape balls. When a drying ball GLOWS, tap it to stack it — stack 3 and sing the pentagon rite. The golem marches off and pillages on its own — you keep digging while it works, and its mana arrives when it falls.</strong></p>
+      <p>Stronger golems need more balls. Weaker ones are cheap. You choose, every time.</p>
+      <button class="bigBtn" id="storyStart">Start digging</button>
+    </div>
+  </div>
+</div>
+
+<!-- RITUAL OVERLAY -->
+<div class="overlay" id="ritualOverlay" role="dialog" aria-label="Summoning ritual">
+  <div class="sheet">
+    <h2 style="text-align:center">The Pentagon Rite</h2>
+    <div class="ritualStatus" id="ritualStatus">Watch the stones light up…</div>
+    <div class="ritualWrap" id="ritualWrap">
+      <div class="ritualCenter">
+        <div class="ritualStack" id="ritualStack"></div>
+        <div class="rcLab">YOUR STACK</div>
+      </div>
+    </div>
+    <div class="progressDots" id="ritualProgress"></div>
+    <button class="bigBtn" id="ritualReplay" style="display:none">Watch it again</button>
+    <button class="bigBtn" id="ritualCancel" style="background:#d8d8d8">Back out (stack is kept)</button>
+  </div>
+</div>
+
+<!-- PILLAGE WATCH OVERLAY (optional — pillage runs fine without it) -->
+<div class="overlay" id="watchOverlay" role="dialog" aria-label="Watch pillage">
+  <div class="sheet">
+    <h2 id="watchTitle">It pillages the town!</h2>
+    <div class="townScene" id="townScene">
+      <div class="golemFig" id="golemFig"></div>
+    </div>
+    <div class="hpBarWrap"><div class="hpBar" id="watchHpBar" style="width:100%"></div><div class="hpLab" id="watchHpLab">GOLEM HP</div></div>
+    <div class="pillageStats">
+      <span id="watchSmashed">Smashed: 0</span>
+      <span id="watchMana">Mana looted: 0</span>
+      <span id="watchTime">Time: 0s</span>
+    </div>
+    <p id="watchResult" style="display:none; font-weight:800"></p>
+    <button class="bigBtn" id="watchClose" style="background:#d8d8d8">Back to the pit — it keeps pillaging without you</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<div class="wrap">
+
+  <!-- ============ MAIN VIEW ============ -->
+  <div class="view active" id="viewMain">
+    <div class="hud">
+      <div class="stat"><div class="num" id="hudMud">0</div><div class="lab">Mud pile</div></div>
+      <div class="stat"><div class="num" id="hudBalls">0</div><div class="lab">Balls drying</div></div>
+      <div class="stat"><div class="num" id="hudStack">0</div><div class="lab">Stacked</div></div>
+      <div class="stat mana"><div class="num" id="hudMana">0</div><div class="lab">Mana ✦</div></div>
+    </div>
+
+    <div class="hint"><span class="step" id="hintStep">START</span><span id="hintText">Tap the pit to dig mud.</span></div>
+
+    <div class="panel pitPanel">
+      <div class="pitScene">
+        <div class="pit" id="pit" role="button" aria-label="Dig in the mud pit" tabindex="0">
+          <div class="digLabel">TAP — OR HOLD — TO DIG!</div>
+          <div class="hole"></div>
+        </div>
+        <div class="pileBox">
+          <div class="pileVisual">
+            <div class="pileTrack"><div class="pileMound" id="pileMound" style="height:10%"></div></div>
+            <div class="pileLab" id="pileLab">Pile: 0 / 10 mud</div>
+          </div>
+          <button class="digBtn" id="digBtn">⛏ DIG — hold me!</button>
+          <div class="autoLine" id="autoLine"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelLab">Drying rack — tap a glowing ball to stack it</div>
+      <div class="rack" id="rack"></div>
+      <div class="emptyNote" id="rackEmpty">No balls yet. Fill a pile and a wet ball forms on its own — dim and soaking at 100%. It dries on its own.</div>
+    </div>
+
+    <div class="panel">
+      <div class="stackScene">
+        <div class="stackVisual" id="stackVisual"></div>
+        <div class="stackInfo">
+          <div style="font-weight:800; font-size:11px;">NEXT GOLEM COSTS</div>
+          <div class="costBig"><span id="costNum">3</span> balls</div>
+          <div style="font-size:12px; font-weight:700;" id="stackCountLine">Stacked: 0</div>
+          <button class="summonBtn" id="summonBtn" disabled>SUMMON — need 3 stacked</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pillStrip" id="pillStrip"></div>
+
+    <div class="lifeLine">Golems raised: <span id="footRaised">0</span> · Buildings smashed: <span id="footSmashed">0</span> · Mana earned: <span id="footMana">0</span></div>
+  </div>
+
+  <!-- ============ SHOP VIEW ============ -->
+  <div class="view" id="viewShop">
+    <div class="viewHead"><span class="vhTitle">Spend Mana</span><span class="vhSub">You have <strong id="shopMana">0</strong> ✦</span></div>
+    <div id="shopRoot"></div>
+  </div>
+
+  <!-- ============ SKILLS VIEW ============ -->
+  <div class="view" id="viewSkills">
+    <div class="viewHead"><span class="vhTitle">Golem Skills</span><span class="vhSub">Next golem: <strong id="skillCostLine">3 balls</strong></span></div>
+    <div class="skillNote">Every skill you switch ON makes the golem stronger — and adds balls to its cost. Switch them all off and a golem costs the plain <strong>3 balls</strong> again.</div>
+    <div id="skillsRoot"></div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tabBtn on" id="tabMain">🕳 THE PIT</button>
+    <button class="tabBtn" id="tabShop">✦ SHOP</button>
+    <button class="tabBtn" id="tabSkills">🗿 SKILLS<span class="tabBadge" id="skillBadge" style="display:none">0 on</span></button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ================= DATA ================= */
+var SKILLS = [
+  {id:'fists',  name:'Big Fists',    cost:5,  mana:6,  desc:'Hits buildings 50% harder.'},
+  {id:'hide',   name:'Thick Hide',   cost:5,  mana:6,  desc:'+60% golem health (5 HP → 8 HP).'},
+  {id:'legs',   name:'Long Legs',    cost:5,  mana:8,  desc:'Reaches the next building 45% faster.'},
+  {id:'sack',   name:'Loot Sack',    cost:5,  mana:8,  desc:'Carries home 50% more mana.'},
+  {id:'stone',  name:'Stone Skin',   cost:10, mana:18, desc:'Town hits land 30% softer.'},
+  {id:'fire',   name:'Fire Belly',   cost:10, mana:22, desc:'Burning buildings pay +3 bonus mana each.'},
+  {id:'trail',  name:'Muddy Trail',  cost:10, mana:22, desc:'Slows the town down — its damage drops 25%.'},
+  {id:'arms',   name:'Swift Arms',   cost:10, mana:26, desc:'Swings 50% faster.'},
+  {id:'nose',   name:'Golden Nose',  cost:10, mana:30, desc:'Sniffs out treasure: +75% mana.'},
+  {id:'core',   name:'Second Core',  cost:20, mana:55, desc:'Destroyed? It gets back up once, at half health.'}
+];
+var UPGRADES = [
+  {group:'Mud Gathering'},
+  {id:'shovel', group:'Mud Gathering', name:'Bigger Shovel', max:8, base:10, desc:function(l){return 'Digging gives +'+l+' extra mud ('+(1+l+ (S.upg.deeppit||0)*2)+' per dig total at max combo).';}, now:function(){return 'Now: +'+(S.upg.shovel||0)+' mud per dig';}},
+  {id:'auto',   group:'Mud Gathering', name:'Auto-Digger Gnome', max:6, base:15, desc:function(l){return 'A tireless gnome digs for you: +'+l+' mud every second.';}, now:function(){return 'Now: '+(S.upg.auto||0)+' mud/sec';}},
+  {id:'deeppit',group:'Mud Gathering', name:'Deeper Pit', max:4, base:30, desc:function(l){return 'Richer mud down deep: +'+(l*2)+' mud per dig.';}, now:function(){return 'Now: +'+((S.upg.deeppit||0)*2)+' mud per dig';}},
+  {group:'Ball Creation'},
+  {id:'hands',  group:'Ball Creation', name:'Efficient Hands', max:5, base:12, desc:function(l){return 'Less mud per ball: '+(10-l)+' mud a ball.';}, now:function(){return 'Now: '+mudPerBall()+' mud per ball';}},
+  {id:'sunlamp',group:'Ball Creation', name:'Sun Lamp', max:4, base:14, desc:function(l){return 'Balls dry '+Math.round(l*25)+'% faster — less waiting in the wet zone.';}, now:function(){return 'Now: drying ×'+(1+(S.upg.sunlamp||0)*0.25).toFixed(2);}},
+  {id:'feel',   group:'Ball Creation', name:'Perfect Feel', max:4, base:16, desc:function(l){return 'Wider halfway band: ±'+(10+l*4)+'% around 50% — much easier stacking.';}, now:function(){return 'Now: band '+bandLow()+'–'+bandHigh()+'%';}},
+  {group:'Summoning'},
+  {id:'slowchant', group:'Summoning', name:'Slow Chant', max:3, base:12, desc:function(l){return 'The rite flashes slower — easier to follow.';}, now:function(){return 'Now: flash pace level '+(S.upg.slowchant||0);}},
+  {id:'doublevis', group:'Summoning', name:'Double Vision', max:1, base:20, desc:function(l){return 'The rite shows the sequence twice before your turn.';}, now:function(){return (S.upg.doublevis?'Now: sequence plays twice':'Not owned');}},
+  {id:'echo',      group:'Summoning', name:'Faint Echo', max:1, base:25, desc:function(l){return 'During your turn, the next stone pulses faintly as a hint.';}, now:function(){return (S.upg.echo?'Now: hint pulse on':'Not owned');}}
+];
+
+/* ================= STATE ================= */
+var BASE_COST = 3;   // balls for a plain golem, no skills on
+var BASE_HP = 5;     // a plain golem is fragile — first pillage is quick
+var S = {
+  mud:0, mana:0,
+  pile:0,               // mud gathered toward the current ball (0..mudPerBall)
+  balls:[],              // drying balls {moisture}
+  stacked:0,
+  upg:{},                // upgrade id -> level
+  unlocked:{},           // skill id -> true
+  enabled:{},            // skill id -> true
+  raised:0, smashedAll:0, manaAll:0,
+  tutorial:0             // furthest hint stage reached
+};
+var RACK_MAX = 4;
+
+function mudPerBall(){ return 10 - (S.upg.hands||0); }
+function digPower(){ return 1 + (S.upg.shovel||0) + (S.upg.deeppit||0)*2; }
+function dryRate(){ return 2.4 * (1 + (S.upg.sunlamp||0)*0.25); } // % per second
+function bandHalf(){ return 10 + (S.upg.feel||0)*4; }
+function bandLow(){ return 50 - bandHalf(); }
+function bandHigh(){ return 50 + bandHalf(); }
+function golemCost(){
+  var c = BASE_COST;
+  SKILLS.forEach(function(sk){ if(S.enabled[sk.id]) c += sk.cost; });
+  return c;
+}
+function upgCost(u){
+  var lvl = S.upg[u.id]||0;
+  if(lvl >= u.max) return null;
+  return Math.round(u.base * Math.pow(1.9, lvl));
+}
+
+/* ================= DOM ================= */
+function $(id){ return document.getElementById(id); }
+var hudMud=$('hudMud'), hudBalls=$('hudBalls'), hudStack=$('hudStack'), hudMana=$('hudMana');
+var hintStep=$('hintStep'), hintText=$('hintText');
+var pileMound=$('pileMound'), pileLab=$('pileLab'), autoLine=$('autoLine');
+var rackEl=$('rack'), rackEmpty=$('rackEmpty'), stackVisual=$('stackVisual');
+var costNum=$('costNum'), stackCountLine=$('stackCountLine'), summonBtn=$('summonBtn');
+var pillStrip=$('pillStrip');
+
+/* ---------- golem SVG ---------- */
+function golemSVG(size, armsUp){
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 100 100" aria-hidden="true">'
+    +'<ellipse cx="50" cy="90" rx="30" ry="6" fill="#00000033"/>'
+    +'<rect x="30" y="52" width="40" height="34" rx="10" fill="#8a5a24" stroke="#1c1408" stroke-width="4"/>'
+    +'<rect x="'+(armsUp?6:12)+'" y="'+(armsUp?22:48)+'" width="16" height="30" rx="7" fill="#8a5a24" stroke="#1c1408" stroke-width="4" transform="rotate('+(armsUp?-24:14)+' 20 55)"/>'
+    +'<rect x="'+(armsUp?78:72)+'" y="'+(armsUp?22:48)+'" width="16" height="30" rx="7" fill="#8a5a24" stroke="#1c1408" stroke-width="4" transform="rotate('+(armsUp?24:-14)+' 80 55)"/>'
+    +'<circle cx="50" cy="32" r="20" fill="#a06a2c" stroke="#1c1408" stroke-width="4"/>'
+    +'<circle cx="43" cy="30" r="3.5" fill="#ffcf3f" stroke="#1c1408" stroke-width="1.5"/>'
+    +'<circle cx="57" cy="30" r="3.5" fill="#ffcf3f" stroke="#1c1408" stroke-width="1.5"/>'
+    +'<path d="M40 42 Q50 38 60 42" stroke="#1c1408" stroke-width="3" fill="none" stroke-linecap="round"/>'
+    +'<circle cx="34" cy="20" r="4" fill="#5f3c14"/><circle cx="64" cy="14" r="5" fill="#5f3c14"/><circle cx="50" cy="10" r="3.5" fill="#5f3c14"/>'
+    +'</svg>';
+}
+function ballSVG(moisture){
+  var t = Math.max(0, Math.min(1, moisture/100));
+  var r = Math.round(74 + (164-74)*t), g = Math.round(47 + (106-47)*t), b = Math.round(14 + (106-44)*t);
+  var cracks = moisture < 35
+    ? '<path d="M22 20 L28 30 L24 38 M42 18 L38 28 L44 36 M32 48 L30 56" stroke="#1c1408" stroke-width="2" fill="none" stroke-linecap="round" opacity=".55"/>'
+    : '';
+  return '<svg width="52" height="52" viewBox="0 0 64 64" aria-hidden="true">'
+    +'<circle cx="32" cy="34" r="24" fill="rgb('+r+','+g+','+b+')" stroke="#1c1408" stroke-width="3.5"/>'
+    +'<ellipse cx="24" cy="26" rx="8" ry="5" fill="#ffffff" opacity="'+(0.15+0.45*t).toFixed(2)+'"/>'
+    +'<circle cx="40" cy="40" r="4" fill="#00000030"/><circle cx="26" cy="44" r="3" fill="#00000026"/>'
+    + cracks
+    +'</svg>';
+}
+
+/* ================= HINTS / TUTORIAL ================= */
+var HINTS = [
+  ['DIG','Tap the pit — or HOLD the dig button — to gather mud. A pile of 10 mud shapes itself into a ball.'],
+  ['DRY','Tap a glowing ball to stack it. Tap a dry ball to splash it. A dim ball is still drying.'],
+  ['READY','A ball is glowing and wiggling — tap it to stack it before it dries past!'],
+  ['BUILD','Nice — one stacked. Keep going: a plain golem needs just 3 stacked balls.'],
+  ['SUMMON','Your stack is ready! Press SUMMON and repeat the 8-stone rite.'],
+  ['PILLAGE','It lives! It pillages on its own — keep digging. Its mana arrives when it falls.'],
+  ['SPEND','Mana earned! Spend it in the SHOP tab below: gathering first, then balls, the rite… and golem SKILLS.']
+];
+function setHint(stage){
+  if(stage > S.tutorial) S.tutorial = stage;
+  var h = HINTS[Math.min(S.tutorial, HINTS.length-1)];
+  hintStep.textContent = h[0];
+  hintText.textContent = h[1];
+}
+
+/* ================= TOAST ================= */
+var toastTimer = null;
+function toast(msg){
+  var t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3800);
+}
+
+/* ================= CORE LOOP ================= */
+var ballSeq = 0;
+function newBall(){ return {id:++ballSeq, moisture:100, lastT:Date.now()}; }
+function syncBall(b){
+  var now = Date.now();
+  var dt = (now - b.lastT)/1000;
+  if(dt > 0){
+    b.moisture = Math.max(0, b.moisture - dryRate()*dt);
+    b.lastT = now;
+  }
+  return b.moisture;
+}
+function syncAllBalls(){ S.balls.forEach(syncBall); }
+function addMud(n){
+  S.mud += n;
+  S.pile += n;
+  while(S.pile >= mudPerBall()){
+    if(S.balls.length < RACK_MAX){
+      S.pile -= mudPerBall();
+      S.balls.push(newBall());
+      if(S.tutorial < 1) setHint(1);
+    } else {
+      S.pile = mudPerBall(); // pile waits at full until the rack has room
+      break;
+    }
+  }
+  render();
+}
+function dig(fromPit, ev){
+  addMud(digPower());
+  if(fromPit && ev){
+    var pit = $('pit'), rect = pit.getBoundingClientRect();
+    var s = document.createElement('div');
+    s.className = 'splat';
+    var x = (ev.clientX ? ev.clientX - rect.left : rect.width/2);
+    var y = (ev.clientY ? ev.clientY - rect.top : rect.height/2);
+    s.style.left = x+'px'; s.style.top = y+'px';
+    s.style.setProperty('--dx', (Math.random()*90-45)+'px');
+    s.style.setProperty('--dy', (-(40+Math.random()*50))+'px');
+    pit.appendChild(s);
+    setTimeout(function(){ s.remove(); }, 600);
+  }
+}
+
+/* ---- hold-to-dig: +1 mud every 450ms while held — slower than tapping,
+        and a hold that produced ticks swallows the release click so the
+        same press never counts twice ---- */
+var HOLD_MS = 450;
+var hold = { timer:null, ticked:false };
+function holdStart(el){
+  if(hold.timer) return;
+  hold.ticked = false;
+  el.classList.add('holding');
+  hold.timer = setInterval(function(){
+    hold.ticked = true;
+    addMud(1);
+  }, HOLD_MS);
+}
+function holdEnd(el){
+  if(hold.timer){ clearInterval(hold.timer); hold.timer = null; }
+  el.classList.remove('holding');
+}
+function bindHold(el, onTap){
+  el.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    holdStart(el);
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(function(evt){
+    el.addEventListener(evt, function(){ holdEnd(el); });
+  });
+  el.addEventListener('click', function(e){
+    if(hold.ticked){ hold.ticked = false; return; } // that click was a hold release
+    onTap(e);
+  });
+  el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+}
+bindHold($('digBtn'), function(){ dig(false); });
+bindHold($('pit'), function(e){ dig(true, e); });
+$('pit').addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); dig(false); } });
+
+/* The ball is the button — one tap, one action, set by its state:
+   too wet → nothing (button disabled), ready → stack, too dry → +20% water. */
+function ballTap(b){
+  syncBall(b);
+  if(b.moisture >= bandLow() && b.moisture <= bandHigh()){
+    stackBallObj(b);
+  } else if(b.moisture < bandLow()){
+    b.moisture = Math.min(100, b.moisture + 20);
+    b.lastT = Date.now();
+    render();
+  }
+}
+function stackBallObj(b){
+  var i = S.balls.indexOf(b);
+  if(i < 0) return;
+  syncBall(b);
+  if(b.moisture < bandLow() || b.moisture > bandHigh()) return;
+  S.balls.splice(i,1);
+  S.stacked++;
+  // freed rack space may let a waiting full pile form a ball
+  while(S.pile >= mudPerBall() && S.balls.length < RACK_MAX){
+    S.pile -= mudPerBall();
+    S.balls.push(newBall());
+  }
+  if(S.tutorial < 3) setHint(3);
+  if(S.stacked >= golemCost()) setHint(4);
+  render();
+}
+
+/* drying tick + auto digger (moisture itself is timestamp-based in syncBall,
+   so it stays correct even if this timer is throttled in a background tab) */
+var lastTick = Date.now();
+setInterval(function(){
+  var now = Date.now();
+  var dt = Math.min(5, (now - lastTick)/1000); lastTick = now;
+  syncAllBalls();
+  for(var i=0;i<S.balls.length;i++){
+    if(S.tutorial===1 && S.balls[i].moisture <= bandHigh() && S.balls[i].moisture > 0) setHint(2);
+  }
+  var auto = S.upg.auto||0;
+  if(auto > 0){
+    S._autoAcc = (S._autoAcc||0) + auto*dt;
+    var whole = Math.floor(S._autoAcc);
+    if(whole >= 1){ S._autoAcc -= whole; addMud(whole); return; }
+  }
+  if(S.balls.length && !ritual.active) renderBalls();
+}, 250);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) render(); });
+
+/* ================= RENDER ================= */
+function render(){
+  hudMud.textContent = Math.floor(S.pile);
+  hudBalls.textContent = S.balls.length;
+  hudStack.textContent = S.stacked;
+  hudMana.textContent = S.mana;
+  renderPile();
+  autoLine.textContent = (S.upg.auto ? 'Gnome: +'+S.upg.auto+' mud/sec · ' : '') + 'Tap dig: '+digPower()+' mud · Hold dig: slow trickle';
+  renderBalls();
+  renderStack();
+  if(currentView === 'shop') renderShop();
+  if(currentView === 'skills') renderSkills();
+  $('shopMana').textContent = S.mana;
+  $('footRaised').textContent = S.raised;
+  $('footSmashed').textContent = S.smashedAll;
+  $('footMana').textContent = S.manaAll;
+}
+function renderPile(){
+  var pct = Math.min(100, Math.round(S.pile / mudPerBall() * 100));
+  /* Height is a % of the fixed pileTrack box (capped by max-height:100%
+     in CSS) — the graphic scales inside its container, never beyond it. */
+  pileMound.style.height = Math.max(10, pct)+'%';
+  pileLab.textContent = S.balls.length >= RACK_MAX && S.pile >= mudPerBall()
+    ? 'Pile FULL — rack is full! Stack a ball to make room.'
+    : 'Pile: '+Math.floor(S.pile)+' / '+mudPerBall()+' mud';
+}
+var rackSig = '';
+function renderBalls(){
+  syncAllBalls();
+  hudBalls.textContent = S.balls.length;
+  rackEmpty.style.display = S.balls.length ? 'none' : 'block';
+  /* Tiles are built once per ball and updated in place — rebuilding them on
+     every tick would restart the ready wiggle and lose tap focus. */
+  var sig = S.balls.map(function(b){ return b.id; }).join(',');
+  if(sig !== rackSig){
+    rackSig = sig;
+    rackEl.innerHTML = '';
+    S.balls.forEach(function(b){
+      var tile = document.createElement('div');
+      tile.className = 'ballTile wet';
+      tile.innerHTML =
+        '<button class="ballTap" type="button"><span class="ballSvg"></span><span class="dropBadge" aria-hidden="true">💧</span></button>'
+        +'<div class="ballPct"></div>';
+      var btn = tile.querySelector('.ballTap');
+      btn.addEventListener('click', function(){ ballTap(b); });
+      b._tile = tile;
+      b._btn = btn;
+      b._svg = tile.querySelector('.ballSvg');
+      b._pct = tile.querySelector('.ballPct');
+      b._state = null;
+      b._shownPct = -1;
+      rackEl.appendChild(tile);
+    });
+  }
+  S.balls.forEach(function(b){
+    if(!b._tile) return;
+    var state = b.moisture > bandHigh() ? 'wet' : (b.moisture >= bandLow() ? 'ready' : 'dry');
+    if(b._state !== state){
+      b._state = state;
+      b._tile.className = 'ballTile ' + state;
+      b._btn.disabled = (state === 'wet');
+    }
+    var pct = Math.round(b.moisture);
+    if(b._shownPct !== pct){
+      b._shownPct = pct;
+      b._pct.textContent = pct + '%';
+      b._svg.innerHTML = ballSVG(b.moisture);
+      b._btn.setAttribute('aria-label',
+        state === 'ready' ? 'Mud ball at '+pct+' percent — tap to stack it'
+        : state === 'dry' ? 'Mud ball at '+pct+' percent, too dry — tap to add water'
+        : 'Mud ball at '+pct+' percent, still drying');
+    }
+  });
+  renderPile();
+}
+function renderStack(){
+  hudStack.textContent = S.stacked;
+  costNum.textContent = golemCost();
+  stackCountLine.textContent = 'Stacked: '+S.stacked+' of '+golemCost()+' needed';
+  stackVisual.innerHTML = '';
+  var show = Math.min(S.stacked, 30);
+  for(var i=0;i<show;i++){
+    var d = document.createElement('div'); d.className='stackBall'; stackVisual.appendChild(d);
+  }
+  if(S.stacked > 30){
+    var more = document.createElement('div');
+    more.style.fontWeight='900'; more.style.fontSize='12px'; more.textContent = '+'+(S.stacked-30);
+    stackVisual.appendChild(more);
+  }
+  var ready = S.stacked >= golemCost();
+  summonBtn.disabled = !ready || ritual.active;
+  summonBtn.textContent = ready ? '✦ SUMMON THE GOLEM ✦' : 'SUMMON — need '+(golemCost()-S.stacked)+' more stacked';
+  var onCount = SKILLS.filter(function(sk){ return !!S.enabled[sk.id]; }).length;
+  var badge = $('skillBadge');
+  badge.style.display = onCount ? 'inline-block' : 'none';
+  badge.textContent = onCount + ' on';
+  $('skillCostLine').textContent = golemCost() + ' balls';
+}
+
+/* ================= VIEWS / TABS ================= */
+var currentView = 'main';
+function showView(name){
+  currentView = name;
+  ['main','shop','skills'].forEach(function(v){
+    $('view'+v.charAt(0).toUpperCase()+v.slice(1)).classList.toggle('active', v===name);
+    $('tab'+v.charAt(0).toUpperCase()+v.slice(1)).classList.toggle('on', v===name);
+  });
+  render();
+}
+$('tabMain').addEventListener('click', function(){ showView('main'); });
+$('tabShop').addEventListener('click', function(){ showView('shop'); });
+$('tabSkills').addEventListener('click', function(){ showView('skills'); });
+
+/* ================= SHOP ================= */
+function renderShop(){
+  var root = $('shopRoot');
+  root.innerHTML = '';
+  var groupDiv = null;
+  UPGRADES.forEach(function(u){
+    if(u.group && !u.id){
+      groupDiv = document.createElement('div');
+      groupDiv.className = 'shopGroup';
+      groupDiv.innerHTML = '<h3>'+u.group+'</h3>';
+      root.appendChild(groupDiv);
+      return;
+    }
+    var lvl = S.upg[u.id]||0;
+    var cost = upgCost(u);
+    var row = document.createElement('div');
+    row.className = 'upg';
+    var nextDesc = cost===null ? 'MAXED OUT' : u.desc(lvl+1);
+    row.innerHTML =
+      '<div class="uInfo"><div class="uName">'+u.name+' <span class="uLvl">Lv '+lvl+'/'+u.max+'</span></div>'
+      +'<div class="uDesc">'+u.now()+' · Next: '+nextDesc+'</div></div>'
+      +(cost===null
+        ? '<button class="buyBtn" disabled>MAX</button>'
+        : '<button class="buyBtn" data-buy="'+u.id+'" '+(S.mana>=cost?'':'disabled')+'>'+cost+' ✦</button>');
+    groupDiv.appendChild(row);
+  });
+  root.querySelectorAll('[data-buy]').forEach(function(btn){
+    btn.addEventListener('click', function(){ buyUpgrade(btn.getAttribute('data-buy')); });
+  });
+}
+function buyUpgrade(id){
+  var u = null;
+  UPGRADES.forEach(function(x){ if(x.id===id) u = x; });
+  if(!u) return;
+  var cost = upgCost(u);
+  if(cost===null || S.mana < cost) return;
+  S.mana -= cost;
+  S.upg[id] = (S.upg[id]||0)+1;
+  render();
+}
+
+/* ================= SKILLS ================= */
+function renderSkills(){
+  var root = $('skillsRoot');
+  root.innerHTML = '';
+  SKILLS.forEach(function(sk){
+    var owned = !!S.unlocked[sk.id];
+    var on = !!S.enabled[sk.id];
+    var row = document.createElement('div');
+    row.className = 'skill' + (owned ? '' : ' locked');
+    if(!owned){
+      row.innerHTML =
+        '<div class="sInfo"><div class="sName">'+sk.name+'</div>'
+        +'<div class="sDesc">'+sk.desc+' · If ON: +'+sk.cost+' balls to cost</div></div>'
+        +'<button class="buyBtn" data-unlock="'+sk.id+'" '+(S.mana>=sk.mana?'':'disabled')+'>Unlock '+sk.mana+' ✦</button>';
+    } else {
+      row.innerHTML =
+        '<div class="sInfo"><div class="sName">'+sk.name+'</div>'
+        +'<div class="sDesc">'+sk.desc+' · '+(on ? 'ON — adds +'+sk.cost+' balls' : 'OFF — adds nothing')+'</div></div>'
+        +'<button class="toggleBtn '+(on?'on':'')+'" data-toggle="'+sk.id+'">'+(on?'ON ✓':'OFF')+'</button>';
+    }
+    root.appendChild(row);
+  });
+  root.querySelectorAll('[data-unlock]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = btn.getAttribute('data-unlock');
+      var sk = SKILLS.filter(function(x){return x.id===id;})[0];
+      if(S.mana < sk.mana || S.unlocked[id]) return;
+      S.mana -= sk.mana;
+      S.unlocked[id] = true;
+      S.enabled[id] = true; // newly unlocked starts ON so the cost change is visible
+      if(S.stacked >= golemCost()) setHint(4);
+      render();
+    });
+  });
+  root.querySelectorAll('[data-toggle]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = btn.getAttribute('data-toggle');
+      S.enabled[id] = !S.enabled[id];
+      render();
+    });
+  });
+  renderStack();
+}
+
+/* ================= RITUAL (Simon) ================= */
+var PENTA_COLORS = ['#ffcf3f','#1fb6a6','#ff6b8a','#3aa7e8','#b388ff'];
+var PENTA_LABELS = ['1','2','3','4','5'];
+var ritual = { active:false, seq:[], input:0, showing:false, btns:[] };
+
+function buildRitual(){
+  var wrap = $('ritualWrap');
+  wrap.querySelectorAll('.pentaBtn').forEach(function(b){ b.remove(); });
+  ritual.btns = [];
+  for(var i=0;i<5;i++){
+    var ang = -Math.PI/2 + i*(Math.PI*2/5);
+    var cx = 150 + Math.cos(ang)*112 - 32;
+    var cy = 150 + Math.sin(ang)*112 - 32;
+    var b = document.createElement('button');
+    b.className = 'pentaBtn';
+    b.style.left = cx+'px'; b.style.top = cy+'px';
+    b.style.background = PENTA_COLORS[i];
+    b.textContent = PENTA_LABELS[i];
+    b.setAttribute('aria-label','Ritual stone '+(i+1));
+    (function(idx, btn){
+      btn.addEventListener('click', function(){ ritualPress(idx); });
+    })(i, b);
+    wrap.appendChild(b);
+    ritual.btns.push(b);
+  }
+  var rs = $('ritualStack');
+  rs.innerHTML = '';
+  var show = Math.min(S.stacked, 24);
+  for(var j=0;j<show;j++){ var d=document.createElement('div'); d.className='stackBall'; rs.appendChild(d); }
+}
+function flashBtn(i, ms){
+  var b = ritual.btns[i];
+  if(!b) return;
+  b.classList.add('flash');
+  setTimeout(function(){ b.classList.remove('flash'); }, ms);
+}
+function startRitual(){
+  if(S.stacked < golemCost() || ritual.active) return;
+  ritual.active = true;
+  buildRitual();
+  $('ritualOverlay').classList.add('open');
+  ritual.seq = [];
+  for(var i=0;i<8;i++) ritual.seq.push(Math.floor(Math.random()*5));
+  ritual.input = 0;
+  playSequence();
+  render();
+}
+function playSequence(){
+  ritual.showing = true;
+  ritual.input = 0;
+  updateRitualProgress();
+  $('ritualReplay').style.display = 'none';
+  var pace = 650 - (S.upg.slowchant||0)*130;         // ms lit
+  var gap  = 950 - (S.upg.slowchant||0)*170;         // ms between
+  var plays = S.upg.doublevis ? 2 : 1;
+  var step = 0, play = 0;
+  $('ritualStatus').textContent = 'Watch the stones… ('+ritual.seq.length+' steps)';
+  function next(){
+    if(!ritual.active) return;
+    if(step >= ritual.seq.length){
+      play++;
+      if(play < plays){ step = 0; $('ritualStatus').textContent = 'Once more — watch…'; setTimeout(next, 700); return; }
+      ritual.showing = false;
+      $('ritualStatus').textContent = 'Your turn — repeat all 8!';
+      $('ritualReplay').style.display = 'block';
+      updateRitualProgress();
+      pulseHint();
+      return;
+    }
+    flashBtn(ritual.seq[step], pace);
+    step++;
+    setTimeout(next, gap);
+  }
+  setTimeout(next, 600);
+}
+function updateRitualProgress(){
+  var s = '';
+  for(var i=0;i<8;i++) s += (i < ritual.input) ? '●' : '○';
+  $('ritualProgress').textContent = ritual.showing ? '· · ·' : s;
+}
+function pulseHint(){
+  if(!S.upg.echo || ritual.showing || !ritual.active) return;
+  var nxt = ritual.seq[ritual.input];
+  if(nxt === undefined) return;
+  flashBtn(nxt, 220);
+}
+function ritualPress(i){
+  if(!ritual.active || ritual.showing) return;
+  flashBtn(i, 200);
+  var b = ritual.btns[i];
+  if(i === ritual.seq[ritual.input]){
+    ritual.input++;
+    b.classList.add('good'); setTimeout(function(){ b.classList.remove('good'); }, 250);
+    updateRitualProgress();
+    if(ritual.input >= ritual.seq.length){ ritualSuccess(); return; }
+    pulseHint();
+  } else {
+    b.classList.add('bad'); setTimeout(function(){ b.classList.remove('bad'); }, 400);
+    $('ritualStatus').textContent = 'Wrong stone! No harm done — watch again…';
+    setTimeout(playSequence, 800);
+  }
+}
+function ritualSuccess(){
+  ritual.active = false;
+  $('ritualStatus').textContent = 'THE GROUND SPLITS — IT RISES!';
+  $('ritualProgress').textContent = '●●●●●●●●';
+  setTimeout(function(){
+    $('ritualOverlay').classList.remove('open');
+    startPillage();
+  }, 900);
+}
+$('summonBtn').addEventListener('click', startRitual);
+$('ritualReplay').addEventListener('click', function(){ if(ritual.active) playSequence(); });
+$('ritualCancel').addEventListener('click', function(){
+  ritual.active = false;
+  $('ritualOverlay').classList.remove('open');
+  render();
+});
+
+/* ================= PILLAGE — runs in the background =================
+   Each summoned golem pillages on its own timers. The main loop never
+   blocks: the player keeps digging / drying / stacking / summoning.
+   Progress shows as chips in the strip; tapping WATCH is optional. */
+var pillages = [];       // active pillage objects
+var pillageSeq = 0;
+var watch = { id:null }; // pillage id currently open in the watch sheet
+
+function golemStats(){
+  var e = S.enabled;
+  return {
+    hp:   Math.round(BASE_HP * (e.hide ? 1.6 : 1)),
+    dmg:  e.fists ? 15 : 10,
+    swingMs: e.arms ? 670 : 1000,
+    walkMs:  e.legs ? 280 : 500,
+    townDps: 0.7 * (e.stone ? 0.7 : 1) * (e.trail ? 0.75 : 1), // tuned low: a 5-HP golem still smashes a few buildings
+    manaMult: (e.sack ? 1.5 : 1) * (e.nose ? 1.75 : 1),
+    fireBonus: e.fire ? 3 : 0,
+    revive: !!e.core
+  };
+}
+function startPillage(){
+  var cost = golemCost();
+  S.stacked -= cost;
+  S.raised++;
+  setHint(5);
+  var st = golemStats();
+  var NB = 12;
+  var buildings = [];
+  for(var i=0;i<NB;i++) buildings.push({ hp:20, dead:false, h:(44 + (i%3)*14) });
+  var P = {
+    id: ++pillageSeq, num: S.raised,
+    hp: st.hp, maxHp: st.hp, smashed:0, mana:0, t:0, idx:0,
+    revived:false, walking:false, buildings:buildings, st:st,
+    dmgTimer:null, swingTimer:null, chip:null, done:false
+  };
+  pillages.push(P);
+  buildChip(P);
+  toast('🗿 Golem #'+P.num+' marches to town — keep digging!');
+
+  P.dmgTimer = setInterval(function(){
+    if(P.done) return;
+    P.t += 0.25;
+    P.hp -= st.townDps * 0.25;
+    if(P.hp <= 0){
+      if(st.revive && !P.revived){
+        P.revived = true;
+        P.hp = Math.round(st.maxHp/2);
+        toast('🗿 Golem #'+P.num+' got back up — second core!');
+      } else {
+        endPillage(P, false);
+        return;
+      }
+    }
+    updatePillageUI(P);
+  }, 250);
+
+  function swing(){
+    if(P.done) return;
+    var b = P.buildings[P.idx];
+    if(!b){ endPillage(P, true); return; }
+    if(P.walking){
+      P.walking = false;
+      positionWatchGolem(P);
+      P.swingTimer = setTimeout(swing, st.walkMs);
+      return;
+    }
+    b.hp -= st.dmg;
+    if(b.hp <= 0 && !b.dead){
+      b.dead = true;
+      P.smashed++;
+      P.mana += Math.round((6 + Math.floor(Math.random()*5)) * st.manaMult) + st.fireBonus;
+      P.idx++;
+      P.walking = P.idx < P.buildings.length;
+      if(P.idx >= P.buildings.length){ updatePillageUI(P); endPillage(P, true); return; }
+    }
+    updatePillageUI(P);
+    if(watch.id === P.id) paintWatchBuildings(P, true);
+    P.swingTimer = setTimeout(swing, st.swingMs);
+  }
+  P.swingTimer = setTimeout(swing, 600);
+  render();
+}
+function buildChip(P){
+  var chip = document.createElement('div');
+  chip.className = 'pillChip';
+  chip.innerHTML =
+    '<div class="pcFig">'+golemSVG(30,false)+'</div>'
+    +'<div class="pcMid"><div class="pcHpWrap"><div class="pcHp"></div></div>'
+    +'<div class="pcLab"></div></div>'
+    +'<button class="watchBtn">👀 WATCH</button>';
+  chip.querySelector('.watchBtn').addEventListener('click', function(){ openWatch(P); });
+  P.chip = {
+    root: chip,
+    hp: chip.querySelector('.pcHp'),
+    lab: chip.querySelector('.pcLab')
+  };
+  pillStrip.appendChild(chip);
+  pillStrip.classList.add('has');
+  updatePillageUI(P);
+}
+function updatePillageUI(P){
+  var pct = Math.max(0, Math.round(P.hp / P.maxHp * 100));
+  if(P.chip){
+    P.chip.hp.style.width = pct+'%';
+    P.chip.hp.style.background = pct > 40 ? 'var(--green)' : 'var(--red)';
+    P.chip.lab.textContent = 'Golem #'+P.num+' pillaging · HP '+Math.max(0, Math.ceil(P.hp))+'/'+P.maxHp+' · ✦ '+P.mana+' looted';
+  }
+  if(watch.id === P.id) paintWatch(P);
+}
+function endPillage(P, clearedTown){
+  if(P.done) return;
+  P.done = true;
+  clearInterval(P.dmgTimer);
+  clearTimeout(P.swingTimer);
+  var bonus = clearedTown ? Math.round(15 * P.st.manaMult) : 0;
+  var total = P.mana + bonus;
+  S.mana += total;
+  S.manaAll += total;
+  S.smashedAll += P.smashed;
+  pillages = pillages.filter(function(x){ return x !== P; });
+  if(P.chip){ P.chip.root.remove(); P.chip = null; }
+  if(!pillages.length) pillStrip.classList.remove('has');
+  toast((clearedTown ? '🏚 TOWN FLAT! ' : '🗿 Golem #'+P.num+' crumbled — ')+'+'+total+' ✦ mana arrived!');
+  if(watch.id === P.id){
+    $('watchTitle').textContent = clearedTown ? 'THE TOWN IS FLAT!' : 'The golem crumbles…';
+    $('golemFig').innerHTML = golemSVG(84, clearedTown);
+    var r = $('watchResult');
+    r.style.display = 'block';
+    r.textContent = (clearedTown ? 'Every building smashed! Town-cleared bonus +'+bonus+' mana. ' : 'The town\'s buckets and brooms finally brought it down. ')
+      +'It pillaged for '+Math.floor(P.t)+'s, smashed '+P.smashed+' building'+(P.smashed===1?'':'s')+', and brought home '+total+' mana — already in your counter.';
+    $('watchClose').textContent = 'Collect & return to the pit';
+    paintWatch(P);
+    paintWatchBuildings(P, false);
+  }
+  setHint(6);
+  render();
+}
+
+/* ---- optional watch sheet ---- */
+function openWatch(P){
+  watch.id = P.id;
+  $('watchTitle').textContent = 'Golem #'+P.num+' pillages the town!';
+  $('watchResult').style.display = 'none';
+  $('watchClose').textContent = 'Back to the pit — it keeps pillaging without you';
+  var scene = $('townScene');
+  scene.querySelectorAll('.building').forEach(function(b){ b.remove(); });
+  $('golemFig').innerHTML = golemSVG(84, false);
+  $('golemFig').style.left = '8px';
+  $('golemFig').classList.remove('rise'); void $('golemFig').offsetWidth; $('golemFig').classList.add('rise');
+  P.buildings.forEach(function(b, i){
+    var el = document.createElement('div');
+    el.className = 'building' + (b.dead ? ' dead' : '');
+    el.style.left = (i===0 ? 22 : 20 + i*6.4) + '%';
+    el.style.height = b.h+'px';
+    el.innerHTML = '<span class="bHp">'+(b.dead ? '✦' : Math.max(0,b.hp))+'</span>';
+    scene.appendChild(el);
+  });
+  $('watchOverlay').classList.add('open');
+  paintWatch(P);
+  positionWatchGolem(P);
+}
+function paintWatch(P){
+  var pct = Math.max(0, Math.round(P.hp / P.maxHp * 100));
+  $('watchHpBar').style.width = pct+'%';
+  $('watchHpBar').style.background = pct > 40 ? 'var(--green)' : 'var(--red)';
+  $('watchHpLab').textContent = 'GOLEM HP: '+Math.max(0, Math.ceil(P.hp))+' / '+P.maxHp;
+  $('watchSmashed').textContent = 'Smashed: '+P.smashed+' / '+P.buildings.length;
+  $('watchMana').textContent = 'Mana looted: '+P.mana;
+  $('watchTime').textContent = 'Time: '+Math.floor(P.t)+'s';
+}
+function paintWatchBuildings(P, shakeCurrent){
+  var els = $('townScene').querySelectorAll('.building');
+  P.buildings.forEach(function(b, i){
+    var el = els[i];
+    if(!el) return;
+    el.classList.toggle('dead', b.dead);
+    el.querySelector('.bHp').textContent = b.dead ? '✦' : Math.max(0, b.hp);
+    if(shakeCurrent && i === P.idx - (P.walking?1:0) || (shakeCurrent && i === P.idx && !b.dead && b.hp < 20)){
+      el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
+    }
+  });
+}
+function positionWatchGolem(P){
+  if(watch.id !== P.id) return;
+  var idx = Math.min(P.idx, P.buildings.length-1);
+  $('golemFig').style.left = 'calc(' + (20 + idx*6.4) + '% - 62px)';
+}
+$('watchClose').addEventListener('click', function(){
+  watch.id = null;
+  $('watchOverlay').classList.remove('open');
+  render();
+});
+
+/* ================= STORY ================= */
+$('storyNext').addEventListener('click', function(){
+  $('storyCard1').style.display = 'none';
+  $('storyCard2').style.display = 'block';
+});
+$('storyStart').addEventListener('click', function(){
+  $('storyOverlay').classList.remove('open');
+  setHint(0);
+});
+
+setHint(0);
+render();
+})();
+</script>
+</body>
+</html>
