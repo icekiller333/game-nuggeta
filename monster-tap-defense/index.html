@@ -99,12 +99,34 @@
       #hearts svg { width: 18px; height: 16px; display: block; }
       #hearts .lost { filter: grayscale(1); opacity: .28; }
       #hudSpacer { flex: 1; }
-      #comboChip {
-        position: absolute; top: 52px; right: 0;
-        background: var(--accent); color: #141414;
-        visibility: hidden; transform: rotate(-2deg);
+      /* ---------- Debut card (centered, swipe to dismiss, never pauses) ---------- */
+      #debutCard {
+        position: absolute; left: 50%; top: 50%;
+        transform: translate(-50%,-50%);
+        z-index: 48; width: min(320px, 84vw);
+        touch-action: none; cursor: grab;
       }
-      #comboChip.on { visibility: visible; }
+      #debutCard[hidden] { display: none; }
+      #debutCard .dInner {
+        background: var(--accent); color: #141414;
+        border: 4px solid var(--ink); box-shadow: 7px 7px 0 var(--ink);
+        padding: 14px 18px 13px; text-align: center;
+        transform: rotate(-1.5deg);
+      }
+      #debutCard .dKicker { font-weight: 900; font-size: 11px; letter-spacing: 2.5px; opacity: .65; }
+      #debutCard .dArt { margin: 4px auto 0; width: 84px; height: 84px; }
+      #debutCard h2 { margin: 4px 0 0; font-size: clamp(24px, 6.4vw, 34px); font-weight: 900; letter-spacing: .5px; }
+      #debutCard p { margin: 5px 0 0; font-size: clamp(14.5px, 4vw, 17px); font-weight: 700; line-height: 1.35; }
+      #debutCard .dHint { margin-top: 11px; font-size: 11.5px; font-weight: 900; letter-spacing: 2px; opacity: .6; }
+      /* ---------- Bestiary rows (pause menu sheet) ---------- */
+      .bestRow { display: flex; gap: 12px; align-items: center; border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 10px 12px; margin-top: 12px; background: #fff; color: #141414; text-align: left; }
+      .bestArt { width: 56px; height: 56px; flex: none; }
+      .bestInfo { flex: 1; min-width: 0; }
+      .bestInfo b { font-size: 16px; letter-spacing: .3px; }
+      .bestInfo small { display: block; font-size: 13px; font-weight: 700; opacity: .75; line-height: 1.3; margin-top: 2px; }
+      .bestCounts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+      .bestCounts .chip { font-size: 13px; padding: 2px 7px; box-shadow: 2px 2px 0 var(--ink); }
+      #bestiaryBackBtn { display: block; width: 100%; margin-top: 18px; }
       /* ---------- Base ---------- */
       #base {
         position: absolute; left: 50%; top: 50%;
@@ -150,11 +172,12 @@
       .monster .pips i.spent { background: #fff; opacity: .45; }
       .monster .pips i.g2 { background: #c77dff; }
       .monster .pips i.g3 { background: #ff5964; }
-      .monster.squash .art { animation: squash .13s linear; }
+      .monster.squash .art { animation: squash .19s ease-out; }
       @keyframes squash {
-        0% { transform: scale(1,1); }
-        40% { transform: scale(1.22,.72); }
-        100% { transform: scale(1,1); }
+        0% { transform: scale(1,1) rotate(0deg); }
+        28% { transform: scale(1.3,.66) rotate(-4deg); }
+        62% { transform: scale(.92,1.12) rotate(2deg); }
+        100% { transform: scale(1,1) rotate(0deg); }
       }
       .monster.wobble .art { animation: wob .5s ease-in-out infinite alternate; }
       @keyframes wob { from { transform: rotate(-3.5deg); } to { transform: rotate(3.5deg); } }
@@ -185,6 +208,40 @@
         background: #fff; border: 2px solid var(--ink); padding: 0 4px; pointer-events: none; white-space: nowrap;
       }
       .monster.boosted .art { filter: drop-shadow(0 0 7px rgba(23,227,194,.95)); }
+      /* ---------- New monster states (segmented / phaser / aura / grave / blast) ---------- */
+      .monster .art { transition: opacity .15s ease, filter .15s ease; }
+      .monster.outphase .art { opacity: .3; filter: saturate(.2); }
+      .monster.stunned .art { filter: drop-shadow(0 0 9px rgba(255,210,31,.95)); }
+      .monster .stunStars { opacity: 0; transition: opacity .15s; }
+      .monster.stunned .stunStars { opacity: 1; }
+      .monster .segX { opacity: 0; transition: opacity .12s; }
+      .monster.marked .segX { opacity: 1; }
+      .monster.marked .art { filter: saturate(.45) brightness(.92); }
+      .monster .xMark { opacity: 0; }
+      .monster.mk1 .x1 { opacity: 1; }
+      .monster.mk2 .x2 { opacity: 1; }
+      .monster.mk3 .x3 { opacity: 1; }
+      .monster.mk1 .sb1 { fill: #93a187; }
+      .monster.mk2 .sb2 { fill: #93a187; }
+      .monster.mk3 .sb3 { fill: #93a187; }
+      .monster.auraGlow .art { filter: drop-shadow(0 0 9px rgba(255,210,31,.95)) drop-shadow(0 0 3px rgba(255,210,31,.85)); }
+      .auraRing {
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+        border: 3px dashed rgba(255,190,20,.8); border-radius: 50%;
+        background: rgba(255,210,31,.07); pointer-events: none; z-index: 0;
+      }
+      .monster .art { position: relative; z-index: 1; }
+      .logDeco { position: absolute; transform: translate(-50%,-50%); z-index: 4; pointer-events: none; animation: logFade 4s ease forwards; }
+      @keyframes logFade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+      .grave { position: absolute; transform: translate(-50%,-50%); z-index: 3; pointer-events: none; }
+      .grave.hatching { animation: graveShake .12s linear infinite; }
+      @keyframes graveShake { 0% { transform: translate(-50%,-50%) rotate(-2.5deg); } 100% { transform: translate(-50%,-50%) rotate(2.5deg); } }
+      .blastRing {
+        position: absolute; transform: translate(-50%,-50%); border: 5px solid #ff7b00; border-radius: 50%;
+        background: rgba(255,123,0,.22); pointer-events: none; animation: blastGrow .45s ease-out forwards;
+      }
+      @keyframes blastGrow { from { transform: translate(-50%,-50%) scale(.3); opacity: 1; } to { transform: translate(-50%,-50%) scale(1); opacity: 0; } }
+      .floater.heal { color: #0a7d43; }
       /* ---------- FX ---------- */
       #fx { position: absolute; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; }
       .floater {
@@ -196,12 +253,13 @@
       .floater.big { font-size: 26px; color: #c21807; }
       .floater.clank { color: #444; font-size: 15px; }
       @keyframes floatUp {
-        0% { opacity: 1; margin-top: 0; }
-        100% { opacity: 0; margin-top: -52px; }
+        0% { opacity: 1; margin-top: 0; transform: translate(-50%,-50%) scale(1.7) rotate(-6deg); }
+        18% { transform: translate(-50%,-50%) scale(1) rotate(2deg); }
+        100% { opacity: 0; margin-top: -52px; transform: translate(-50%,-50%) scale(1) rotate(0deg); }
       }
       .bit {
         position: absolute; width: 10px; height: 10px; border: 2px solid var(--ink);
-        transform: translate(-50%,-50%); pointer-events: none;
+        transform: translate(-50%,-50%); pointer-events: none; opacity: 0;
       }
       /* ---------- Banner ---------- */
       #banner {
@@ -273,6 +331,7 @@
       .upgRow .btn { margin-top: 0; flex: 1; padding: 13px 10px; font-size: 17px; }
       #shopCloseBtn { display: block; width: 100%; margin-top: 18px; }
       .btn[disabled] { opacity: .38; cursor: default; }
+      .btn[hidden] { display: none; }
       .btn[disabled]:active { transform: none; box-shadow: 4px 4px 0 var(--ink); }
       .tglWrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
       .tgl { position: relative; width: 52px; height: 28px; border: 3px solid var(--ink); background: #d8d8d8; cursor: pointer; padding: 0; flex: none; }
@@ -281,6 +340,10 @@
       .tgl.on .knob { left: 25px; }
       .tgl[disabled] { opacity: .35; cursor: default; }
       .tglState { font-size: 10.5px; font-weight: 900; letter-spacing: 1px; }
+      /* Settings rows (music toggle) — fixed box, content clips, never pushes the panel layout. */
+      .setRow { display: flex; align-items: center; justify-content: space-between; gap: 14px; border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 12px 14px; margin-top: 14px; background: #fff; color: #141414; text-align: left; overflow: hidden; }
+      .setRow b { font-size: 16px; letter-spacing: .3px; }
+      .setRow small { display: block; font-size: 13px; font-weight: 700; opacity: .72; margin-top: 3px; line-height: 1.3; }
       #hearts { flex-wrap: wrap; }
       #hearts .bonus svg path { fill: #ffd21f; }
       /* ---------- Roast / pure win ---------- */
@@ -307,8 +370,84 @@
         transition: opacity .15s;
       }
       #vignette.on { opacity: 1; }
+      /* ---------- Pause button + frozen field ---------- */
+      #pauseBtn {
+        position: absolute; right: 10px; bottom: calc(5px + env(safe-area-inset-bottom));
+        height: 38px; min-width: 54px; padding: 0 14px;
+        background: var(--chip); color: var(--hud-text);
+        border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
+        font: inherit; font-size: 17px; font-weight: 900; line-height: 1;
+        cursor: pointer; z-index: 45; display: none;
+      }
+      #pauseBtn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--ink); }
+      #game.paused .monster .art, #game.paused .monster .notes,
+      #game.paused .floater, #game.paused #dangerRing { animation-play-state: paused; }
+      /* ---------- Hidden developer star (main menu, upper-right) ---------- */
+      #devStar {
+        position: absolute; top: calc(56px + env(safe-area-inset-top)); right: 10px;
+        background: none; border: none; padding: 6px 8px; cursor: pointer;
+        font-size: 21px; line-height: 1; color: #ffd21f; opacity: .38; z-index: 5;
+      }
+      #devStar.armed { opacity: 1; text-shadow: 0 0 9px rgba(255,210,31,.95), 0 0 2px rgba(20,20,20,.6); }
+
+      /* ---------- Chunky comic impact (starburst), small shake, debut hold ---------- */
+      .impact { position: absolute; background: #141414; clip-path: polygon(50.0% 0.0%, 61.1% 23.2%, 85.4% 14.6%, 76.8% 38.9%, 100.0% 50.0%, 76.8% 61.1%, 85.4% 85.4%, 61.1% 76.8%, 50.0% 100.0%, 38.9% 76.8%, 14.6% 85.4%, 23.2% 61.1%, 0.0% 50.0%, 23.2% 38.9%, 14.6% 14.6%, 38.9% 23.2%); pointer-events: none;
+        transform: translate(-50%,-50%) rotate(var(--rot,0deg)) scale(.3); animation: impactPop .26s ease-out forwards; }
+      .impact i { position: absolute; inset: 13%; display: block; clip-path: polygon(50.0% 0.0%, 61.1% 23.2%, 85.4% 14.6%, 76.8% 38.9%, 100.0% 50.0%, 76.8% 61.1%, 85.4% 85.4%, 61.1% 76.8%, 50.0% 100.0%, 38.9% 76.8%, 14.6% 85.4%, 23.2% 61.1%, 0.0% 50.0%, 23.2% 38.9%, 14.6% 14.6%, 38.9% 23.2%); }
+      @keyframes impactPop {
+        0% { opacity: 1; transform: translate(-50%,-50%) rotate(var(--rot,0deg)) scale(.3); }
+        35% { opacity: 1; transform: translate(-50%,-50%) rotate(var(--rot,0deg)) scale(1.12); }
+        100% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--rot,0deg)) scale(1.35); }
+      }
+      #game.shakeSm { animation: shakeSm .2s linear; }
+      @keyframes shakeSm {
+        0%,100% { transform: translate(0,0); }
+        25% { transform: translate(-4px,2px); }
+        50% { transform: translate(4px,-3px); }
+        75% { transform: translate(-2px,-2px); }
+      }
+      #game.debutHold #field { filter: saturate(.7) brightness(.82); }
+      .setRow + .setRow { margin-top: 10px; }
+
+      /* ---------- Polish pass: softer corners, entrances, depth ---------- */
+      .panel { border-radius: 20px; background: linear-gradient(180deg, #ffffff 0%, #fff6dc 100%); box-shadow: 8px 8px 0 var(--ink), 0 22px 44px rgba(0,0,0,.35); animation: panelIn .3s cubic-bezier(.2,1.25,.3,1) both; }
+      @keyframes panelIn { from { opacity: 0; transform: translateY(16px) scale(.93); } to { opacity: 1; transform: none; } }
+      .panel h1 { text-shadow: 2px 2px 0 var(--accent); letter-spacing: .5px; }
+      .btn { border-radius: 14px; background: linear-gradient(180deg, #ffe766 0%, var(--accent) 100%); transition: transform .08s, box-shadow .08s; }
+      @media (hover: hover) { .btn:hover:not([disabled]) { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); } }
+      .btn:active:not([disabled]) { transform: translate(3px,3px); box-shadow: 1px 1px 0 var(--ink); }
+      .chip { border-radius: 11px; }
+      #hearts { border-radius: 12px; }
+      #hearts.low span:not(.lost) { animation: heartPulse .75s ease-in-out infinite; }
+      @keyframes heartPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.28); } }
+      .chip.pop { animation: chipPop .2s ease-out; }
+      @keyframes chipPop { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+      .hourBar { display: block; height: 7px; margin-top: 4px; border: 2px solid var(--ink); border-radius: 5px; background: rgba(0,0,0,.14); overflow: hidden; }
+      .hourBar b { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #58cc02, #a6ec6a); transition: width .3s ease; }
+      #field { border-radius: 18px; box-shadow: 7px 7px 0 rgba(0,0,0,.55), inset 0 0 70px rgba(0,0,0,.17); }
+      #pauseBtn { border-radius: 12px; }
+      #banner .card, #debutCard .dInner { border-radius: 18px; }
+      #debutCard .dInner { animation: cardPop .32s cubic-bezier(.2,1.3,.3,1) both; }
+      @keyframes cardPop { from { opacity: 0; transform: rotate(-1.5deg) scale(.8); } to { opacity: 1; transform: rotate(-1.5deg) scale(1); } }
+      .bestRow, .upg, .setRow, .roast, .pureBadge { border-radius: 14px; }
+      #coach { border-radius: 14px; }
+      .tgl { border-radius: 16px; } .tgl .knob { border-radius: 50%; }
+      #game::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+        background: radial-gradient(circle, rgba(255,232,170,.55) 1.5px, transparent 2.2px) 21px 17px / 110px 110px;
+        animation: twinkle 3.8s ease-in-out infinite alternate; }
+      @keyframes twinkle { from { opacity: .2; } to { opacity: .85; } }
+      /* Kill explosion bits */
+      .shock { position: absolute; transform: translate(-50%,-50%); border: 6px solid #fff; border-radius: 50%; pointer-events: none; animation: shockOut .42s ease-out forwards; }
+      @keyframes shockOut { from { transform: translate(-50%,-50%) scale(.2); opacity: .95; } to { transform: translate(-50%,-50%) scale(1); opacity: 0; border-width: 1px; } }
+      .splat { position: absolute; z-index: 3; transform: translate(-50%,-50%) rotate(var(--rot,0deg)); pointer-events: none; opacity: .5;
+        border-radius: 46% 54% 58% 42% / 52% 44% 56% 48%; border: 3px solid rgba(20,20,20,.5); animation: splatFade .9s ease-out forwards; }
+      @keyframes splatFade { 0% { transform: translate(-50%,-50%) rotate(var(--rot,0deg)) scale(.4); opacity: .7; } 25% { transform: translate(-50%,-50%) rotate(var(--rot,0deg)) scale(1); opacity: .55; } 100% { transform: translate(-50%,-50%) rotate(var(--rot,0deg)) scale(1.05); opacity: 0; } }
       @media (prefers-reduced-motion: reduce) {
-        #game.shake, #base.hit, .monster.squash .art, .monster .notes { animation: none; }
+        .panel, #debutCard .dInner, #game::before, #hearts.low span, .chip.pop { animation: none !important; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .impact { animation-duration: .12s; }
+        #game.shakeSm, #game.shake, #base.hit, .monster.squash .art, .monster .notes { animation: none; }
         #land, #base, #dangerRing, #field { transition: none; }
       }
     </style>
@@ -326,12 +465,13 @@
 
       <div id="hud">
         <div class="chip" id="hearts" aria-label="Base health"></div>
-        <div class="chip"><small id="hourLabel">HOUR</small><span id="waveNum">1</span><span id="ofHours"> OF 10</span></div>
+        <div class="chip"><small id="hourLabel">HOUR</small><span id="waveNum">1</span><span id="ofHours"> OF 10</span><i class="hourBar"><b id="hourFill"></b></i></div>
         <div class="chip" id="dmgChip" style="display:none"><small>TAP DMG</small><span id="dmgNum">1</span></div>
         <div id="hudSpacer"></div>
-        <div class="chip" id="comboChip">COMBO ×<span id="comboNum">1</span></div>
         <div class="chip"><small>SCORE</small><span id="scoreNum">0</span></div>
       </div>
+
+      <button id="pauseBtn" aria-label="Pause game">⏸</button>
 
       <div id="banner"><div class="card">
         <div class="bArt" id="bannerArt"></div>
@@ -339,11 +479,22 @@
         <p id="bannerText"></p>
       </div></div>
 
+      <!-- Debut card: a new creature's intro, dead centre. The game does NOT
+           pause behind it — swipe it away when you've read it (or don't). -->
+      <div id="debutCard" hidden><div class="dInner">
+        <div class="dKicker">NEW MONSTER</div>
+        <div class="dArt" id="debutArt"></div>
+        <h2 id="debutName"></h2>
+        <p id="debutTip"></p>
+        <div class="dHint">◂ SWIPE TO RESUME ▸</div>
+      </div></div>
+
       <div id="spot"></div>
       <div id="coach"><span id="coachText"></span><br /><button class="btn" id="coachBtn">GOT IT</button></div>
 
       <!-- Story / start -->
       <div class="screen" id="storyScreen">
+        <button id="devStar" aria-label="Developer options">★</button>
         <div class="panel">
           <div class="artRow" id="storyArt"></div>
           <h1 id="storyTitle">THE GLITTERING THING</h1>
@@ -353,6 +504,7 @@
             <span class="starBal" aria-label="Dawn Star balance">★ <span id="starChip">0</span></span>
             <button class="btn" id="shopOpenBtn">★ SHOP</button>
           </div>
+          <div><button class="btn small" id="settingsOpenBtn" style="margin-top:12px">SETTINGS</button></div>
         </div>
       </div>
 
@@ -391,6 +543,87 @@
             </div>
           </div>
           <button class="btn" id="shopCloseBtn">◂ BACK</button>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="screen" id="settingsScreen" hidden>
+        <div class="panel">
+          <h1>SETTINGS</h1>
+          <p id="settingsRunInfo">No run in progress.</p>
+          <div class="setRow">
+            <div><b>BACKGROUND MUSIC</b><small>A new track every 3 hours — the night gets darker as it goes.</small></div>
+            <div class="tglWrap">
+              <button class="tgl" id="musicTgl" aria-label="Toggle background music"><span class="knob"></span></button>
+              <span class="tglState" id="musicTglState">ON</span>
+            </div>
+          </div>
+          <div class="setRow">
+            <div><b>SOUND EFFECTS</b><small>Thwacks, pops and chomps.</small></div>
+            <div class="tglWrap">
+              <button class="tgl" id="sfxTgl" aria-label="Toggle sound effects"><span class="knob"></span></button>
+              <span class="tglState" id="sfxTglState">ON</span>
+            </div>
+          </div>
+          <div class="setRow">
+            <div><b>VIBRATION</b><small>Buzz on hits and bites. Android phones only; iPhones can't do web vibration.</small></div>
+            <div class="tglWrap">
+              <button class="tgl" id="vibeTgl" aria-label="Toggle vibration"><span class="knob"></span></button>
+              <span class="tglState" id="vibeTglState">ON</span>
+            </div>
+          </div>
+          <button class="btn" id="abandonBtn" style="background:#ff4757">ABANDON RUN</button>
+          <div id="abandonConfirm" hidden>
+            <p><b>Really abandon this run?</b><br />The night restarts from hour 1, and no stars are banked for the hours you've survived. Your banked stars, upgrades and shop unlocks stay exactly as they are.</p>
+            <div class="choiceRow">
+              <button class="btn small" id="abandonYes" style="background:#ff4757">YES, ABANDON IT</button>
+              <button class="btn small" id="abandonNo">KEEP PLAYING</button>
+            </div>
+          </div>
+          <br /><button class="btn" id="settingsCloseBtn">◂ BACK</button>
+        </div>
+      </div>
+
+      <!-- Pause menu -->
+      <div class="screen" id="pauseScreen" hidden>
+        <div class="panel">
+          <h1>PAUSED</h1>
+          <p>The night is holding its breath.</p>
+          <button class="btn" id="pauseResumeBtn">RESUME ▸</button>
+          <br /><button class="btn" id="pauseBestiaryBtn">BESTIARY</button>
+          <br /><button class="btn" id="pauseResetBtn" style="background:#ff4757">RESET RUN</button>
+          <div id="pauseResetConfirm" hidden>
+            <p><b>Are you sure?</b><br />Resetting abandons this night — no stars are banked for the hours you've survived. Your banked stars, upgrades and unlocks stay exactly as they are.</p>
+            <div class="choiceRow">
+              <button class="btn small" id="pauseResetYes" style="background:#ff4757">YES, RESET</button>
+              <button class="btn small" id="pauseResetNo">NO</button>
+            </div>
+          </div>
+          <br /><button class="btn" id="pauseMenuBtn">MAIN MENU</button>
+        </div>
+      </div>
+
+      <!-- Bestiary sheet (from the pause menu; game stays paused behind it) -->
+      <div class="screen" id="bestiaryScreen" hidden>
+        <div class="panel shopPanel">
+          <div class="shopHead">
+            <span class="shopTitle">BESTIARY</span>
+          </div>
+          <p class="shopNote">Every creature that has come out of the dark so far — and what it has cost you.</p>
+          <div id="bestiaryList"></div>
+          <button class="btn" id="bestiaryBackBtn">◂ BACK</button>
+        </div>
+      </div>
+
+      <!-- Developer mode / full reset -->
+      <div class="screen" id="devScreen" hidden>
+        <div class="panel">
+          <h1 id="devTitle">DEVELOPER MODE</h1>
+          <p id="devText">Developer mode enabled?</p>
+          <div class="choiceRow">
+            <button class="btn small" id="devYes">YES</button>
+            <button class="btn small" id="devNo">NO</button>
+          </div>
         </div>
       </div>
 
@@ -621,6 +854,103 @@
           '<path d="M41 71 Q50 66 59 71" fill="none" stroke="#141414" stroke-width="3.2" stroke-linecap="round"/>' +
           '<ellipse cx="30" cy="90" rx="10" ry="5" fill="#6c7889" stroke="#141414" stroke-width="3.5"/>' +
           '<ellipse cx="70" cy="90" rx="10" ry="5" fill="#6c7889" stroke="#141414" stroke-width="3.5"/></svg>',
+        segmented:
+          '<svg viewBox="0 0 120 100" width="100%" height="100%">' +
+          '<circle class="segBody sb3" cx="93" cy="55" r="23" fill="#7fb069" stroke="#141414" stroke-width="4.5"/>' +
+          '<circle class="segBody sb2" cx="59" cy="45" r="26" fill="#8bc34a" stroke="#141414" stroke-width="4.5"/>' +
+          '<circle class="segBody sb1" cx="25" cy="55" r="23" fill="#a5d66d" stroke="#141414" stroke-width="4.5"/>' +
+          '<circle cx="19" cy="49" r="4.6" fill="#141414"/><circle cx="33" cy="49" r="4.6" fill="#141414"/>' +
+          '<path d="M17 63 Q25 68 33 63" fill="none" stroke="#141414" stroke-width="3" stroke-linecap="round"/>' +
+          '<circle cx="59" cy="42" r="4" fill="#141414"/><circle cx="93" cy="52" r="4" fill="#141414"/>' +
+          '<path class="xMark x1" d="M16 46 L34 64 M34 46 L16 64" stroke="#c21807" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+          '<path class="xMark x2" d="M49 35 L69 55 M69 35 L49 55" stroke="#c21807" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+          '<path class="xMark x3" d="M84 46 L102 64 M102 46 L84 64" stroke="#c21807" stroke-width="5" stroke-linecap="round" fill="none"/></svg>',
+        segpiece:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<circle cx="50" cy="52" r="40" fill="#8bc34a" stroke="#141414" stroke-width="5"/>' +
+          '<circle cx="36" cy="44" r="5.5" fill="#141414"/><circle cx="64" cy="44" r="5.5" fill="#141414"/>' +
+          '<path d="M34 66 Q50 74 66 66" fill="none" stroke="#141414" stroke-width="3.5" stroke-linecap="round"/>' +
+          '<path class="segX" d="M28 34 L72 78 M72 34 L28 78" stroke="#c21807" stroke-width="7" stroke-linecap="round" fill="none"/></svg>',
+        phaser:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<path d="M50 8 C72 8 84 26 84 48 L84 84 L74 73 L64 84 L54 73 L44 84 L34 73 L24 84 L16 84 L16 48 C16 26 28 8 50 8Z" fill="#b8c6ff" stroke="#141414" stroke-width="5" stroke-linejoin="round"/>' +
+          '<circle cx="38" cy="42" r="6.5" fill="#141414"/><circle cx="62" cy="42" r="6.5" fill="#141414"/>' +
+          '<ellipse cx="50" cy="58" rx="6" ry="8" fill="#141414"/>' +
+          '<g class="stunStars" fill="#ffd21f" stroke="#141414" stroke-width="2">' +
+          '<path d="M14 20 L16.5 26 L22 28 L16.5 30 L14 36 L11.5 30 L6 28 L11.5 26Z"/>' +
+          '<path d="M84 14 L86 19 L91 21 L86 23 L84 28 L82 23 L77 21 L82 19Z"/>' +
+          '<path d="M78 62 L79.8 66.5 L84 68 L79.8 69.5 L78 74 L76.2 69.5 L72 68 L76.2 66.5Z"/></g></svg>',
+        ninja:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<path d="M64 16 Q86 4 93 17 Q79 21 67 25" fill="#e63946" stroke="#141414" stroke-width="3.5" stroke-linejoin="round"/>' +
+          '<circle cx="50" cy="53" r="36" fill="#2b2d42" stroke="#141414" stroke-width="5"/>' +
+          '<rect x="20" y="40" width="60" height="17" rx="8" fill="#f4e1c1" stroke="#141414" stroke-width="3.5"/>' +
+          '<circle cx="39" cy="48.5" r="3.6" fill="#141414"/><circle cx="61" cy="48.5" r="3.6" fill="#141414"/>' +
+          '<path d="M15 37 Q50 25 85 37" fill="none" stroke="#e63946" stroke-width="6" stroke-linecap="round"/>' +
+          '<path d="M32 76 Q50 83 68 76" fill="none" stroke="#8a8fa8" stroke-width="4" stroke-linecap="round"/></svg>',
+        log:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<rect x="14" y="34" width="72" height="34" rx="15" fill="#8a5a2b" stroke="#141414" stroke-width="4.5"/>' +
+          '<ellipse cx="86" cy="51" rx="9" ry="17" fill="#d9b380" stroke="#141414" stroke-width="4"/>' +
+          '<ellipse cx="86" cy="51" rx="4" ry="8" fill="none" stroke="#8a5a2b" stroke-width="2.5"/>' +
+          '<path d="M26 46 H62 M26 57 H58" stroke="#6e4520" stroke-width="3.5" stroke-linecap="round"/></svg>',
+        aura:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<ellipse cx="50" cy="15" rx="17" ry="6" fill="none" stroke="#ffd21f" stroke-width="5"/>' +
+          '<path d="M50 26 C68 26 80 40 80 58 C80 78 66 90 50 90 C34 90 20 78 20 58 C20 40 32 26 50 26Z" fill="#c77dff" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M50 31 L53 39 L61 39 L55 44 L57 52 L50 47.5 L43 52 L45 44 L39 39 L47 39Z" fill="#ffd21f" stroke="#141414" stroke-width="2.4" stroke-linejoin="round"/>' +
+          '<circle cx="39" cy="58" r="5" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="39" cy="59" r="2.4" fill="#141414"/>' +
+          '<circle cx="61" cy="58" r="5" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="61" cy="59" r="2.4" fill="#141414"/>' +
+          '<path d="M42 71 Q50 76 58 71" fill="none" stroke="#141414" stroke-width="3.2" stroke-linecap="round"/></svg>',
+        gravedigger:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<rect x="70" y="18" width="7" height="42" rx="3" transform="rotate(24 73 39)" fill="#8a5a2b" stroke="#141414" stroke-width="3"/>' +
+          '<path d="M84 52 L95 66 L80 70 L76 56 Z" fill="#a8b0ba" stroke="#141414" stroke-width="3.5" stroke-linejoin="round"/>' +
+          '<ellipse cx="44" cy="56" rx="33" ry="31" fill="#7a6c4f" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M16 42 Q44 24 72 42 L72 33 Q44 17 16 33Z" fill="#4e4634" stroke="#141414" stroke-width="3.5"/>' +
+          '<circle cx="34" cy="54" r="5" fill="#ffd21f" stroke="#141414" stroke-width="2.6"/><circle cx="34" cy="54" r="2" fill="#141414"/>' +
+          '<circle cx="54" cy="54" r="5" fill="#ffd21f" stroke="#141414" stroke-width="2.6"/><circle cx="54" cy="54" r="2" fill="#141414"/>' +
+          '<path d="M33 70 L39 65 L45 70 L51 65 L57 70" fill="none" stroke="#141414" stroke-width="3" stroke-linecap="round"/></svg>',
+        grave:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<ellipse cx="50" cy="86" rx="38" ry="10" fill="#6e4520" stroke="#141414" stroke-width="3.5"/>' +
+          '<path d="M28 88 L28 44 C28 26 38 16 50 16 C62 16 72 26 72 44 L72 88 Z" fill="#a8b0ba" stroke="#141414" stroke-width="4.5"/>' +
+          '<path d="M50 32 v22 M39 43 h22" stroke="#5d6b7a" stroke-width="5" stroke-linecap="round"/>' +
+          '<path d="M36 66 L46 74 M62 62 L56 72" stroke="#5d6b7a" stroke-width="3" stroke-linecap="round"/></svg>',
+        gravechomp:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<ellipse cx="50" cy="54" rx="38" ry="34" fill="#0e9f5a" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M20 58 Q50 92 80 58 Q72 50 66 58 Q60 50 53 58 Q47 50 40 58 Q33 50 27 58 Z" fill="#eafff3" stroke="#141414" stroke-width="4"/>' +
+          '<path d="M22 60 Q50 34 78 60 Q50 76 22 60Z" fill="#5d1d8f" stroke="#141414" stroke-width="3"/>' +
+          '<circle cx="36" cy="38" r="9" fill="#ffd21f" stroke="#141414" stroke-width="4"/><circle cx="36" cy="39" r="4" fill="#141414"/>' +
+          '<circle cx="64" cy="38" r="9" fill="#ffd21f" stroke="#141414" stroke-width="4"/><circle cx="64" cy="39" r="4" fill="#141414"/>' +
+          '<path d="M70 20 L77 28 M77 20 L70 28" stroke="#141414" stroke-width="2.6" stroke-linecap="round"/>' +
+          '<ellipse cx="30" cy="90" rx="10" ry="5" fill="#0b7a44" stroke="#141414" stroke-width="3.5"/>' +
+          '<ellipse cx="70" cy="90" rx="10" ry="5" fill="#0b7a44" stroke="#141414" stroke-width="3.5"/></svg>',
+        exploder:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<path d="M50 24 Q54 13 65 9" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round"/>' +
+          '<path d="M71 3 L73.5 9.5 L80 10.5 L75 15 L76.5 21.5 L71 17.5 L65.5 21.5 L67 15 L62 10.5 L68.5 9.5Z" fill="#ffd21f" stroke="#141414" stroke-width="2.2" stroke-linejoin="round"/>' +
+          '<circle cx="50" cy="59" r="34" fill="#3d405b" stroke="#141414" stroke-width="5"/>' +
+          '<circle cx="38" cy="53" r="6" fill="#fff" stroke="#141414" stroke-width="3.2"/><circle cx="38" cy="54" r="3" fill="#141414"/>' +
+          '<circle cx="62" cy="53" r="6" fill="#fff" stroke="#141414" stroke-width="3.2"/><circle cx="62" cy="54" r="3" fill="#141414"/>' +
+          '<path d="M41 66 Q50 60 59 66" fill="none" stroke="#141414" stroke-width="3.2" stroke-linecap="round"/>' +
+          '<path d="M25 74 Q50 85 75 74 L73 81 Q50 90 27 81Z" fill="#ff7b00" stroke="#141414" stroke-width="3"/></svg>',
+        healer:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<ellipse cx="50" cy="52" rx="35" ry="33" fill="#fdf6e3" stroke="#141414" stroke-width="5"/>' +
+          '<circle cx="38" cy="40" r="5" fill="#141414"/><circle cx="62" cy="40" r="5" fill="#141414"/>' +
+          '<path d="M43 50 Q50 55 57 50" fill="none" stroke="#141414" stroke-width="3" stroke-linecap="round"/>' +
+          '<path d="M44 60 h12 v6 h6 v12 h-6 v6 h-12 v-6 h-6 v-12 h6 Z" fill="#ff4757" stroke="#141414" stroke-width="2.6" stroke-linejoin="round"/>' +
+          '<path d="M20 24 L21.8 29.5 L27 31.3 L21.8 33.1 L20 38.5 L18.2 33.1 L13 31.3 L18.2 29.5Z" fill="#17d3c5" stroke="#141414" stroke-width="2"/>' +
+          '<path d="M81 18 L82.5 22.5 L87 24 L82.5 25.5 L81 30 L79.5 25.5 L75 24 L79.5 22.5Z" fill="#17d3c5" stroke="#141414" stroke-width="2"/></svg>',
+        heartrunner:
+          '<svg viewBox="0 0 100 100" width="100%" height="100%">' +
+          '<path d="M6 38 H24 M2 54 H20 M8 70 H22" stroke="#141414" stroke-width="4" stroke-linecap="round" opacity=".5"/>' +
+          '<ellipse cx="57" cy="49" rx="33" ry="31" fill="#ff8fab" stroke="#141414" stroke-width="5"/>' +
+          '<path d="M57 66 C42 55 38 46.5 38 40.5 C38 34 42.5 30 47.5 30 C51.5 30 55 32.5 57 36.5 C59 32.5 62.5 30 66.5 30 C71.5 30 76 34 76 40.5 C76 46.5 72 55 57 66Z" fill="#ff4757" stroke="#141414" stroke-width="3.5" stroke-linejoin="round"/>' +
+          '<circle cx="47" cy="55" r="3.2" fill="#141414"/><circle cx="67" cy="55" r="3.2" fill="#141414"/>' +
+          '<path d="M42 82 L32 93 M72 82 L81 93" stroke="#141414" stroke-width="5" stroke-linecap="round"/></svg>',
         heart:
           '<svg viewBox="0 0 24 22"><path d="M12 20 C4 14 2 9 2 6 C2 2.5 4.8 1 7 1 C9 1 11 2.4 12 4.4 C13 2.4 15 1 17 1 C19.2 1 22 2.5 22 6 C22 9 20 14 12 20Z" fill="#ff4757" stroke="#141414" stroke-width="2"/></svg>',
         land:
@@ -660,9 +990,19 @@
         banjo:     { hp: 3, speed: 0.082, size: 74, score: 40,  dmg: 1, art: "banjo",     name: "BANJO PLAYER", tip: "Tap him to hush him — 3 hushes and he leaves. While he's quiet, taps do nothing." },
         knockback: { hp: 1, speed: 0.078, size: 86, score: 60,  dmg: 1, art: "knockback", name: "KNOCKBACK",   tip: "Taps don't hurt him — they shove him back. Shove him off the screen to beat him." },
         pooler:    { hp: 1, speed: 0.100, size: 58, score: 20,  dmg: 1, art: "pooler",    name: "POOL MONSTER", tip: "One tap kills it — but it leaves a pool that SPEEDS UP anything that touches it. Kill it somewhere lonely!" },
-        coner:     { hp: 2, speed: 0.090, size: 72, score: 35,  dmg: 1, art: "coner",     name: "CONE MONSTER", tip: "When it dies, its cone gives +1 HP to monsters ahead of it, toward the house. Mind your kill order!" }
+        coner:     { hp: 2, speed: 0.090, size: 72, score: 35,  dmg: 1, art: "coner",     name: "CONE MONSTER", tip: "When it dies, its cone gives +1 HP to monsters ahead of it, toward the house. Mind your kill order!" },
+        segmented: { hp: 3, speed: 0.095, size: 84, score: 45,  dmg: 1, art: "segmented", name: "SEGMENTED",   tip: "One monster in three parts — and the parts crawl in from DIFFERENT sides! Tap EVERY part: a tapped part is marked but keeps coming. When every part still out there is tapped, they all pop at once." },
+        phaser:    { hp: 6, speed: 0.088, size: 70, score: 55,  dmg: 1, art: "phaser",    name: "PHASER",      tip: "Only hittable while IN PHASE (solid). One in-phase tap stuns it solid for 3 seconds — then wail on it! 6 HP." },
+        ninja:     { hp: 1, speed: 0.115, size: 64, score: 50,  dmg: 1, art: "ninja",     name: "NINJA",       tip: "Tap it and POOF — it swaps with a log and reappears at the edge! Later taps might poof again (max 3 logs) — or catch it for good." },
+        aura:      { hp: 3, speed: 0.068, size: 80, score: 60,  dmg: 1, art: "aura",      name: "AURA",        tip: "Monsters inside its glowing ring can't be tapped at all. Break the ring — tap the AURA itself! 3 HP." },
+        gravedigger:{ hp: 3, speed: 0.072, size: 78, score: 45, dmg: 1, art: "gravedigger", name: "GRAVEDIGGER", tip: "When it falls it leaves a grave — and graves hatch GREEN CHOMPERS. The hour isn't over till the grave is empty." },
+        gravechomp:{ hp: 1, speed: 0.105, size: 62, score: 10,  dmg: 1, art: "gravechomp", name: "GRAVE CHOMPER", tip: "" },
+        exploder:  { hp: 6, speed: 0.080, size: 76, score: 55,  dmg: 1, art: "exploder",  name: "EXPLODER",    tip: "6 HP — and when it pops, everything near it takes 3 damage. Kill it in a crowd… or far from one." },
+        healer:    { hp: 2, speed: 0.050, size: 72, score: 50,  dmg: 1, art: "healer",    name: "HEALER",      tip: "It never comes closer — it hangs back and heals the most-hurt monster every 3 seconds. Take it out! 2 HP." },
+        heartrunner:{ hp: 20, speed: 0.160, size: 74, score: 250, dmg: 1, art: "heartrunner", name: "HEART RUNNER", tip: "It just runs laps — it never attacks and it won't hold up the dawn. But pop its 20 HP and it gives a heart back!" }
       };
-      var INTRO_WAVE = { dartling: 2, brute: 3, zigzagger: 4, boss: 5, splitter: 6, shieldback: 7, banjo: 13, knockback: 15, pooler: 16, coner: 18, collector: 20 };
+      var INTRO_WAVE = { dartling: 2, brute: 3, zigzagger: 4, boss: 5, splitter: 6, shieldback: 7, segmented: 8, phaser: 9, ninja: 10, aura: 11, gravedigger: 12, banjo: 13, exploder: 14, healer: 15, knockback: 16, pooler: 17, coner: 18, heartrunner: 19, collector: 20 };
+      var AURA_BASE = 135; // aura ring radius in monster-local px (scaled by the bearer's approach scale)
       var TOTAL_HOURS = 20;
 
       /* Story beats shown BEFORE the hour they key (never mid-wave). */
@@ -675,7 +1015,7 @@
         7:  "The monsters aren't hungry. Watch them — they move like they're listening. Like they're coming to a concert.",
         8:  "The stone whispered your name at 3 a.m. You did not teach it your name.",
         9:  "There is a second hum now, far off, answering. It is getting closer every hour.",
-        10: "Half the night gone. The answering hum has a shape now, and the shape has too many legs.",
+        10: "The answering hum has a shape now, and the shape has too many legs.",
         11: "The stone's eye follows you around the room. You have started saying goodnight to it. Stop that.",
         12: "Whatever is coming is not coming FOR the stone. The stone is coming to IT. Your house is just the meeting place.",
         13: "The grass around the house is flattened in a ring, like something enormous sat down here once. A long time ago. Or tonight.",
@@ -696,7 +1036,7 @@
 
       /* ================= Dawn Stars save (localStorage) ================= */
       var SAVE_KEY = "mtd_save_v1";
-      var SAVE = { stars: 0, heartsBought: 0, dmgBought: 0, heartsOn: true, dmgOn: true };
+      var SAVE = { stars: 0, heartsBought: 0, dmgBought: 0, heartsOn: true, dmgOn: true, lifetime: 0, devMode: false, musicOn: true, sfxOn: true, vibeOn: true, bestiary: {} };
       try {
         var rawSave = localStorage.getItem(SAVE_KEY);
         if (rawSave) {
@@ -707,12 +1047,84 @@
             SAVE.dmgBought = parsedSave.dmgBought | 0;
             SAVE.heartsOn = parsedSave.heartsOn !== false;
             SAVE.dmgOn = parsedSave.dmgOn !== false;
+            SAVE.musicOn = parsedSave.musicOn !== false;
+            SAVE.sfxOn = parsedSave.sfxOn !== false;
+            SAVE.vibeOn = parsedSave.vibeOn !== false;
+            SAVE.devMode = parsedSave.devMode === true;
+            // Migration: a player already holding stars has banked at least
+            // that many lifetime — the shop must never re-lock for them.
+            SAVE.lifetime = Math.max(parsedSave.lifetime | 0, SAVE.stars);
+            if (parsedSave.bestiary && typeof parsedSave.bestiary === "object") {
+              Object.keys(parsedSave.bestiary).forEach(function (k) {
+                var be = parsedSave.bestiary[k] || {};
+                SAVE.bestiary[k] = { k: be.k | 0, h: be.h | 0, c: be.c | 0 };
+              });
+            }
           }
         }
       } catch (e) { /* storage unavailable — run with an in-memory save */ }
       function saveSave() {
         try { localStorage.setItem(SAVE_KEY, JSON.stringify(SAVE)); } catch (e) { /* in-memory only */ }
       }
+
+      /* ================= In-progress run save (separate key) =================
+         Save-as-you-go: the live run is persisted continuously so a reload
+         (including a viewer pull-to-refresh) can never wipe it. The ONLY way
+         to discard an in-progress run is Settings → Abandon run. This key is
+         fully separate from mtd_save_v1 (stars / upgrades / lifetime). */
+      var RUN_KEY = "mtd_run_v1";
+      var PENDING_RUN = null; // run save found on load, waiting to be resumed
+      try {
+        var rawRun = localStorage.getItem(RUN_KEY);
+        if (rawRun) {
+          var parsedRun = JSON.parse(rawRun);
+          if (parsedRun && (parsedRun.wave | 0) >= 1 && (parsedRun.hearts | 0) > 0 && (parsedRun.maxHearts | 0) >= 1) {
+            PENDING_RUN = parsedRun;
+          }
+        }
+      } catch (e) { /* storage unavailable — no resume available */ }
+      function saveRun() {
+        if (typeof S === "undefined" || !S) return;
+        if (S.mode !== "play" && S.mode !== "beat") return;
+        var w = S.mode === "beat" && S.pendingHour ? S.pendingHour : S.wave;
+        if (!w || w < 1 || S.hearts <= 0) return;
+        var data = {
+          wave: w, hearts: S.hearts, maxHearts: S.maxHearts,
+          score: S.score, kills: S.kills,
+          extended: !!S.extended, endless: !!S.endless,
+          bankedThrough: S.bankedThrough || 0,
+          tapDmg: S.tapDmg, boostHearts: S.boostHearts, boostDmg: S.boostDmg,
+          anyBoostOn: !!S.anyBoostOn
+        };
+        try { localStorage.setItem(RUN_KEY, JSON.stringify(data)); } catch (e) { /* in-memory only */ }
+      }
+      function clearRunSave() {
+        try { localStorage.removeItem(RUN_KEY); } catch (e) { /* nothing to clear */ }
+        PENDING_RUN = null;
+      }
+      /* ================= Bestiary records (persist in the main save) =================
+         One entry per creature type, created the first time that type is
+         encountered (spawned) and kept forever after — abandoning or
+         resetting a run never touches it; only the dev full-reset wipes it.
+         k = killed, h = hearts stolen, c = clicked. Spawned variants fold
+         into their base type: Splitter minis → Splitter, the Grave Chomper
+         → Chomper, and the Collector's spat Dartlings are plain Dartlings. */
+      var BASE_TYPE = { mini: "splitter", gravechomp: "chomper" };
+      function bestiaryEntry(type) {
+        var bt = BASE_TYPE[type] || type;
+        if (!SAVE.bestiary) SAVE.bestiary = {};
+        if (!SAVE.bestiary[bt]) SAVE.bestiary[bt] = { k: 0, h: 0, c: 0 };
+        return SAVE.bestiary[bt];
+      }
+      function bestiarySeen(type) {
+        var bt = BASE_TYPE[type] || type;
+        if (!SAVE.bestiary || !SAVE.bestiary[bt]) { bestiaryEntry(type); saveSave(); }
+      }
+      function bestiaryBump(type, field) {
+        bestiaryEntry(type)[field] += 1;
+        saveSave();
+      }
+
       function heartCost() { return 5 * (SAVE.heartsBought + 1); }
       function dmgCost() { return 10 * (SAVE.dmgBought + 1); }
 
@@ -728,11 +1140,10 @@
       var hourLabelEl = document.getElementById("hourLabel");
       var ofHoursEl = document.getElementById("ofHours");
       var scoreNumEl = document.getElementById("scoreNum");
-      var comboChipEl = document.getElementById("comboChip");
-      var comboNumEl = document.getElementById("comboNum");
       var dmgChipEl = document.getElementById("dmgChip");
       var dmgNumEl = document.getElementById("dmgNum");
       var bannerEl = document.getElementById("banner");
+      var pauseBtnEl = document.getElementById("pauseBtn");
       var vignetteEl = document.getElementById("vignette");
       var dangerRingEl = document.getElementById("dangerRing");
       baseEl.innerHTML = ART.base;
@@ -749,16 +1160,16 @@
         var db = SAVE.dmgOn ? SAVE.dmgBought : 0;
         return {
           mode: "story", // story | coach | play | beat | win | over
+          paused: false,
           hearts: 5 + hb, maxHearts: 5 + hb,
           tapDmg: 1 + db, boostHearts: hb, boostDmg: db, anyBoostOn: hb > 0 || db > 0,
           bankedThrough: 0, lastEarned: 0, extended: false,
           wave: 0, score: 0, kills: 0,
-          combo: 0, comboT: 0,
           monsters: [], spawnQueue: [], spawnT: 0, spawnEvery: 1.2,
           waveState: "idle", // idle | spawning | fighting | between | dying
           betweenT: 0, pendingHour: 0, time: 0,
-          endless: false, bossTookIt: false, winT: 0,
-          pools: [], cones: [],
+          endless: false, bossTookIt: false, winT: 0, collectorDown: false,
+          pools: [], cones: [], graves: [],
           coachStep: 0, coachMonster: null
         };
       }
@@ -771,7 +1182,7 @@
       }
       function currentZoom() { return zoomFor(Math.max(1, S ? S.wave : 1)); }
       // Hours 11+: ~20% fewer monsters on screen at once (14 → 11); totals unchanged.
-      function maxOnScreen() { return S && S.wave >= 11 ? 11 : 14; }
+      function maxOnScreen() { var w = S ? S.wave : 1; return w >= 16 ? 11 : w >= 13 ? 10 : w >= 6 ? 9 : 12; }
       function applyZoom(hour) {
         var z = zoomFor(hour);
         baseEl.style.width = (118 * z) + "px";
@@ -793,6 +1204,7 @@
       /* ================= Audio (tiny synth blips) ================= */
       var AC = null;
       function beep(freq, dur, type, vol, slide) {
+        if (SAVE.sfxOn === false) return;
         try {
           if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
           if (AC.state === "suspended") AC.resume();
@@ -806,6 +1218,222 @@
         } catch (e) { /* audio is decoration only */ }
       }
 
+      /* ---- Game feel helpers: noise hits, haptics, impact starburst, hitstop ---- */
+      var NOISE_BUF = null;
+      function sfxNoise(dur, vol, freq) {
+        if (SAVE.sfxOn === false) return;
+        try {
+          if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+          if (AC.state === "suspended") AC.resume();
+          if (!NOISE_BUF) {
+            NOISE_BUF = AC.createBuffer(1, Math.floor(AC.sampleRate * 0.3), AC.sampleRate);
+            var d = NOISE_BUF.getChannelData(0);
+            for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+          }
+          var src = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+          src.buffer = NOISE_BUF; f.type = "bandpass"; f.frequency.value = freq; f.Q.value = 0.9;
+          g.gain.setValueAtTime(vol, AC.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + Math.min(0.28, dur));
+          src.connect(f); f.connect(g); g.connect(AC.destination);
+          src.start(); src.stop(AC.currentTime + Math.min(0.28, dur));
+        } catch (e) { /* audio is decoration only */ }
+      }
+      function sfxPunch() { // a landed, non-lethal tap: low thump + short crack
+        beep(150 + Math.random() * 50, 0.09, "triangle", 0.13, -70);
+        sfxNoise(0.07, 0.11, 1400);
+      }
+      function sfxPop(heavy) { // a kill: crunch + the old rising pop
+        sfxNoise(heavy ? 0.26 : 0.12, heavy ? 0.2 : 0.12, heavy ? 320 : 1900);
+        if (heavy) beep(90, 0.2, "sawtooth", 0.09, -40);
+      }
+      function haptic(pattern) {
+        if (SAVE.vibeOn === false) return;
+        try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) { /* not supported */ }
+      }
+      var REDUCED_MOTION = false;
+      try { REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { /* default off */ }
+      function hitstop(sec) { if (S && !REDUCED_MOTION) S.hitstop = Math.max(S.hitstop || 0, sec); }
+      function impact(x, y, color, size) {
+        var o = document.createElement("div");
+        o.className = "impact";
+        o.style.left = x + "px"; o.style.top = y + "px";
+        o.style.width = size + "px"; o.style.height = size + "px";
+        o.style.setProperty("--rot", (Math.random() * 44 - 22) + "deg");
+        var i = document.createElement("i"); i.style.background = color;
+        o.appendChild(i);
+        fxEl.appendChild(o);
+        setTimeout(function () { if (o.parentNode) o.parentNode.removeChild(o); }, 300);
+      }
+      function smallShake() {
+        if (REDUCED_MOTION) return;
+        gameEl.classList.remove("shakeSm"); void gameEl.offsetWidth; gameEl.classList.add("shakeSm");
+      }
+
+      /* ---- Kill explosion: shard confetti with gravity, shockwave ring, ground splat ---- */
+      function killFX(x, y, color, power, size) {
+        // power: 1 normal, 2 heavy, 3 boss/collector
+        var palette = [color, color, "#ffd21f", "#ffffff", "#141414"];
+        var n = power >= 3 ? 40 : power === 2 ? 26 : 16;
+        if (REDUCED_MOTION) n = Math.ceil(n / 2);
+        for (var i = 0; i < n; i++) {
+          var b = document.createElement("div");
+          b.className = "bit";
+          var sz = 6 + Math.random() * (power >= 2 ? 11 : 8);
+          var shape = Math.random();
+          b.style.width = sz + "px"; b.style.height = (shape < 0.28 ? sz * 0.5 : sz) + "px";
+          b.style.background = palette[Math.floor(Math.random() * palette.length)];
+          if (shape > 0.62) b.style.borderRadius = "50%";
+          b.style.left = x + "px"; b.style.top = y + "px";
+          fxEl.appendChild(b);
+          var a = Math.random() * Math.PI * 2;
+          var d = (34 + Math.random() * 62) * (power >= 3 ? 1.9 : power === 2 ? 1.4 : 1);
+          var bx = Math.cos(a) * d, by = Math.sin(a) * d - 18;
+          var fall = 22 + Math.random() * 34, rot = Math.random() * 540 - 270;
+          var dur = 520 + Math.random() * 340;
+          b.animate([
+            { transform: "translate(-50%,-50%) scale(.4) rotate(0deg)", opacity: 1, offset: 0 },
+            { transform: "translate(calc(-50% + " + bx + "px), calc(-50% + " + by + "px)) scale(1.15) rotate(" + (rot * 0.5) + "deg)", opacity: 1, offset: 0.45 },
+            { transform: "translate(calc(-50% + " + (bx * 1.18) + "px), calc(-50% + " + (by + fall) + "px)) scale(.15) rotate(" + rot + "deg)", opacity: 0, offset: 1 }
+          ], { duration: dur, easing: "cubic-bezier(.22,.7,.35,1)", fill: "forwards" });
+          setTimeout((function (node) { return function () { if (node.parentNode) node.parentNode.removeChild(node); }; })(b), dur + 80);
+        }
+        // shockwave ring
+        var ring = document.createElement("div");
+        ring.className = "shock";
+        var rs = Math.max(70, Math.min(230, size * (power >= 2 ? 2.1 : 1.7)));
+        ring.style.left = x + "px"; ring.style.top = y + "px";
+        ring.style.width = rs + "px"; ring.style.height = rs + "px";
+        ring.style.borderColor = color;
+        fxEl.appendChild(ring);
+        setTimeout(function () { if (ring.parentNode) ring.parentNode.removeChild(ring); }, 460);
+        // ground splat (sits under the monsters, fades slowly)
+        var sp = document.createElement("div");
+        sp.className = "splat";
+        var ss = Math.max(46, Math.min(150, size * 1.1));
+        sp.style.left = x + "px"; sp.style.top = y + "px";
+        sp.style.width = ss + "px"; sp.style.height = ss * 0.8 + "px";
+        sp.style.background = color;
+        sp.style.setProperty("--rot", (Math.random() * 360) + "deg");
+        fieldEl.appendChild(sp);
+        setTimeout(function () { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 900);
+      }
+      var HIT_WORDS = ["WHACK!", "POW!", "BONK!", "WHAM!", "BAM!"];
+
+      /* ================= Background music (synthesized, Web Audio) =================
+         Seamless synthesized loops — no audio files, so the game stays
+         self-contained. A NEW TRACK EVERY 3 HOURS: block = floor((hour-1)/3),
+         so hours 1–3 share track 0, 4–6 track 1, and so on into endless.
+         Tracks grow darker and denser as the block rises (root sinks, tempo
+         climbs, rests thin out, extra pulse layers arrive). Music starts
+         ONLY after a user gesture (START / RESUME tap) sets MUSIC.unlocked —
+         never on page load. Pausing suspends it, win / game over / main menu
+         stop it, and the Settings toggle (SAVE.musicOn, persisted, default
+         on) gates it entirely. Track switches are queued and land on the
+         next bar boundary (step 0), so there is no gap or click. */
+      var MUSIC = { unlocked: false, playing: false, currentBlock: -1, pendingBlock: -1, step: 0, nextTime: 0, timer: null, gain: null, cfg: null };
+      function musicBlockForHour(hour) { var h = Math.max(1, hour | 0); return Math.floor((h - 1) / 3); }
+      function musicTrackForHour(hour) { return musicBlockForHour(hour); }
+      var MUSIC_PRESETS = [
+        { name: "FIRST DARK", bpm: 74, root: 220.00, scale: [0, 2, 4, 7, 9], bassWave: "triangle", leadWave: "sine", bassEvery: 4, bassPat: [0, -1, 3, -1], pad: [0, 4, 7], vol: 0.9, hatEvery: 0,
+          leadPat: [0, -1, -1, 2, -1, -1, 3, -1, -1, -1, 2, -1, 1, -1, -1, -1] },
+        { name: "HUMMING FIELD", bpm: 80, root: 196.00, scale: [0, 2, 3, 7, 9], bassWave: "triangle", leadWave: "sine", bassEvery: 4, bassPat: [0, -1, 2, 3], pad: [0, 3, 7], vol: 0.95, hatEvery: 0,
+          leadPat: [2, -1, 1, -1, 0, -1, -1, 3, -1, 2, -1, 1, -1, -1, 0, -1] },
+        { name: "SECOND HUM", bpm: 86, root: 174.61, scale: [0, 3, 5, 7, 10], bassWave: "triangle", leadWave: "triangle", bassEvery: 4, bassPat: [0, 0, -1, 3], pad: [0, 3, 10], vol: 1, hatEvery: 4,
+          leadPat: [0, -1, 2, -1, 3, -1, 2, 1, -1, 0, -1, 2, -1, 4, -1, 1] },
+        { name: "BROKEN DAWN", bpm: 92, root: 164.81, scale: [0, 3, 5, 6, 10], bassWave: "sawtooth", leadWave: "triangle", bassEvery: 2, bassPat: [0, -1, 0, 3, -1, 0, 4, -1], pad: [0, 6, 10], vol: 1, hatEvery: 4,
+          leadPat: [3, -1, 2, 0, -1, 3, -1, 1, 2, -1, 0, -1, 4, -1, 2, -1] },
+        { name: "FLATTENED GRASS", bpm: 98, root: 146.83, scale: [0, 2, 3, 7, 8], bassWave: "sawtooth", leadWave: "square", bassEvery: 2, bassPat: [0, 0, -1, 2, 0, -1, 3, -1], pad: [0, 3, 8], vol: 0.95, hatEvery: 2,
+          leadPat: [0, 2, -1, 1, 3, -1, 2, -1, 0, -1, 4, 2, -1, 1, -1, 3] },
+        { name: "CRACKED STAR", bpm: 104, root: 138.59, scale: [0, 3, 5, 7, 11], bassWave: "sawtooth", leadWave: "square", bassEvery: 2, bassPat: [0, -1, 3, 0, 2, -1, 0, 4], pad: [0, 5, 11], vol: 0.95, hatEvery: 2,
+          leadPat: [4, -1, 3, 2, -1, 0, 2, -1, 3, 1, -1, 0, -1, 2, 4, -1] },
+        { name: "UNDER THE FLOOR", bpm: 110, root: 130.81, scale: [0, 2, 3, 6, 8], bassWave: "sawtooth", leadWave: "square", bassEvery: 2, bassPat: [0, 0, 3, -1, 0, 2, -1, 4], pad: [0, 6, 8], vol: 1, hatEvery: 2,
+          leadPat: [0, 3, 2, -1, 4, 2, -1, 1, 0, -1, 3, 4, 2, -1, 1, -1] },
+        { name: "THE COLLECTOR'S KEY", bpm: 116, root: 123.47, scale: [0, 1, 5, 7, 8], bassWave: "sawtooth", leadWave: "square", bassEvery: 2, bassPat: [0, 3, 0, 4, 0, 3, 2, 0], pad: [0, 1, 8], vol: 1, hatEvery: 1,
+          leadPat: [4, 3, -1, 2, 0, -1, 3, 4, -1, 2, 1, 0, 3, -1, 4, 2] }
+      ];
+      function musicConfig(block) {
+        if (block < MUSIC_PRESETS.length) { var p = MUSIC_PRESETS[block]; p.block = block; return p; }
+        // Endless, past the composed tracks: keep sinking and quickening.
+        var base = MUSIC_PRESETS[MUSIC_PRESETS.length - 1];
+        var extra = block - (MUSIC_PRESETS.length - 1);
+        return { name: "ENDLESS DEEP " + (block + 1), bpm: Math.min(132, base.bpm + extra * 3), root: base.root * Math.pow(0.9439, extra), scale: base.scale, bassWave: base.bassWave, leadWave: base.leadWave, bassEvery: 2, bassPat: base.bassPat, pad: base.pad, vol: 1, hatEvery: 1, leadPat: base.leadPat, block: block };
+      }
+      function musicFreq(root, semi) { return root * Math.pow(2, semi / 12); }
+      function ensureMusic() {
+        if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+        if (AC.state === "suspended") AC.resume();
+        if (!MUSIC.gain) { MUSIC.gain = AC.createGain(); MUSIC.gain.gain.value = 0; MUSIC.gain.connect(AC.destination); }
+      }
+      function musicNote(freq, t, dur, type, vol) {
+        var o = AC.createOscillator(), g = AC.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, t);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g); g.connect(MUSIC.gain);
+        o.start(t); o.stop(t + dur + 0.05);
+      }
+      function scheduleMusicStep(step, t) {
+        var cfg = MUSIC.cfg; if (!cfg) return;
+        var stepDur = 60 / cfg.bpm / 2; // eighth notes, 16 steps = one seamless bar loop
+        var scale = cfg.scale;
+        if (step === 0) {
+          for (var pi = 0; pi < cfg.pad.length; pi++) musicNote(musicFreq(cfg.root, cfg.pad[pi]), t, stepDur * 16 * 0.92, "triangle", 0.028 * cfg.vol);
+        }
+        if (step % cfg.bassEvery === 0) {
+          var bi = cfg.bassPat[(step / cfg.bassEvery) % cfg.bassPat.length];
+          if (bi >= 0) musicNote(musicFreq(cfg.root / 2, scale[bi % scale.length]), t, stepDur * cfg.bassEvery * 0.9, cfg.bassWave, 0.13 * cfg.vol);
+        }
+        var li = cfg.leadPat[step % cfg.leadPat.length];
+        if (li >= 0) musicNote(musicFreq(cfg.root * 2, scale[li % scale.length]), t, stepDur * 0.85, cfg.leadWave, 0.045 * cfg.vol);
+        if (cfg.hatEvery > 0 && step % cfg.hatEvery === cfg.hatEvery - 1) musicNote(5200, t, 0.03, "square", 0.012 * cfg.vol);
+      }
+      function musicTick() {
+        if (!MUSIC.playing || !AC) return;
+        while (MUSIC.nextTime < AC.currentTime + 0.25) {
+          // A queued track change lands exactly on the bar line — no gap, no click.
+          if (MUSIC.step === 0 && MUSIC.pendingBlock >= 0 && MUSIC.pendingBlock !== MUSIC.currentBlock) {
+            MUSIC.currentBlock = MUSIC.pendingBlock;
+            MUSIC.cfg = musicConfig(MUSIC.currentBlock);
+          }
+          var stepDur = 60 / (MUSIC.cfg ? MUSIC.cfg.bpm : 80) / 2;
+          scheduleMusicStep(MUSIC.step, MUSIC.nextTime);
+          MUSIC.nextTime += stepDur;
+          MUSIC.step = (MUSIC.step + 1) % 16;
+        }
+      }
+      function startMusicForHour(hour) {
+        if (!SAVE.musicOn || !MUSIC.unlocked) return;
+        try {
+          ensureMusic();
+          var block = musicBlockForHour(hour);
+          if (MUSIC.playing) { MUSIC.pendingBlock = block; return; }
+          MUSIC.currentBlock = block; MUSIC.pendingBlock = block;
+          MUSIC.cfg = musicConfig(block);
+          MUSIC.step = 0;
+          MUSIC.nextTime = AC.currentTime + 0.08;
+          MUSIC.playing = true;
+          MUSIC.gain.gain.cancelScheduledValues(AC.currentTime);
+          MUSIC.gain.gain.setTargetAtTime(0.85, AC.currentTime, 0.06); // modest master level
+          if (MUSIC.timer) clearInterval(MUSIC.timer);
+          MUSIC.timer = setInterval(musicTick, 90);
+          musicTick();
+        } catch (e) { /* music is decoration only */ }
+      }
+      function haltMusicScheduler() {
+        if (MUSIC.timer) { clearInterval(MUSIC.timer); MUSIC.timer = null; }
+        MUSIC.playing = false;
+        if (AC && MUSIC.gain) { try { MUSIC.gain.gain.setTargetAtTime(0, AC.currentTime, 0.04); } catch (e) { /* already gone */ } }
+      }
+      function stopMusic() { haltMusicScheduler(); MUSIC.currentBlock = -1; MUSIC.pendingBlock = -1; MUSIC.step = 0; }
+      function suspendMusic() { haltMusicScheduler(); } // block + unlock kept — resume restarts the current track
+      function resumeMusic() { if (S && (S.mode === "play" || S.mode === "coach")) startMusicForHour(Math.max(1, S.wave || 1)); }
+      function setMusicHour(hour) {
+        if (!MUSIC.unlocked || !SAVE.musicOn) return;
+        if (MUSIC.playing) { MUSIC.pendingBlock = musicBlockForHour(hour); }
+        else if (S && S.mode === "play") { startMusicForHour(hour); }
+      }
+
       /* ================= HUD ================= */
       function drawHearts() {
         var html = "";
@@ -814,23 +1442,60 @@
           html += '<span class="' + hcls.trim() + '">' + ART.heart + "</span>";
         }
         heartsEl.innerHTML = html;
+        heartsEl.classList.toggle("low", S.hearts > 0 && S.hearts <= 1);
+      }
+      var hourFillEl = document.getElementById("hourFill");
+      function updateHourBar() {
+        if (!S.hourTotal || !hourFillEl) return;
+        var left = S.spawnQueue.length;
+        for (var i = 0; i < S.monsters.length; i++) if (S.monsters[i].type !== "heartrunner") left++;
+        var pr = Math.max(S.hourProg || 0, Math.min(1, 1 - left / (S.hourTotal + 2)));
+        S.hourProg = pr;
+        hourFillEl.style.width = (pr * 100).toFixed(1) + "%";
       }
       function drawHud() {
         waveNumEl.textContent = Math.max(1, S.wave);
         hourLabelEl.textContent = S.endless ? "ENDLESS · HOUR" : "HOUR";
         ofHoursEl.style.display = S.endless ? "none" : "inline";
         ofHoursEl.textContent = " OF " + (S.extended || S.wave > 10 ? 20 : 10);
+        if (String(S.score) !== scoreNumEl.textContent) { var sc = scoreNumEl.parentNode; sc.classList.remove("pop"); void sc.offsetWidth; sc.classList.add("pop"); }
         scoreNumEl.textContent = S.score;
         dmgNumEl.textContent = S.tapDmg;
         dmgChipEl.style.display = S.tapDmg > 1 ? "" : "none";
-        var mult = comboMult();
-        comboNumEl.textContent = mult;
-        comboChipEl.classList.toggle("on", S.combo >= 3);
       }
-      function comboMult() { return Math.min(5, 1 + Math.floor(S.combo / 5)); }
 
       /* ================= Monsters ================= */
       var uid = 0;
+      var segSetUid = 0;
+      // One Segmented in the schedule = ONE set of 3 separate pieces, each
+      // crawling in from a DIFFERENT edge of the field (3 distinct sides,
+      // picked per set). Pieces advance independently at Segmented speed.
+      function spawnSegmentedSet() {
+        var sides = [0, 1, 2, 3];
+        for (var i = sides.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var tmp = sides[i]; sides[i] = sides[j]; sides[j] = tmp; }
+        var baseAngle = [-Math.PI / 2, 0, Math.PI / 2, Math.PI]; // top, right, bottom, left
+        var setId = ++segSetUid;
+        var first = null;
+        for (var k = 0; k < 3; k++) {
+          var ang = baseAngle[sides[k]] + (Math.random() * 0.7 - 0.35);
+          var p = makeMonster("segmented", { angle: ang, segSet: setId });
+          p.speed *= 1 + (Math.max(1, S.wave) - 1) * 0.035;
+          if (!first) first = p;
+        }
+        return first;
+      }
+      function segRemaining(setId) {
+        return S.monsters.filter(function (x) { return x.type === "segmented" && x.segSet === setId && !x.dead; });
+      }
+      function killSegSet(setId) {
+        // The whole set pops at once — but it is ONE monster: one kill,
+        // one score, no matter how many pieces were still out there.
+        var pieces = segRemaining(setId);
+        pieces.forEach(function (p, idx) {
+          if (idx === 0) { killMonster(p); }
+          else { burst(p.x, p.y, "#7fb069", 8); removeMonster(p); }
+        });
+      }
       function bossPhase(m) {
         var f = m.hp / m.maxHp;
         return f > 2 / 3 ? 1 : f > 1 / 3 ? 2 : 3;
@@ -845,12 +1510,22 @@
         el.dataset.type = type;
         el.setAttribute("role", "button");
         el.setAttribute("aria-label", t.name + " — tap to smash");
-        var box = Math.max(30, t.size * z * 1.25);
+        var dispSize = type === "segmented" ? 54 : t.size; // a lone Segmented piece, not the whole clump
+        // Forgiving hitboxes: the tap area grows as the map zooms out (z falls
+        // from 1.0 at hour 1 to 0.5 by hour 14), so late-night monsters stay
+        // easy to hit even though their art keeps shrinking. Invisible padding only.
+        var zoomOut = Math.min(1, (1 - z) / 0.5);            // 0 → 1 across the night
+        var hitBoost = 1 + zoomOut * 0.45;                    // up to +45% tap area
+        var minBox = 30 + zoomOut * 24;                       // smallest tap box: 30px → 54px
+        var artBox = dispSize * z * 1.25;
+        var box = Math.max(minBox, artBox * hitBoost);
+        var padExtra = (box - artBox) / 2;                    // keep pips hugging the art
         el.style.width = box + "px"; el.style.height = box + "px";
+        var pipStep = type === "collector" ? 3 : type === "heartrunner" ? 2 : 1;
         var pips = "";
-        if (t.hp > 1) {
-          var n = type === "collector" ? 15 : t.hp;
-          pips = '<span class="pips">';
+        if (t.hp > 1 && type !== "segmented") {
+          var n = Math.ceil(t.hp / pipStep);
+          pips = '<span class="pips" style="top:' + (-13 + padExtra).toFixed(1) + 'px">';
           for (var i = 0; i < n; i++) {
             var cls = "";
             if (type === "collector") cls = i < 5 ? "g3" : i < 10 ? "g2" : "";
@@ -858,7 +1533,7 @@
           }
           pips += "</span>";
         }
-        el.innerHTML = pips + '<span class="art" style="width:' + (t.size * z) + 'px;height:' + (t.size * z) + 'px">' + ART[t.art] + "</span>";
+        el.innerHTML = pips + '<span class="art" style="width:' + (dispSize * z) + 'px;height:' + (dispSize * z) + 'px">' + ART[type === "segmented" ? "segpiece" : t.art] + "</span>";
         if (type === "banjo") {
           // Hush dots start empty and fill one per hush.
           el.querySelectorAll(".pips i").forEach(function (d) { d.classList.add("spent"); });
@@ -866,21 +1541,32 @@
         var m = {
           id: ++uid, type: type, el: el, hp: t.hp, maxHp: t.hp,
           angle: angle, prog: opts.prog != null ? opts.prog : 0, // 0 at edge → 1 at base
-          speed: t.speed * (0.9 + Math.random() * 0.2),
+          speed: t.speed * (0.9 + Math.random() * 0.2) * Math.pow(z, 0.7), // slows with the zoom-out so small monsters aren't racing
           dist0: spawnDist(angle),
           lat: opts.lat || 0, phase0: Math.random() * Math.PI * 2,
           shieldT: Math.random() * 1.2, open: false,
           phase: 1, spitT: 3.5, burstT: 0, burstCd: 2.2,
           playing: true, hushes: 0, hushT: 0,
           boosted: false, coneBonus: false,
+          pipStep: pipStep,
+          partsHit: 0, inPhase: true, phaseT: 1.6, stunT: 0,
+          segSet: opts.segSet || 0, segHit: false,
+          logs: 0, healT: 3,
           x: 0, y: 0, dead: false
         };
+        if (type === "aura") {
+          var ring = document.createElement("span");
+          ring.className = "auraRing";
+          ring.style.width = (AURA_BASE * 2) + "px"; ring.style.height = (AURA_BASE * 2) + "px";
+          el.appendChild(ring);
+        }
         el.addEventListener("pointerdown", function (ev) {
           ev.preventDefault(); ev.stopPropagation();
           tapMonster(m);
         });
         monstersEl.appendChild(el);
         S.monsters.push(m);
+        bestiarySeen(type); // spawning a type is encountering it — the bestiary learns it exists
         positionMonster(m);
         return m;
       }
@@ -890,6 +1576,7 @@
         var px = Math.cos(m.angle), py = Math.sin(m.angle);
         var lat = m.lat;
         if (m.type === "zigzagger") lat += Math.sin(m.prog * 14 + m.phase0) * 46;
+        if (m.type === "healer") lat += Math.sin((S ? S.time : 0) * 1.1 + m.phase0) * 26; // a slow drift along the edge while it holds position
         if (m.type === "collector") {
           if (m.phase === 1) lat += Math.sin(m.prog * 10 + m.phase0) * 38;
           else if (m.phase === 3) lat += Math.sin(m.prog * 16 + m.phase0) * 30;
@@ -916,9 +1603,9 @@
           b.animate(
             [{ transform: "translate(-50%,-50%) rotate(0deg)", opacity: 1 },
              { transform: "translate(calc(-50% + " + bx + "px), calc(-50% + " + by + "px)) rotate(" + (Math.random() * 260 - 130) + "deg)", opacity: 0 }],
-            { duration: 420 + Math.random() * 200, easing: "cubic-bezier(.2,.7,.3,1)" }
+            { duration: 420 + Math.random() * 200, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" }
           );
-          setTimeout((function (node) { return function () { if (node.parentNode) node.parentNode.removeChild(node); }; })(b), 680);
+          setTimeout((function (node) { return function () { if (node.parentNode) node.parentNode.removeChild(node); }; })(b), 760);
         }
       }
       function floater(x, y, text, cls) {
@@ -930,8 +1617,38 @@
         setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 720);
       }
 
+      function refreshPips(m) {
+        var pips = m.el.querySelectorAll(".pips i");
+        var lit = Math.ceil(m.hp / (m.pipStep || 1));
+        for (var i = 0; i < pips.length; i++) pips[i].classList.toggle("spent", i >= lit);
+      }
+      function auraRadius(a) { return AURA_BASE * (0.8 + 0.42 * a.prog); }
+      function isAuraImmune(m) {
+        if (!m || m.dead || m.type === "aura" || !S) return false;
+        for (var i = 0; i < S.monsters.length; i++) {
+          var a = S.monsters[i];
+          if (a.type !== "aura" || a.dead || a === m) continue;
+          if (Math.hypot(m.x - a.x, m.y - a.y) <= auraRadius(a)) return true;
+        }
+        return false;
+      }
+      // An hour resolves when the queue is spent, no graves are pending, and
+      // every live monster is a Heart Runner (the runner exception: it never
+      // holds the hour — survivors despawn as the hour turns).
+      function fieldClear() {
+        if (S.spawnQueue.length || S.graves.length) return false;
+        for (var i = 0; i < S.monsters.length; i++) if (S.monsters[i].type !== "heartrunner") return false;
+        return true;
+      }
+      function despawnRunners() {
+        S.monsters.filter(function (m) { return m.type === "heartrunner"; }).forEach(function (m) {
+          floater(m.x, m.y - 30, "IT SLIPS AWAY…", "");
+          burst(m.x, m.y, "#ff8fab", 6);
+          removeMonster(m);
+        });
+      }
       function tapMonster(m) {
-        if (m.dead) return;
+        if (m.dead || S.paused) return;
         if (S.mode === "coach") {
           if (S.coachStep === 2 && m === S.coachMonster) { hitMonster(m); }
           return;
@@ -941,6 +1658,68 @@
       }
       function hitMonster(m) {
         var t = TYPES[m.type];
+        bestiaryBump(m.type, "c"); // every tap that lands on it counts — even a useless one
+        if (isAuraImmune(m)) {
+          // Inside an AURA ring: taps do nothing at all — no damage, no hush, no shove.
+          floater(m.x, m.y - 40, "IMMUNE!", "clank");
+          beep(150, 0.05, "square", 0.04);
+          m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
+          return;
+        }
+        if (m.type === "segmented") {
+          // The pieces are separate monsters now, spread across the field.
+          // A tap MARKS this piece (big red ✗) — it does NOT remove it, and
+          // the marked piece keeps crawling. Only when every piece of the
+          // set still on the field has been tapped do they all pop at once.
+          // (A piece that reaches the house leaves the set — the rest still
+          // pop together, and a lone last piece dies on its tap.)
+          m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
+          if (m.segHit) {
+            floater(m.x, m.y - 44, "ALREADY MARKED!", "clank");
+            beep(180, 0.05, "square", 0.04);
+            return;
+          }
+          m.segHit = true;
+          m.partsHit = 1;
+          m.el.classList.add("marked");
+          beep(320, 0.07, "square", 0.07, -60);
+          var rest = segRemaining(m.segSet);
+          var marked = rest.filter(function (x) { return x.segHit; }).length;
+          if (marked >= rest.length) {
+            floater(m.x, m.y - 48, "ALL PARTS TAPPED!", "");
+            killSegSet(m.segSet);
+          } else {
+            floater(m.x, m.y - 48, "MARKED! " + marked + "/" + rest.length + " PARTS", "");
+          }
+          return;
+        }
+        if (m.type === "ninja") {
+          // First tap always poofs; later taps poof at 50% while logs last
+          // (max 3 logs). Any other tap catches it — dead outright.
+          var poof = m.logs <= 0 || (m.logs < 3 && Math.random() < 0.5);
+          if (poof) {
+            m.logs += 1;
+            spawnLog(m.x, m.y);
+            burst(m.x, m.y, "#9aa3b2", 9);
+            m.angle = Math.random() * Math.PI * 2;
+            m.dist0 = spawnDist(m.angle);
+            m.lat = 0;
+            positionMonster(m);
+            floater(m.x, m.y - 48, "POOF!", "");
+            beep(520, 0.09, "sine", 0.06, 320);
+          } else {
+            floater(m.x, m.y - 48, "GOTCHA!", "");
+            killMonster(m);
+          }
+          return;
+        }
+        if (m.type === "phaser" && (m.stunT || 0) <= 0 && !m.inPhase) {
+          // Out of phase: the tap passes straight through it.
+          floater(m.x, m.y - 40, "NOT THERE!", "clank");
+          beep(140, 0.05, "square", 0.035);
+          m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
+          return;
+        }
         if (m.type === "banjo") {
           if (!m.playing) {
             // Hushed and invulnerable — a dull puff so the tap never feels broken.
@@ -962,15 +1741,18 @@
           var dots = m.el.querySelectorAll(".pips i");
           if (dots[m.hushes - 1]) dots[m.hushes - 1].classList.remove("spent");
           floater(m.x, m.y - 48, "HUSHED! " + m.hushes + "/3", "");
+          impact(m.x, m.y, "#c77dff", 66); haptic(10);
           beep(220, 0.12, "triangle", 0.08, -80);
           return;
         }
         if (m.type === "knockback") {
           // Taps never hurt him — they shove him back toward his edge.
           m.prog -= 0.17;
+          m.shoved = true; // from now on, leaving the screen counts as being knocked out
           m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
           floater(m.x, m.y - 48, "BOING!", "");
           burst(m.x, m.y, "#39c2d7", 4);
+          impact(m.x, m.y, "#39c2d7", 70); haptic(10);
           beep(170, 0.09, "square", 0.07, 300);
           positionMonster(m);
           return;
@@ -983,12 +1765,22 @@
           return;
         }
         m.hp -= S.tapDmg;
-        beep(320 + Math.random() * 120, 0.06, "square", 0.07, -140);
+        sfxPunch(); haptic(10);
         m.el.classList.remove("squash"); void m.el.offsetWidth; m.el.classList.add("squash");
-        var pips = m.el.querySelectorAll(".pips i");
-        var lit = m.type === "collector" ? Math.ceil(m.hp / 3) : m.hp;
-        for (var i = 0; i < pips.length; i++) pips[i].classList.toggle("spent", i >= lit);
-        if (m.hp > 0) { floater(m.x, m.y - t.size * currentZoom() * 0.55, "WHACK!", ""); return; }
+        refreshPips(m);
+        if (m.type === "phaser" && (m.stunT || 0) <= 0) {
+          // First landed in-phase hit: stunned solid for 3s — keep hitting it.
+          m.stunT = 3; m.inPhase = true;
+          m.el.classList.add("stunned"); m.el.classList.remove("outphase");
+          floater(m.x, m.y - 58, "STUNNED IN PHASE!", "");
+        }
+        if (m.hp > 0) {
+          impact(m.x, m.y, "#ffd21f", Math.max(56, Math.min(110, t.size * currentZoom() * 1.05)));
+          burst(m.x, m.y, "#ffffff", 3);
+          hitstop(0.035);
+          floater(m.x, m.y - t.size * currentZoom() * 0.55, HIT_WORDS[Math.floor(Math.random() * HIT_WORDS.length)], "");
+          return;
+        }
         killMonster(m);
       }
       function killMonster(m) {
@@ -996,14 +1788,29 @@
         var x = m.x, y = m.y;
         removeMonster(m);
         S.kills += 1;
-        S.combo += 1; S.comboT = 1.25;
-        var pts = t.score * comboMult();
+        bestiaryBump(m.type, "k"); // any kill counts — taps, blasts, shove-offs
+        var pts = t.score;
         S.score += pts;
         floater(x, y - 16, "+" + pts, pts >= 100 ? "big" : "");
-        burst(x, y, m.type === "brute" ? "#9b5de5" : m.type === "collector" ? "#ffd21f" : m.type === "dartling" ? "#ff5964" : "#58cc02", m.type === "collector" ? 30 : m.type === "boss" ? 22 : 9);
         beep(m.type === "boss" || m.type === "collector" ? 130 : 520, 0.12, "triangle", 0.1, -260);
+        var heavyKill = m.type === "boss" || m.type === "collector" || m.type === "brute" || m.type === "exploder";
+        var killCol = m.type === "brute" ? "#9b5de5" : m.type === "collector" ? "#ffd21f" : m.type === "dartling" ? "#ff5964" : "#58cc02";
+        var killSize = t.size * currentZoom();
+        var power = (m.type === "boss" || m.type === "collector") ? 3 : heavyKill ? 2 : 1;
+        impact(x, y, killCol, Math.max(80, Math.min(190, killSize * (heavyKill ? 1.5 : 1.25))));
+        killFX(x, y, killCol, power, Math.max(50, killSize));
+        sfxPop(heavyKill);
+        hitstop(heavyKill ? 0.1 : 0.05);
+        if (heavyKill) { smallShake(); haptic([30, 20, 50]); } else { haptic(18); }
         if (m.type === "pooler") spawnPool(x, y);
         if (m.type === "coner") spawnCone(x, y);
+        if (m.type === "gravedigger") spawnGrave(x, y);
+        if (m.type === "exploder") detonate(x, y);
+        if (m.type === "heartrunner" && S.hearts < S.maxHearts) {
+          S.hearts += 1; drawHearts();
+          floater(x, y - 56, "+1 ♥ BACK!", "big");
+          beep(740, 0.12, "triangle", 0.08, 160);
+        }
         if (m.type === "splitter") {
           for (var k = 0; k < 2; k++) {
             var mini = makeMonster("mini", { angle: m.angle, prog: Math.max(0, m.prog - 0.03), lat: k === 0 ? -34 : 34 });
@@ -1012,7 +1819,12 @@
           }
           floater(x, y - 44, "IT SPLIT!", "");
         }
-        if (m.type === "collector" && !S.endless) beginWin();
+        if (m.type === "collector" && !S.endless) {
+          // The night is NOT won yet — anything it spat out is still live and
+          // must resolve first. The win lands in tick once the field is empty.
+          S.collectorDown = true;
+          showBanner("THE COLLECTOR FALLS!", "The song is ending…", null);
+        }
         if (S.mode === "coach" && m === S.coachMonster) { S.coachMonster = null; coachStep(3); }
         drawHud();
       }
@@ -1048,6 +1860,72 @@
           '<path d="M50 50 L99 23 Q105 50 99 77 Z" fill="rgba(255,123,0,.5)" stroke="#ff7b00" stroke-width="2"/></svg>';
         monstersEl.appendChild(el);
         S.cones.push({ x: x, y: y, dx: dx, dy: dy, len: len * 0.94, cos: Math.cos(0.5), t: 15, el: el, hit: {} });
+      }
+      /* ================= Ninja logs, graves, explosions ================= */
+      function spawnLog(x, y) {
+        // Pure decoration: never tappable, never blocks the hour.
+        var el = document.createElement("div");
+        el.className = "logDeco";
+        el.style.width = "52px"; el.style.height = "52px";
+        el.style.left = x + "px"; el.style.top = y + "px";
+        el.innerHTML = ART.log;
+        monstersEl.appendChild(el);
+        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 4100);
+      }
+      function spawnGrave(x, y) {
+        var el = document.createElement("div");
+        el.className = "grave";
+        var d = Math.round(54 * currentZoom()) + 24;
+        el.style.width = d + "px"; el.style.height = d + "px";
+        el.style.left = x + "px"; el.style.top = y + "px";
+        el.innerHTML = ART.grave;
+        monstersEl.appendChild(el);
+        var f = field();
+        S.graves.push({ x: x, y: y, t: 3, el: el, angle: Math.atan2(y - f.cy, x - f.cx) });
+      }
+      function graveTick(dt) {
+        for (var i = S.graves.length - 1; i >= 0; i--) {
+          var g = S.graves[i];
+          g.t -= dt;
+          if (g.t < 0.7) g.el.classList.add("hatching");
+          if (g.t <= 0) {
+            S.graves.splice(i, 1);
+            if (g.el.parentNode) g.el.parentNode.removeChild(g.el);
+            var f = field();
+            var d0 = spawnDist(g.angle);
+            var prog = Math.max(0, Math.min(0.95, 1 - Math.hypot(g.x - f.cx, g.y - f.cy) / d0));
+            var gc = makeMonster("gravechomp", { angle: g.angle, prog: prog, lat: 0 });
+            gc.dist0 = d0;
+            positionMonster(gc);
+            burst(g.x, g.y, "#0e9f5a", 7);
+            floater(g.x, g.y - 42, "IT HATCHES!", "");
+            beep(300, 0.1, "square", 0.06, -100);
+          }
+        }
+      }
+      function damageMonster(o, dmg) {
+        // Non-tap damage (explosions). Types whose defeat isn't HP-based
+        // (banjo hushes, knockback shoves, segmented parts, ninja poofs)
+        // are untouched — a blast can't mark a part or catch a ninja.
+        if (o.dead) return;
+        if (o.type === "banjo" || o.type === "knockback" || o.type === "segmented" || o.type === "ninja") return;
+        o.hp -= dmg;
+        refreshPips(o);
+        burst(o.x, o.y, "#ff7b00", 5);
+        if (o.hp <= 0) killMonster(o); // death effects trigger — exploders chain
+      }
+      function detonate(x, y) {
+        var R = 105 * currentZoom() + 35;
+        var ring = document.createElement("div");
+        ring.className = "blastRing";
+        ring.style.width = (R * 2) + "px"; ring.style.height = (R * 2) + "px";
+        ring.style.left = x + "px"; ring.style.top = y + "px";
+        fxEl.appendChild(ring);
+        setTimeout(function () { if (ring.parentNode) ring.parentNode.removeChild(ring); }, 480);
+        floater(x, y - 30, "BOOM!", "big");
+        beep(80, 0.3, "sawtooth", 0.12, -30);
+        var targets = S.monsters.filter(function (o) { return !o.dead && Math.hypot(o.x - x, o.y - y) <= R; });
+        targets.forEach(function (o) { damageMonster(o, 3); });
       }
       function hazardTick(dt) {
         var i, j, k;
@@ -1089,16 +1967,14 @@
           for (j = 0; j < S.monsters.length; j++) {
             var mm = S.monsters[j];
             if (mm.dead || c.hit[mm.id]) continue;
-            if (mm.type === "banjo" || mm.type === "knockback") { c.hit[mm.id] = 1; continue; } // their defeats aren't HP — a cone can't change them
+            if (mm.type === "banjo" || mm.type === "knockback" || mm.type === "segmented" || mm.type === "ninja" || mm.type === "phaser") { c.hit[mm.id] = 1; continue; } // their defeats aren't plain HP (parts / poofs / a fixed 6) — a cone can't change them
             var vx = mm.x - c.x, vy = mm.y - c.y;
             var dd = Math.hypot(vx, vy);
             if (dd > c.len) continue;
             if (dd >= 16 && (vx * c.dx + vy * c.dy) / dd < c.cos) continue;
             c.hit[mm.id] = 1; // at most +1 HP from this cone, ever
             mm.hp += 1; mm.maxHp += 1; mm.coneBonus = true;
-            var pips = mm.el.querySelectorAll(".pips i");
-            var lit = mm.type === "collector" ? Math.ceil(mm.hp / 3) : mm.hp;
-            for (k = 0; k < pips.length; k++) pips[k].classList.toggle("spent", k >= lit);
+            refreshPips(mm);
             if (!mm.el.querySelector(".hpMark")) {
               var hb = document.createElement("span");
               hb.className = "hpMark";
@@ -1116,13 +1992,15 @@
         var t = TYPES[m.type];
         var x = m.x, y = m.y;
         removeMonster(m);
+        bestiaryBump(m.type, "h"); // it reached the house and took its hearts
         if (m.type === "collector") S.bossTookIt = true;
         S.hearts -= t.dmg;
         if (m.type === "collector") S.hearts = 0; // it takes the stone — the night is lost either way
-        S.combo = 0; S.comboT = 0;
         floater(x, y, "CHOMP! −" + t.dmg + " ♥", "big");
         burst(x, y, "#ff4757", 10);
         beep(110, 0.22, "sawtooth", 0.11, -60);
+        sfxNoise(0.22, 0.2, 220);
+        haptic([70, 40, 110]);
         baseEl.classList.remove("hit"); void baseEl.offsetWidth; baseEl.classList.add("hit");
         gameEl.classList.remove("shake"); void gameEl.offsetWidth; gameEl.classList.add("shake");
         vignetteEl.classList.add("on");
@@ -1131,53 +2009,194 @@
         if (S.hearts <= 0) gameOver();
       }
 
-      /* ================= Hours (waves) ================= */
-      function rawComp(n) {
+      /* ================= Hours (waves) — deterministic, pattern-built spawns =================
+         Spawning is NOT random any more. Each hour's per-type totals come
+         from rawCounts (hours 1–7 and the boss hours keep their original
+         formulas; waveComp keeps the hours 1–5 +20%). Those totals are then
+         laid out as a fixed sequence of named ATTACK PATTERNS — contiguous
+         groups that spawn together and pose one tactical problem each. The
+         same hour therefore spawns the same monsters in the same order on
+         every run. A pattern only fires when every type in it has been
+         introduced by that hour (INTRO_WAVE: segmented 8, phaser 9,
+         ninja 10, aura 11, gravedigger 12, banjo 13, exploder 14,
+         healer 15, knockback 16, pooler 17, coner 18, heartrunner 19,
+         boss 5, collector 20) and the hour still owes
+         those monsters; leftovers fill in a fixed order at the end.
+
+         REBALANCE (spawn smoothing): the main night is capped at 30 spawns
+         per hour. Hours 8, 9, 11–14 and 16–19 use the hand-smoothed mixes
+         in REBALANCED below — veterans stay present in every hour, new
+         types debut at 1–2 backed by veterans and grow gradually, and the
+         late-hour difficulty comes from harder pattern mixes (pool+cone
+         traps, banjo cover, knockback herds, shell walls), not volume.
+         Endless hours past 20 grow from the 30 cap by +1/hour up to 50,
+         then hold at 50; endless boss hours keep the boss-branch dip. */
+      var PATTERNS = [
+        { name: "KING'S COURT",     seq: ["chomper", "chomper", "boss", "chomper"] },
+        { name: "POOL + CONE TRAP", seq: ["pooler", "coner", "splitter", "zigzagger"] },
+        { name: "BANJO COVER",      seq: ["banjo", "dartling", "dartling", "dartling"] },
+        { name: "CONE FEAST",       seq: ["coner", "brute", "zigzagger", "zigzagger"] },
+        { name: "POOL PARTY",       seq: ["pooler", "zigzagger", "zigzagger", "dartling"] },
+        { name: "KNOCKBACK HERD",   seq: ["knockback", "zigzagger", "zigzagger", "dartling"] },
+        { name: "BANJO CHOIR",      seq: ["banjo", "zigzagger", "zigzagger", "chomper"] },
+        { name: "BANJO & ZIGS",     seq: ["banjo", "zigzagger", "zigzagger", "dartling"] },
+        { name: "IN THREE PARTS",   seq: ["segmented", "dartling", "dartling"] },
+        { name: "NOW YOU SEE IT",   seq: ["phaser", "zigzagger", "zigzagger"] },
+        { name: "SMOKE AND LOGS",   seq: ["ninja", "dartling", "chomper"] },
+        { name: "UNDER ITS WING",   seq: ["aura", "chomper", "chomper", "dartling"] },
+        { name: "FRESH EARTH",      seq: ["gravedigger", "splitter", "chomper"] },
+        { name: "SHORT FUSE",       seq: ["exploder", "zigzagger", "zigzagger"] },
+        { name: "MEND THE LINE",    seq: ["healer", "chomper", "dartling"] },
+        { name: "HEART ON THE RUN", seq: ["heartrunner", "chomper", "chomper"] },
+        { name: "SPLIT BLOOM",      seq: ["splitter", "splitter", "chomper"] },
+        { name: "SPLIT STORM",      seq: ["splitter", "splitter", "zigzagger"] },
+        { name: "SHELL GAME",       seq: ["shieldback", "dartling", "dartling"] },
+        { name: "SHELL & TEETH",    seq: ["shieldback", "brute", "chomper"] },
+        { name: "SHELL WALL",       seq: ["shieldback", "shieldback", "brute"] },
+        { name: "BRUTE WALL",       seq: ["brute", "chomper", "chomper"] },
+        { name: "BRUTE PAIR",       seq: ["brute", "brute", "zigzagger"] },
+        { name: "ZIG CROSS",        seq: ["zigzagger", "zigzagger", "dartling"] },
+        { name: "ZIG STORM",        seq: ["zigzagger", "zigzagger", "zigzagger"] },
+        { name: "DART DASH",        seq: ["dartling", "dartling", "chomper"] },
+        { name: "OPENING TEETH",    seq: ["chomper", "chomper", "chomper"] }
+      ];
+      function introOf(type) { return type === "chomper" ? 1 : (INTRO_WAVE[type] || 1); }
+      // Hand-smoothed mixes for the trimmed hours — every one totals exactly
+      // 30, keeps chompers (and the other veterans) on the field, and grows
+      // each newer type gradually from its debut. Every gap hour now debuts
+      // exactly ONE new type at 1 copy, swapped for a veteran (totals
+      // unchanged): segmented H8, phaser H9, aura H11, gravedigger H12,
+      // exploder H14, heartrunner H19 (ninja H10 and healer H15 debut in
+      // the boss-hour branch of rawCounts). Knockback debuts H16; the Pool
+      // Monster's debut moved to H17, so H16 carries no pooler at all and
+      // POOL PARTY first fires at H17.
+      var REBALANCED = {
+        8:  { chomper: 9, dartling: 5, brute: 3, zigzagger: 3, splitter: 2, shieldback: 1, segmented: 1 },
+        9:  { chomper: 8, dartling: 5, brute: 3, zigzagger: 3, splitter: 2, segmented: 1, phaser: 1 },
+        11: { chomper: 8, dartling: 4, brute: 3, zigzagger: 3, segmented: 1, phaser: 1, ninja: 1, aura: 1 },
+        12: { chomper: 7, dartling: 4, brute: 4, zigzagger: 3, splitter: 2, ninja: 1, aura: 1, gravedigger: 1 },
+        13: { chomper: 7, dartling: 4, brute: 3, zigzagger: 3, shieldback: 2, aura: 1, gravedigger: 1, banjo: 1 },
+        14: { chomper: 7, dartling: 4, brute: 3, zigzagger: 3, splitter: 3, gravedigger: 1, banjo: 1, exploder: 1 },
+        16: { chomper: 7, dartling: 4, brute: 3, zigzagger: 3, banjo: 1, exploder: 1, healer: 1, knockback: 1 },
+        17: { chomper: 6, dartling: 4, brute: 3, splitter: 3, shieldback: 2, healer: 1, knockback: 1, pooler: 1 },
+        18: { chomper: 6, dartling: 4, brute: 3, zigzagger: 3, shieldback: 2, knockback: 1, pooler: 1, coner: 1 },
+        19: { chomper: 6, dartling: 3, brute: 3, zigzagger: 3, shieldback: 2, banjo: 1, pooler: 1, coner: 1, heartrunner: 1 }
+      };
+      // Endless growth: the H19 mix, topped up in one fixed rotation until
+      // the hour's target total is reached (see rawCounts).
+      var ENDLESS_GROW = ["brute", "zigzagger", "splitter", "shieldback", "dartling", "chomper", "banjo", "pooler", "knockback", "coner", "gravedigger", "phaser", "exploder", "segmented"];
+      function copyCounts(src) { var c = {}; Object.keys(src).forEach(function (t) { c[t] = src[t]; }); return c; }
+      /* ---- Reapply-what-you-learned guarantee ----
+         Every creature debuting at hour 8+ must be on the field again the
+         very NEXT hour, and once more the hour after (skipping a boss hour,
+         which is pushed to the next one). The swap takes one body from the
+         most plentiful veteran so the hour's total never grows. */
+      function isBossHour(n) { return n % 5 === 0; }
+      function reinforceTypes(n) {
+        var out = [];
+        Object.keys(INTRO_WAVE).forEach(function (t) {
+          var d = INTRO_WAVE[t];
+          if (d < 8 || t === "boss" || t === "collector" || d >= TOTAL_HOURS) return;
+          var second = d + 2; if (isBossHour(second)) second = d + 3;
+          if (n === d + 1 || n === second) out.push(t);
+        });
+        return out;
+      }
+      function rawCounts(n) {
+        var counts = rawCountsBase(n);
+        if (n >= TOTAL_HOURS) return counts;
+        reinforceTypes(n).forEach(function (t) {
+          if ((counts[t] || 0) >= 1) return;
+          var best = null;
+          ["chomper", "dartling", "zigzagger", "splitter", "shieldback", "brute"].forEach(function (dn) {
+            if ((counts[dn] || 0) > 2 && (!best || counts[dn] > counts[best])) best = dn;
+          });
+          if (best) counts[best] -= 1;
+          counts[t] = 1;
+        });
+        return counts;
+      }
+      function rawCountsBase(n) {
         var q = [];
         function add(type, count) { for (var i = 0; i < count; i++) q.push(type); }
-        if (n === TOTAL_HOURS && !S.endless) { add("collector", 1); return q; }
-        if (n === 5 || n === 10 || n === 15 || n % 10 === 0) {
-          add("boss", 1); add("chomper", 3 + Math.floor(n / 2));
+        if (n === TOTAL_HOURS && !S.endless) { add("collector", 1); }
+        else if (n === 5 || n === 10 || n === 15 || n % 10 === 0) {
+          add("boss", 1); add("chomper", 3 + Math.floor(n / 2) - ((n === 10 || n === 15) ? 1 : 0));
           if (n >= 10) { add("dartling", 3); add("zigzagger", 2); }
-          return shuffle(q);
+          if (n === 10) add("ninja", 1);  // H10 debut — swapped for one chomper, boss-hour total unchanged
+          if (n === 15) add("healer", 1); // H15 debut — swapped for one chomper; it can mend the King, and that's intended
+        } else if (REBALANCED[n]) {
+          return copyCounts(REBALANCED[n]);
+        } else if (n > TOTAL_HOURS) {
+          // Endless: +1 total per hour past 20, from the 30 cap up to 50,
+          // then hold at 50. Boss hours never reach here (branch above).
+          var counts = copyCounts(REBALANCED[19]);
+          var total = 0;
+          Object.keys(counts).forEach(function (t) { total += counts[t]; });
+          var base19 = 0; Object.keys(counts).forEach(function (k) { base19 += counts[k]; });
+          var target = Math.min(50, base19 + 3 + (n - TOTAL_HOURS));
+          for (var gi = 0; total < target; gi++) { var gt = ENDLESS_GROW[gi % ENDLESS_GROW.length]; counts[gt] = (counts[gt] || 0) + 1; total += 1; }
+          return counts;
+        } else {
+          add("chomper", 4 + n);
+          if (n >= 2) add("dartling", 1 + Math.floor(n * 0.8));
+          if (n >= 3) add("brute", Math.floor((n - 1) / 2));
+          if (n >= 4) add("zigzagger", Math.floor(n / 2));
+          if (n >= 6) add("splitter", Math.floor((n - 4) / 2) + 1);
+          if (n >= 7) add("shieldback", Math.floor((n - 5) / 2) + 1);
+          if (n >= 9) add("brute", 1);
+          if (n >= 13) add("banjo", Math.min(3, 1 + Math.floor((n - 13) / 3)));
+          if (n >= 15) add("knockback", Math.min(2, 1 + Math.floor((n - 15) / 4)));
+          if (n >= 16) add("pooler", Math.min(3, 1 + Math.floor((n - 16) / 3)));
+          if (n >= 18) add("coner", Math.min(3, 1 + Math.floor((n - 18) / 3)));
         }
-        add("chomper", 4 + n);
-        if (n >= 2) add("dartling", 1 + Math.floor(n * 0.8));
-        if (n >= 3) add("brute", Math.floor((n - 1) / 2));
-        if (n >= 4) add("zigzagger", Math.floor(n / 2));
-        if (n >= 6) add("splitter", Math.floor((n - 4) / 2) + 1);
-        if (n >= 7) add("shieldback", Math.floor((n - 5) / 2) + 1);
-        if (n >= 9) add("brute", 1);
-        if (n >= 13) add("banjo", Math.min(3, 1 + Math.floor((n - 13) / 3)));
-        if (n >= 15) add("knockback", Math.min(2, 1 + Math.floor((n - 15) / 4)));
-        if (n >= 16) add("pooler", Math.min(3, 1 + Math.floor((n - 16) / 3)));
-        if (n >= 18) add("coner", Math.min(3, 1 + Math.floor((n - 18) / 3)));
-        // Trim the tail of the night so late hours stay playable and the field stays light.
-        var CAP = 46;
-        while (q.length > CAP) {
-          var idx = q.lastIndexOf("chomper");
-          if (idx === -1) idx = q.lastIndexOf("dartling");
-          if (idx === -1) break;
-          q.splice(idx, 1);
-        }
-        return shuffle(q);
+        var counts = {};
+        q.forEach(function (t) { counts[t] = (counts[t] || 0) + 1; });
+        return counts;
       }
+      function assembleHour(counts, n) {
+        var left = {};
+        Object.keys(counts).forEach(function (t) { left[t] = counts[t]; });
+        var out = [];
+        function canFire(p) {
+          var need = {};
+          for (var i = 0; i < p.seq.length; i++) {
+            var t = p.seq[i];
+            if (introOf(t) > n) return false;
+            need[t] = (need[t] || 0) + 1;
+            if ((left[t] || 0) < need[t]) return false;
+          }
+          return true;
+        }
+        var fired = true, guard = 0;
+        while (fired && guard++ < 300) {
+          fired = false;
+          for (var pi = 0; pi < PATTERNS.length; pi++) {
+            var p = PATTERNS[pi];
+            if (!canFire(p)) continue;
+            for (var si = 0; si < p.seq.length; si++) { left[p.seq[si]] -= 1; out.push(p.seq[si]); }
+            fired = true;
+          }
+        }
+        // Whatever no pattern claimed fills the tail in one fixed order.
+        var FILL = ["collector", "boss", "banjo", "knockback", "pooler", "coner", "heartrunner", "healer", "aura", "exploder", "gravedigger", "ninja", "phaser", "segmented", "shieldback", "brute", "splitter", "zigzagger", "dartling", "chomper"];
+        FILL.forEach(function (t) { while ((left[t] || 0) > 0) { left[t] -= 1; out.push(t); } });
+        return out;
+      }
+      function rawComp(n) { return assembleHour(rawCounts(n), n); }
       function waveComp(n) {
-        var q = rawComp(n);
+        var counts = rawCounts(n);
         if (n <= 5) {
           // Early hours run ~20% busier — extra bodies before the hour ends.
-          var extra = Math.round(q.length * 0.2);
-          for (var i = 0; i < extra; i++) q.push(n >= 2 && i % 2 === 1 ? "dartling" : "chomper");
-          q = shuffle(q);
+          var total = 0;
+          Object.keys(counts).forEach(function (t) { total += counts[t]; });
+          var extra = Math.round(total * 0.2);
+          for (var i = 0; i < extra; i++) {
+            var t = n >= 2 && i % 2 === 1 ? "dartling" : "chomper";
+            counts[t] = (counts[t] || 0) + 1;
+          }
         }
-        return q;
-      }
-      function shuffle(a) {
-        for (var i = a.length - 1; i > 0; i--) {
-          var j = Math.floor(Math.random() * (i + 1));
-          var t = a[i]; a[i] = a[j]; a[j] = t;
-        }
-        return a;
+        return assembleHour(counts, n);
       }
       function startWave(n, force) {
         // Hours only ever move forward within a run — a stray or duplicated
@@ -1190,15 +2209,20 @@
         Object.keys(INTRO_WAVE).forEach(function (type) {
           if (INTRO_WAVE[type] === n && S.spawnQueue.indexOf(type) === -1) S.spawnQueue.push(type);
         });
-        // Hours 11+: same total count, but spawns land ~20% more slowly.
-        S.spawnEvery = Math.max(0.5, 1.35 - n * 0.07) * (n >= 11 ? 1.2 : 1);
+        reinforceTypes(n).forEach(function (t, i) {
+          var at = S.spawnQueue.indexOf(t);
+          if (at > 3) { S.spawnQueue.splice(at, 1); S.spawnQueue.splice(Math.min(2 + i, S.spawnQueue.length), 0, t); }
+        });
+        // Hours 11+: same total count, but spawns land 50% more slowly (1.5× interval).
+        S.spawnEvery = n >= 8 ? Math.max(0.7, 1.05 - Math.max(0, n - 11) * 0.045) : Math.max(0.5, 1.35 - n * 0.07); // hours 8-11: a steady 1.05s, then tightening to 0.7s by hour 19
         S.spawnT = 0.7;
+        S.hourTotal = S.spawnQueue.length; S.hourProg = 0;
         S.waveState = "spawning";
         var debut = null;
         Object.keys(INTRO_WAVE).forEach(function (type) { if (INTRO_WAVE[type] === n && !SEEN[type]) debut = type; });
         if (debut) {
           SEEN[debut] = true;
-          showBanner("NEW MONSTER: " + TYPES[debut].name, TYPES[debut].tip, TYPES[debut].art);
+          showDebutCard(debut);
         } else if (n === 1) {
           showBanner("HOUR 1 OF 10", "Here they come — hold till dawn!", null);
         } else if (S.endless) {
@@ -1207,6 +2231,8 @@
           showBanner("HOUR " + n + " OF " + (n > 10 ? 20 : 10), n % 5 === 0 ? "Something BIG is coming…" : "They're getting hungrier…", null);
         }
         drawHud();
+        saveRun(); // every hour transition persists the run
+        setMusicHour(n); // a new 3-hour block queues its track for the next bar line
       }
       var bannerTimer = 0;
       function showBanner(title, text, art) {
@@ -1219,6 +2245,88 @@
         clearTimeout(bannerTimer);
         bannerTimer = setTimeout(function () { bannerEl.classList.remove("show"); }, 1900);
       }
+
+      /* ================= Debut card =================
+         A new creature's intro, dead centre of the screen. It NEVER pauses
+         the game — monsters keep coming while it is up, and hearts can be
+         lost behind it. It stays until the player swipes it away (pointer
+         drag in any direction), a newer debut replaces it, or the pause
+         menu opens. Taps that start on the card are the card's; taps
+         anywhere else still hit monsters as normal. */
+      var debutEl = document.getElementById("debutCard");
+      var debutType = null;
+      var debutHideT = 0;
+      var debutDrag = null;
+      function debutTransform(dx, dy) {
+        return "translate(calc(-50% + " + dx + "px), calc(-50% + " + dy + "px))";
+      }
+      function showDebutCard(type) {
+        debutType = type;
+        debutDrag = null;
+        clearTimeout(debutHideT);
+        document.getElementById("debutArt").innerHTML = ART[TYPES[type].art];
+        document.getElementById("debutName").textContent = TYPES[type].name;
+        document.getElementById("debutTip").textContent = TYPES[type].tip;
+        debutEl.style.transition = "none";
+        debutEl.style.opacity = "1";
+        debutEl.style.transform = debutTransform(0, 0);
+        debutEl.hidden = false;
+        // The game holds still until the card is swiped away.
+        if (S && S.mode === "play" && !S.paused) {
+          S.paused = true; S.debutPaused = true;
+          gameEl.classList.add("paused", "debutHold");
+        }
+      }
+      function endDebutPause() {
+        gameEl.classList.remove("debutHold");
+        if (S && S.debutPaused) {
+          S.debutPaused = false; S.paused = false;
+          gameEl.classList.remove("paused");
+        }
+      }
+      function dismissDebutCard() {
+        endDebutPause();
+        clearTimeout(debutHideT);
+        debutEl.hidden = true;
+        debutType = null;
+        debutDrag = null;
+      }
+      function flingDebutCard(dx, dy) {
+        endDebutPause(); // resume the instant the swipe lands
+        beep(560, 0.05, "square", 0.05);
+        var len = Math.hypot(dx, dy) || 1;
+        var dist = Math.max(window.innerWidth, window.innerHeight) * 0.8 + 220;
+        debutEl.style.transition = "transform .28s ease-in, opacity .28s ease-in";
+        debutEl.style.transform = debutTransform(dx / len * dist, dy / len * dist);
+        debutEl.style.opacity = "0";
+        debutType = null;
+        debutDrag = null;
+        clearTimeout(debutHideT);
+        debutHideT = setTimeout(function () { debutEl.hidden = true; }, 300);
+      }
+      debutEl.addEventListener("pointerdown", function (ev) {
+        ev.preventDefault();
+        debutDrag = { id: ev.pointerId, sx: ev.clientX, sy: ev.clientY, dx: 0, dy: 0 };
+        try { debutEl.setPointerCapture(ev.pointerId); } catch (e) { /* capture is a nicety */ }
+        debutEl.style.transition = "none";
+        debutEl.style.opacity = "1";
+      });
+      debutEl.addEventListener("pointermove", function (ev) {
+        if (!debutDrag || ev.pointerId !== debutDrag.id) return;
+        debutDrag.dx = ev.clientX - debutDrag.sx;
+        debutDrag.dy = ev.clientY - debutDrag.sy;
+        debutEl.style.transform = debutTransform(debutDrag.dx, debutDrag.dy);
+      });
+      function debutRelease(ev) {
+        if (!debutDrag || ev.pointerId !== debutDrag.id) return;
+        var dx = debutDrag.dx, dy = debutDrag.dy;
+        if (Math.hypot(dx, dy) > 48) { flingDebutCard(dx, dy); return; }
+        debutDrag = null;
+        debutEl.style.transition = "transform .18s ease-out";
+        debutEl.style.transform = debutTransform(0, 0);
+      }
+      debutEl.addEventListener("pointerup", debutRelease);
+      debutEl.addEventListener("pointercancel", debutRelease);
 
       /* ================= Story beats between hours ================= */
       var beatScreenEl = document.getElementById("beatScreen");
@@ -1233,6 +2341,7 @@
           document.getElementById("beatKicker").textContent = "HOUR 10 CLEARED — WHERE IS THE SUN?";
           document.getElementById("beatText").textContent = TWIST_BEAT;
           beatScreenEl.hidden = false;
+          saveRun(); // the run now points at the pending hour
           beep(196, 0.3, "sine", 0.07, -60);
           return;
         }
@@ -1244,6 +2353,7 @@
           document.getElementById("beatKicker").textContent = S.endless ? "ENDLESS · HOUR " + next : "HOUR " + next + " OF " + (next > 10 ? 20 : 10);
           document.getElementById("beatText").textContent = BEATS[next];
           beatScreenEl.hidden = false;
+          saveRun(); // the run now points at the pending hour
           beep(440, 0.09, "sine", 0.05);
         } else {
           startWave(next);
@@ -1330,15 +2440,22 @@
         S.raf = requestAnimationFrame(frame);
       }
       function tick(dt) {
+        pauseBtnEl.style.display = S.mode === "play" ? "block" : "none";
+        if (S.paused) return; // fully frozen — no monster, spawn, hazard or hush timer advances
+        if (S.hitstop > 0) { S.hitstop -= dt; return; } // a few frames of impact freeze
         if (S.mode !== "play" && S.mode !== "coach") return;
         S.time += dt;
-
-        if (S.comboT > 0) {
-          S.comboT -= dt;
-          if (S.comboT <= 0) { S.combo = 0; drawHud(); }
-        }
+        if (S.mode === "play") updateHourBar();
 
         if (S.mode === "play") {
+          // Collector down: the win may only land once every monster it left
+          // behind has resolved — spawn queue spent AND field truly empty.
+          if (S.collectorDown && S.waveState !== "dying" && fieldClear()) {
+            despawnRunners();
+            S.waveState = "dying";
+            S.winT = 1.2;
+            beep(660, 0.35, "triangle", 0.1, 220);
+          }
           if (S.waveState === "dying") {
             S.winT -= dt;
             if (S.winT <= 0) showWin();
@@ -1347,9 +2464,13 @@
             if (S.spawnT <= 0 && S.spawnQueue.length) {
               if (S.monsters.length < maxOnScreen()) {
                 var type = S.spawnQueue.shift();
-                var m = makeMonster(type);
-                m.speed *= 1 + (S.wave - 1) * 0.035;
-                S.spawnT = S.spawnEvery * (0.6 + Math.random() * 0.8);
+                if (type === "segmented") {
+                  spawnSegmentedSet(); // one queue entry = one 3-piece set, from 3 different sides
+                } else {
+                  var m = makeMonster(type);
+                  m.speed *= 1 + Math.min(S.wave - 1, 9) * 0.035; // capped at +31%; the zoom-out slowdown is applied in makeMonster
+                }
+                S.spawnT = S.spawnEvery; // fixed cadence — the hour's rhythm is part of its design
                 if (!S.spawnQueue.length) S.waveState = "fighting";
               } else {
                 S.spawnT = 0.25; // field is full — hold the rest at the tree line
@@ -1358,12 +2479,18 @@
           } else if (S.waveState === "fighting") {
             // An hour is cleared only when the queue is spent AND the field is
             // empty — splitter children keep the hour alive until they're gone.
-            if (!S.spawnQueue.length && !S.monsters.length) { S.waveState = "between"; S.betweenT = 1.4; }
+            if (fieldClear()) { despawnRunners(); S.waveState = "between"; S.betweenT = 1.4; }
           } else if (S.waveState === "between") {
             S.betweenT -= dt;
             if (S.betweenT <= 0) {
-              S.waveState = "idle";
-              showBeatOrStart(S.wave + 1);
+              // Hard rule: no hour ever advances over a live monster.
+              if (fieldClear()) {
+                despawnRunners();
+                S.waveState = "idle";
+                showBeatOrStart(S.wave + 1);
+              } else {
+                S.waveState = "fighting";
+              }
             }
           }
         }
@@ -1385,6 +2512,57 @@
               }
             }
           }
+          if (m.type === "phaser") {
+            if ((m.stunT || 0) > 0) {
+              m.stunT -= dt;
+              if (m.stunT <= 0) { // stun over — it slips back into the phase cycle
+                m.el.classList.remove("stunned");
+                m.inPhase = true; m.phaseT = 1.1;
+                m.el.classList.remove("outphase");
+              }
+            } else {
+              m.phaseT -= dt;
+              if (m.phaseT <= 0) {
+                m.inPhase = !m.inPhase;
+                m.phaseT = 1.6;
+                m.el.classList.toggle("outphase", !m.inPhase);
+              }
+            }
+          }
+          if (m.type === "healer") {
+            sp = 0; // it never advances on the house — it hangs back and mends
+            // ...but it MUST be on screen to be tappable: glide in from the spawn edge to a holding spot, then hover there.
+            var holdAt = Math.min(0.6, 96 / m.dist0); // dist0 = field edge + 46px, so this parks it ~50px inside the visible edge
+            if (m.prog < holdAt) m.prog = Math.min(holdAt, m.prog + dt * 0.22);
+            m.healT -= dt;
+            if (m.healT <= 0) {
+              var best = null, worst = 0;
+              S.monsters.forEach(function (o) {
+                if (o === m || o.dead) return;
+                if (o.type === "banjo" || o.type === "knockback" || o.type === "segmented" || o.type === "ninja") return;
+                var miss = o.maxHp - o.hp;
+                if (miss > worst) { worst = miss; best = o; }
+              });
+              if (best) {
+                best.hp += 1;
+                refreshPips(best);
+                floater(best.x, best.y - 46, "+1 HP!", "heal");
+                beep(660, 0.08, "sine", 0.05, 120);
+                m.healT = 3;
+              } else {
+                m.healT = 0.6; // everyone's whole — it waits, watching
+              }
+            }
+          }
+          if (m.type === "heartrunner") {
+            // Runs laps around the field — circles at a fixed approach band,
+            // never closes on the house.
+            m.angle += dt * 0.55;
+            if (m.prog < 0.38) m.prog = Math.min(0.38, m.prog + dt * 0.22);
+            sp = 0;
+          }
+          var glowNow = isAuraImmune(m);
+          if (glowNow !== !!m._glow) { m._glow = glowNow; m.el.classList.toggle("auraGlow", glowNow); }
           if (S.mode === "coach") sp = m === S.coachMonster ? 0.035 : 0;
           m.prog += sp * dt;
           // The practice chomper parks at snack-smelling distance until tapped — onboarding can't be lost.
@@ -1400,8 +2578,14 @@
           }
           if (m.type === "collector") collectorTick(m, dt);
           positionMonster(m);
-          if (m.type === "knockback" && m.prog <= -0.1) {
-            // Shoved completely off the edge he came from — the only way he falls.
+          var kbOff = false;
+          if (m.type === "knockback" && m.shoved) {
+            // Fully off-screen (his whole body past an edge) after being shoved = knocked out.
+            var kf = field(), kh = (m.el.offsetWidth / 2) * (0.8 + 0.42 * Math.max(0, m.prog));
+            kbOff = m.x < -kh || m.x > kf.w + kh || m.y < -kh || m.y > kf.h + kh;
+          }
+          if (m.type === "knockback" && (m.prog <= -0.1 || kbOff)) {
+            // Shoved off the edge he came from — the only way he falls.
             var fw = field();
             m.x = Math.max(26, Math.min(fw.w - 26, m.x));
             m.y = Math.max(26, Math.min(fw.h - 26, m.y));
@@ -1415,6 +2599,7 @@
           if (m.prog >= 1 || dCenter < 52 * currentZoom() + 14) monsterReachesBase(m);
         });
         hazardTick(dt);
+        graveTick(dt);
         dangerRingEl.classList.toggle("on", anyClose && S.mode === "play");
       }
 
@@ -1422,6 +2607,7 @@
       var storyStep = 0;
       document.getElementById("storyBtn").addEventListener("click", function () {
         beep(500, 0.06, "square", 0.06);
+        if (PENDING_RUN) { resumeRun(); return; } // a saved run is continued, never silently dropped
         if (storyStep === 0) {
           storyStep = 1;
           document.getElementById("storyTitle").textContent = "IT SINGS AT NIGHT";
@@ -1456,6 +2642,8 @@
 
       function startCoaching() {
         S.mode = "coach";
+        MUSIC.unlocked = true; // the DEFEND THE HOUSE tap is the gesture that starts the music
+        startMusicForHour(1);
         coachStep(1);
       }
       function coachStep(n) {
@@ -1497,24 +2685,19 @@
         var from = S.bankedThrough || 0;
         var earned = 0;
         for (var h = from + 1; h <= upToHour; h++) earned += pointsForHour(h);
-        if (earned > 0) { SAVE.stars += earned; saveSave(); }
+        if (earned > 0) { SAVE.stars += earned; SAVE.lifetime += earned; saveSave(); }
         S.bankedThrough = Math.max(from, upToHour);
         S.lastEarned = earned;
         return earned;
       }
 
       /* ================= Win / game over / restart ================= */
-      function beginWin() {
-        if (S.waveState === "dying") return;
-        S.waveState = "dying";
-        S.winT = 1.2;
-        S.monsters.slice().forEach(function (m) { burst(m.x, m.y, "#ffd21f", 6); removeMonster(m); });
-        S.spawnQueue = [];
-        showBanner("THE COLLECTOR FALLS!", "The song is ending…", null);
-        beep(660, 0.35, "triangle", 0.1, 220);
-      }
       function showWin() {
         bankRun(TOTAL_HOURS);
+        dismissDebutCard();
+        stopMusic(); // dawn is quiet
+        clearRunSave(); // finished run — nothing left to resume
+        applyShopGate(); // this run's banking may have just unlocked the shop
         S.mode = "win";
         S.waveState = "idle";
         dangerRingEl.classList.remove("on");
@@ -1558,6 +2741,10 @@
 
       function gameOver() {
         bankRun(Math.max(0, S.wave - 1));
+        dismissDebutCard();
+        stopMusic(); // the song wins — the music stops with the night
+        clearRunSave(); // finished run — nothing left to resume
+        applyShopGate(); // this run's banking may have just unlocked the shop
         S.mode = "over";
         dangerRingEl.classList.remove("on");
         if (S.bossTookIt) {
@@ -1576,6 +2763,7 @@
         beep(90, 0.5, "sawtooth", 0.1, -40);
       }
       function reset() {
+        MUSIC.unlocked = true; // reset() is only ever reached from a tap — a fresh night gets its track 0
         monstersEl.innerHTML = ""; fxEl.innerHTML = "";
         fieldEl.classList.remove("dawn");
         beatScreenEl.hidden = true;
@@ -1594,7 +2782,19 @@
       });
 
       /* ================= Dawn Star shop ================= */
+      // The shop stays completely hidden until the first star is banked.
+      // Unlock is keyed on LIFETIME stars earned, so spending back down to
+      // a 0 balance never re-hides it (owned upgrades stay reachable).
+      function shopUnlocked() { return SAVE.lifetime >= 1; }
+      function applyShopGate() {
+        var un = shopUnlocked();
+        document.querySelector(".startShopRow").style.display = un ? "" : "none";
+        document.getElementById("winShopBtn").style.display = un ? "" : "none";
+        document.getElementById("overShopBtn").style.display = un ? "" : "none";
+      }
       function updateShop() {
+        applyShopGate();
+        updateDevStar();
         document.getElementById("starBal").textContent = SAVE.stars;
         document.getElementById("starChip").textContent = SAVE.stars;
         var hb = document.getElementById("heartBuy");
@@ -1664,6 +2864,7 @@
       document.getElementById("shopOpenBtn").addEventListener("click", openShop);
       document.getElementById("shopCloseBtn").addEventListener("click", closeShop);
       function showStartScreen() {
+        stopMusic(); // the main menu is silent — music (re)starts on START / RESUME
         shopScreenEl.hidden = true;
         document.getElementById("winScreen").hidden = true;
         document.getElementById("overScreen").hidden = true;
@@ -1671,10 +2872,7 @@
         monstersEl.innerHTML = ""; fxEl.innerHTML = "";
         fieldEl.classList.remove("dawn");
         storyStep = 0;
-        document.getElementById("storyTitle").textContent = "THE GLITTERING THING";
-        document.getElementById("storyText").textContent = "This morning, down by the fence, you found something glittering in the grass: a singing stone — warm, smooth, with one tiny shut eye. You brought it home. Of course you did.";
-        document.getElementById("storyArt").innerHTML = ART.stone;
-        document.getElementById("storyBtn").textContent = "NEXT ▸";
+        presentStart();
         document.getElementById("storyScreen").hidden = false;
         S = newState();
         uid = 0;
@@ -1692,9 +2890,327 @@
         reset();
       });
 
+      /* ================= Save-as-you-go: resume + Settings → Abandon ================= */
+      function presentStart() {
+        // With a run save waiting, the start screen's main action IS the
+        // resume — there is no path here that silently discards the run.
+        if (PENDING_RUN) {
+          document.getElementById("storyTitle").textContent = "THE NIGHT ISN'T OVER";
+          document.getElementById("storyText").textContent = "You left in the middle of the night — and the song never stopped. Hour " + (PENDING_RUN.wave | 0) + " is still waiting out there: " + (PENDING_RUN.hearts | 0) + " of " + (PENDING_RUN.maxHearts | 0) + " hearts left, score " + (PENDING_RUN.score | 0) + ". Pick the night back up.";
+          document.getElementById("storyArt").innerHTML = ART.stoneOpen;
+          document.getElementById("storyBtn").textContent = "RESUME — HOUR " + (PENDING_RUN.wave | 0) + " ▸";
+        } else {
+          document.getElementById("storyTitle").textContent = "THE GLITTERING THING";
+          document.getElementById("storyText").textContent = "This morning, down by the fence, you found something glittering in the grass: a singing stone — warm, smooth, with one tiny shut eye. You brought it home. Of course you did.";
+          document.getElementById("storyArt").innerHTML = ART.stone;
+          document.getElementById("storyBtn").textContent = "NEXT ▸";
+        }
+      }
+      function resumeRun() {
+        var r = PENDING_RUN;
+        if (!r) return;
+        MUSIC.unlocked = true; // the RESUME tap is the gesture — startWave below starts this run's block
+        document.getElementById("storyScreen").hidden = true;
+        document.getElementById("settingsScreen").hidden = true;
+        shopScreenEl.hidden = true;
+        beatScreenEl.hidden = true;
+        endSpotlight();
+        monstersEl.innerHTML = ""; fxEl.innerHTML = "";
+        fieldEl.classList.remove("dawn");
+        S = newState();
+        S.mode = "play";
+        // The saved run keeps the build it was started with — shop toggles
+        // changed since then apply to the NEXT fresh night, not this one.
+        S.maxHearts = Math.max(1, r.maxHearts | 0);
+        S.hearts = Math.max(1, Math.min(r.hearts | 0, S.maxHearts));
+        S.tapDmg = Math.max(1, r.tapDmg | 0);
+        S.boostHearts = r.boostHearts | 0;
+        S.boostDmg = r.boostDmg | 0;
+        S.anyBoostOn = !!r.anyBoostOn;
+        S.score = r.score | 0;
+        S.kills = r.kills | 0;
+        S.extended = !!r.extended;
+        S.endless = !!r.endless;
+        S.bankedThrough = r.bankedThrough | 0;
+        uid = 0;
+        drawHearts(); drawHud();
+        startLoop();
+        // Resume at the START of the saved hour — its monsters respawn fresh;
+        // a mid-hour reload restarts that hour, never the whole night.
+        startWave(Math.max(1, r.wave | 0), true);
+        beep(560, 0.06, "square", 0.06);
+      }
+      /* Settings sheet — home of the one deliberate wipe: Abandon run. */
+      var settingsScreenEl = document.getElementById("settingsScreen");
+      function openSettings() {
+        updateMusicToggle();
+        var info = document.getElementById("settingsRunInfo");
+        var abandonBtn = document.getElementById("abandonBtn");
+        document.getElementById("abandonConfirm").hidden = true;
+        if (PENDING_RUN) {
+          info.textContent = "A run is in progress — hour " + (PENDING_RUN.wave | 0) + ", " + (PENDING_RUN.hearts | 0) + " hearts, score " + (PENDING_RUN.score | 0) + ". It saves as you go, so reloading picks it right back up. The only way to wipe it is to abandon it here.";
+          abandonBtn.hidden = false;
+        } else {
+          info.textContent = "No run in progress. Runs save as they go — a reload can never wipe one. Abandoning a run (with a confirm step) is the only way to start over.";
+          abandonBtn.hidden = true;
+        }
+        settingsScreenEl.hidden = false;
+        beep(560, 0.06, "square", 0.06);
+      }
+      document.getElementById("settingsOpenBtn").addEventListener("click", openSettings);
+      document.getElementById("settingsCloseBtn").addEventListener("click", function () {
+        settingsScreenEl.hidden = true;
+        beep(500, 0.05, "square", 0.05);
+      });
+      /* Background music toggle — persisted in the same save, default ON. */
+      function updateMusicToggle() {
+        var t = document.getElementById("musicTgl");
+        if (!t) return;
+        t.classList.toggle("on", !!SAVE.musicOn);
+        document.getElementById("musicTglState").textContent = SAVE.musicOn ? "ON" : "OFF";
+      }
+      function setMusicEnabled(on) {
+        SAVE.musicOn = !!on;
+        saveSave();
+        updateMusicToggle();
+        if (!SAVE.musicOn) { stopMusic(); }
+        else if (MUSIC.unlocked && S && (S.mode === "play" || S.mode === "coach") && !S.paused) {
+          startMusicForHour(Math.max(1, S.wave || 1));
+        }
+      }
+      document.getElementById("musicTgl").addEventListener("click", function () {
+        setMusicEnabled(!SAVE.musicOn);
+        beep(SAVE.musicOn ? 660 : 440, 0.06, "square", 0.06);
+      });
+
+      /* Sound-effects + vibration toggles — persisted, default ON. */
+      function updateFeelToggles() {
+        var a = document.getElementById("sfxTgl"), b = document.getElementById("vibeTgl");
+        if (!a || !b) return;
+        a.classList.toggle("on", SAVE.sfxOn !== false);
+        b.classList.toggle("on", SAVE.vibeOn !== false);
+        document.getElementById("sfxTglState").textContent = SAVE.sfxOn !== false ? "ON" : "OFF";
+        document.getElementById("vibeTglState").textContent = SAVE.vibeOn !== false ? "ON" : "OFF";
+      }
+      document.getElementById("sfxTgl").addEventListener("click", function () {
+        SAVE.sfxOn = SAVE.sfxOn === false; saveSave(); updateFeelToggles();
+        beep(SAVE.sfxOn ? 660 : 440, 0.06, "square", 0.06);
+      });
+      document.getElementById("vibeTgl").addEventListener("click", function () {
+        SAVE.vibeOn = SAVE.vibeOn === false; saveSave(); updateFeelToggles();
+        haptic(SAVE.vibeOn ? 30 : 0);
+      });
+      updateFeelToggles();
+      document.getElementById("abandonBtn").addEventListener("click", function () {
+        document.getElementById("abandonConfirm").hidden = false;
+        document.getElementById("abandonBtn").hidden = true;
+        beep(440, 0.06, "square", 0.06);
+      });
+      document.getElementById("abandonNo").addEventListener("click", function () {
+        // Cancel — the run save is untouched and stays resumable.
+        document.getElementById("abandonConfirm").hidden = true;
+        document.getElementById("abandonBtn").hidden = false;
+        beep(500, 0.05, "square", 0.05);
+      });
+      document.getElementById("abandonYes").addEventListener("click", function () {
+        // The deliberate wipe: clears ONLY the in-progress run save — no
+        // stars banked, and stars / upgrades / lifetime are never touched.
+        clearRunSave();
+        settingsScreenEl.hidden = true;
+        beep(330, 0.09, "square", 0.07, -120);
+        showStartScreen();
+      });
+      /* ================= Pause menu ================= */
+      var pauseScreenEl = document.getElementById("pauseScreen");
+      var pauseResetConfirmEl = document.getElementById("pauseResetConfirm");
+      function openPause() {
+        if (!S || S.mode !== "play" || S.paused) return;
+        dismissDebutCard(); // opening pause sweeps any debut card away
+        S.paused = true;
+        gameEl.classList.add("paused");
+        pauseResetConfirmEl.hidden = true;
+        document.getElementById("pauseResetBtn").hidden = false;
+        pauseScreenEl.hidden = false;
+        suspendMusic(); // the music holds its breath with the night
+        beep(440, 0.06, "square", 0.06);
+      }
+      function closePause() {
+        S.paused = false;
+        gameEl.classList.remove("paused");
+        pauseScreenEl.hidden = true;
+        bestiaryScreenEl.hidden = true;
+        resumeMusic(); // back to the current hour's track
+      }
+      pauseBtnEl.addEventListener("click", openPause);
+      document.getElementById("pauseResumeBtn").addEventListener("click", function () {
+        beep(560, 0.06, "square", 0.06);
+        closePause();
+      });
+      document.getElementById("pauseResetBtn").addEventListener("click", function () {
+        pauseResetConfirmEl.hidden = false;
+        document.getElementById("pauseResetBtn").hidden = true;
+        beep(440, 0.06, "square", 0.06);
+      });
+      document.getElementById("pauseResetNo").addEventListener("click", function () {
+        // No — back to the pause menu, run untouched and still frozen.
+        pauseResetConfirmEl.hidden = true;
+        document.getElementById("pauseResetBtn").hidden = false;
+        beep(500, 0.05, "square", 0.05);
+      });
+      document.getElementById("pauseResetYes").addEventListener("click", function () {
+        // Same wipe as Settings → Abandon: clears ONLY the run save and
+        // starts a fresh night at hour 1 — stars / upgrades / lifetime kept.
+        pauseScreenEl.hidden = true;
+        bestiaryScreenEl.hidden = true;
+        S.paused = false;
+        gameEl.classList.remove("paused");
+        clearRunSave();
+        beep(330, 0.09, "square", 0.07, -120);
+        reset(); // startWave(1) re-saves the fresh night as it begins
+      });
+      document.getElementById("pauseMenuBtn").addEventListener("click", function () {
+        // Save first, THEN leave — the start screen must offer this exact run.
+        saveRun();
+        reloadRunSave();
+        pauseScreenEl.hidden = true;
+        bestiaryScreenEl.hidden = true;
+        S.paused = false;
+        gameEl.classList.remove("paused");
+        beep(500, 0.05, "square", 0.05);
+        showStartScreen();
+      });
+      function reloadRunSave() {
+        PENDING_RUN = null;
+        try {
+          var v = localStorage.getItem(RUN_KEY);
+          if (v) {
+            var p = JSON.parse(v);
+            if (p && (p.wave | 0) >= 1 && (p.hearts | 0) > 0 && (p.maxHearts | 0) >= 1) PENDING_RUN = p;
+          }
+        } catch (e) { /* storage unavailable — no resume available */ }
+      }
+
+      /* ================= Bestiary sheet (pause menu only) =================
+         Lists ONLY creature types ever encountered — an unencountered type
+         leaves no row at all, not even a placeholder. The game stays paused
+         the whole time the sheet is open; Back returns to the pause menu. */
+      var bestiaryScreenEl = document.getElementById("bestiaryScreen");
+      var BEST_ORDER = ["chomper", "dartling", "brute", "zigzagger", "splitter", "shieldback", "boss", "segmented", "phaser", "ninja", "aura", "gravedigger", "banjo", "exploder", "healer", "knockback", "pooler", "coner", "heartrunner", "collector"];
+      // Bestiary HP line: the creature's base HP exactly as implemented —
+      // or, for types with no normal HP pool, the defeat condition instead.
+      function bestHpChip(type) {
+        if (type === "segmented") return ["DEFEAT", "3 PARTS"];
+        if (type === "banjo") return ["DEFEAT", "3 HUSHES"];
+        if (type === "knockback") return ["DEFEAT", "PUSH OFF-SCREEN"];
+        if (type === "ninja") return ["DEFEAT", "1 LANDED HIT"];
+        if (type === "collector") return ["HP", "45 · 3 PHASES"];
+        return ["HP", String(TYPES[type].hp)];
+      }
+      function renderBestiary() {
+        var html = "";
+        BEST_ORDER.forEach(function (type) {
+          var e = SAVE.bestiary ? SAVE.bestiary[type] : null;
+          if (!e) return; // never encountered — it simply isn't in the book
+          var t = TYPES[type];
+          var hp = bestHpChip(type);
+          html += '<div class="bestRow"><div class="bestArt">' + ART[t.art] + '</div>' +
+            '<div class="bestInfo"><b>' + t.name + '</b><small>' + t.tip + '</small>' +
+            '<div class="bestCounts">' +
+            '<span class="chip"><small>' + hp[0] + '</small>' + hp[1] + '</span>' +
+            '<span class="chip"><small>KILLED</small>' + e.k + '</span>' +
+            '<span class="chip"><small>HEARTS STOLEN</small>' + e.h + '</span>' +
+            '<span class="chip"><small>CLICKED</small>' + e.c + '</span>' +
+            '</div></div></div>';
+        });
+        if (!html) html = '<p style="font-weight:700;opacity:.7">Nothing has come out of the dark yet.</p>';
+        document.getElementById("bestiaryList").innerHTML = html;
+      }
+      function openBestiary() {
+        renderBestiary();
+        pauseScreenEl.hidden = true;
+        bestiaryScreenEl.hidden = false;
+        var p = bestiaryScreenEl.querySelector(".shopPanel");
+        if (p) p.scrollTop = 0;
+        beep(560, 0.06, "square", 0.06);
+      }
+      function closeBestiary() {
+        bestiaryScreenEl.hidden = true;
+        pauseScreenEl.hidden = false; // back to the pause menu — still paused
+        beep(500, 0.05, "square", 0.05);
+      }
+      document.getElementById("pauseBestiaryBtn").addEventListener("click", openBestiary);
+      document.getElementById("bestiaryBackBtn").addEventListener("click", closeBestiary);
+
+      /* ================= Hidden developer star (main menu) =================
+         Two-stage arming. Stage 1 (dev mode OFF): the star asks "Developer
+         mode enabled?" — Yes arms dev mode (star lights up) and the flag is
+         stored WITH the save data. Stage 2 (dev mode ON): the star asks
+         "Are you sure?" — Yes wipes ALL save data (run save AND the
+         stars/upgrades/lifetime save) back to a brand-new fresh file,
+         which also clears the dev flag itself. Nothing else is dev-gated. */
+      var devStarEl = document.getElementById("devStar");
+      var devScreenEl = document.getElementById("devScreen");
+      var DEV_STAGE = "enable";
+      function updateDevStar() { devStarEl.classList.toggle("armed", !!SAVE.devMode); }
+      devStarEl.addEventListener("click", function () {
+        var yesBtn = document.getElementById("devYes");
+        if (!SAVE.devMode) {
+          DEV_STAGE = "enable";
+          document.getElementById("devTitle").textContent = "DEVELOPER MODE";
+          document.getElementById("devText").textContent = "Developer mode enabled?";
+          yesBtn.textContent = "YES";
+          yesBtn.style.background = "";
+        } else {
+          DEV_STAGE = "reset";
+          document.getElementById("devTitle").textContent = "RESET THE GAME?";
+          document.getElementById("devText").textContent = "Are you sure? This wipes ALL save data — banked stars, upgrades, lifetime progress and any run in progress — and starts over from a brand-new fresh file.";
+          yesBtn.textContent = "YES, WIPE IT";
+          yesBtn.style.background = "#ff4757";
+        }
+        devScreenEl.hidden = false;
+        beep(500, 0.05, "square", 0.05);
+      });
+      document.getElementById("devNo").addEventListener("click", function () {
+        // No changes nothing — and in stage 2, dev mode stays enabled.
+        devScreenEl.hidden = true;
+        beep(500, 0.05, "square", 0.05);
+      });
+      document.getElementById("devYes").addEventListener("click", function () {
+        devScreenEl.hidden = true;
+        if (DEV_STAGE === "enable") {
+          SAVE.devMode = true;
+          saveSave();
+          updateDevStar();
+          beep(740, 0.08, "triangle", 0.07, 160);
+        } else {
+          fullReset();
+          beep(330, 0.12, "square", 0.07, -120);
+        }
+      });
+      function fullReset() {
+        try {
+          localStorage.removeItem(SAVE_KEY);
+          localStorage.removeItem(RUN_KEY);
+        } catch (e) { /* storage unavailable — in-memory reset still applies */ }
+        SAVE.stars = 0; SAVE.heartsBought = 0; SAVE.dmgBought = 0;
+        SAVE.heartsOn = true; SAVE.dmgOn = true; SAVE.lifetime = 0; SAVE.devMode = false; SAVE.musicOn = true; SAVE.sfxOn = true; SAVE.vibeOn = true;
+        SAVE.bestiary = {}; // the one wipe that empties the bestiary
+        PENDING_RUN = null;
+        updateDevStar();
+        updateMusicToggle(); updateFeelToggles();
+        showStartScreen(); // fresh file: shop locked (lifetime 0), no resume offer
+      }
+
+      /* Persist the run whenever the page is about to go away or hide. */
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "hidden") saveRun();
+      });
+      window.addEventListener("pagehide", saveRun);
+
       /* ================= Boot ================= */
       S = newState();
-      drawHearts(); drawHud(); updateShop();
+      drawHearts(); drawHud(); updateShop(); updateMusicToggle();
+      presentStart();
       applyZoom(1);
       startLoop();
 
@@ -1705,11 +3221,13 @@
           return { mode: S.mode, hearts: S.hearts, wave: S.wave, score: S.score, kills: S.kills,
                    endless: S.endless, zoom: +currentZoom().toFixed(3), pendingHour: S.pendingHour,
                    fieldBox: { top: Math.round(fr.top), bottom: Math.round(fr.bottom), vh: window.innerHeight },
-                   monsters: S.monsters.map(function (m) { return { type: m.type, hp: m.hp, prog: +m.prog.toFixed(3), open: !!m.open, phase: m.phase || 1, x: Math.round(m.x), y: Math.round(m.y), playing: m.playing !== false, hushes: m.hushes || 0, boosted: !!m.boosted, coneBonus: !!m.coneBonus, speed: +m.speed.toFixed(4) }; }),
+                   monsters: S.monsters.map(function (m) { return { type: m.type, hp: m.hp, prog: +m.prog.toFixed(3), open: !!m.open, phase: m.phase || 1, x: Math.round(m.x), y: Math.round(m.y), playing: m.playing !== false, hushes: m.hushes || 0, boosted: !!m.boosted, coneBonus: !!m.coneBonus, speed: +m.speed.toFixed(4), partsHit: m.partsHit || 0, logs: m.logs || 0, inPhase: m.type === "phaser" ? !!m.inPhase : null, stunned: (m.stunT || 0) > 0, immune: isAuraImmune(m), segSet: m.segSet || 0, segHit: !!m.segHit, marked: m.el.classList.contains("marked"), angle: +m.angle.toFixed(2) }; }),
                    pools: S.pools.map(function (p) { return { x: Math.round(p.x), y: Math.round(p.y), t: +p.t.toFixed(1) }; }),
                    cones: S.cones.map(function (c) { return { x: Math.round(c.x), y: Math.round(c.y), t: +c.t.toFixed(1) }; }),
+                   graves: S.graves.map(function (g) { return { t: +g.t.toFixed(1) }; }),
                    queue: S.spawnQueue.length, waveState: S.waveState, coachStep: S.coachStep,
-                   stars: SAVE.stars, heartsBought: SAVE.heartsBought, dmgBought: SAVE.dmgBought,
+                   stars: SAVE.stars, lifetime: SAVE.lifetime, shopUnlocked: SAVE.lifetime >= 1, collectorDown: !!S.collectorDown,
+                   heartsBought: SAVE.heartsBought, dmgBought: SAVE.dmgBought,
                    heartsOn: SAVE.heartsOn, dmgOn: SAVE.dmgOn, tapDmg: S.tapDmg, maxHearts: S.maxHearts,
                    anyBoostOn: !!S.anyBoostOn, extended: !!S.extended, ofHours: ofHoursEl.textContent.trim(),
                    lastEarned: S.lastEarned || 0, bankedThrough: S.bankedThrough || 0,
@@ -1717,9 +3235,44 @@
                    roastShown: !document.getElementById("roastBox").hidden,
                    pureShown: !document.getElementById("pureBadge").hidden,
                    beatShown: !beatScreenEl.hidden, beatText: document.getElementById("beatText").textContent,
-                   winShown: !document.getElementById("winScreen").hidden };
+                   winShown: !document.getElementById("winScreen").hidden,
+                   hasRunSave: !!PENDING_RUN,
+                   runSave: (function () { try { var v = localStorage.getItem(RUN_KEY); return v ? JSON.parse(v) : null; } catch (e) { return null; } })(),
+                   storyBtnLabel: document.getElementById("storyBtn").textContent,
+                   settingsShown: !document.getElementById("settingsScreen").hidden,
+                   paused: !!S.paused,
+                   pauseShown: !pauseScreenEl.hidden,
+                   pauseBtnShown: pauseBtnEl.style.display === "block",
+                   pauseBtnRect: (function () { var r = pauseBtnEl.getBoundingClientRect(); return { left: Math.round(r.left), top: Math.round(r.top), right: Math.round(r.right), bottom: Math.round(r.bottom) }; })(),
+                   fieldRect: (function () { var r = fieldEl.getBoundingClientRect(); return { left: Math.round(r.left), top: Math.round(r.top), right: Math.round(r.right), bottom: Math.round(r.bottom) }; })(),
+                   musicOn: SAVE.musicOn !== false,
+                   musicPlaying: MUSIC.playing,
+                   musicBlockNow: MUSIC.currentBlock,
+                   musicPendingBlock: MUSIC.pendingBlock,
+                   musicUnlocked: MUSIC.unlocked,
+                   musicTrackName: MUSIC.cfg ? MUSIC.cfg.name : null,
+                   devMode: !!SAVE.devMode,
+                   devShown: !devScreenEl.hidden,
+                   devStarArmed: devStarEl.classList.contains("armed"),
+                   devText: document.getElementById("devText").textContent,
+                   comboChipExists: !!document.getElementById("comboChip"),
+                   debutShown: !debutEl.hidden,
+                   debutType: debutType,
+                   debutName: debutType ? TYPES[debutType].name : null,
+                   debutRect: (function () { var r = debutEl.getBoundingClientRect(); return { left: Math.round(r.left), top: Math.round(r.top), width: Math.round(r.width), height: Math.round(r.height), cx: Math.round(r.left + r.width / 2), cy: Math.round(r.top + r.height / 2) }; })(),
+                   bestiary: (function () { var o = {}; Object.keys(SAVE.bestiary || {}).forEach(function (k) { var e = SAVE.bestiary[k]; o[k] = { k: e.k, h: e.h, c: e.c }; }); return o; })(),
+                   bestiaryShown: !bestiaryScreenEl.hidden,
+                   bestiaryRows: document.querySelectorAll("#bestiaryList .bestRow").length,
+                   bestiaryText: document.getElementById("bestiaryList").textContent.replace(/\s+/g, " ").trim(),
+                   saveRaw: (function () { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } })() };
         },
-        spawn: function (type) { var m = makeMonster(type); m.speed *= 1 + (Math.max(1, S.wave) - 1) * 0.035; return m.id; },
+        spawn: function (type) { if (type === "segmented") { var f = spawnSegmentedSet(); return f ? f.id : null; } var m = makeMonster(type); m.speed *= 1 + (Math.max(1, S.wave) - 1) * 0.035; return m.id; },
+        tapSegPiece: function (i) { var ps = S.monsters.filter(function (x) { return x.type === "segmented"; }); if (ps[i]) tapMonster(ps[i]); },
+        segReachBase: function (i) { var ps = S.monsters.filter(function (x) { return x.type === "segmented"; }); if (ps[i]) monsterReachesBase(ps[i]); },
+        spawnNear: function (type, targetType) { var t = S.monsters.filter(function (x) { return x.type === targetType; })[0]; if (!t) return null; var m = makeMonster(type, { angle: t.angle, prog: t.prog, lat: (t.lat || 0) + 26 }); m.dist0 = t.dist0; positionMonster(m); return m.id; },
+        killAllBut: function (type) { S.monsters.slice().forEach(function (m) { if (m.type !== type) removeMonster(m); }); S.spawnQueue = []; },
+        forceWaveState: function (ws) { S.waveState = ws; },
+        hurt: function (n) { S.hearts -= n; drawHearts(); drawHud(); },
         tapFirst: function () { if (S.monsters[0]) tapMonster(S.monsters[0]); },
         tapType: function (type) { var m = S.monsters.filter(function (x) { return x.type === type; })[0]; if (m) tapMonster(m); },
         setProg: function (type, p) { var m = S.monsters.filter(function (x) { return x.type === type; })[0]; if (m) { m.prog = p; positionMonster(m); } },
@@ -1744,8 +3297,15 @@
         },
         beat: function () { if (S.mode === "play" && S.waveState === "between") { S.waveState = "idle"; showBeatOrStart(S.wave + 1); } },
         compLen: function (n) { return waveComp(n).length; },
+        comp: function (n) { return waveComp(n).slice(); },
+        patterns: function () { return PATTERNS.map(function (p) { return p.name + ": " + p.seq.join(","); }); },
+        musicBlockFor: function (h) { return musicBlockForHour(h); },
+        musicTrackFor: function (h) { return musicTrackForHour(h); },
+        musicConfigFor: function (h) { var c = musicConfig(musicBlockForHour(h)); return { block: c.block, name: c.name, bpm: c.bpm, root: +c.root.toFixed(2) }; },
+        setMusic: function (on) { setMusicEnabled(on); },
+        musicStartNow: function (h) { MUSIC.unlocked = true; startMusicForHour(h); },
         rawLen: function (n) { return rawComp(n).length; },
-        grantStars: function (n) { SAVE.stars += n; saveSave(); updateShop(); },
+        grantStars: function (n) { SAVE.stars += n; SAVE.lifetime += n; saveSave(); updateShop(); },
         buyHeart: function () { return buyUpgrade("heart"); },
         buyDmg: function () { return buyUpgrade("dmg"); },
         setTgl: function (kind, on) { if (kind === "heart") SAVE.heartsOn = !!on; else SAVE.dmgOn = !!on; saveSave(); refreshStartState(); },
@@ -1754,7 +3314,23 @@
         clearField: function () { S.monsters.slice().forEach(removeMonster); S.spawnQueue = []; if (S.waveState === "spawning" || S.waveState === "fighting") { S.waveState = "between"; S.betweenT = 0.05; } },
         continueBeat: function () { if (S.mode === "beat") leaveBeat(true); },
         showWinNow: function () { showWin(); },
-        toStart: function () { showStartScreen(); }
+        toStart: function () { showStartScreen(); },
+        saveRunNow: function () { saveRun(); },
+        resumeNow: function () { resumeRun(); },
+        openSettingsNow: function () { openSettings(); },
+        pauseNow: function () { openPause(); },
+        pauseResumeNow: function () { document.getElementById("pauseResumeBtn").click(); },
+        pauseResetAskNow: function () { document.getElementById("pauseResetBtn").click(); },
+        pauseResetYesNow: function () { document.getElementById("pauseResetYes").click(); },
+        pauseResetNoNow: function () { document.getElementById("pauseResetNo").click(); },
+        pauseMenuNow: function () { document.getElementById("pauseMenuBtn").click(); },
+        devClickNow: function () { devStarEl.click(); },
+        devYesNow: function () { document.getElementById("devYes").click(); },
+        devNoNow: function () { document.getElementById("devNo").click(); },
+        debutShowNow: function (type) { showDebutCard(type); },
+        debutDismissNow: function () { dismissDebutCard(); },
+        bestiaryOpenNow: function () { document.getElementById("pauseBestiaryBtn").click(); },
+        bestiaryBackNow: function () { document.getElementById("bestiaryBackBtn").click(); }
       };
     </script>
   </body>
