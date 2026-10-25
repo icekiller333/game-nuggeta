@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#8dd9ff" />
+  <link rel="icon" href="data:," />
+  <title>Spot the Cow</title>
+  <style>
+    :root {
+      --ink:#151515; --sky:#8dd9ff; --grass:#a7e86d; --paper:#fff5c7; --pink:#ff79b9;
+      --orange:#ff974f; --yellow:#ffe66b; --blue:#75caff; --white:#fffdf4; --muted:#5f563c;
+      --shadow:#151515; --panel:#fffdf4; --danger:#ec3f58; --good:#1d9f62; --field-line:#65ba50;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink:#f8f1dd; --sky:#17364c; --grass:#295f3b; --paper:#493d1f; --pink:#c64f87;
+        --orange:#c76534; --yellow:#d4b63d; --blue:#296b92; --white:#202522; --muted:#cfc39e;
+        --shadow:#080909; --panel:#202522; --danger:#ff6373; --good:#55d595; --field-line:#377b4b;
+      }
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;overflow-x:hidden}
+    body{
+      background:var(--sky); color:var(--ink); font-family:"Avenir Next","Trebuchet MS",sans-serif;
+      font-weight:700; padding:clamp(8px,2vw,20px); min-height:100vh;
+      background-image:radial-gradient(circle at 12px 12px,color-mix(in srgb,var(--white) 38%,transparent) 0 3px,transparent 4px);
+      background-size:42px 42px;
+    }
+    button{font:inherit;color:inherit}
+    .game-shell{width:min(1380px,100%);margin:auto}
+    .hud{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+    .day-card,.stat,.icon-btn,.panel,.pasture-wrap,.modal-card{
+      border:3px solid var(--ink);box-shadow:5px 5px 0 var(--shadow);background:var(--panel)
+    }
+    .day-card{padding:8px 14px;background:var(--yellow);font-family:Impact,"Arial Black",sans-serif;font-size:clamp(22px,3vw,36px);letter-spacing:.02em;transform:rotate(-1deg)}
+    .stat{padding:7px 10px;min-height:46px;display:flex;align-items:center;gap:7px}
+    .stat strong{font-family:Impact,"Arial Black",sans-serif;font-size:22px;letter-spacing:.03em}
+    .spacer{flex:1}
+    .icon-btn{min-width:46px;height:46px;background:var(--pink);cursor:pointer;font-size:18px;display:grid;place-items:center;border-radius:0}
+    .icon-btn.ach-btn{width:auto;padding:0 10px;background:var(--yellow);font-family:Impact,"Arial Black",sans-serif;font-size:14px;letter-spacing:.04em}
+    .icon-btn:hover,.icon-btn:focus-visible,.action:hover,.action:focus-visible{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--shadow)}
+    .icon-btn:active,.action:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--shadow)}
+    .layout{display:grid;grid-template-columns:minmax(230px,310px) minmax(0,1fr);gap:14px;align-items:start}
+    .sidebar{display:grid;gap:14px}
+    .panel{padding:12px;background:var(--panel)}
+    .wanted{background:var(--paper);position:relative;overflow:hidden}
+    .wanted:after{content:"";position:absolute;inset:5px;border:2px dashed color-mix(in srgb,var(--ink) 45%,transparent);pointer-events:none}
+    .panel h2{margin:0 0 9px;font-family:Impact,"Arial Black",sans-serif;font-size:24px;letter-spacing:.04em;position:relative;z-index:1}
+    .target-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(76px,1fr));gap:8px;position:relative;z-index:1}
+    .target{background:var(--white);border:2px solid var(--ink);padding:5px;min-width:0;text-align:center;position:relative}
+    .target canvas{width:100%;height:auto;display:block;aspect-ratio:1.35/1}
+    .target .hint{font-size:11px;line-height:1.15;min-height:26px;display:flex;align-items:center;justify-content:center}
+    .target.found{background:var(--good);color:#081b11}
+    .target.found:after{content:"COLLECTED";position:absolute;inset:0;display:grid;place-items:center;font:20px/1 Impact,"Arial Black",sans-serif;letter-spacing:.03em;color:#fff5c7;text-shadow:2px 2px 0 #111;background:#15955acc;transform:rotate(-7deg)}
+    .rules h2{font-size:19px}
+    .rules ul{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+    .rules li{border:2px solid var(--ink);padding:6px 7px;background:var(--blue);font-size:12px;line-height:1.15;box-shadow:2px 2px 0 var(--shadow)}
+    .rules li:first-child{background:var(--pink)}
+    .pasture-wrap{position:relative;background:var(--grass);overflow:hidden;isolation:isolate}
+    .pasture-wrap:before{content:"";position:absolute;inset:0;opacity:.22;background:repeating-linear-gradient(105deg,transparent 0 29px,var(--field-line) 30px 33px,transparent 34px 55px);pointer-events:none;z-index:-1}
+    #pasture{display:block;width:100%;height:auto;aspect-ratio:5/3;touch-action:manipulation;cursor:crosshair}
+    .narration{position:absolute;top:10px;left:10px;max-width:min(580px,calc(100% - 20px));background:var(--white);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--shadow);padding:7px 10px;font-size:clamp(12px,1.5vw,17px);pointer-events:none;z-index:2}
+    .progress-strip{position:absolute;right:10px;bottom:10px;background:var(--ink);color:var(--white);padding:5px 8px;font-size:12px;pointer-events:none}
+    .toast{position:fixed;left:50%;top:22px;translate:-50% -140%;background:var(--yellow);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--shadow);padding:10px 16px;z-index:30;transition:translate .18s ease;font-family:Impact,"Arial Black",sans-serif;font-size:20px;white-space:nowrap}
+    .toast.show{translate:-50% 0}
+    .achievement-toast{top:18px;max-width:calc(100vw - 24px);white-space:normal;text-align:center;background:var(--orange);z-index:60;font-size:18px}
+    body.omen-mid{background-color:color-mix(in srgb,var(--sky) 78%,#263b61)}
+    body.omen-late{background-color:color-mix(in srgb,var(--sky) 58%,#11152f);background-image:radial-gradient(circle at 20px 18px,#fff9 0 1px,transparent 2px),radial-gradient(circle at 8px 34px,#fff7 0 1px,transparent 2px)}
+    .intro-stage{position:fixed;inset:0;z-index:70;overflow:hidden;background:#8dd9ff;color:#151515;display:grid;place-items:center;transition:opacity .45s ease}
+    .intro-stage.done{opacity:0;pointer-events:none}.intro-stage[hidden]{display:none}
+    #introCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}
+    .loading-panel,.start-panel{position:relative;z-index:2;text-align:center;border:4px solid #151515;box-shadow:9px 9px 0 #151515;background:#fff5c7;padding:22px clamp(18px,5vw,42px);width:min(520px,calc(100% - 32px))}
+    .loading-panel strong{display:block;font:clamp(27px,7vw,46px)/1 Impact,"Arial Black",sans-serif;letter-spacing:.025em;margin-bottom:17px}
+    .loading-track{height:30px;border:4px solid #151515;background:#fffdf4;box-shadow:5px 5px 0 #151515;overflow:hidden}
+    .loading-track i{display:block;height:100%;width:0;background:#ff79b9;border-right:4px solid #151515;transition:width .18s linear}
+    .start-panel{background:transparent;border:0;box-shadow:none;width:min(650px,100%);padding:18px;filter:drop-shadow(5px 5px 0 #151515)}
+    .start-panel h1{margin:0;color:#fff5c7;-webkit-text-stroke:4px #151515;text-shadow:8px 8px 0 #ff79b9;font:clamp(62px,14vw,128px)/.72 Impact,"Arial Black",sans-serif;letter-spacing:.01em;animation:titleWobble 2.2s ease-in-out infinite}
+    .start-panel p{display:inline-block;margin:26px 0 16px;background:#fff5c7;border:3px solid #151515;box-shadow:5px 5px 0 #151515;padding:7px 11px;font-size:clamp(12px,2.5vw,17px)}
+    .start-action{font-size:30px;animation:startPulse 1s steps(2,end) infinite}
+    .skip-intro{position:absolute;z-index:4;bottom:18px;right:18px;border:3px solid #151515;box-shadow:4px 4px 0 #151515;background:#fff5c7;color:#151515;padding:8px 11px;font:14px Impact,"Arial Black",sans-serif;cursor:pointer}
+    .intro-stage.cinematic{cursor:pointer}
+    @keyframes titleWobble{0%,100%{transform:rotate(-1deg) scale(1)}50%{transform:rotate(1deg) scale(1.025)}}
+    @keyframes startPulse{0%,100%{transform:translate(0,0)}50%{transform:translate(-2px,-2px);box-shadow:8px 8px 0 #151515}}
+    .modal{position:fixed;inset:0;background:#131313b8;display:grid;place-items:center;padding:18px;z-index:40}
+    .modal[hidden]{display:none}
+    .modal-card{width:min(500px,100%);padding:clamp(18px,5vw,34px);background:var(--paper);position:relative;text-align:center;animation:pop .25s cubic-bezier(.2,1.8,.3,1)}
+    .modal-card:before{content:"";position:absolute;inset:8px;border:2px dashed color-mix(in srgb,var(--ink) 45%,transparent);pointer-events:none}
+    .modal h1,.modal h2{font-family:Impact,"Arial Black",sans-serif;letter-spacing:.025em;margin:0 0 12px;font-size:clamp(34px,8vw,58px);line-height:.95;position:relative}
+    .modal p{font-size:clamp(17px,4vw,22px);line-height:1.3;margin:8px auto 22px;max-width:380px;position:relative}
+    .action{position:relative;border:3px solid var(--ink);background:var(--pink);box-shadow:5px 5px 0 var(--shadow);padding:12px 22px;font-family:Impact,"Arial Black",sans-serif;font-size:23px;cursor:pointer;border-radius:0;text-transform:uppercase;letter-spacing:.04em}
+    .action.alt{background:var(--blue)}
+    .action.small{font-size:17px;padding:9px 14px;margin:6px 3px}
+    .modal-actions{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;position:relative}
+    .tiny{font-size:12px!important;color:var(--muted);margin-top:14px!important}
+    .achievements-card{width:min(860px,100%);max-height:calc(100vh - 28px);overflow:auto;text-align:left;padding:24px}
+    .achievements-card h2{text-align:center;font-size:clamp(30px,6vw,46px)}
+    .achievement-stats{text-align:center;font-size:13px;margin:-2px 0 14px;color:var(--muted);position:relative}
+    .achievement-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;position:relative}
+    .achievement{border:3px solid var(--ink);box-shadow:3px 3px 0 var(--shadow);background:var(--white);padding:9px;display:grid;grid-template-columns:42px 1fr;gap:8px;align-items:center;min-width:0}
+    .achievement .badge{width:42px;height:42px;border:3px solid var(--ink);display:grid;place-items:center;background:var(--yellow);font:18px Impact,"Arial Black",sans-serif}
+    .achievement strong{display:block;font-family:Impact,"Arial Black",sans-serif;font-size:17px;letter-spacing:.02em;line-height:1.05}
+    .achievement span{display:block;font-size:11px;line-height:1.2;margin-top:4px}
+    .achievement.locked{background:color-mix(in srgb,var(--panel) 84%,var(--ink));color:var(--muted)}
+    .achievement.locked .badge{background:var(--ink);color:transparent;position:relative}
+    .achievement.locked .badge:after{content:"?";color:var(--panel);position:absolute}
+    .achievement.unlocked:nth-child(3n+1){background:var(--yellow)}.achievement.unlocked:nth-child(3n+2){background:var(--blue)}.achievement.unlocked:nth-child(3n){background:var(--pink)}
+    .boss-stage{position:fixed;inset:0;z-index:65;background:#171129;overflow:hidden;color:#fffdf4}
+    .boss-stage[hidden]{display:none}.boss-stage.shake{animation:shake .28s linear}
+    #bossCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:manipulation;cursor:crosshair}
+    .boss-ui{position:absolute;z-index:2;inset:10px 10px auto;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;pointer-events:none}
+    .boss-title,.boss-timer,.boss-wanted{border:3px solid #151515;box-shadow:5px 5px 0 #050508;background:#ff79b9;color:#151515;padding:8px}
+    .boss-title{font:clamp(18px,3vw,34px)/1 Impact,"Arial Black",sans-serif;transform:rotate(-1deg)}
+    .boss-timer{font:clamp(20px,4vw,38px)/1 Impact,"Arial Black",sans-serif;background:#ffe66b;min-width:92px;text-align:center}
+    .boss-wanted{background:#fff5c7;display:grid;grid-template-columns:repeat(10,minmax(38px,1fr));gap:4px;min-width:0}
+    .boss-wanted .boss-poster{border:2px solid #151515;background:#fffdf4;position:relative;min-width:0}
+    .boss-poster canvas{width:100%;height:auto;display:block}.boss-poster.off{filter:grayscale(1);opacity:.45}.boss-poster.off:after{content:"X";position:absolute;inset:0;display:grid;place-items:center;color:#151515;font:28px Impact,"Arial Black",sans-serif}
+    .boss-progress{grid-column:1/-1;background:#151515;color:#fff5c7;padding:5px 8px;font-size:12px;text-align:center}
+    .boss-death{z-index:82}
+    .stars{font-size:42px;letter-spacing:4px;color:var(--orange);text-shadow:2px 2px 0 var(--ink)}
+    .shake{animation:shake .28s linear}
+    .bounce{animation:dayBounce .4s cubic-bezier(.2,1.6,.4,1)}
+    @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px) rotate(-.4deg)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(3px)}}
+    @keyframes pop{from{transform:scale(.72) rotate(-2deg);opacity:.2}to{transform:scale(1) rotate(0);opacity:1}}
+    @keyframes dayBounce{0%{transform:scale(.8) rotate(-3deg)}70%{transform:scale(1.08) rotate(1deg)}100%{transform:scale(1) rotate(0)}}
+    @media(max-width:760px){
+      body{padding:7px}.layout{grid-template-columns:1fr;gap:10px}.sidebar{grid-template-columns:1fr}.rules{display:none}.wanted{padding:9px}.panel h2{font-size:19px;margin-bottom:6px}.target-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.target{padding:3px}.target canvas{max-height:58px}.target .hint{font-size:10px;min-height:22px}.pasture-wrap{box-shadow:4px 4px 0 var(--shadow)}.hud{gap:6px;margin-bottom:9px}.day-card{font-size:22px}.stat{padding:5px 7px;min-height:40px;font-size:12px}.stat strong{font-size:18px}.icon-btn{width:40px;min-width:40px;height:40px}.icon-btn.ach-btn{font-size:12px;padding:0 7px}.narration{top:6px;left:6px;font-size:11px;padding:5px 7px;max-width:calc(100% - 12px);box-shadow:3px 3px 0 var(--shadow)}.progress-strip{right:5px;bottom:5px;font-size:10px}.modal-card{padding:22px 16px}.modal h1,.modal h2{font-size:38px}.modal p{font-size:17px}.achievement-grid{grid-template-columns:1fr}.achievements-card{padding:20px 14px}.achievement{grid-template-columns:38px 1fr}.achievement .badge{width:38px;height:38px}.boss-ui{grid-template-columns:1fr auto;inset:6px 6px auto;gap:5px}.boss-title{font-size:18px}.boss-timer{font-size:22px;min-width:74px}.boss-wanted{grid-column:1/-1;grid-template-columns:repeat(5,minmax(38px,1fr));padding:4px}.boss-progress{grid-column:1/-1;font-size:10px}}
+    @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <main class="game-shell" id="gameShell" aria-label="Spot the Cow game">
+    <section class="hud" aria-label="Game status">
+      <div class="day-card" id="dayCard">DAY 1</div>
+      <div class="stat" title="Hearts remaining"><span aria-hidden="true">♥</span><strong id="hearts">3</strong></div>
+      <div class="stat" title="Elapsed time"><span aria-hidden="true">◷</span><strong id="timer">0.0</strong>s</div>
+      <div class="stat" title="Cows in pasture"><span aria-hidden="true">♉</span><strong id="cowCount">2</strong></div>
+      <div class="spacer"></div>
+      <button class="icon-btn ach-btn" id="achievementsBtn" aria-label="Open achievements">ACHV</button>
+      <button class="icon-btn" id="pauseBtn" aria-label="Pause game" title="Pause game">Ⅱ</button>
+      <button class="icon-btn" id="muteBtn" aria-label="Mute sound" title="Mute sound">♪</button>
+    </section>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <section class="panel wanted" aria-labelledby="wantedTitle">
+          <h2 id="wantedTitle">WANTED</h2>
+          <div class="target-grid" id="targetGrid"></div>
+        </section>
+        <section class="panel rules" aria-labelledby="rulesTitle">
+          <h2 id="rulesTitle">RULES — NEWEST FIRST</h2>
+          <ul id="rulesList"></ul>
+        </section>
+      </aside>
+
+      <section class="pasture-wrap" id="pastureWrap" aria-label="Pasture. Tap the cows matching the wanted portraits.">
+        <canvas id="pasture" width="1000" height="600"></canvas>
+        <div class="narration" id="narration"></div>
+        <div class="progress-strip" id="progressStrip">FOUND 0 / 1</div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="toast achievement-toast" id="achievementToast" role="status" aria-live="polite"></div>
+
+  <section class="intro-stage" id="introStage" aria-label="Spot the Cow opening">
+    <canvas id="introCanvas" width="1000" height="700" aria-hidden="true"></canvas>
+    <div class="loading-panel" id="loadingPanel">
+      <strong>WAKING THE FARM…</strong>
+      <div class="loading-track"><i id="loadingFill"></i></div>
+    </div>
+    <div class="start-panel" id="startPanel" hidden>
+      <h1>SPOT<br>THE COW</h1>
+      <p>EVERY MORNING, ONE OF THEM IS WANTED.</p>
+      <div class="modal-actions">
+        <button class="action start-action" id="startBtn">START</button>
+        <button class="action alt small" id="introAchievementsBtn">ACHIEVEMENTS</button>
+      </div>
+    </div>
+    <button class="skip-intro" id="skipIntro" hidden>Tap to skip</button>
+  </section>
+
+  <section class="modal" id="storyModal" aria-modal="true" role="dialog" aria-labelledby="storyTitle" hidden>
+    <div class="modal-card">
+      <h1 id="storyTitle">MORNING.</h1>
+      <p id="storyText">You are a farmer. Every morning, the herd must be counted.</p>
+      <div class="modal-actions">
+        <button class="action" id="storyNext">NEXT</button>
+        <button class="action alt small" id="storyAchievementsBtn">ACHIEVEMENTS</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="modal" id="pauseModal" aria-modal="true" role="dialog" aria-labelledby="pauseTitle" hidden>
+    <div class="modal-card">
+      <h2 id="pauseTitle">PAUSED</h2>
+      <p>The cows are pretending not to move.</p>
+      <div class="modal-actions">
+        <button class="action" id="resumeBtn">RESUME</button>
+        <button class="action alt small" id="pauseAchievementsBtn">ACHIEVEMENTS</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="modal" id="achievementsModal" aria-modal="true" role="dialog" aria-labelledby="achievementsTitle" hidden>
+    <div class="modal-card achievements-card">
+      <h2 id="achievementsTitle">ACHIEVEMENTS</h2>
+      <div class="achievement-stats" id="achievementStats"></div>
+      <div class="achievement-grid" id="achievementGrid"></div>
+      <div class="modal-actions"><button class="action small" id="achievementsBack">BACK</button></div>
+    </div>
+  </section>
+
+  <section class="modal" id="revealModal" aria-modal="true" role="dialog" aria-labelledby="revealTitle" hidden>
+    <div class="modal-card">
+      <h2 id="revealTitle">BENEATH THE PASTURE</h2>
+      <p>Something vast and patient has been assembling its herd. You have been its shepherd all along.</p>
+      <button class="action" id="revealBtn">FACE THE MORNING</button>
+    </div>
+  </section>
+
+  <section class="boss-stage" id="bossStage" aria-label="Final boss: The Herd Made Flesh" hidden>
+    <canvas id="bossCanvas" width="1000" height="700"></canvas>
+    <div class="boss-ui">
+      <div class="boss-title">THE HERD MADE FLESH</div>
+      <div class="boss-wanted" id="bossWanted" aria-label="Ten cows to de-link"></div>
+      <div class="boss-timer" id="bossTimer">75.0</div>
+      <div class="boss-progress" id="bossProgress">LINKS 10 / 10</div>
+    </div>
+  </section>
+
+  <section class="modal boss-death" id="bossDeathModal" aria-modal="true" role="dialog" aria-labelledby="bossDeathTitle" hidden>
+    <div class="modal-card">
+      <h2 id="bossDeathTitle">IT HAS YOU</h2>
+      <p>The herd reached the fence. It remembers your hands.</p>
+      <button class="action" id="retryBossBtn">RETRY BOSS</button>
+    </div>
+  </section>
+
+  <section class="modal" id="resultModal" aria-modal="true" role="dialog" aria-labelledby="resultTitle" hidden>
+    <div class="modal-card">
+      <h2 id="resultTitle">PASTURE CLEARED</h2>
+      <div class="stars" id="resultStars" aria-label="Stars earned">★★★</div>
+      <p id="resultText"></p>
+      <button class="action alt" id="resultBtn">NEXT MORNING</button>
+      <p class="tiny" id="resultTiny"></p>
+    </div>
+  </section>
+
+<script>
+(function(){
+  'use strict';
+  var canvas=document.getElementById('pasture'),ctx=canvas.getContext('2d');
+  var shell=document.getElementById('gameShell'),wrap=document.getElementById('pastureWrap');
+  var dayCard=document.getElementById('dayCard'),heartsEl=document.getElementById('hearts'),timerEl=document.getElementById('timer'),cowCountEl=document.getElementById('cowCount');
+  var targetGrid=document.getElementById('targetGrid'),rulesList=document.getElementById('rulesList'),narration=document.getElementById('narration'),progressStrip=document.getElementById('progressStrip');
+  var storyModal=document.getElementById('storyModal'),storyTitle=document.getElementById('storyTitle'),storyText=document.getElementById('storyText'),storyNext=document.getElementById('storyNext');
+  var resultModal=document.getElementById('resultModal'),resultTitle=document.getElementById('resultTitle'),resultText=document.getElementById('resultText'),resultStars=document.getElementById('resultStars'),resultBtn=document.getElementById('resultBtn'),resultTiny=document.getElementById('resultTiny');
+  var toast=document.getElementById('toast'),achievementToast=document.getElementById('achievementToast'),muteBtn=document.getElementById('muteBtn');
+  var pauseBtn=document.getElementById('pauseBtn'),achievementsBtn=document.getElementById('achievementsBtn');
+  var pauseModal=document.getElementById('pauseModal'),resumeBtn=document.getElementById('resumeBtn'),pauseAchievementsBtn=document.getElementById('pauseAchievementsBtn');
+  var achievementsModal=document.getElementById('achievementsModal'),achievementGrid=document.getElementById('achievementGrid'),achievementStats=document.getElementById('achievementStats'),achievementsBack=document.getElementById('achievementsBack');
+  var storyAchievementsBtn=document.getElementById('storyAchievementsBtn'),revealModal=document.getElementById('revealModal'),revealBtn=document.getElementById('revealBtn');
+  var introStage=document.getElementById('introStage'),introCanvas=document.getElementById('introCanvas'),introCtx=introCanvas.getContext('2d'),loadingPanel=document.getElementById('loadingPanel'),loadingFill=document.getElementById('loadingFill'),startPanel=document.getElementById('startPanel'),startBtn=document.getElementById('startBtn'),introAchievementsBtn=document.getElementById('introAchievementsBtn'),skipIntro=document.getElementById('skipIntro');
+  var bossStage=document.getElementById('bossStage'),bossCanvas=document.getElementById('bossCanvas'),bossCtx=bossCanvas.getContext('2d'),bossWanted=document.getElementById('bossWanted'),bossTimer=document.getElementById('bossTimer'),bossProgress=document.getElementById('bossProgress'),bossDeathModal=document.getElementById('bossDeathModal'),retryBossBtn=document.getElementById('retryBossBtn');
+
+  var achievements=[
+    {id:'first',code:'01',name:'First Find',hint:'Clear day 1.'},
+    {id:'eagle',code:'EE',name:'Eagle Eye',hint:'Clear a day with zero wrong picks.'},
+    {id:'quick',code:'QD',name:'Quick Draw',hint:'Clear a day in under 15 seconds.'},
+    {id:'double',code:'02',name:'Double Duty',hint:'Find both targets on a two-target day.'},
+    {id:'triple',code:'03',name:'Triple Threat',hint:'Find all three targets on a three-target day.'},
+    {id:'tracker',code:'TR',name:'Tracker',hint:'Find a target on a wandering-cows day.'},
+    {id:'untouchable',code:'U3',name:'Untouchable',hint:'Clear 3 consecutive days with zero wrong picks.'},
+    {id:'survivor',code:'1H',name:'Survivor',hint:'Clear a day with exactly 1 heart remaining.'},
+    {id:'butter',code:'BF',name:'Butterfingers',hint:'Make 3 wrong picks in one day.'},
+    {id:'collection',code:'25',name:'The Collection',hint:'Find 25 total cows in one run.'},
+    {id:'legend',code:'15',name:'Legendary Cow Spotter',hint:'Beat day 15.'},
+    {id:'hungers',code:'20',name:'It Hungers',hint:'Reach day 20 in endless mode.'}
+  ];
+
+  var levels=[
+    {c:2,t:1,m:0,b:0},{c:3,t:1,m:0,b:0},{c:4,t:1,m:0,b:0},{c:6,t:1,m:0,b:0},{c:8,t:1,m:0,b:0},
+    {c:10,t:1,m:0,b:0},{c:12,t:1,m:0,b:0},{c:15,t:2,m:0,b:0},{c:18,t:2,m:1,b:0},{c:22,t:2,m:1,b:0},
+    {c:28,t:2,m:1,b:0},{c:35,t:2,m:1,b:0},{c:45,t:3,m:1,b:1},{c:55,t:3,m:1,b:1},{c:70,t:3,m:1,b:1}
+  ];
+  var coatColors=[
+    {n:'white',v:'#f7f2dd',s:'#3c322a'},{n:'brown',v:'#9c623b',s:'#f3dfb7'},{n:'black',v:'#242426',s:'#f5eee0'},
+    {n:'tan',v:'#d6a666',s:'#5e392b'},{n:'grey',v:'#92989d',s:'#2e3336'}
+  ];
+  var state={day:1,hearts:3,cows:[],targets:[],found:{},start:0,elapsed:0,mistakes:0,running:false,clearing:false,best:0,bestTime:null,muted:false,storyStep:0,lastFrame:0,particles:[],ripples:[],achievements:{},cleanStreak:0,totalFound:0,collectedFeatures:[],pausedFromGame:false};
+  var audio=null,achievementQueue=[],achievementShowing=false,achievementReturn=null;
+  var intro={mode:'loading',started:performance.now(),cinematicStart:0,done:false,particles:[],skip:false};
+  var boss={active:false,start:0,penalty:0,parts:[],exploding:false,explodeStart:0,lastFrame:0,particles:[]};
+
+  function mulberry32(seed){return function(){var t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+  function levelFor(day){if(day<=15)return levels[day-1];return{c:70+(day-15)*10,t:3+Math.floor((day-15)/5),m:1,b:1}}
+  function comboKey(f){return [f.coat,f.pattern,f.horns?1:0,f.acc].join('-')}
+  function feature(rng){return{coat:Math.floor(rng()*coatColors.length),pattern:Math.floor(rng()*14),horns:rng()>.52,acc:rng()<.58?'none':(rng()<.5?'bell':'ribbon'),flip:rng()>.5}}
+  function distinctFeature(rng,used){var f,k,guard=0;do{f=feature(rng);k=comboKey(f);guard++}while(used[k]&&guard<500);used[k]=1;return f}
+  function makeNear(target,rng,used,kind){var f,k,guard=0;do{
+      f={coat:target.coat,pattern:target.pattern,horns:target.horns,acc:target.acc,flip:rng()>.5};
+      if(kind%3===0)f.pattern=(f.pattern+1+Math.floor(rng()*12))%14;
+      else if(kind%3===1)f.acc=f.acc==='none'?'bell':(f.acc==='bell'?'ribbon':'none');
+      else f.horns=!f.horns;
+      k=comboKey(f);guard++;
+    }while(used[k]&&guard<50);used[k]=1;return f}
+  function buildDay(day){
+    var lvl=levelFor(day),rng=mulberry32(day),used={},features=[],i;
+    for(i=0;i<lvl.c;i++)features.push(distinctFeature(rng,used));
+    var targetIndexes=[],pool=[];for(i=0;i<lvl.c;i++)pool.push(i);
+    for(i=pool.length-1;i>0;i--){var j=Math.floor(rng()*(i+1)),tmp=pool[i];pool[i]=pool[j];pool[j]=tmp}
+    targetIndexes=pool.slice(0,lvl.t);
+    var protectedSet={};targetIndexes.forEach(function(x){protectedSet[x]=1});
+    var decoys=pool.slice(lvl.t,lvl.t+Math.min(lvl.t*2,lvl.c-lvl.t));
+    decoys.forEach(function(idx,k){var target=features[targetIndexes[k%targetIndexes.length]];features[idx]=makeNear(target,rng,used,k)});
+
+    var cols=Math.ceil(Math.sqrt(lvl.c*1.67)),rows=Math.ceil(lvl.c/cols),cellW=920/cols,cellH=480/rows;
+    var scale=Math.min(1.12,Math.max(.56,Math.min(cellW/92,cellH/76)));
+    state.cows=[];
+    for(i=0;i<lvl.c;i++){
+      var col=i%cols,row=Math.floor(i/cols),x=40+cellW*(col+.5)+(rng()-.5)*cellW*.30,y=88+cellH*(row+.5)+(rng()-.5)*cellH*.26;
+      var angle=rng()*Math.PI*2,speed=(9+rng()*9)*(day>=9?1:0);
+      state.cows.push({id:i,f:features[i],x:x,y:y,baseX:x,baseY:y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,scale:scale,phase:rng()*Math.PI*2,boltPhase:rng()*14,hop:0,found:false,abducting:false,abductStart:0,target:protectedSet[i]===1});
+    }
+    state.targets=targetIndexes;state.found={};state.mistakes=0;state.elapsed=0;state.start=performance.now();state.running=true;state.clearing=false;state.particles=[];state.ripples=[];state.lastFrame=performance.now();
+    document.body.classList.toggle('omen-mid',day>=8&&day<11);document.body.classList.toggle('omen-late',day>=11);
+    if(day>=20)unlockAchievement('hungers');
+    updateUI();renderTargets();renderRules();
+    shell.classList.remove('bounce');void shell.offsetWidth;shell.classList.add('bounce');
+  }
+
+  function narrationFor(day,c){
+    var special={1:'Day 1 — TWO cows. Stay calm.',2:'Day 2 — THREE cows. The herd is growing.',3:'Day 3 — FOUR cows. This is getting serious.',4:'Day 4 — SIX cows. Practically a stampede.',8:'Day 8 — FIFTEEN cows. Also: find TWO.',9:'Day 9 — EIGHTEEN cows. They have learned to wander.',10:'Day 10 — TWENTY-TWO cows. Unprecedented.',13:'Day 13 — FORTY-FIVE cows. Some now bolt. Naturally.',15:'Day 15 — SEVENTY cows. History will remember this.'};
+    return special[day]||('Day '+day+' — '+numberWord(c)+' cows. Oh my goodness.');
+  }
+  function storyBeatFor(day){var beats={
+    1:'Two cows. One is yours to find. The other one is watching.',
+    2:'Another letter waits on the step. It has no sender, but it knows your gate code.',
+    3:'The ink smells like rain. The new cow has no brand, no tag, and excellent posture.',
+    4:'Nobody bought these cows. They simply arrived overnight and ate the petunias.',
+    5:'The wanted cow’s spots make a shape—almost a constellation. Probably a ladle. Probably.',
+    6:'Yesterday’s cow is gone. The letter calls this “collected,” which feels needlessly formal.',
+    7:'The milk tastes faintly of iron. The cows refuse to discuss it.',
+    8:'Something moves in the barn at night. In the morning, the barn is empty and politely locked.',
+    9:'Their eyes follow your hand. Not your face. Just the hand that points.',
+    10:'The rafters creak above you. There are no rafters above you.',
+    11:'The field holds more cows than the field should hold. The fence has stopped objecting.',
+    12:'The ground is warm under your boots. Somewhere below, something hums the tune you whistle.',
+    13:'The humming is louder now. The bolting cows are not trying to escape you.',
+    14:'This morning’s letter is in your handwriting. You do not remember dotting the i with an eye.',
+    15:'The final request says only: “Bring the herd home.” The paper pulses once in your hand.'
+  };return beats[day]||(day>15?'There is another letter. It still hungers.':'');}
+  function numberWord(n){var w={3:'THREE',4:'FOUR',6:'SIX',8:'EIGHT',10:'TEN',12:'TWELVE',15:'FIFTEEN',18:'EIGHTEEN',22:'TWENTY-TWO',28:'TWENTY-EIGHT',35:'THIRTY-FIVE',45:'FORTY-FIVE',55:'FIFTY-FIVE',70:'SEVENTY'};return w[n]||String(n)}
+  function rulesFor(day){var r=[];if(day>=13)r.push('⚡ Some cows BOLT'),r.push('③ Find THREE cows');if(day>=9)r.push('↝ Cows wander');if(day>=8)r.push('② Find TWO cows');r.push('◎ Match the WANTED portrait');r.push('♥ Three mistakes end the run');return r}
+  function updateUI(){var lvl=levelFor(state.day);dayCard.textContent='DAY '+state.day;heartsEl.textContent=state.hearts;cowCountEl.textContent=lvl.c;narration.textContent=narrationFor(state.day,lvl.c)+' '+storyBeatFor(state.day);var done=Object.keys(state.found).length;progressStrip.textContent='COLLECTED '+done+' / '+state.targets.length}
+  function renderRules(){rulesList.innerHTML='';rulesFor(state.day).forEach(function(rule){var li=document.createElement('li');li.textContent=rule;rulesList.appendChild(li)})}
+  function hintFor(f){if(f.acc==='bell')return 'Look for a neck bell.';if(f.acc==='ribbon')return 'Look for a pink ribbon.';if(f.horns)return 'This cow has horns.';if(f.pattern>=10)return 'Tiny scattered spots.';return 'A '+coatColors[f.coat].n+' coat.'}
+  function renderTargets(){
+    targetGrid.innerHTML='';state.targets.forEach(function(idx){var cow=state.cows[idx],card=document.createElement('div');card.className='target'+(state.found[idx]?' found':'');card.dataset.id=idx;
+      var cv=document.createElement('canvas');cv.width=180;cv.height=130;var c=cv.getContext('2d');drawCow(c,cow,90,68,1.25,0,true);
+      var h=document.createElement('div');h.className='hint';h.textContent=hintFor(cow.f);card.appendChild(cv);card.appendChild(h);targetGrid.appendChild(card);
+    });
+  }
+
+  function unlockAchievement(id){if(state.achievements[id])return;state.achievements[id]=1;var item=achievements.filter(function(a){return a.id===id})[0];if(!item)return;achievementQueue.push(item.name);showNextAchievement();renderAchievements()}
+  function showNextAchievement(){if(achievementShowing||!achievementQueue.length)return;achievementShowing=true;var name=achievementQueue.shift();achievementToast.textContent='ACHIEVEMENT UNLOCKED: '+name;achievementToast.classList.add('show');playAchievement();setTimeout(function(){achievementToast.classList.remove('show');setTimeout(function(){achievementShowing=false;showNextAchievement()},220)},1800)}
+  function renderAchievements(){achievementGrid.innerHTML='';var unlocked=0;achievements.forEach(function(a){var yes=!!state.achievements[a.id];if(yes)unlocked++;var card=document.createElement('div');card.className='achievement '+(yes?'unlocked':'locked');var badge=document.createElement('div');badge.className='badge';badge.textContent=a.code;var text=document.createElement('div');var strong=document.createElement('strong');strong.textContent=a.name;var span=document.createElement('span');span.textContent=a.hint;text.appendChild(strong);text.appendChild(span);card.appendChild(badge);card.appendChild(text);achievementGrid.appendChild(card)});achievementStats.textContent=unlocked+' / '+achievements.length+' unlocked • Best day '+state.best+(state.bestTime===null?'':' • Fastest clear '+state.bestTime.toFixed(1)+'s')+' • Session only'}
+  function openAchievements(from){achievementReturn=from||null;if(from)from.hidden=true;renderAchievements();achievementsModal.hidden=false}
+  function closeAchievements(){achievementsModal.hidden=true;if(achievementReturn){achievementReturn.hidden=false;achievementReturn=null}}
+  function checkClearAchievements(){var targetCount=state.targets.length;if(state.day===1)unlockAchievement('first');if(state.mistakes===0){unlockAchievement('eagle');state.cleanStreak++}else state.cleanStreak=0;if(state.elapsed<15)unlockAchievement('quick');if(targetCount===2)unlockAchievement('double');if(targetCount>=3)unlockAchievement('triple');if(state.cleanStreak>=3)unlockAchievement('untouchable');if(state.hearts===1)unlockAchievement('survivor');state.best=Math.max(state.best,state.day);state.bestTime=state.bestTime===null?state.elapsed:Math.min(state.bestTime,state.elapsed)}
+
+  function drawCow(g,cow,x,y,s,now,portrait){
+    var f=cow.f,coat=coatColors[f.coat],dir=f.flip?-1:1,hop=cow.hop>0?Math.sin(cow.hop*Math.PI)*-14:0;
+    var jig=!portrait&&state.running?Math.sin(now*.003+cow.phase)*1.3:0;
+    g.save();g.translate(x+jig,y+hop);g.scale(s*dir,s);g.lineJoin='round';g.lineCap='round';g.strokeStyle='#161616';g.lineWidth=3/s;
+    // tail
+    g.beginPath();g.moveTo(-37,0);g.quadraticCurveTo(-52,-10,-46,18);g.stroke();g.fillStyle='#161616';g.beginPath();g.ellipse(-46,21,5,8,-.3,0,Math.PI*2);g.fill();
+    // legs
+    g.fillStyle=coat.v;[-24,-7,16,30].forEach(function(lx,k){g.beginPath();g.roundRect(lx,13,9,29,3);g.fill();g.stroke();g.fillStyle='#302b27';g.fillRect(lx,35,9,7);g.fillStyle=coat.v});
+    // body
+    g.beginPath();g.ellipse(-3,0,41,25,0,0,Math.PI*2);g.fillStyle=coat.v;g.fill();g.stroke();
+    // pattern spots, deterministic distinct arrangement
+    g.fillStyle=coat.s;var pr=mulberry32(6000+f.pattern*77+f.coat*9);var spots=2+(f.pattern%4);
+    for(var i=0;i<spots;i++){var sx=-28+pr()*52,sy=-13+pr()*24,rx=6+pr()*10,ry=4+pr()*8;g.save();g.translate(sx,sy);g.rotate(pr()*2);g.beginPath();g.ellipse(0,0,rx,ry,0,0,Math.PI*2);g.fill();g.restore()}
+    // head
+    g.fillStyle=coat.v;g.beginPath();g.ellipse(35,-3,23,25,0,0,Math.PI*2);g.fill();g.stroke();
+    // ears
+    g.beginPath();g.ellipse(18,-18,12,6,-.35,0,Math.PI*2);g.fill();g.stroke();g.beginPath();g.ellipse(52,-18,12,6,.35,0,Math.PI*2);g.fill();g.stroke();
+    if(f.horns){g.fillStyle='#f5cf73';g.beginPath();g.moveTo(24,-24);g.quadraticCurveTo(19,-40,30,-35);g.quadraticCurveTo(25,-31,30,-24);g.fill();g.stroke();g.beginPath();g.moveTo(43,-24);g.quadraticCurveTo(50,-40,40,-36);g.quadraticCurveTo(45,-31,38,-24);g.fill();g.stroke()}
+    // snout + face
+    g.fillStyle='#f3a6a5';g.beginPath();g.ellipse(38,8,15,11,0,0,Math.PI*2);g.fill();g.stroke();g.fillStyle='#1a1a1a';g.beginPath();g.arc(33,8,2,0,Math.PI*2);g.arc(43,8,2,0,Math.PI*2);g.fill();
+    g.beginPath();g.arc(30,-7,2.4,0,Math.PI*2);g.arc(44,-7,2.4,0,Math.PI*2);g.fill();
+    if(f.acc==='bell'){g.fillStyle='#ffe45b';g.fillRect(19,21,34,5);g.strokeRect(19,21,34,5);g.beginPath();g.moveTo(31,26);g.lineTo(44,26);g.lineTo(41,38);g.lineTo(34,38);g.closePath();g.fill();g.stroke()}
+    if(f.acc==='ribbon'){g.fillStyle='#ff5fa7';g.beginPath();g.moveTo(29,18);g.lineTo(17,14);g.lineTo(20,28);g.lineTo(34,22);g.lineTo(46,29);g.lineTo(48,15);g.lineTo(35,18);g.closePath();g.fill();g.stroke()}
+    if(cow.found){g.fillStyle='#22b66c';g.strokeStyle='#111';g.lineWidth=2.5/s;g.beginPath();g.arc(-3,-4,16,0,Math.PI*2);g.fill();g.stroke();g.strokeStyle='#fff';g.lineWidth=5/s;g.beginPath();g.moveTo(-11,-4);g.lineTo(-5,3);g.lineTo(8,-12);g.stroke()}
+    g.restore();
+  }
+
+  function drawBackground(){
+    var styles=getComputedStyle(document.documentElement);ctx.fillStyle=styles.getPropertyValue('--grass').trim();ctx.fillRect(0,0,1000,600);
+    ctx.strokeStyle=styles.getPropertyValue('--field-line').trim();ctx.lineWidth=3;ctx.globalAlpha=.28;
+    for(var x=-100;x<1100;x+=70){ctx.beginPath();ctx.moveTo(x,600);ctx.lineTo(x+170,70);ctx.stroke()}ctx.globalAlpha=1;
+    // distant fence
+    ctx.strokeStyle='#684928';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(0,72);ctx.lineTo(1000,72);ctx.stroke();for(x=15;x<1000;x+=95){ctx.beginPath();ctx.moveTo(x,50);ctx.lineTo(x,100);ctx.stroke()}
+    if(state.day>=8){ctx.fillStyle='#573a39';ctx.strokeStyle='#151515';ctx.lineWidth=5;ctx.fillRect(822,25,125,68);ctx.strokeRect(822,25,125,68);ctx.beginPath();ctx.moveTo(808,28);ctx.lineTo(884,-10);ctx.lineTo(960,28);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle=state.day>=11?'#ffe66b':'#20221f';ctx.fillRect(865,49,28,27);ctx.strokeRect(865,49,28,27)}
+  }
+  function drawAbductionBeam(c,now){var p=Math.min(1,(now-c.abductStart)/850),topX=c.x+Math.sin(now*.018)*7;ctx.save();ctx.globalCompositeOperation='screen';var grad=ctx.createLinearGradient(topX,0,c.x,c.y);grad.addColorStop(0,'rgba(232,235,255,.12)');grad.addColorStop(.6,'rgba(233,244,255,.52)');grad.addColorStop(1,'rgba(255,255,230,.9)');ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(topX-22,0);ctx.lineTo(c.x-58*(1-p*.3),c.y+30);ctx.lineTo(c.x+58*(1-p*.3),c.y+30);ctx.lineTo(topX+22,0);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(255,255,240,'+(0.4+p*.5)+')';ctx.lineWidth=5;for(var k=0;k<3;k++){ctx.beginPath();ctx.moveTo(topX+(k-1)*18,0);ctx.bezierCurveTo(c.x+Math.sin(now*.01+k)*45,120,c.x+Math.cos(now*.014+k)*30,c.y-70,c.x,c.y);ctx.stroke()}if(p>.72){ctx.globalAlpha=(p-.72)/.28;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(c.x,c.y-p*210,28+(p-.72)*150,0,Math.PI*2);ctx.fill()}ctx.restore()}
+  function drawParticles(){
+    state.particles.forEach(function(p){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillRect(-4,-3,8,6);ctx.restore()});ctx.globalAlpha=1;
+    state.ripples.forEach(function(r){ctx.strokeStyle=r.good?'#fff34f':'#e9324d';ctx.lineWidth=6;ctx.globalAlpha=r.life;ctx.beginPath();ctx.arc(r.x,r.y,(1-r.life)*45+6,0,Math.PI*2);ctx.stroke()});ctx.globalAlpha=1;
+  }
+  function update(dt,now){var lvl=levelFor(state.day);if(state.running&&lvl.m){state.cows.forEach(function(c){if(c.found||c.abducting)return;var bolt=lvl.b&&((now/1000+c.boltPhase)%8<.52)?4.2:1;var wobble=Math.sin(now*.0012+c.phase)*.8;c.x+=(c.vx+wobble*5)*dt*bolt;c.y+=(c.vy+Math.cos(now*.001+c.phase)*3)*dt*bolt;var pad=38*c.scale;if(c.x<pad||c.x>1000-pad){c.vx*=-1;c.x=Math.max(pad,Math.min(1000-pad,c.x))}if(c.y<105||c.y>570-pad){c.vy*=-1;c.y=Math.max(105,Math.min(570-pad,c.y))}})}
+    state.cows.forEach(function(c){if(c.abducting&&now-c.abductStart>=850)finishAbduction(c);if(c.hop>0){c.hop+=dt*2.2;if(c.hop>=1)c.hop=0}});
+    state.particles.forEach(function(p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=150*dt;p.life-=dt*1.1;p.r+=dt*4});state.particles=state.particles.filter(function(p){return p.life>0});
+    state.ripples.forEach(function(r){r.life-=dt*2.5});state.ripples=state.ripples.filter(function(r){return r.life>0});
+  }
+  function frame(rafNow){var now=performance.now(),dt=Math.min(.04,(now-state.lastFrame)/1000||0);state.lastFrame=now;if(state.running){state.elapsed=(now-state.start)/1000;timerEl.textContent=state.elapsed.toFixed(1)}update(dt,now);drawBackground();var ordered=state.cows.slice().sort(function(a,b){return a.y-b.y});ordered.forEach(function(c){if(c.found)return;if(c.abducting){var p=Math.min(1,(now-c.abductStart)/850);drawAbductionBeam(c,now);ctx.save();ctx.translate(c.x,c.y-p*210);ctx.rotate(p*2.6);drawCow(ctx,c,0,0,c.scale*(1-p*.42),now,false);ctx.restore()}else drawCow(ctx,c,c.x,c.y,c.scale,now,false)});drawParticles();requestAnimationFrame(frame)}
+
+  function cowAt(px,py){var ordered=state.cows.slice().sort(function(a,b){return b.y-a.y});for(var i=0;i<ordered.length;i++){var c=ordered[i],w=54*c.scale,h=42*c.scale;if(Math.abs(px-c.x)<w&&Math.abs(py-c.y)<h)return c}return null}
+  function pointer(e){if(!state.running||state.clearing)return;var r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1000,y=(e.clientY-r.top)/r.height*600,c=cowAt(x,y);if(!c)return;state.ripples.push({x:x,y:y,life:1,good:c.target});if(c.target&&!c.found&&!c.abducting){correct(c)}else if(!c.found&&!c.abducting){wrong(c)}}
+  function correct(c){c.abducting=true;c.abductStart=performance.now();wrap.classList.remove('shake');void wrap.offsetWidth;wrap.classList.add('shake');playRisingMoo();showToast('THEY FOUND IT.');if(state.day>=9)unlockAchievement('tracker')}
+  function finishAbduction(c){if(c.found)return;c.abducting=false;c.found=true;state.found[c.id]=1;state.totalFound++;if(state.collectedFeatures.length<10)state.collectedFeatures.push({coat:c.f.coat,pattern:c.f.pattern,horns:c.f.horns,acc:c.f.acc,flip:c.f.flip});implode(c.x,c.y-190);playArp();if(state.totalFound>=25)unlockAchievement('collection');renderTargets();updateUI();if(Object.keys(state.found).length===state.targets.length){state.clearing=true;state.running=false;setTimeout(clearDay,260)}}
+  function wrong(){state.hearts--;state.mistakes++;heartsEl.textContent=state.hearts;wrap.classList.remove('shake');void wrap.offsetWidth;wrap.classList.add('shake');playFail();showToast('NOT THAT COW! −1 ♥');if(state.mistakes>=3)unlockAchievement('butter');if(state.hearts<=0){state.running=false;state.clearing=true;setTimeout(gameOver,500)}}
+  function confetti(x,y){var colors=['#ffef61','#ff5fa7','#54d6ff','#fff','#ff7b46'];for(var i=0;i<30;i++){var a=Math.random()*Math.PI*2,s=60+Math.random()*170;state.particles.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-80,life:.6+Math.random()*.5,color:colors[i%colors.length],r:Math.random()*6})}}
+  function implode(x,y){var colors=['#fff','#d9e8ff','#ffef61','#ff79b9'];for(var i=0;i<38;i++){var a=Math.random()*Math.PI*2,r=40+Math.random()*100,s=80+Math.random()*120;state.particles.push({x:x+Math.cos(a)*r,y:y+Math.sin(a)*r,vx:-Math.cos(a)*s,vy:-Math.sin(a)*s,life:.45+Math.random()*.35,color:colors[i%colors.length],r:Math.random()*6})}}
+  function showToast(msg){toast.textContent=msg;toast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(function(){toast.classList.remove('show')},900)}
+  function starsEarned(){var lvl=levelFor(state.day),base=4+lvl.c*.15+lvl.t*1.6;if(state.mistakes===0&&state.elapsed<base)return 3;if(state.mistakes<=1&&state.elapsed<base*2)return 2;return 1}
+  function clearDay(){var stars=starsEarned();checkClearAchievements();playFanfare();resultTitle.textContent=state.day===15?'LEGENDARY COW SPOTTER':'PASTURE CLEARED';resultStars.textContent='★'.repeat(stars)+'☆'.repeat(3-stars);resultStars.setAttribute('aria-label',stars+' stars earned');resultText.textContent='Day '+state.day+' cleared in '+state.elapsed.toFixed(1)+'s with '+state.mistakes+' mistake'+(state.mistakes===1?'':'s')+'.';resultTiny.textContent=state.day===15?'It still hungers.':'Hearts carry into the next morning.';resultBtn.textContent=state.day===15?'ENTER ENDLESS MODE':'NEXT MORNING';if(state.day===15)revealModal.hidden=false;else resultModal.hidden=false}
+  function gameOver(){playFail();state.best=Math.max(state.best,state.day-1);resultTitle.textContent='THE HERD OUTSMARTED YOU';resultStars.textContent='';resultText.textContent='You survived '+Math.max(0,state.day-1)+' full day'+(state.day-1===1?'':'s')+'. Best this session: '+state.best+'.';resultTiny.textContent='The cows will be waiting in the same places.';resultBtn.textContent='RESTART DAY 1';resultModal.hidden=false;resultBtn.dataset.over='1'}
+  function nextDay(){resultModal.hidden=true;if(resultBtn.dataset.over){delete resultBtn.dataset.over;state.day=1;state.hearts=3;state.totalFound=0;state.cleanStreak=0;state.collectedFeatures=[]}else state.day++;buildDay(state.day)}
+
+  function ensureAudio(){if(state.muted)return null;if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();return audio}
+  function tone(freq,start,dur,type,vol,to){var ac=ensureAudio();if(!ac)return;var o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.setValueAtTime(freq,ac.currentTime+start);if(to)o.frequency.exponentialRampToValueAtTime(to,ac.currentTime+start+dur);g.gain.setValueAtTime(.0001,ac.currentTime+start);g.gain.exponentialRampToValueAtTime(vol||.08,ac.currentTime+start+.02);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+start+dur);o.connect(g);g.connect(ac.destination);o.start(ac.currentTime+start);o.stop(ac.currentTime+start+dur+.03)}
+  function playMoo(){tone(145,0,.32,'sawtooth',.055,92);tone(170,.18,.38,'triangle',.045,105)}
+  function playRisingMoo(){tone(105,0,.72,'sawtooth',.055,420);tone(145,.12,.62,'triangle',.035,620)}
+  function playArp(){tone(392,0,.12,'square',.035);tone(523,.08,.14,'square',.035);tone(659,.16,.18,'square',.035)}
+  function playAchievement(){tone(523,0,.13,'square',.03);tone(659,.11,.13,'square',.03);tone(784,.22,.22,'square',.035)}
+  function playFail(){tone(120,0,.32,'sawtooth',.06,65)}
+  function playFanfare(){[392,523,659,784].forEach(function(n,i){tone(n,i*.09,.25,'square',.035)})}
+  function playDramaticChord(){tone(82,0,2.8,'sawtooth',.04,58);tone(123,.1,2.5,'triangle',.035,88);tone(185,.2,2.2,'sine',.03,118)}
+
+  function drawIntro(rafNow){if(intro.done)return;var now=performance.now(),t=(now-intro.started)/1000,cin=intro.mode==='cinematic'?Math.max(0,(now-intro.cinematicStart)/1000):0,dark=intro.mode==='cinematic'?Math.min(1,cin/1.1)*Math.max(0,Math.min(1,(4.6-cin)/.8)):0;
+    introCtx.clearRect(0,0,1000,700);introCtx.fillStyle=mixColor('#8dd9ff','#211433',dark);introCtx.fillRect(0,0,1000,700);
+    var sunY=intro.mode==='loading'?300-Math.min(1,t/1.5)*150:145;introCtx.fillStyle='#ffe66b';introCtx.strokeStyle='#151515';introCtx.lineWidth=7;introCtx.beginPath();introCtx.arc(150,sunY,58,0,Math.PI*2);introCtx.fill();introCtx.stroke();
+    introCtx.globalAlpha=1-dark*.7;for(var i=0;i<3;i++)drawCloud(introCtx,180+i*310+Math.sin(now*.0003+i)*60,105+i*45,1+i*.12);introCtx.globalAlpha=1;
+    if(intro.mode!=='loading'){introCtx.strokeStyle='#151515';introCtx.lineWidth=5;for(i=0;i<4;i++){var bx=120+i*210+Math.sin(now*.001+i)*15,by=170+i%2*30;introCtx.beginPath();introCtx.arc(bx,by,12,Math.PI*1.1,Math.PI*1.9);introCtx.arc(bx+22,by,12,Math.PI*1.1,Math.PI*1.9);introCtx.stroke()}}
+    introCtx.fillStyle=mixColor('#a7e86d','#27304a',dark);introCtx.fillRect(0,420,1000,280);introCtx.strokeStyle='#65ba50';introCtx.lineWidth=4;for(i=-100;i<1100;i+=70){introCtx.beginPath();introCtx.moveTo(i,700);introCtx.lineTo(i+130,420);introCtx.stroke()}
+    var introCows=[{x:260,f:{coat:0,pattern:3,horns:true,acc:'bell',flip:false}},{x:560,f:{coat:1,pattern:9,horns:false,acc:'ribbon',flip:true}},{x:790,f:{coat:2,pattern:12,horns:true,acc:'none',flip:false}}];
+    introCows.forEach(function(c,j){var x=c.x+Math.sin(now*.0008+j)*18,y=515+Math.sin(now*.002+j)*5;if(intro.mode==='loading'&&j===0)x=-120+Math.min(1,t/1.5)*380;if(intro.mode==='cinematic'&&j===1&&cin>1.25){var lift=Math.min(1,(cin-1.25)/1.9);y-=lift*390;x+=Math.sin(cin*8)*12;introCtx.save();introCtx.translate(x,y);introCtx.rotate(lift*3.2);drawCow(introCtx,{f:c.f,hop:0,found:false,phase:j},0,0,1.2*(1-lift*.5),now,true);introCtx.restore()}else if(!(intro.mode==='cinematic'&&j===1&&cin>3.15))drawCow(introCtx,{f:c.f,hop:0,found:false,phase:j},x,y,1.2,now,true)});
+    if(intro.mode==='cinematic')drawIntroPresence(cin,dark,now);
+    if(intro.mode==='loading'){loadingFill.style.width=Math.min(100,t/1.55*100)+'%';if(t>1.62){intro.mode='start';loadingPanel.hidden=true;startPanel.hidden=false}}
+    if(intro.mode==='cinematic'&&cin>4.55)finishIntro();requestAnimationFrame(drawIntro)
+  }
+  function mixColor(a,b,t){function p(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]}var x=p(a),y=p(b);return'rgb('+x.map(function(v,i){return Math.round(v+(y[i]-v)*t)}).join(',')+')'}
+  function drawCloud(g,x,y,s){g.save();g.translate(x,y);g.scale(s,s);g.fillStyle='#fffdf4';g.strokeStyle='#151515';g.lineWidth=5;g.beginPath();g.arc(-38,8,28,0,Math.PI*2);g.arc(0,-4,40,0,Math.PI*2);g.arc(40,10,26,0,Math.PI*2);g.rect(-48,8,98,30);g.fill();g.stroke();g.restore()}
+  function drawIntroPresence(cin,dark,now){if(cin<.45)return;var descend=Math.min(1,(cin-.45)/.95),recede=cin>3.6?Math.max(0,1-(cin-3.6)/.8):1,y=-150+descend*250-(1-recede)*220;introCtx.save();introCtx.globalAlpha=recede;introCtx.translate(500,y);introCtx.fillStyle='#171129';introCtx.strokeStyle='#fff5c7';introCtx.lineWidth=8;introCtx.beginPath();introCtx.moveTo(-240,-70);introCtx.quadraticCurveTo(0,-210,240,-70);introCtx.quadraticCurveTo(0,150,-240,-70);introCtx.fill();introCtx.stroke();introCtx.fillStyle='#fff5c7';introCtx.beginPath();introCtx.ellipse(0,-35,112,64,0,0,Math.PI*2);introCtx.fill();introCtx.fillStyle='#ff79b9';introCtx.beginPath();introCtx.arc(0,-35,30+Math.sin(now*.006)*5,0,Math.PI*2);introCtx.fill();introCtx.fillStyle='#151515';introCtx.beginPath();introCtx.arc(0,-35,14,0,Math.PI*2);introCtx.fill();for(var k=0;k<7;k++){introCtx.beginPath();introCtx.moveTo(-175+k*58,10);introCtx.bezierCurveTo(-230+k*65,90+Math.sin(now*.004+k)*25,-140+k*48,170,-180+k*60,230);introCtx.stroke()}introCtx.restore();if(cin>1.1&&cin<3.35){var alpha=Math.min(1,(cin-1.1)/.3)*Math.min(1,(3.35-cin)/.25),grad=introCtx.createLinearGradient(500,0,560,520);grad.addColorStop(0,'rgba(239,243,255,.18)');grad.addColorStop(1,'rgba(255,255,220,'+(.85*alpha)+')');introCtx.fillStyle=grad;introCtx.beginPath();introCtx.moveTo(465,0);introCtx.lineTo(490,560);introCtx.lineTo(635,560);introCtx.lineTo(535,0);introCtx.closePath();introCtx.fill()}if(cin>3.02&&cin<3.4){introCtx.globalAlpha=1-Math.abs(cin-3.18)/.18;introCtx.fillStyle='#fff';introCtx.fillRect(0,0,1000,700);introCtx.globalAlpha=1}}
+  function beginIntroCinematic(){if(intro.mode!=='start')return;ensureAudio();intro.mode='cinematic';intro.cinematicStart=performance.now();startPanel.hidden=true;skipIntro.hidden=false;introStage.classList.add('cinematic');playDramaticChord();playRisingMoo()}
+  function finishIntro(){if(intro.done)return;intro.done=true;skipIntro.hidden=true;introStage.classList.add('done');setTimeout(function(){introStage.hidden=true;storyModal.hidden=false},430)}
+
+  function buildBossParts(){var source=state.collectedFeatures.slice(0,10),rng=mulberry32(15015);while(source.length<10){var f=state.cows[source.length%Math.max(1,state.cows.length)];source.push(f?f.f:feature(rng))}var offsets=[[-145,-155],[25,-165],[155,-105],[-205,-45],[-55,-55],[105,-15],[-170,75],[-25,105],[145,95],[35,20]];boss.parts=source.map(function(f,i){return{f:{coat:f.coat,pattern:f.pattern,horns:f.horns,acc:f.acc,flip:f.flip},ox:offsets[i][0],oy:offsets[i][1],off:false,rx:0,ry:0,rs:1,vx:0,vy:0,rot:0}})}
+  function renderBossWanted(){bossWanted.innerHTML='';boss.parts.forEach(function(p,i){var slot=document.createElement('div');slot.className='boss-poster'+(p.off?' off':'');slot.title='Collected cow '+(i+1);var cv=document.createElement('canvas');cv.width=120;cv.height=88;drawCow(cv.getContext('2d'),{f:p.f,hop:0,found:false,phase:i},60,46,.78,0,true);slot.appendChild(cv);bossWanted.appendChild(slot)});var left=boss.parts.filter(function(p){return!p.off}).length;bossProgress.textContent='LINKS '+left+' / 10'}
+  function startBoss(){revealModal.hidden=true;bossDeathModal.hidden=true;bossStage.hidden=false;boss.active=true;boss.exploding=false;boss.start=performance.now();boss.penalty=0;boss.particles=[];boss.lastFrame=performance.now();buildBossParts();renderBossWanted();playDramaticChord();requestAnimationFrame(bossFrame)}
+  function bossFrame(rafNow){if(bossStage.hidden)return;var now=performance.now(),dt=Math.min(.04,(now-boss.lastFrame)/1000||0);boss.lastFrame=now;boss.particles.forEach(function(p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=80*dt;p.life-=dt});boss.particles=boss.particles.filter(function(p){return p.life>0});var elapsed=(now-boss.start)/1000+boss.penalty;if(boss.active&&elapsed>=75){bossLose();return}drawBoss(now,elapsed);if(boss.exploding&&now-boss.explodeStart>1900){showTrueEnding();return}if(!bossStage.hidden)requestAnimationFrame(bossFrame)}
+  function drawBoss(now,elapsed){var g=bossCtx,w=1000,h=700;g.fillStyle='#171129';g.fillRect(0,0,w,h);g.fillStyle='#fff5c7';for(var s=0;s<70;s++){var sx=(s*137)%1000,sy=(s*71)%620;g.globalAlpha=.25+((s%5)/10);g.fillRect(sx,sy,2+(s%2),2+(s%2))}g.globalAlpha=1;g.fillStyle='#2d593e';g.fillRect(0,615,1000,85);var progress=Math.min(1,elapsed/75),scale=.72+progress*1.5,t=now*.001,alpha=boss.exploding?Math.max(0,1-(now-boss.explodeStart)/1300):1,cx=500+Math.sin(t*.7)*20,cy=470+progress*75+Math.sin(t)*10;g.save();g.globalAlpha=alpha;g.translate(cx,cy);g.rotate(Math.sin(t*.8)*.035);g.scale(scale,scale);g.fillStyle='#4c3c51';g.strokeStyle='#09080b';g.lineWidth=10/scale;for(var b=0;b<8;b++){g.beginPath();g.ellipse(Math.sin(b*2.1)*120,Math.cos(b*1.7)*80-35,110+(b%3)*20,90+(b%2)*20,b*.3,0,Math.PI*2);g.fill();g.stroke()}for(b=0;b<6;b++){g.beginPath();g.moveTo(-190+b*75,15);g.bezierCurveTo(-260+b*90,120,-230+b*72,170,-260+b*90,245);g.stroke()}g.fillStyle='#f3a6a5';g.beginPath();g.ellipse(10,95,120,48,0,0,Math.PI*2);g.fill();g.stroke();for(b=0;b<5;b++){g.beginPath();g.arc(-70+b*35,112,10,0,Math.PI*2);g.fill();g.stroke()}for(b=0;b<13;b++){var ex=-175+(b%7)*55,ey=-130+Math.floor(b/7)*95;g.fillStyle='#fff5c7';g.beginPath();g.ellipse(ex,ey,14,9,0,0,Math.PI*2);g.fill();g.stroke();g.fillStyle=b%2?'#ff79b9':'#151515';g.beginPath();g.arc(ex+Math.sin(t*2+b)*3,ey,4,0,Math.PI*2);g.fill()}g.restore();
+    boss.parts.forEach(function(p,i){var swayX=Math.sin(t*1.7+i)*10,swayY=Math.cos(t*1.3+i)*7;p.rx=cx+(p.ox+swayX)*scale;p.ry=cy+(p.oy+swayY)*scale;p.rs=Math.max(.55,.72*scale);var px=p.rx,py=p.ry,rot=Math.sin(t*1.5+i)*.08;if(boss.exploding){var et=(now-boss.explodeStart)/1000;px+=p.vx*et;py+=p.vy*et+80*et*et;rot+=p.rot*et}g.save();g.translate(px,py);g.rotate(rot);if(p.off){g.globalAlpha=.42*alpha;g.filter='grayscale(1)'}else g.globalAlpha=alpha;drawCow(g,{f:p.f,hop:0,found:false,phase:i},0,0,p.rs,now,true);g.restore()});g.filter='none';g.globalAlpha=1;
+    boss.particles.forEach(function(p){g.globalAlpha=Math.max(0,p.life);g.fillStyle=p.color;g.fillRect(p.x-4,p.y-4,8,8)});g.globalAlpha=1;if(boss.exploding){var flash=1-Math.min(1,(now-boss.explodeStart)/450);g.globalAlpha=flash;g.fillStyle='#fff';g.fillRect(0,0,w,h);g.globalAlpha=1}bossTimer.textContent=Math.max(0,75-elapsed).toFixed(1)}
+  function bossPointer(e){if(!boss.active)return;var r=bossCanvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1000,y=(e.clientY-r.top)/r.height*700,hit=null;for(var i=boss.parts.length-1;i>=0;i--){var p=boss.parts[i];if(!p.off&&Math.abs(x-p.rx)<60*p.rs&&Math.abs(y-p.ry)<48*p.rs){hit=p;break}}if(hit)delinkBossPart(hit);else bossWrong()}
+  function delinkBossPart(p){p.off=true;for(var i=0;i<24;i++){var a=Math.random()*Math.PI*2,s=80+Math.random()*160;boss.particles.push({x:p.rx,y:p.ry,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.45+Math.random()*.45,color:i%2?'#ffe66b':'#8dd9ff'})}tone(240,0,.14,'square',.05,90);tone(520,.08,.2,'triangle',.03,760);renderBossWanted();if(boss.parts.every(function(x){return x.off}))bossWin()}
+  function bossWrong(){boss.penalty+=3;bossStage.classList.remove('shake');void bossStage.offsetWidth;bossStage.classList.add('shake');tone(70,0,.35,'sawtooth',.07,45)}
+  function bossLose(){boss.active=false;bossDeathModal.hidden=false;tone(75,0,1.1,'sawtooth',.08,38)}
+  function bossWin(){boss.active=false;boss.exploding=true;boss.explodeStart=performance.now();boss.parts.forEach(function(p){var a=Math.atan2(p.ry-350,p.rx-500)+(Math.random()-.5);p.vx=Math.cos(a)*(180+Math.random()*260);p.vy=Math.sin(a)*(180+Math.random()*260)-180;p.rot=(Math.random()-.5)*8});unlockAchievement('legend');playFanfare();tone(196,0,1.4,'triangle',.04,784)}
+  function showTrueEnding(){bossStage.hidden=true;boss.exploding=false;resultTitle.textContent='THE HERD IS UNMADE';resultStars.textContent='★★★';resultStars.setAttribute('aria-label','True ending');resultText.textContent='The sky is quiet. For now.';resultTiny.textContent='Endless mode unlocked. It still hungers.';resultBtn.textContent='ENTER ENDLESS MODE';resultModal.hidden=false}
+
+  storyNext.addEventListener('click',function(){ensureAudio();state.storyStep++;if(state.storyStep===1){storyTitle.textContent='ANOTHER THING.';storyText.textContent="The requests arrive as letters with no sender. Find the cow on the WANTED poster."}else if(state.storyStep===2){storyTitle.textContent='HOW TO SPOT';storyText.textContent='Match the WANTED portrait, then tap that cow. Three wrong cows end the run. Move fast for stars.';storyNext.textContent='START DAY 1'}else{storyModal.hidden=true;buildDay(1)}});
+  resultBtn.addEventListener('click',nextDay);
+  startBtn.addEventListener('click',beginIntroCinematic);
+  skipIntro.addEventListener('pointerdown',function(e){e.stopPropagation();finishIntro()});
+  introStage.addEventListener('pointerdown',function(){if(intro.mode==='cinematic')finishIntro()});
+  introAchievementsBtn.addEventListener('click',function(e){e.stopPropagation();openAchievements(introStage)});
+  storyAchievementsBtn.addEventListener('click',function(){openAchievements(storyModal)});
+  achievementsBack.addEventListener('click',closeAchievements);
+  function pauseGame(){if(!state.running)return;state.elapsed=(performance.now()-state.start)/1000;state.running=false;state.pausedFromGame=true;pauseModal.hidden=false}
+  function resumeGame(){pauseModal.hidden=true;if(state.pausedFromGame){state.start=performance.now()-state.elapsed*1000;state.running=true;state.pausedFromGame=false}}
+  pauseBtn.addEventListener('click',pauseGame);resumeBtn.addEventListener('click',resumeGame);
+  pauseAchievementsBtn.addEventListener('click',function(){openAchievements(pauseModal)});
+  achievementsBtn.addEventListener('click',function(){if(state.running)pauseGame();openAchievements(pauseModal.hidden?null:pauseModal)});
+  revealBtn.addEventListener('click',startBoss);retryBossBtn.addEventListener('click',startBoss);bossCanvas.addEventListener('pointerdown',bossPointer);
+  muteBtn.addEventListener('click',function(){state.muted=!state.muted;muteBtn.textContent=state.muted?'×':'♪';muteBtn.setAttribute('aria-label',state.muted?'Unmute sound':'Mute sound');if(!state.muted)ensureAudio()});
+  canvas.addEventListener('pointerdown',pointer);
+  canvas.addEventListener('pointermove',function(e){if(e.pointerType==='touch')return;var r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*1000,y=(e.clientY-r.top)/r.height*600;canvas.style.cursor=cowAt(x,y)?'pointer':'crosshair'});
+
+  // Deterministic test hooks. Ctrl+Alt+1/8/9/0/3 jumps to days 1/8/9/10/13;
+  // Ctrl+Alt+T selects a target and Ctrl+Alt+W selects a wrong cow.
+  window.__spotCowDebug={jump:function(day){intro.done=true;introStage.hidden=true;storyModal.hidden=true;resultModal.hidden=true;revealModal.hidden=true;bossStage.hidden=true;state.day=Math.max(1,Math.floor(day));state.hearts=3;buildDay(state.day)},snapshot:function(){var l=levelFor(state.day);return{day:state.day,cows:state.cows.length,targets:state.targets.length,moving:!!l.m,bolting:!!l.b,hearts:state.hearts,found:Object.keys(state.found).length,narration:narration.textContent,achievements:Object.keys(state.achievements),totalFound:state.totalFound}},pickTarget:function(){var id=state.targets.filter(function(x){return!state.found[x]&&!state.cows[x].abducting})[0];if(id!==undefined)correct(state.cows[id])},finishAbductions:function(){state.cows.filter(function(c){return c.abducting}).forEach(finishAbduction)},pickWrong:function(){var c=state.cows.filter(function(x){return!x.target})[0];if(c)wrong(c)},openAchievements:function(){openAchievements(null)},startBoss:function(){startBoss()},delinkAll:function(){boss.parts.forEach(function(p){if(!p.off)delinkBossPart(p)})},forceBossLoss:function(){boss.penalty=80},skipIntro:function(){finishIntro()}};
+  document.addEventListener('keydown',function(e){if(!e.ctrlKey||!e.altKey)return;var jumps={'1':1,'8':8,'9':9,'0':10,'3':13,'4':14,'5':15};if(jumps[e.key])window.__spotCowDebug.jump(jumps[e.key]);else if(e.key.toLowerCase()==='t')window.__spotCowDebug.pickTarget();else if(e.key.toLowerCase()==='w')window.__spotCowDebug.pickWrong();else if(e.key.toLowerCase()==='b')window.__spotCowDebug.startBoss();else if(e.key.toLowerCase()==='l')window.__spotCowDebug.delinkAll()});
+
+  buildDay(1);state.running=false;timerEl.textContent='0.0';renderAchievements();requestAnimationFrame(frame);requestAnimationFrame(drawIntro);
+})();
+</script>
+</body>
+</html>
