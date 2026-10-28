@@ -70,6 +70,20 @@ h1,h2,.bungee{font-family:"Bungee",cursive;font-weight:400;line-height:1.05}
 .gob.half .hpbar i{background:var(--orange)}
 .gob .crack{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:26px}
 .gob.half .crack{display:flex}
+.gob .badge{position:absolute;top:-4px;right:2px;font-size:17px;filter:drop-shadow(1px 1px 0 #141414)}
+.gob.eliteGob{max-width:150px}
+.gob.eliteGob svg{max-height:118px}
+.cave.shake{animation:caveShake .45s ease}
+@keyframes caveShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px) rotate(-.4deg)}45%{transform:translateX(6px)}70%{transform:translateX(-4px)}}
+#comboTag{background:var(--orange);color:#141414;visibility:hidden}
+.synergy{border:3px solid #141414;background:#FFF3B0;color:#141414;box-shadow:3px 3px 0 #141414;padding:9px 10px;margin-bottom:10px;font-size:13px;line-height:1.35}
+.synergy.on{background:#C6F16D}
+.synergy b{font-family:"Bungee";font-size:13px;display:block}
+.ach{border:3px solid #141414;background:#fff;color:#141414;box-shadow:3px 3px 0 #141414;padding:8px 10px;margin-bottom:8px;font-size:13px;line-height:1.35}
+.ach.done{background:#E8FFD9}
+.ach b{font-family:"Bungee";font-size:13px}
+.ach .bar{height:8px;border:2px solid #141414;background:#fff;margin-top:5px;overflow:hidden}
+.ach .bar i{display:block;height:100%;background:var(--green)}
 .hordeRow{display:flex;justify-content:center;align-items:flex-end;gap:8px;height:118px;padding:6px 0 2px;overflow:hidden}
 .hordeStack{flex:1;max-width:104px;text-align:center;position:relative}
 .hordeStack svg{width:100%;max-height:88px;height:auto;display:block}
@@ -88,7 +102,8 @@ h1,h2,.bungee{font-family:"Bungee",cursive;font-weight:400;line-height:1.05}
 .floater{position:absolute;font-family:"Bungee";color:#FFE45E;background:#141414;border:2px solid #FFE45E;border-radius:999px;padding:2px 10px;font-size:17px;animation:floatUp .9s ease forwards;white-space:nowrap}
 .particle{position:absolute;font-size:18px;animation:floatUp .7s ease forwards;pointer-events:none}
 @keyframes floatUp{to{transform:translateY(-72px) rotate(-8deg);opacity:0}}
-#goldenGob{position:absolute;z-index:6;display:none;background:var(--gold);border:3px solid #141414;box-shadow:3px 3px 0 #141414;padding:8px 10px;font-weight:900;color:#141414;animation:bob .4s infinite alternate}
+#goldenGob{position:absolute;z-index:6;display:none;background:var(--gold);border:3px solid #141414;box-shadow:3px 3px 0 #141414,0 0 22px 6px rgba(255,196,0,.85);padding:6px 10px;font-weight:900;color:#141414;animation:bob .4s infinite alternate;align-items:center;gap:6px}
+#goldenGob svg{width:44px;height:44px;display:block;filter:drop-shadow(0 0 5px #FFF3B0)}
 @keyframes bob{to{transform:translateY(-6px) rotate(2deg)}}
 
 /* CONTROLS — exactly 3, fixed height, slots never move (locked ones hide in place) */
@@ -171,7 +186,7 @@ h1,h2,.bungee{font-family:"Bungee",cursive;font-weight:400;line-height:1.05}
   </header>
 
   <section class="cave" id="cave">
-    <div class="cavehead"><span class="tag">🕳️ GOBLIN CAVES</span><span class="tag" id="surgeTag">📈 PARTS ×2!</span></div>
+    <div class="cavehead"><span class="tag">🕳️ GOBLIN CAVES</span><span class="tag" id="comboTag">🔥 COMBO</span><span class="tag" id="surgeTag">📈 PARTS ×2!</span></div>
     <div class="cardZone">
       <div id="card" role="button" aria-label="Goblin encounter card. Swipe or tap to strike." tabindex="0">
         <div id="cardInner">
@@ -180,7 +195,7 @@ h1,h2,.bungee{font-family:"Bungee",cursive;font-weight:400;line-height:1.05}
         </div>
         <div class="slashFx" id="slashFx">💥</div>
       </div>
-      <button id="goldenGob">✨ GOLDEN GOBLIN! TAP FAST! ✨</button>
+      <button id="goldenGob"><span id="goldenArt"></span><span id="goldenTxt">✨ GOLDEN! TAP!</span></button>
       <div class="floaters" id="floaters"></div>
     </div>
     <div class="swipeHint">👉 SWIPE THE CARD 👈</div>
@@ -203,7 +218,7 @@ h1,h2,.bungee{font-family:"Bungee",cursive;font-weight:400;line-height:1.05}
       <button class="iconbtn" id="sheetClose" aria-label="Close shop">✕</button>
     </div>
     <div class="sheetBody">
-      <div id="gearView"><div id="upgrades"></div></div>
+      <div id="gearView"><div id="synergyBox"></div><div id="statsLine" class="synergy" style="background:#fff"></div><div id="upgrades"></div><div id="achBox"></div></div>
       <div id="partyView" style="display:none">
         <div class="partyMeta">⚔️ PARTY: <span id="kps">0</span>/s</div>
         <div id="slots"></div>
@@ -253,6 +268,15 @@ h1,h2,.bungee{font-family:"Bungee",cursive;font-weight:400;line-height:1.05}
     <button class="cta" id="winClose">KEEP PLAYING →</button>
   </div>
 </div>
+<div class="overlay" id="eliteModal">
+  <div class="modal" style="text-align:center">
+    <div class="faces"><span>👹</span><span>👑</span></div>
+    <h2>ELITE BRUTE!</h2>
+    <p id="eliteText">A huge brute blocks the tunnel. Big risk, big parts.</p>
+    <button class="cta" id="eliteFight" style="background:var(--red)">FIGHT IT ⚔️</button>
+    <button class="cta" id="eliteSkip" style="background:var(--teal)">SKIP IT</button>
+  </div>
+</div>
 <div class="overlay" id="confirmModal">
   <div class="modal">
     <h2>ABANDON THE QUEST?</h2>
@@ -272,39 +296,64 @@ var GOAL=1000000000, GOB_HP=5;
 var ADV=[
  {name:"Peasant with a Spoon",face:"🧑‍🌾",kps:1,cost:50,desc:"Sharpened spoon."},
  {name:"Squire",face:"🧑",kps:3,cost:250,desc:"A real sword now."},
- {name:"Knight",face:"🤺",kps:9,cost:1200,desc:"Armour. Horse. Attitude."},
- {name:"Ranger",face:"🧝",kps:27,cost:6000,desc:"Never misses."},
- {name:"Battle Mage",face:"🧙",kps:80,cost:30000,desc:"Fireball clears tunnels."},
- {name:"Paladin",face:"🦸",kps:240,cost:160000,desc:"Holy light. Sad goblins."},
- {name:"Golem Rider",face:"🤖",kps:700,cost:850000,desc:"The golem does the stepping."},
- {name:"Dragon Knight",face:"🐲",kps:2000,cost:4500000,desc:"Brought a dragon. Fair."},
- {name:"Goblin Economist",face:"👹",kps:6000,cost:24000000,desc:"A defector. Knows every tunnel."},
- {name:"Demigod of Pest Control",face:"👼",kps:18000,cost:130000000,desc:"Caves file noise complaints."}
+ {name:"Knight",face:"🤺",kps:9,cost:2400,desc:"Armour. Horse. Attitude."},
+ {name:"Ranger",face:"🧝",kps:27,cost:12000,desc:"Never misses."},
+ {name:"Battle Mage",face:"🧙",kps:80,cost:60000,desc:"Fireball clears tunnels."},
+ {name:"Paladin",face:"🦸",kps:240,cost:315000,desc:"Holy light. Sad goblins."},
+ {name:"Golem Rider",face:"🤖",kps:700,cost:1650000,desc:"The golem does the stepping."},
+ {name:"Dragon Knight",face:"🐲",kps:2000,cost:8850000,desc:"Brought a dragon. Fair."},
+ {name:"Goblin Economist",face:"👹",kps:6000,cost:46500000,desc:"A defector. Knows every tunnel."},
+ {name:"Demigod of Pest Control",face:"👼",kps:18000,cost:255000000,desc:"Caves file noise complaints."}
 ];
-var SLOT_COSTS=[0,300,2000,12000,75000,450000,2700000,16000000];
+var SLOT_COSTS=[0,300,3500,21000,133000,784000,4760000,28000000];
 var WEAPON_NAMES=["Bare Fists","Pointy Stick","Rusty Sword","Steel Sword","War Hammer","Twin Axes","Enchanted Blade","Goblin Cleaver 3000","Dragon Fang","Excalibur Jr.","Starfall Cannon","Bigger Starfall Cannon"];
 function damageFor(l){return Math.max(1,Math.round(Math.pow(2.15,l)));}
 var ENC_SIZES=[1,2,3,4,5,8,12,20,35,60,100,175,300];
 function encSizeFor(l){return ENC_SIZES[Math.min(l,ENC_SIZES.length-1)];}
 var UPGS=[
- {id:"weapon",emoji:"🗡️",name:"Weapon",base:25,growth:2.55,desc:function(l){return "💥 "+fmt(damageFor(l))+" → "+fmt(damageFor(l+1))+" dmg/swipe";}},
- {id:"bait",emoji:"🪔",name:"Goblin Bait",base:80,growth:3.05,max:12,desc:function(l){return l>=12?"👹 "+encSizeFor(l)+" per card — MAX":"👹 "+encSizeFor(l)+" → "+encSizeFor(l+1)+" per card";}},
- {id:"sack",emoji:"🎒",name:"Loot Sack",base:50,growth:2.95,desc:function(l){return "👂 "+partsPerKillFor(l)+" → "+partsPerKillFor(l+1)+" parts/kill";}},
- {id:"haggle",emoji:"💬",name:"Haggling",base:60,growth:2.95,desc:function(l){return "🪙 "+sellPriceFor(l)+"g → "+sellPriceFor(l+1)+"g per part";}},
- {id:"whet",emoji:"🪨",name:"Party Whetstone",base:100,growth:3.18,desc:function(l){return "⚔️ party ×"+partyMultFor(l).toFixed(1)+" → ×"+partyMultFor(l+1).toFixed(1);}}
+ {id:"weapon",emoji:"🗡️",name:"Weapon",base:25,growth:2.8,desc:function(l){return "💥 "+fmt(damageFor(l))+" → "+fmt(damageFor(l+1))+" dmg/swipe";}},
+ {id:"bait",emoji:"🪔",name:"Goblin Bait",base:80,growth:3.6,max:12,desc:function(l){return l>=12?"👹 "+encSizeFor(l)+" per card — MAX":"👹 "+encSizeFor(l)+" → "+encSizeFor(l+1)+" per card";}},
+ {id:"sack",emoji:"🎒",name:"Loot Sack",base:50,growth:3.35,desc:function(l){return "👂 "+partsPerKillFor(l)+" → "+partsPerKillFor(l+1)+" parts/kill";}},
+ {id:"haggle",emoji:"💬",name:"Haggling",base:60,growth:3.35,desc:function(l){return "🪙 "+sellPriceFor(l)+"g → "+sellPriceFor(l+1)+"g per part";}},
+ {id:"whet",emoji:"🪨",name:"Party Whetstone",base:100,growth:3.6,desc:function(l){return "⚔️ party ×"+partyMultFor(l).toFixed(1)+" → ×"+partyMultFor(l+1).toFixed(1);}}
 ];
 var S=null;
-function defState(){return{kills:0,total:0,gold:0,parts:0,frac:0,upg:{weapon:0,bait:0,sack:0,haggle:0,whet:0},slotsUnlocked:1,party:[null],card:null,won:false,muted:false,lastSeen:Date.now(),seenStory:false,surgeUntil:0,nextSurge:Date.now()+45000,introTour:false,unlockSell:false,introSell:false,unlockShop:false,introShop:false,unlockParty:false,introParty:false};}
-function newCard(){var n=encSizeFor(S.upg.bait),a=[];for(var i=0;i<n;i++)a.push(GOB_HP);return a;}
+function defState(){return{kills:0,total:0,gold:0,parts:0,frac:0,upg:{weapon:0,bait:0,sack:0,haggle:0,whet:0},slotsUnlocked:1,party:[null],card:null,won:false,muted:false,lastSeen:Date.now(),seenStory:false,surgeUntil:0,nextSurge:Date.now()+45000,introTour:false,unlockSell:false,introSell:false,unlockShop:false,introShop:false,unlockParty:false,introParty:false,stats:{brute:0,swift:0,goldskin:0,spiky:0,golden:0,surgeSales:0,elites:0},seenTypes:{},nextElite:250,elitePending:false,introBait:false,introHorde:false,pendingBaitSpot:false,pendingHordeSpot:false};}
+/* goblin types — variety unlocks only after the opening (first upgrade or 60 kills), so early pacing is untouched */
+var GTYPES={
+ normal:{hp:5,parts:1,fill:"#7ED321",badge:"",label:"Goblin"},
+ swift:{hp:3,parts:1,fill:"#C6E62E",badge:"⚡",label:"Swift"},
+ brute:{hp:10,parts:2,fill:"#4C9A06",badge:"🛡️",label:"Brute"},
+ goldskin:{hp:5,parts:4,fill:"#FFC400",badge:"✨",label:"Goldskin"},
+ spiky:{hp:5,parts:1,fill:"#2FBF71",badge:"💥",label:"Spiky"},
+ crimson:{hp:5,parts:2,fill:"#EF5350",badge:"◆",label:"Crimson · ×2 parts"},
+ azure:{hp:5,parts:2,fill:"#42A5F5",badge:"◆",label:"Azure · ×2 parts"},
+ violet:{hp:5,parts:2,fill:"#AB47BC",badge:"◆",label:"Violet · ×2 parts"},
+ golden:{hp:5,parts:4,fill:"#FFD700",badge:"👑",label:"Golden"},
+ elite:{hp:30,parts:25,fill:"#7CB342",badge:"👑",label:"Elite Brute"}
+};
+function variantsOn(){if(!S)return false;var u=S.upg.weapon+S.upg.bait+S.upg.sack+S.upg.haggle+S.upg.whet;return u>=1||S.total>=60;}
+function rollType(){if(!variantsOn())return "normal";var r=Math.random();if(r<0.10)return "brute";if(r<0.25)return "swift";if(r<0.28)return "goldskin";if(r<0.34)return "spiky";if(r<0.36)return "crimson";if(r<0.38)return "azure";if(r<0.395)return "violet";return "normal";}
+function mkGob(t){var g=GTYPES[t]||GTYPES.normal;return{hp:g.hp,max:g.hp,t:t};}
+function newCard(){var n=encSizeFor(S.upg.bait),a=[];for(var i=0;i<n;i++)a.push(mkGob(rollType()));return a;}
+function asGob(c){if(typeof c==="number")return{hp:c,max:GOB_HP,t:"normal"};if(c&&typeof c==="object"){var g=GTYPES[c.t]||GTYPES.normal;return{hp:Math.max(1,Math.min(c.max||g.hp,c.hp||g.hp)),max:c.max||g.hp,t:GTYPES[c.t]?c.t:"normal"};}return mkGob("normal");}
 function partsPerKillFor(l){return 1+l;}
 function partsPerKill(){return partsPerKillFor(S.upg.sack);}
 function sellPriceFor(l){return 2+l;}
 function sellPrice(){return sellPriceFor(S.upg.haggle);}
 function partyMultFor(l){return 1+l*0.4;}
 function partyMult(){return partyMultFor(S.upg.whet);}
+/* synergy: owning one of EACH track pays more than stacking one track */
+function fullKit(){return S.upg.weapon>=1&&S.upg.bait>=1&&S.upg.sack>=1&&S.upg.haggle>=1&&S.upg.whet>=1;}
+function kitCount(){var n=0;["weapon","bait","sack","haggle","whet"].forEach(function(k){if(S.upg[k]>=1)n++;});return n;}
+function synergyMult(){return fullKit()?1.2:1;}
+/* achievements pay real bonuses, never just badges */
+function achMult(){var m=1;if(S.total>=1000)m*=1.25;return m;}
+function sellMult(){var m=fullKit()?1.1:1;if(S.total>=100)m*=1.1;return m;}
+function surgeDur(){return (S.stats&&S.stats.surgeSales>=3)?25000:15000;}
 function damage(){return damageFor(S.upg.weapon);}
 function upgCost(u){return Math.floor(u.base*Math.pow(u.growth,S.upg[u.id]));}
-function partyKPS(){var t=0;S.party.forEach(function(a){if(a!==null&&a!==undefined)t+=ADV[a].kps;});return t*partyMult();}
+function partyKPS(){var t=0;S.party.forEach(function(a){if(a!==null&&a!==undefined)t+=ADV[a].kps;});return t*partyMult()*synergyMult()*achMult();}
 function fmt(n){n=Math.floor(n*10)/10;if(n<1000)return (n%1===0?""+Math.floor(n):n.toFixed(1));var u=["K","M","B","T","Qa","Qi"];var v=n;var i=-1;while(v>=1000&&i<u.length-1){v/=1000;i++;}return (v>=100?v.toFixed(0):v>=10?v.toFixed(1):v.toFixed(2)).replace(/\.0+$/,"").replace(/(\.\d)0$/,"$1")+" "+(u[i]||"");}
 function fullFmt(n){return Math.floor(n).toLocaleString("en-US");}
 
@@ -320,13 +369,18 @@ function save(){try{S.lastSeen=Date.now();localStorage.setItem(KEY,JSON.stringif
 function load(){try{var r=localStorage.getItem(KEY);if(r){var p=JSON.parse(r);var d=defState();for(var k in d){if(p[k]!==undefined)d[k]=p[k];}if(!d.upg)d.upg=defState().upg;["weapon","bait","sack","haggle","whet"].forEach(function(k){if(d.upg[k]===undefined)d.upg[k]=0;});if(!Array.isArray(d.party))d.party=[null];return d;}}catch(e){}return defState();}
 S=load();
 if(!Array.isArray(S.card)||!S.card.length)S.card=newCard();
-S.card=S.card.map(function(h){return Math.max(1,Math.min(GOB_HP,h));});
+S.card=S.card.map(asGob);
+if(!S.stats)S.stats=defState().stats;
+["brute","swift","goldskin","spiky","golden","surgeSales","elites"].forEach(function(k){if(S.stats[k]===undefined)S.stats[k]=0;});
+if(!S.seenTypes)S.seenTypes={};
+if(!S.nextElite)S.nextElite=250;
 /* returning players keep everything already introduced — no re-tour */
 (function(){if(!S.seenStory)return;var anyUpg=["weapon","bait","sack","haggle","whet"].some(function(k){return S.upg[k]>0;});var anyAdv=S.party.some(function(a){return a!==null&&a!==undefined;});
  S.introTour=true;
  if(S.kills>0||S.parts>0||S.gold>0||anyUpg||anyAdv){S.unlockSell=true;S.introSell=true;}
  if(S.gold>0||anyUpg||anyAdv){S.unlockShop=true;S.introShop=true;}
  if(anyUpg||anyAdv){S.unlockParty=true;S.introParty=true;}
+ if(S.upg.bait>0){S.introBait=true;if(encSizeFor(S.upg.bait)>5)S.introHorde=true;}
 })();
 
 var offlineMsg="";
@@ -338,6 +392,7 @@ var el={kills:$("kills"),gold:$("gold"),parts:null,kps:$("kps"),bar:$("progBar")
 var sellBtnEl=null,shopBtnEl=null;
 function ensureSellBtn(){if(sellBtnEl)return;sellBtnEl=document.createElement("button");sellBtnEl.className="ctl";sellBtnEl.id="sellBtn";sellBtnEl.addEventListener("click",sellParts);$("sellSlot").appendChild(sellBtnEl);}
 function removeSellBtn(){if(sellBtnEl){sellBtnEl.remove();sellBtnEl=null;}}
+function removeShopBtn(){if(shopBtnEl){shopBtnEl.remove();shopBtnEl=null;}}
 function ensureShopBtn(){if(shopBtnEl)return;shopBtnEl=document.createElement("button");shopBtnEl.className="ctl";shopBtnEl.id="shopBtn";shopBtnEl.textContent="🛒 SHOP";shopBtnEl.addEventListener("click",function(){if(spot.active)return;openSheet("gear");beep(440,.06,"square",.04);});$("shopSlot").appendChild(shopBtnEl);}
 function flash(elm){if(!elm)return;elm.classList.remove("flash");void elm.offsetWidth;elm.classList.add("flash");}
 
@@ -350,23 +405,40 @@ function cutToast(){clearTimeout(toastT);el.toast.style.display="none";toastBusy
 
 var MILES=[[100,"👑 “A hundred? Beginner's luck.”"],[1000,"👑 “A thousand. You'll tire.”"],[10000,"👑 “Ten thousand?! Stop enjoying this.”"],[100000,"👑 The King stopped smiling."],[1000000,"👑 “ONE MILLION? Who sold you maps?!”"],[10000000,"👑 The King's counter quit."],[100000000,"👑 “This was IMPOSSIBLE.”"],[500000000,"👑 Halfway. The King is nervous."],[900000000,"👑 The Princess picked flowers."],[GOAL,"👑 “A deal is a deal.”"]];
 var mileIdx=0;
-function checkMiles(){var winNow=S.total>=GOAL&&!S.won;while(mileIdx<MILES.length&&S.total>=MILES[mileIdx][0]){if(!(winNow&&MILES[mileIdx][0]===GOAL))toast(MILES[mileIdx][1],3400);mileIdx++;}if(winNow){S.won=true;cutToast();toastQ.length=0;$("winModal").classList.add("show");coinSnd();setTimeout(coinSnd,250);}}
+function celebrate(big){var cave=$("cave");cave.classList.remove("shake");void cave.offsetWidth;cave.classList.add("shake");for(var i=0;i<(big?18:12);i++){(function(i){setTimeout(function(){burst(8+Math.random()*84,12+Math.random()*46);},i*55);})(i);}beep(660,.09,"square",.06);setTimeout(function(){beep(880,.09,"square",.06);},110);setTimeout(function(){beep(1320,.14,"square",.06);},220);}
+function checkMiles(){var winNow=S.total>=GOAL&&!S.won;var crossed=false;while(mileIdx<MILES.length&&S.total>=MILES[mileIdx][0]){if(!(winNow&&MILES[mileIdx][0]===GOAL)){toast(MILES[mileIdx][1],3400);crossed=true;}mileIdx++;}if(crossed)celebrate(S.total>=1000000);if(winNow){S.won=true;cutToast();toastQ.length=0;$("winModal").classList.add("show");coinSnd();setTimeout(coinSnd,250);}}
 
-var GOB_SVG='<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M22 78 L62 92 L38 108 Z" fill="#7ED321" stroke="#141414" stroke-width="6"/><path d="M178 78 L138 92 L162 108 Z" fill="#7ED321" stroke="#141414" stroke-width="6"/><circle cx="100" cy="102" r="58" fill="#7ED321" stroke="#141414" stroke-width="7"/><circle cx="78" cy="94" r="11" fill="#fff" stroke="#141414" stroke-width="4"/><circle cx="80" cy="96" r="5" fill="#141414"/><circle cx="122" cy="94" r="11" fill="#fff" stroke="#141414" stroke-width="4"/><circle cx="120" cy="96" r="5" fill="#141414"/><path d="M72 126 Q100 142 128 126" fill="none" stroke="#141414" stroke-width="6" stroke-linecap="round"/><path d="M86 44 Q100 22 116 44" fill="none" stroke="#141414" stroke-width="7" stroke-linecap="round"/></svg>';
-var HORDE10_SVG='<svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="52" cy="118" r="34" fill="#5EA800" stroke="#141414" stroke-width="6"/><circle cx="148" cy="118" r="34" fill="#5EA800" stroke="#141414" stroke-width="6"/><circle cx="100" cy="88" r="42" fill="#7ED321" stroke="#141414" stroke-width="6"/><circle cx="66" cy="152" r="26" fill="#96E03A" stroke="#141414" stroke-width="5"/><circle cx="134" cy="152" r="26" fill="#96E03A" stroke="#141414" stroke-width="5"/><circle cx="86" cy="82" r="6" fill="#141414"/><circle cx="114" cy="82" r="6" fill="#141414"/><path d="M84 104 Q100 114 116 104" fill="none" stroke="#141414" stroke-width="5" stroke-linecap="round"/><circle cx="44" cy="112" r="4" fill="#141414"/><circle cx="156" cy="112" r="4" fill="#141414"/></svg>';
-var HORDE100_SVG='<svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="34" cy="130" r="24" fill="#4C8A00" stroke="#141414" stroke-width="5"/><circle cx="166" cy="130" r="24" fill="#4C8A00" stroke="#141414" stroke-width="5"/><circle cx="52" cy="86" r="28" fill="#5EA800" stroke="#141414" stroke-width="5"/><circle cx="148" cy="86" r="28" fill="#5EA800" stroke="#141414" stroke-width="5"/><circle cx="100" cy="140" r="30" fill="#5EA800" stroke="#141414" stroke-width="5"/><circle cx="100" cy="76" r="48" fill="#7ED321" stroke="#141414" stroke-width="7"/><path d="M58 62 L84 44 L74 74 Z" fill="#FF8A00" stroke="#141414" stroke-width="5"/><path d="M142 62 L116 44 L126 74 Z" fill="#FF8A00" stroke="#141414" stroke-width="5"/><circle cx="84" cy="72" r="8" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="86" cy="74" r="4" fill="#141414"/><circle cx="116" cy="72" r="8" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="114" cy="74" r="4" fill="#141414"/><path d="M80 96 L92 90 L100 100 L108 90 L120 96 L116 108 Q100 116 84 108 Z" fill="#fff" stroke="#141414" stroke-width="4"/></svg>';
+/* ===== ART — every type is its OWN creature: different body, posture, silhouette.
+   Bold single-silhouette shapes, thick outline, readable at card size. No text in art. ===== */
+function gobSVG(t){
+ var K="#141414";
+ if(t==="swift")return '<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M94 76 L154 60 L161 82 L102 97 Z" fill="#FF8A00" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M84 64 L162 38 L102 92 Z" fill="#C6E62E" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M60 116 Q98 84 154 100 Q164 130 130 148 Q78 156 60 116 Z" fill="#C6E62E" stroke="'+K+'" stroke-width="7"/><path d="M132 138 L172 158 L184 134 L146 118 Z" fill="#A8C90A" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M86 140 L54 180 L80 186 L108 150 Z" fill="#A8C90A" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M98 112 L68 140 L84 150 L112 126 Z" fill="#A8C90A" stroke="'+K+'" stroke-width="5" stroke-linejoin="round"/><circle cx="56" cy="88" r="35" fill="#C6E62E" stroke="'+K+'" stroke-width="7"/><path d="M24 84 L2 98 L26 108 Z" fill="#C6E62E" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><circle cx="48" cy="84" r="10" fill="#fff" stroke="'+K+'" stroke-width="4"/><circle cx="45" cy="86" r="5" fill="'+K+'"/><path d="M30 106 Q42 114 54 108" fill="none" stroke="'+K+'" stroke-width="6" stroke-linecap="round"/></svg>';
+ if(t==="brute")return '<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M48 96 L16 148 L46 166 L70 112 Z" fill="#3E7A04" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M152 96 L184 148 L154 166 L130 112 Z" fill="#3E7A04" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M52 62 Q100 40 148 62 L164 188 L36 188 Z" fill="#4C9A06" stroke="'+K+'" stroke-width="7" stroke-linejoin="round"/><ellipse cx="100" cy="142" rx="35" ry="31" fill="#96E03A" stroke="'+K+'" stroke-width="5"/><circle cx="28" cy="162" r="25" fill="#4C9A06" stroke="'+K+'" stroke-width="6"/><circle cx="172" cy="162" r="25" fill="#4C9A06" stroke="'+K+'" stroke-width="6"/><path d="M74 52 L54 42 L64 66 Z" fill="#4C9A06" stroke="'+K+'" stroke-width="5" stroke-linejoin="round"/><path d="M126 52 L146 42 L136 66 Z" fill="#4C9A06" stroke="'+K+'" stroke-width="5" stroke-linejoin="round"/><circle cx="100" cy="62" r="28" fill="#5EA800" stroke="'+K+'" stroke-width="7"/><path d="M73 54 L127 54 L127 65 L73 65 Z" fill="'+K+'"/><circle cx="88" cy="72" r="6" fill="#fff"/><circle cx="112" cy="72" r="6" fill="#fff"/><circle cx="88" cy="73" r="3" fill="'+K+'"/><circle cx="112" cy="73" r="3" fill="'+K+'"/><path d="M84 92 L92 78 L99 92 Z" fill="#fff" stroke="'+K+'" stroke-width="3" stroke-linejoin="round"/><path d="M101 92 L108 78 L116 92 Z" fill="#fff" stroke="'+K+'" stroke-width="3" stroke-linejoin="round"/></svg>';
+ if(t==="goldskin")return '<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M100 60 Q152 82 160 132 Q164 186 100 188 Q36 186 40 132 Q48 82 100 60 Z" fill="#FFC400" stroke="'+K+'" stroke-width="7"/><ellipse cx="100" cy="140" rx="38" ry="32" fill="#FFE082" stroke="'+K+'" stroke-width="5"/><path d="M74 40 Q50 56 56 94 L78 84 Q70 60 74 40 Z" fill="#FFB300" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M126 40 Q150 56 144 94 L122 84 Q130 60 126 40 Z" fill="#FFB300" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><circle cx="100" cy="52" r="31" fill="#FFC400" stroke="'+K+'" stroke-width="7"/><circle cx="89" cy="50" r="7" fill="#fff" stroke="'+K+'" stroke-width="3"/><circle cx="111" cy="50" r="7" fill="#fff" stroke="'+K+'" stroke-width="3"/><circle cx="90" cy="52" r="3.5" fill="'+K+'"/><circle cx="110" cy="52" r="3.5" fill="'+K+'"/><path d="M88 64 Q100 76 112 64 Q100 84 88 64 Z" fill="'+K+'"/><circle cx="82" cy="178" r="13" fill="#FFD54F" stroke="'+K+'" stroke-width="5"/><circle cx="118" cy="178" r="13" fill="#FFD54F" stroke="'+K+'" stroke-width="5"/><circle cx="100" cy="168" r="13" fill="#FFE082" stroke="'+K+'" stroke-width="5"/></svg>';
+ if(t==="spiky")return '<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M100 104 L100 18 M100 104 L162 42 M100 104 L186 104 M100 104 L162 166 M100 104 L100 190 M100 104 L38 166 M100 104 L14 104 M100 104 L38 42" fill="none" stroke="'+K+'" stroke-width="30" stroke-linecap="round"/><path d="M100 104 L100 18 M100 104 L162 42 M100 104 L186 104 M100 104 L162 166 M100 104 L100 190 M100 104 L38 166 M100 104 L14 104 M100 104 L38 42" fill="none" stroke="#2FBF71" stroke-width="16" stroke-linecap="round"/><circle cx="100" cy="104" r="54" fill="#2FBF71" stroke="'+K+'" stroke-width="7"/><path d="M62 84 L88 92" stroke="'+K+'" stroke-width="7" stroke-linecap="round"/><path d="M138 84 L112 92" stroke="'+K+'" stroke-width="7" stroke-linecap="round"/><circle cx="80" cy="100" r="9" fill="#fff" stroke="'+K+'" stroke-width="4"/><circle cx="120" cy="100" r="9" fill="#fff" stroke="'+K+'" stroke-width="4"/><circle cx="81" cy="102" r="4.5" fill="'+K+'"/><circle cx="119" cy="102" r="4.5" fill="'+K+'"/><path d="M74 130 L87 119 L100 130 L113 119 L126 130" fill="none" stroke="'+K+'" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+ if(t==="crimson")return '<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M64 64 Q28 54 32 12 Q60 18 78 48 Z" fill="#FFF3E0" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M136 64 Q172 54 168 12 Q140 18 122 48 Z" fill="#FFF3E0" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M54 64 L146 64 L160 116 L128 160 L72 160 L40 116 Z" fill="#EF5350" stroke="'+K+'" stroke-width="7" stroke-linejoin="round"/><path d="M62 88 L94 97" stroke="'+K+'" stroke-width="7" stroke-linecap="round"/><path d="M138 88 L106 97" stroke="'+K+'" stroke-width="7" stroke-linecap="round"/><circle cx="80" cy="106" r="10" fill="#fff" stroke="'+K+'" stroke-width="4"/><circle cx="120" cy="106" r="10" fill="#fff" stroke="'+K+'" stroke-width="4"/><circle cx="81" cy="108" r="5" fill="'+K+'"/><circle cx="119" cy="108" r="5" fill="'+K+'"/><path d="M72 132 Q100 148 128 132 L119 152 L109 139 L100 152 L91 139 L81 152 Z" fill="#fff" stroke="'+K+'" stroke-width="4" stroke-linejoin="round"/></svg>';
+ if(t==="azure")return '<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M100 2 L128 60 L100 46 L72 60 Z" fill="#1565C0" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M64 82 L22 58 L32 108 Z" fill="#64B5F6" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M136 82 L178 58 L168 108 Z" fill="#64B5F6" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><ellipse cx="100" cy="114" rx="45" ry="64" fill="#42A5F5" stroke="'+K+'" stroke-width="7"/><ellipse cx="82" cy="102" rx="10" ry="15" fill="#fff" stroke="'+K+'" stroke-width="4"/><ellipse cx="118" cy="102" rx="10" ry="15" fill="#fff" stroke="'+K+'" stroke-width="4"/><circle cx="82" cy="107" r="5" fill="'+K+'"/><circle cx="118" cy="107" r="5" fill="'+K+'"/><circle cx="100" cy="148" r="8" fill="'+K+'"/><path d="M64 140 Q56 152 64 164" fill="none" stroke="'+K+'" stroke-width="5" stroke-linecap="round"/><path d="M136 140 Q144 152 136 164" fill="none" stroke="'+K+'" stroke-width="5" stroke-linecap="round"/></svg>';
+ if(t==="violet")return '<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M100 16 L148 84 L172 188 L148 174 L124 188 L100 176 L76 188 L52 174 L28 188 L52 84 Z" fill="#AB47BC" stroke="'+K+'" stroke-width="7" stroke-linejoin="round"/><path d="M60 78 Q32 96 38 132 L60 120 Q52 94 60 78 Z" fill="#8E24AA" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M140 78 Q168 96 162 132 L140 120 Q148 94 140 78 Z" fill="#8E24AA" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M100 42 L130 86 L123 130 Q100 146 77 130 L70 86 Z" fill="#4A148C" stroke="'+K+'" stroke-width="5" stroke-linejoin="round"/><circle cx="86" cy="98" r="9" fill="#FFE45E" stroke="'+K+'" stroke-width="3"/><circle cx="114" cy="98" r="9" fill="#FFE45E" stroke="'+K+'" stroke-width="3"/><path d="M92 122 Q100 118 108 122" fill="none" stroke="#FFE45E" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="156" r="10" fill="#FFC400" stroke="'+K+'" stroke-width="4"/></svg>';
+ if(t==="golden")return '<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M100 100 L100 10 M100 100 L164 36 M100 100 L190 100 M100 100 L164 164 M100 100 L100 190 M100 100 L36 164 M100 100 L10 100 M100 100 L36 36" fill="none" stroke="'+K+'" stroke-width="26" stroke-linecap="round"/><path d="M100 100 L100 10 M100 100 L164 36 M100 100 L190 100 M100 100 L164 164 M100 100 L100 190 M100 100 L36 164 M100 100 L10 100 M100 100 L36 36" fill="none" stroke="#FF8F00" stroke-width="13" stroke-linecap="round"/><path d="M58 106 L28 186 L86 174 L74 118 Z" fill="#D32F2F" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M142 106 L172 186 L114 174 L126 118 Z" fill="#D32F2F" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><circle cx="100" cy="102" r="49" fill="#FFD700" stroke="'+K+'" stroke-width="7"/><path d="M63 68 L59 20 L85 42 L100 10 L115 42 L141 20 L137 68 Q100 55 63 68 Z" fill="#FFC400" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><circle cx="78" cy="52" r="6" fill="#E53935" stroke="'+K+'" stroke-width="3"/><circle cx="100" cy="47" r="6" fill="#3A86FF" stroke="'+K+'" stroke-width="3"/><circle cx="122" cy="52" r="6" fill="#E53935" stroke="'+K+'" stroke-width="3"/><path d="M74 100 Q83 91 92 100" fill="none" stroke="'+K+'" stroke-width="6" stroke-linecap="round"/><path d="M108 100 Q117 91 126 100" fill="none" stroke="'+K+'" stroke-width="6" stroke-linecap="round"/><circle cx="66" cy="114" r="7" fill="#F9A825"/><circle cx="134" cy="114" r="7" fill="#F9A825"/><path d="M83 118 Q100 136 117 118 Q100 144 83 118 Z" fill="'+K+'"/></svg>';
+ if(t==="elite")return '<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M46 76 Q100 50 154 76 L172 190 L28 190 Z" fill="#558B2F" stroke="'+K+'" stroke-width="7" stroke-linejoin="round"/><path d="M72 126 L128 126 L134 170 L66 170 Z" fill="#78909C" stroke="'+K+'" stroke-width="5" stroke-linejoin="round"/><circle cx="32" cy="86" r="29" fill="#90A4AE" stroke="'+K+'" stroke-width="7"/><circle cx="168" cy="86" r="29" fill="#90A4AE" stroke="'+K+'" stroke-width="7"/><path d="M32 58 L40 32 L54 56 Z" fill="#90A4AE" stroke="'+K+'" stroke-width="5" stroke-linejoin="round"/><path d="M168 58 L160 32 L146 56 Z" fill="#90A4AE" stroke="'+K+'" stroke-width="5" stroke-linejoin="round"/><circle cx="34" cy="174" r="23" fill="#558B2F" stroke="'+K+'" stroke-width="6"/><circle cx="166" cy="174" r="23" fill="#558B2F" stroke="'+K+'" stroke-width="6"/><circle cx="100" cy="70" r="34" fill="#7CB342" stroke="'+K+'" stroke-width="7"/><path d="M75 50 L73 22 L90 37 L100 15 L110 37 L127 22 L125 50 Q100 40 75 50 Z" fill="#FFC400" stroke="'+K+'" stroke-width="5" stroke-linejoin="round"/><circle cx="85" cy="70" r="8" fill="#fff" stroke="'+K+'" stroke-width="3"/><circle cx="115" cy="70" r="8" fill="#fff" stroke="'+K+'" stroke-width="3"/><circle cx="86" cy="72" r="4" fill="'+K+'"/><circle cx="114" cy="72" r="4" fill="'+K+'"/><path d="M119 50 L128 65" stroke="#B71C1C" stroke-width="6" stroke-linecap="round"/><path d="M82 98 L91 82 L100 98 Z" fill="#fff" stroke="'+K+'" stroke-width="3" stroke-linejoin="round"/><path d="M100 98 L109 82 L118 98 Z" fill="#fff" stroke="'+K+'" stroke-width="3" stroke-linejoin="round"/></svg>';
+ /* normal — the classic: big round head, wide pointy ears, hair tuft, squat body, one tooth */
+ return '<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M62 146 L138 146 L148 186 L52 186 Z" fill="#57A800" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M12 72 L66 88 L38 114 Z" fill="#7ED321" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><path d="M188 72 L134 88 L162 114 Z" fill="#7ED321" stroke="'+K+'" stroke-width="6" stroke-linejoin="round"/><circle cx="100" cy="98" r="55" fill="#7ED321" stroke="'+K+'" stroke-width="7"/><path d="M82 50 L90 26 L101 44 L111 24 L119 50" fill="none" stroke="'+K+'" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="79" cy="94" r="11" fill="#fff" stroke="'+K+'" stroke-width="4"/><circle cx="121" cy="94" r="11" fill="#fff" stroke="'+K+'" stroke-width="4"/><circle cx="81" cy="97" r="5" fill="'+K+'"/><circle cx="119" cy="97" r="5" fill="'+K+'"/><path d="M73 124 Q100 142 127 124" fill="none" stroke="'+K+'" stroke-width="6" stroke-linecap="round"/><path d="M92 132 L98 145 L106 133 Z" fill="#fff" stroke="'+K+'" stroke-width="3" stroke-linejoin="round"/></svg>';
+}
+var GOB_SVG=gobSVG("normal");
+var HORDE10_SVG='<svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="42" cy="86" r="26" fill="#5EA800" stroke="#141414" stroke-width="6"/><circle cx="158" cy="86" r="26" fill="#5EA800" stroke="#141414" stroke-width="6"/><path d="M76 44 L84 24 L94 40 L103 22 L110 44" fill="none" stroke="#141414" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="100" cy="66" r="27" fill="#96E03A" stroke="#141414" stroke-width="6"/><circle cx="91" cy="64" r="4.5" fill="#141414"/><circle cx="109" cy="64" r="4.5" fill="#141414"/><path d="M20 128 L52 138 L34 156 Z" fill="#7ED321" stroke="#141414" stroke-width="5" stroke-linejoin="round"/><path d="M180 128 L148 138 L166 156 Z" fill="#69B900" stroke="#141414" stroke-width="5" stroke-linejoin="round"/><circle cx="60" cy="142" r="33" fill="#7ED321" stroke="#141414" stroke-width="6"/><circle cx="140" cy="142" r="33" fill="#69B900" stroke="#141414" stroke-width="6"/><circle cx="49" cy="138" r="8" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="71" cy="138" r="8" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="50" cy="140" r="4" fill="#141414"/><circle cx="70" cy="140" r="4" fill="#141414"/><circle cx="129" cy="138" r="8" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="151" cy="138" r="8" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="130" cy="140" r="4" fill="#141414"/><circle cx="150" cy="140" r="4" fill="#141414"/><path d="M48 160 Q60 168 72 160" fill="none" stroke="#141414" stroke-width="5" stroke-linecap="round"/><path d="M128 160 Q140 168 152 160" fill="none" stroke="#141414" stroke-width="5" stroke-linecap="round"/><circle cx="35" cy="84" r="4" fill="#141414"/><circle cx="49" cy="84" r="4" fill="#141414"/><circle cx="151" cy="84" r="4" fill="#141414"/><circle cx="165" cy="84" r="4" fill="#141414"/></svg>';
+var HORDE100_SVG='<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M2 98 Q34 76 62 94 L70 190 L0 190 Z" fill="#3E7A04" stroke="#141414" stroke-width="6" stroke-linejoin="round"/><path d="M198 98 Q166 76 138 94 L130 190 L200 190 Z" fill="#3E7A04" stroke="#141414" stroke-width="6" stroke-linejoin="round"/><circle cx="32" cy="84" r="23" fill="#5EA800" stroke="#141414" stroke-width="6"/><circle cx="168" cy="84" r="23" fill="#5EA800" stroke="#141414" stroke-width="6"/><circle cx="25" cy="82" r="3.5" fill="#141414"/><circle cx="39" cy="82" r="3.5" fill="#141414"/><circle cx="161" cy="82" r="3.5" fill="#141414"/><circle cx="175" cy="82" r="3.5" fill="#141414"/><path d="M56 94 Q100 70 144 94 L156 190 L44 190 Z" fill="#558B2F" stroke="#141414" stroke-width="7" stroke-linejoin="round"/><circle cx="50" cy="118" r="19" fill="#90A4AE" stroke="#141414" stroke-width="6"/><circle cx="150" cy="118" r="19" fill="#90A4AE" stroke="#141414" stroke-width="6"/><path d="M68 68 L50 32 L86 48 Z" fill="#FF8A00" stroke="#141414" stroke-width="5" stroke-linejoin="round"/><path d="M132 68 L150 32 L114 48 Z" fill="#FF8A00" stroke="#141414" stroke-width="5" stroke-linejoin="round"/><circle cx="100" cy="84" r="37" fill="#7ED321" stroke="#141414" stroke-width="7"/><circle cx="86" cy="80" r="9" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="114" cy="80" r="9" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="87" cy="82" r="4.5" fill="#141414"/><circle cx="113" cy="82" r="4.5" fill="#141414"/><path d="M77 106 Q100 120 123 106 L116 124 L107 112 L100 124 L93 112 L84 124 Z" fill="#fff" stroke="#141414" stroke-width="4" stroke-linejoin="round"/><path d="M76 152 L124 152 L130 178 L70 178 Z" fill="#78909C" stroke="#141414" stroke-width="5" stroke-linejoin="round"/></svg>';
 function faceHTML(isBack){
- var alive=S.card.filter(function(h){return h>0;});
+ var alive=S.card.filter(function(g){return g.hp>0;});
  var n=alive.length;
  var head='<div class="cardTop"><span>'+(isBack?"👹 GOBLINS · BACK":"⚔️ ENCOUNTER")+'</span><span class="count">×'+n+(n===1?" GOBLIN":" GOBLINS")+'</span></div>';
  if(n===0)return head+'<div style="font-family:Bungee;padding:20px;text-align:center">…</div>';
  if(n<=5){
   var h="";
-  S.card.forEach(function(hp){if(hp<=0)return;var pct=Math.max(0,Math.min(100,hp/GOB_HP*100));var half=hp<GOB_HP?" half":"";var hurt=hp<GOB_HP&&hp>GOB_HP/2?" hurt":"";
-   h+='<div class="gob'+half+hurt+'">'+GOB_SVG+'<div class="crack">💢</div><div class="hpbar"><i style="width:'+pct+'%"></i></div></div>';});
+  S.card.forEach(function(g){if(g.hp<=0)return;var pct=Math.max(0,Math.min(100,g.hp/g.max*100));var half=g.hp<g.max?" half":"";var hurt=g.hp<g.max&&g.hp>g.max/2?" hurt":"";var gt=GTYPES[g.t]||GTYPES.normal;var elite=g.t==="elite"?" eliteGob":"";
+   h+='<div class="gob'+half+hurt+elite+'">'+gobSVG(g.t)+(gt.badge?'<div class="badge">'+gt.badge+'</div>':"")+'<div class="crack">💢</div><div class="hpbar"><i style="width:'+pct+'%"></i></div></div>';});
   return head+'<div class="gobRow">'+h+'</div>';
  }
- var frontHp=alive[0],hundreds=Math.floor(n/100),tens=Math.floor((n%100)/10),ones=n%10,stacks=[];
+ var frontHp=alive[0].hp,frontMax=alive[0].max,frontT=(GTYPES[alive[0].t]||GTYPES.normal),hundreds=Math.floor(n/100),tens=Math.floor((n%100)/10),ones=n%10,stacks=[];
  if(n<10){stacks.push({svg:HORDE10_SVG,denom:"×"+n+" HORDE",piles:1});}
  else{
  if(hundreds>0)stacks.push({svg:HORDE100_SVG,denom:"×100",piles:hundreds});
@@ -375,13 +447,13 @@ function faceHTML(isBack){
  }
  var sh="";
  stacks.forEach(function(s){sh+='<div class="hordeStack">'+s.svg+(s.piles>1?'<div class="piles">×'+s.piles+'</div>':"")+'<div><span class="denom">'+(s.denom.indexOf("HORDE")>=0?s.denom:s.denom+" EACH")+'</span></div></div>';});
- var pct=Math.max(0,Math.min(100,frontHp/GOB_HP*100));
- var meta='<div class="hordeMeta'+(frontHp<GOB_HP?" wounded":"")+'">👹 '+n+' LEFT · FRONT: '+frontHp+'/'+GOB_HP+' HP<div class="hpbar"><i style="width:'+pct+'%"></i></div></div>';
+ var pct=Math.max(0,Math.min(100,frontHp/frontMax*100));
+ var meta='<div class="hordeMeta'+(frontHp<frontMax?" wounded":"")+'">👹 '+n+' LEFT · '+frontT.label.toUpperCase()+' '+frontHp+'/'+frontMax+' HP<div class="hpbar"><i style="width:'+pct+'%"></i></div></div>';
  return head+'<div class="hordeRow">'+sh+'</div>'+meta;
 }
 var cardSig="";
 function renderCard(deal){
- var sig=S.card.join(",");
+ var sig=S.card.map(function(g){return g.t+":"+g.hp+"/"+g.max;}).join(",");
  if(sig!==cardSig){cardSig=sig;el.faceFront.innerHTML=faceHTML(false);el.faceBack.innerHTML=faceHTML(true);}
  if(deal){el.card.classList.remove("dealing");void el.card.offsetWidth;el.card.classList.add("dealing");}
 }
@@ -390,17 +462,35 @@ function renderCard(deal){
 var sheetSig="";
 function sheetOpen(){return $("sheetWrap").classList.contains("show");}
 function renderSheet(force){
- var sig=[S.gold,S.upg.weapon,S.upg.bait,S.upg.sack,S.upg.haggle,S.upg.whet,S.slotsUnlocked,S.party.join("/"),S.unlockParty].join("|");
+ var sig=[S.gold,S.upg.weapon,S.upg.bait,S.upg.sack,S.upg.haggle,S.upg.whet,S.slotsUnlocked,S.party.join("/"),S.unlockParty,S.total,S.stats.brute,S.stats.golden,S.stats.surgeSales,S.stats.elites,(Date.now()<S.surgeUntil?1:0)].join("|");
  if(!force&&sig===sheetSig)return;sheetSig=sig;
  $("tabParty").style.visibility=S.unlockParty?"visible":"hidden";
  renderUpgs();renderParty();
 }
+function renderSynergyAch(){
+ var surgeNow=Date.now()<S.surgeUntil;
+ var effPrice=Math.max(1,Math.round(sellPrice()*(surgeNow?2:1)*sellMult()));
+ $("statsLine").innerHTML="<b>📊 YOUR STATS</b>🪙 Sell price: <b>"+effPrice+"g / part</b>"+(surgeNow?" (📈 surge ×2!)":"")+" · ⚔️ Party: "+fmt(partyKPS())+"/s";
+ var kc=kitCount();
+ $("synergyBox").innerHTML='<div class="synergy'+(fullKit()?" on":"")+'"><b>'+(fullKit()?"⭐ FULL KIT ACTIVE":"FULL KIT · "+kc+" / 5")+'</b>'+(fullKit()?"Party ×1.2 · Sell prices +10%. Diverse beats stacking.":"Own one of each track: party ×1.2, prices +10%.")+'</div>';
+ var A=[
+  {n:"CENTURION",d:"100 kills → sell prices +10%",cur:Math.min(S.total,100),goal:100},
+  {n:"THOUSAND CLUB",d:"1,000 kills → party ×1.25",cur:Math.min(S.total,1000),goal:1000},
+  {n:"GILDED",d:"Catch 3 golden → golden pays ×2",cur:Math.min(S.stats.golden,3),goal:3},
+  {n:"SURGE TRADER",d:"Sell in 3 surges → surges last 25s",cur:Math.min(S.stats.surgeSales,3),goal:3},
+  {n:"ELITE SLAYER",d:"Kill 3 elites → elites pay ×2 parts",cur:Math.min(S.stats.elites,3),goal:3}
+ ];
+ var h='<div style="font-family:Bungee;font-size:15px;margin:4px 0 8px">🏆 BONUSES</div>';
+ A.forEach(function(a){var done=a.cur>=a.goal;h+='<div class="ach'+(done?" done":"")+'"><b>'+(done?"✅ ":"")+a.n+'</b> · '+fmt(a.cur)+' / '+fmt(a.goal)+'<br>'+a.d+'<div class="bar"><i style="width:'+(a.cur/a.goal*100)+'%"></i></div></div>';});
+ $("achBox").innerHTML=h;
+}
 function renderUpgs(){
+ renderSynergyAch();
  var h="";
  UPGS.forEach(function(u){var lvl=S.upg[u.id];var maxed=u.max!==undefined&&lvl>=u.max;var cost=upgCost(u);
   h+='<div class="upg"><div class="emoji">'+u.emoji+'</div><div><b>'+u.name+' · Lv '+lvl+'</b><span>'+u.desc(lvl)+(u.id==="weapon"?"<br><i>"+WEAPON_NAMES[Math.min(lvl,WEAPON_NAMES.length-1)]+"</i>":"")+'</span></div>'+(maxed?'<button class="buy max" disabled>MAX ⭐</button>':'<button class="buy" data-upg="'+u.id+'" '+(S.gold>=cost?"":"disabled")+'>🪙 '+fmt(cost)+'</button>')+'</div>';});
  $("upgrades").innerHTML=h;
- document.querySelectorAll("[data-upg]").forEach(function(b){b.addEventListener("click",function(){var id=this.getAttribute("data-upg");var u=null;UPGS.forEach(function(x){if(x.id===id)u=x;});var c=upgCost(u);if(S.gold<c)return;S.gold-=c;S.upg[id]++;if(id==="bait"){S.card=newCard();renderCard(true);toast("🪔 "+encSizeFor(S.upg.bait)+" goblins per card!");}beep(520,.08,"square",.06);flash(el.goldChip);renderAll();save();
+ document.querySelectorAll("[data-upg]").forEach(function(b){b.addEventListener("click",function(){var id=this.getAttribute("data-upg");var u=null;UPGS.forEach(function(x){if(x.id===id)u=x;});var c=upgCost(u);if(S.gold<c)return;S.gold-=c;S.upg[id]++;if(id==="bait"){S.card=newCard();renderCard(true);if(!S.introBait){S.pendingBaitSpot=true;}else if(encSizeFor(S.upg.bait)>5&&!S.introHorde){S.pendingHordeSpot=true;}else toast("🪔 "+encSizeFor(S.upg.bait)+" goblins per card!");}beep(520,.08,"square",.06);flash(el.goldChip);renderAll();save();
   if(!S.unlockParty){S.unlockParty=true;save();setTimeout(function(){showSpot($("tabParty"),"New tab: PARTY. Adventurers kill for you.","GOT IT",null,false);},60);}
  });});
 }
@@ -429,16 +519,17 @@ function renderParty(){
  else{var c=SLOT_COSTS[nx];sb.textContent="+ SLOT "+(nx+1)+" · 🪙 "+fmt(c);sb.disabled=S.gold<c;$("slotInfo").textContent="Slots: "+nx+" / "+SLOT_COSTS.length;}
 }
 
-var lastGold=-1;
+var lastGold=-1,dispKills=null,dispGold=null;
 function renderAll(){
- el.kills.textContent=fullFmt(S.kills);
- el.gold.textContent=fmt(S.gold);
+ if(dispKills===null){dispKills=S.kills;dispGold=S.gold;}
+ el.kills.textContent=fullFmt(dispKills);
+ el.gold.textContent=fmt(dispGold);
  el.dmg.textContent=fmt(damage());
  var pct=S.total/GOAL*100;el.bar.style.width=Math.min(100,pct)+"%";
  el.prog.textContent=(pct<0.01?pct.toFixed(4):pct.toFixed(2))+"% of 1 billion";
- var surge=Date.now()<S.surgeUntil,price=sellPrice()*(surge?2:1);
+ var surge=Date.now()<S.surgeUntil,price=Math.max(1,Math.round(sellPrice()*(surge?2:1)*sellMult()));
  el.surge.style.visibility=surge?"visible":"hidden";
- if(S.unlockSell&&S.parts>0){ensureSellBtn();sellBtnEl.innerHTML="SELL "+fmt(S.parts)+" → 🪙"+fmt(S.parts*price);}else removeSellBtn();
+ if(S.unlockSell&&S.parts>0){ensureSellBtn();sellBtnEl.innerHTML="SELL · "+fmt(S.parts);}else removeSellBtn();
  if(S.unlockShop)ensureShopBtn();
  if(lastGold>=0&&S.gold>lastGold)flash(el.goldChip);
  lastGold=S.gold;
@@ -494,7 +585,10 @@ function maybeSellSpot(){
 /* ===== THE STRIKE — swipe / tap the card ===== */
 function addFloater(txt,x,y,cls){var f=document.createElement("div");f.className=cls||"floater";f.textContent=txt;f.style.left=(x||50)+"%";f.style.top=(y||30)+"%";el.float.appendChild(f);setTimeout(function(){f.remove();},950);}
 function burst(x,y){["⭐","💨","✨","💥"].forEach(function(p,i){setTimeout(function(){addFloater(p,x+(Math.random()*16-8),y+(Math.random()*10-5),"particle");},i*45);});}
+function burstBig(x,y,n){var ps=["⭐","💨","✨","💥","🌟","💢"];var c=Math.min(16,Math.max(4,n));for(var i=0;i<c;i++){(function(i){setTimeout(function(){addFloater(ps[i%ps.length],x+(Math.random()*30-15),y+(Math.random()*18-9),"particle");},i*35);})(i);}}
 var striking=false,cardAngle=0,nudgeAnim=null;
+var combo=0,lastStrikeT=0,comboT=null;
+function bumpCombo(){var now=Date.now();combo=(now-lastStrikeT<1400)?combo+1:1;lastStrikeT=now;var ct=$("comboTag");if(combo>=5){ct.textContent="🔥 COMBO ×"+combo;ct.style.visibility="visible";}clearTimeout(comboT);comboT=setTimeout(function(){combo=0;ct.style.visibility="hidden";},1600);return combo;}
 function setCardAngle(a){cardAngle=a;el.inner.style.transform="rotateY("+a+"deg)";}
 function strike(){
  if(striking||spot.active||anyOverlay())return;
@@ -502,17 +596,19 @@ function strike(){
  slashSnd();
  el.slash.classList.remove("on");void el.slash.offsetWidth;el.slash.classList.add("on");
  el.card.classList.remove("hit");void el.card.offsetWidth;el.card.classList.add("hit");
- var sim=S.card.slice(),dmg=dmgTotal,deaths=0,scarDamage=0,guard=0;
+ var sim=S.card.map(function(g){return{hp:g.hp,max:g.max,t:g.t};}),dmg=dmgTotal,deaths=0,scarDamage=0,partsGain=0,typeKills={},guard=0;
+ function killIdx(idx){var g=sim[idx];deaths++;typeKills[g.t]=(typeKills[g.t]||0)+1;partsGain+=(g.t==="elite"?Math.round(g.max/GOB_HP)*6*(S.stats.elites>=3?2:1):(GTYPES[g.t]||GTYPES.normal).parts)*partsPerKill();if(g.t==="spiky"){for(var j=0;j<sim.length;j++){if(sim[j].hp>0){sim[j].hp-=2;if(sim[j].hp<=0&&j!==idx){sim[j].hp=0;killIdx(j);}break;}}}}
  while(dmg>0&&guard<5000){guard++;
-  var idx=-1;for(var i=0;i<sim.length;i++){if(sim[i]>0){idx=i;break;}}
-  if(idx<0){sim=newCard();continue;}
-  if(sim[idx]>dmg){scarDamage=dmg;sim[idx]-=dmg;dmg=0;}
-  else{dmg-=sim[idx];sim[idx]=0;deaths++;}
+  var idx=-1;for(var i=0;i<sim.length;i++){if(sim[i].hp>0){idx=i;break;}}
+  if(idx<0)break;/* face cleared: leftover damage is LOST at the flip — overflow only works within this face */
+  if(sim[idx].hp>dmg){scarDamage=dmg;sim[idx].hp-=dmg;dmg=0;}
+  else{dmg-=sim[idx].hp;sim[idx].hp=0;killIdx(idx);}
  }
- if(!sim.some(function(h){return h>0;}))sim=newCard();
+ if(!sim.some(function(g){return g.hp>0;}))sim=newCard();
  var reduced=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
  if(deaths===0){
-   var frac=dmgTotal/GOB_HP;
+   var frontG=S.card.filter(function(g){return g.hp>0;})[0];
+   var frac=dmgTotal/((frontG?frontG.max:GOB_HP));
    var nudgeDeg=Math.round(16+frac*36);
    var from=cardAngle;
    if(nudgeAnim){try{nudgeAnim.cancel();}catch(e){}nudgeAnim=null;}
@@ -539,11 +635,18 @@ function strike(){
  spinSnd();
  if(deaths>=3)setTimeout(spinSnd,180);
  addFloater("+"+deaths+" 💀",36+Math.random()*22,22+Math.random()*14);
- burst(46+Math.random()*10,32);
+ burstBig(46+Math.random()*10,32,3+deaths);
  var swapped=false;
  function swap(){
    if(swapped)return;swapped=true;
-   S.card=sim;S.kills+=deaths;S.total+=deaths;S.parts+=deaths*partsPerKill();
+   S.card=sim;S.kills+=deaths;S.total+=deaths;S.parts+=partsGain;
+   ["brute","swift","goldskin","spiky"].forEach(function(t){if(typeKills[t])S.stats[t]+=typeKills[t];});
+   if(typeKills.elite){S.stats.elites+=typeKills.elite;S.elitePending=false;S.nextElite=S.total+750;celebrate(true);toast("👑 ELITE DOWN! Parts shower!");}
+   var cb=bumpCombo();
+   if(cb>0&&cb%10===0&&variantsOn()){var bonus=partsPerKill()*2;S.parts+=bonus;addFloater("🔥 COMBO +"+fmt(bonus)+" PARTS",30+Math.random()*20,44);}
+   var introDone=false;
+   sim.forEach(function(g){if(!S.seenTypes[g.t]&&g.t!=="normal"&&g.t!=="elite"){S.seenTypes[g.t]=true;if(!introDone){introDone=true;var hints={swift:"⚡ Swift: only 3 HP. Squishy!",brute:"🛡️ Brute: 10 HP, double parts!",goldskin:"✨ Goldskin: ×4 parts!",spiky:"💥 Spiky: bursts, hurting its neighbour!",crimson:"◆ Rare Crimson! ×2 parts!",azure:"◆ Rare Azure! ×2 parts!",violet:"◆ Rare Violet! ×2 parts!"};toast(hints[g.t]);}}});
+   if(deaths>=4){var cave=$("cave");cave.classList.remove("shake");void cave.offsetWidth;cave.classList.add("shake");}
    if(S.parts>0&&!S.unlockSell)S.unlockSell=true;
    checkMiles();renderAll();save();
  }
@@ -572,10 +675,25 @@ el.card.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){
 $("killBtn").addEventListener("click",strike);
 
 /* sell — first sale unlocks + spotlights the shop */
-function sellParts(){if(S.parts<=0||spot.active)return;var surge=Date.now()<S.surgeUntil;var price=sellPrice()*(surge?2:1);var gain=S.parts*price;S.gold+=gain;S.parts=0;coinSnd();flash(el.goldChip);renderAll();save();
+function sellParts(){if(S.parts<=0||spot.active)return;var surge=Date.now()<S.surgeUntil;var price=Math.max(1,Math.round(sellPrice()*(surge?2:1)*sellMult()));var gain=S.parts*price;S.gold+=gain;S.parts=0;if(surge)S.stats.surgeSales++;coinSnd();flash(el.goldChip);renderAll();save();
  if(!S.unlockShop){S.unlockShop=true;S.introSell=true;renderAll();save();setTimeout(function(){showSpot(shopBtnEl,"Gold buys gear. Open the SHOP.","GOT IT",function(){S.introShop=true;save();},true);},80);}
  else toast("🪙 +"+fmt(gain)+" GOLD!");
 }
+
+/* elite encounter — an optional risk the player chooses to take */
+var eliteShown=false;
+function maybeElite(){
+ if(eliteShown||S.elitePending||spot.active||anyOverlay()||sheetOpen())return;
+ if(S.total<S.nextElite)return;
+ eliteShown=true;
+ var hp=Math.max(30,damage()*6);
+ $("eliteText").textContent="One huge brute: "+fmt(hp)+" HP. Kill it for a parts shower. Skip and hunt on.";
+ $("eliteModal").classList.add("show");
+ beep(180,.18,"sawtooth",.07);
+}
+$("eliteFight").addEventListener("click",function(){$("eliteModal").classList.remove("show");eliteShown=false;S.elitePending=true;var hp=Math.max(30,damage()*6);S.card=[{hp:hp,max:hp,t:"elite"}];cardSig="";renderCard(true);toast("👑 ELITE BRUTE! Parts shower!");save();});
+$("eliteSkip").addEventListener("click",function(){$("eliteModal").classList.remove("show");eliteShown=false;S.nextElite=S.total+400;toast("You slip past the brute.");save();pumpToast();});
+setInterval(maybeElite,1500);
 
 /* shop sheet */
 function openSheet(view){
@@ -589,24 +707,33 @@ function showView(v){
  $("tabGear").classList.toggle("on",v==="gear");
  $("tabParty").classList.toggle("on",v==="party");
 }
-$("sheetClose").addEventListener("click",function(){$("sheetWrap").classList.remove("show");pumpToast();});
-$("sheetWrap").addEventListener("click",function(e){if(e.target===this){this.classList.remove("show");pumpToast();}});
+function onSheetClosed(){pumpToast();
+ if(S.pendingHordeSpot&&!S.introHorde){S.pendingHordeSpot=false;setTimeout(function(){showSpot($("card"),"A horde! Piles show ×10 and ×100 goblins.","GOT IT",function(){S.introHorde=true;save();},false);},80);}
+ else if(S.pendingBaitSpot&&!S.introBait){S.pendingBaitSpot=false;setTimeout(function(){showSpot($("card"),"More goblins per card. Overflow hits this face only.","GOT IT",function(){S.introBait=true;save();},false);},80);}
+}
+$("sheetClose").addEventListener("click",function(){$("sheetWrap").classList.remove("show");onSheetClosed();});
+$("sheetWrap").addEventListener("click",function(e){if(e.target===this){this.classList.remove("show");onSheetClosed();}});
 $("tabGear").addEventListener("click",function(){showView("gear");});
 $("tabParty").addEventListener("click",function(){if(S.unlockParty)showView("party");});
 $("buySlotBtn").addEventListener("click",function(){var idx=S.slotsUnlocked;if(idx>=SLOT_COSTS.length)return;var c=SLOT_COSTS[idx];if(S.gold<c)return;S.gold-=c;S.slotsUnlocked++;S.party.push(null);beep(740,.12,"square",.07);flash(el.goldChip);toast("NEW SLOT! 🎉");renderAll();save();});
 
-/* golden goblin — reflex bonus (never spawns during a spotlight) */
-var goldenActive=false,goldenT=null;
-function spawnGolden(){if(goldenActive||spot.active||anyOverlay())return;goldenActive=true;el.golden.style.display="block";el.golden.style.left=(8+Math.random()*50)+"%";el.golden.style.top=(14+Math.random()*26)+"%";beep(990,.1,"square",.06);goldenT=setTimeout(function(){el.golden.style.display="none";goldenActive=false;},3200);}
-el.golden.addEventListener("click",function(){if(!goldenActive)return;clearTimeout(goldenT);el.golden.style.display="none";goldenActive=false;var bp=Math.max(1,Math.ceil(damage()/GOB_HP))*partsPerKill()*25;var bg=Math.floor(bp*sellPrice()*.25);S.parts+=bp;S.gold+=bg;if(!S.unlockSell)S.unlockSell=true;coinSnd();burst(50,30);toast("✨ GOLDEN! +"+fmt(bp)+" parts, +"+fmt(bg)+"g");renderAll();save();setTimeout(maybeSellSpot,300);});
+/* golden goblin — push your luck: the pot grows ×1 → ×3 over 3s, but it escapes at 3.2s */
+var goldenActive=false,goldenT=null,goldenStart=0,goldenTick=null;
+function goldenMult(){return Math.min(3,1+(Date.now()-goldenStart)/1100);}
+function stopGolden(){clearTimeout(goldenT);clearInterval(goldenTick);el.golden.style.display="none";goldenActive=false;}
+function burstCoins(x,y){["🪙","🪙","💰","✨","🪙","⭐"].forEach(function(p,i){setTimeout(function(){addFloater(p,x+(Math.random()*26-13),y+(Math.random()*14-7),"particle");},i*50);});}
+function spawnGolden(){if(goldenActive||spot.active||anyOverlay())return;goldenActive=true;goldenStart=Date.now();$("goldenArt").innerHTML=gobSVG("golden");el.golden.style.display="flex";el.golden.style.left=(8+Math.random()*50)+"%";el.golden.style.top=(14+Math.random()*26)+"%";$("goldenTxt").textContent="GOLDEN! TAP = ×1.0";beep(990,.1,"square",.06);goldenTick=setInterval(function(){if(goldenActive)$("goldenTxt").textContent="GOLDEN! TAP = ×"+goldenMult().toFixed(1);},120);goldenT=setTimeout(function(){stopGolden();toast("✨ It escaped! Greed taxed.");},3200);}
+el.golden.addEventListener("click",function(){if(!goldenActive)return;var m=goldenMult();stopGolden();S.stats.golden++;var gild=S.stats.golden>=3?2:1;var bp=Math.round(Math.max(1,Math.ceil(damage()/GOB_HP))*partsPerKill()*15*m*gild);var bg=Math.floor(bp*sellPrice()*.25);S.parts+=bp;S.gold+=bg;if(!S.unlockSell)S.unlockSell=true;coinSnd();burstBig(50,30,6+Math.round(m*3));burstCoins(50,26);addFloater("🪙 +"+fmt(bg)+" GOLD SPRAY!",30+Math.random()*20,16);toast("✨ GOLDEN ×"+m.toFixed(1)+"! +"+fmt(bp)+" parts, +"+fmt(bg)+"g");renderAll();save();setTimeout(maybeSellSpot,300);});
 setInterval(function(){if(!document.hidden&&Math.random()<0.28)spawnGolden();},18000);
 
 /* surge — announced through the single toast queue only */
-setInterval(function(){var now=Date.now();if(now>=S.nextSurge&&now>S.surgeUntil){S.surgeUntil=now+15000;S.nextSurge=now+60000+Math.random()*50000;toast("📈 PARTS ×2 for 15s — SELL NOW!");renderAll();}},1000);
+setInterval(function(){var now=Date.now();if(now>=S.nextSurge&&now>S.surgeUntil){var d=surgeDur();S.surgeUntil=now+d;S.nextSurge=now+60000+Math.random()*50000;toast("📈 PARTS ×2 for "+Math.round(d/1000)+"s — SELL NOW!");renderAll();}},1000);
 
 /* party tick — they hunt their own tunnels */
 setInterval(function(){var kps=partyKPS();if(kps<=0)return;var gain=kps*0.25;S.frac+=gain;var whole=Math.floor(S.frac);if(whole>0){S.frac-=whole;S.kills+=whole;S.total+=whole;S.parts+=whole*partsPerKill();checkMiles();if(Math.random()<.3&&!sheetOpen())addFloater("party +"+fmt(whole)+" ⚔️",8+Math.random()*14,58+Math.random()*16);}renderAll();},250);
 setInterval(save,4000);
+/* numbers count toward their targets instead of snapping */
+setInterval(function(){if(dispKills===null)return;var changed=false;if(dispKills!==S.kills){var d=S.kills-dispKills;dispKills+=Math.abs(d)<2?d:Math.ceil(d*0.3);changed=true;}if(dispGold!==S.gold){var g=S.gold-dispGold;dispGold+=Math.abs(g)<2?g:Math.ceil(g*0.3);changed=true;}if(changed){el.kills.textContent=fullFmt(dispKills);el.gold.textContent=fmt(dispGold);}},50);
 
 /* story + settings */
 if(S.seenStory)$("story1").classList.remove("show");
@@ -616,7 +743,27 @@ $("howtoBtn").addEventListener("click",function(){$("howto").classList.remove("s
 $("winClose").addEventListener("click",function(){$("winModal").classList.remove("show");pumpToast();});
 $("resetBtn").addEventListener("click",function(){$("sheetWrap").classList.remove("show");$("confirmModal").classList.add("show");});
 $("confirmNo").addEventListener("click",function(){$("confirmModal").classList.remove("show");pumpToast();});
-$("confirmYes").addEventListener("click",function(){try{localStorage.removeItem(KEY);}catch(e){}var keepSeen=true;S=defState();S.seenStory=keepSeen;S.introTour=true;mileIdx=0;cardSig="";sheetSig="";$("confirmModal").classList.remove("show");setCardAngle(0);renderAll();save();toast("🆕 A new quest begins.");});
+$("confirmYes").addEventListener("click",function(){
+ try{localStorage.removeItem(KEY);}catch(e){}
+ /* full reset: stop every live system so nothing from the old run survives on screen */
+ stopGolden();
+ toastQ.length=0;cutToast();
+ if(nudgeAnim){try{nudgeAnim.cancel();}catch(e){}nudgeAnim=null;}
+ if(spot.active)endSpot();
+ S=defState();S.seenStory=true;S.introTour=true;
+ S.card=newCard(); /* fresh opening encounter: exactly 1 normal goblin (bait is Lv 0 again) */
+ mileIdx=0;cardSig="";sheetSig="";dispKills=null;dispGold=null;lastGold=-1;
+ eliteShown=false;combo=0;striking=false;cardAngle=0;
+ $("comboTag").style.visibility="hidden";el.surge.style.visibility="hidden";
+ el.float.innerHTML="";el.golden.style.display="none";
+ removeSellBtn();removeShopBtn();
+ $("tabParty").style.visibility="hidden";
+ $("sheetWrap").classList.remove("show");
+ $("confirmModal").classList.remove("show");
+ setCardAngle(0);
+ renderAll();renderCard(true);save();
+ toast("🆕 A new quest begins.");
+});
 $("muteBtn").addEventListener("click",function(){S.muted=!S.muted;this.textContent=S.muted?"🔇 MUTED":"🔊 SOUND";save();});
 if(S.muted)$("muteBtn").textContent="🔇 MUTED";
 (function(){var m=0,i;for(i=0;i<MILES.length;i++){if(S.total>=MILES[i][0])m=i;}if(S.total>0)mileIdx=m+1;})();
