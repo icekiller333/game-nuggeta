@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Find the Mad Goblin</title>
+    <style>
+      :root{
+        --bg:#b8e986; --bg2:#8fd45e; --panel:#fffbe8; --ink:#16240c;
+        --accent:#ffd23f; --accent2:#ff6b9d; --danger:#ff5d5d; --good:#37c978;
+        --shadow:#16240c; --bar-track:#16240c22;
+        --scene-sky:#aee7ff; --scene-sky2:#dff6ff; --scene-ground:#7ec850; --scene-path:#d9b878;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#1d3320; --bg2:#14261a; --panel:#243b26; --ink:#f2ffe3;
+          --accent:#ffd23f; --accent2:#ff6b9d; --danger:#ff7070; --good:#4fe08d;
+          --shadow:#000000; --bar-track:#ffffff2b;
+          --scene-sky:#274b63; --scene-sky2:#1d3a4e; --scene-ground:#3f7031; --scene-path:#6b5836;
+        }
+      }
+      *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+      html,body{ height:100%; }
+      body{
+        margin:0; font-family:ui-rounded,"Trebuchet MS",system-ui,sans-serif;
+        background:var(--bg); color:var(--ink); overflow:hidden;
+      }
+      #app{
+        height:100dvh; max-width:520px; margin:0 auto;
+        display:flex; flex-direction:column; padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+        gap:8px;
+      }
+      /* ---------- top bar ---------- */
+      header{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+      .chip{
+        background:var(--panel); border:3px solid var(--ink); border-radius:10px;
+        box-shadow:3px 3px 0 var(--shadow); padding:5px 10px; font-weight:900;
+        display:flex; align-items:center; gap:6px; font-size:17px; line-height:1;
+      }
+      .chip .coin{ width:20px; height:20px; flex:0 0 auto; }
+      #biomeChip{ flex:1; justify-content:center; font-size:14px; text-transform:uppercase; letter-spacing:.4px; text-align:center; }
+      .iconbtn{
+        background:var(--panel); border:3px solid var(--ink); border-radius:10px;
+        box-shadow:3px 3px 0 var(--shadow); width:40px; height:36px; font-size:19px;
+        display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink);
+      }
+      .iconbtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadow); }
+      /* ---------- scene ---------- */
+      #scene{
+        position:relative; flex:1 1 auto; min-height:0; overflow:hidden;
+        border:3px solid var(--ink); border-radius:14px; box-shadow:4px 4px 0 var(--shadow);
+        background:linear-gradient(var(--scene-sky), var(--scene-sky2) 55%, var(--scene-ground) 55%);
+      }
+      #scene.shake{ animation:shake .3s; }
+      @keyframes shake{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+      #scene.warp{ animation:warp .9s ease-out; }
+      @keyframes warp{ 0%{ transform:scale(1); filter:saturate(1); } 18%{ transform:scale(1.035) rotate(-.6deg); filter:saturate(1.7) brightness(1.25); } 42%{ transform:scale(.985) rotate(.5deg); } 68%{ transform:scale(1.02); filter:saturate(1.3); } 100%{ transform:scale(1); filter:saturate(1); } }
+      #scene.bigshake{ animation:bigshake .55s ease-out; }
+      @keyframes bigshake{ 0%,100%{transform:translate(0,0)} 15%{transform:translate(-9px,4px) rotate(-.7deg)} 30%{transform:translate(9px,-5px) rotate(.7deg)} 45%{transform:translate(-7px,-3px)} 60%{transform:translate(7px,4px)} 78%{transform:translate(-3px,2px)} }
+      #flash{ position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:9; }
+      #flash.go{ animation:flashgo .55s ease-out; }
+      @keyframes flashgo{ 0%{opacity:0} 12%{opacity:.85} 100%{opacity:0} }
+      #biomeBanner{
+        position:absolute; left:50%; top:38%; transform:translate(-50%,-50%) scale(.6); z-index:10;
+        background:var(--ink); color:var(--accent); border:4px solid var(--accent); border-radius:14px;
+        box-shadow:6px 6px 0 rgba(0,0,0,.35); padding:14px 20px; text-align:center; opacity:0; pointer-events:none;
+        max-width:92%; width:max-content;
+      }
+      #biomeBanner.show{ animation:bannerin 2.1s cubic-bezier(.2,1.6,.3,1) forwards; }
+      @keyframes bannerin{ 0%{opacity:0; transform:translate(-50%,-50%) scale(.5) rotate(-4deg)} 14%{opacity:1; transform:translate(-50%,-50%) scale(1.12) rotate(1deg)} 22%{transform:translate(-50%,-50%) scale(1)} 82%{opacity:1; transform:translate(-50%,-50%) scale(1)} 100%{opacity:0; transform:translate(-50%,-62%) scale(1.04)} }
+      #biomeBanner .bb-kicker{ font-size:13px; letter-spacing:2px; font-weight:900; color:#fff; }
+      #biomeBanner .bb-name{ font-size:28px; font-weight:900; line-height:1.05; margin-top:2px; }
+      #biomeBanner .bb-odds{ font-size:14px; font-weight:800; color:#fff; margin-top:4px; }
+      .ring{ position:absolute; width:90px; height:90px; margin:-45px 0 0 -45px; border:6px solid var(--accent); border-radius:50%; z-index:6; pointer-events:none; animation:ringout .8s ease-out forwards; }
+      @keyframes ringout{ from{ transform:scale(.3); opacity:1; } to{ transform:scale(2.6); opacity:0; } }
+      .coinfall{ position:absolute; top:-30px; font-size:28px; z-index:11; pointer-events:none; animation:coinfall 1.15s ease-in forwards; }
+      @keyframes coinfall{ 0%{ transform:translateY(0) rotate(0); opacity:1; } 85%{ opacity:1; } 100%{ transform:translateY(340px) rotate(340deg); opacity:0; } }
+      #goblinPop.hyper{ animation:gobhyper .9s ease-out; }
+      @keyframes gobhyper{ 0%{ } 25%{ } 45%{ transform:translateY(-26px) scale(1.18) rotate(-7deg); } 65%{ transform:translateY(0) scale(1.05) rotate(6deg); } 82%{ transform:translateY(-10px) scale(1.1) rotate(-3deg); } 100%{ transform:translateY(0) scale(1) rotate(0); } }
+      #findPanel{
+        position:absolute; left:50%; bottom:10px; transform:translateX(-50%) translateY(18px); z-index:10;
+        width:min(94%,430px); background:var(--panel); color:var(--ink); border:3px solid var(--ink);
+        border-radius:12px; box-shadow:5px 5px 0 var(--shadow); padding:12px 14px; opacity:0; pointer-events:none;
+      }
+      #findPanel.show{ animation:findin 2.9s ease-out forwards; }
+      @keyframes findin{ 0%{opacity:0; transform:translateX(-50%) translateY(18px) scale(.94)} 10%{opacity:1; transform:translateX(-50%) translateY(0) scale(1)} 88%{opacity:1} 100%{opacity:0; transform:translateX(-50%) translateY(10px)} }
+      #findPanel .fp-rarity{ font-size:20px; font-weight:900; line-height:1.1; }
+      #findPanel .fp-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:8px; text-align:center; }
+      #findPanel .fp-grid b{ display:block; font-size:19px; line-height:1; }
+      #findPanel .fp-grid span{ font-size:11px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; opacity:.85; }
+      #findPanel .fp-ach{ margin-top:9px; background:var(--accent); border:2.5px solid var(--ink); border-radius:8px; padding:6px 9px; font-weight:900; font-size:14px; line-height:1.35; }
+      #findPanel .fp-lucky{ margin-top:8px; font-weight:900; font-size:16px; }
+      .plx{ position:absolute; left:0; right:0; overflow:hidden; pointer-events:none; }
+      .plx-strip{ display:flex; width:200%; height:100%; will-change:transform; }
+      .plx-strip svg{ width:50%; height:100%; flex:0 0 50%; display:block; }
+      #plxFar{ top:0; height:58%; z-index:0; }
+      #plxMid{ bottom:42%; height:42%; z-index:1; }
+      #plxNear{ bottom:42%; height:27%; z-index:2; }
+      #pathBand{
+        position:absolute; left:0; right:0; bottom:0; height:26%;
+        background:var(--scene-path); border-top:3px solid var(--ink);
+      }
+      #travelLayer{ position:absolute; inset:0; z-index:3; }
+      .pass-obj{
+        position:absolute; width:96px; margin-left:-48px; cursor:pointer;
+        transform-origin:50% 100%; user-select:none; touch-action:manipulation;
+      }
+      .pass-obj svg{ display:block; width:100%; height:auto; pointer-events:none; filter:drop-shadow(3px 3px 0 rgba(22,36,12,.35)); }
+      .pass-obj:active svg{ transform:scale(.94); }
+      .pass-obj.searched{ opacity:.45; pointer-events:none; filter:grayscale(.5); }
+      .pass-obj.searching{ animation:objwig .3s; }
+      @keyframes objwig{ 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg) scale(1.05)} 70%{transform:rotate(5deg)} }
+      .pass-obj.anim-flip{ animation:kflip .65s ease-out; }
+      .pass-obj.anim-twirl{ animation:ktwirl .7s ease-out; }
+      .pass-obj.anim-wiggle2{ animation:kwiggle .6s ease-in-out; }
+      .pass-obj.anim-boing{ animation:kboing .65s ease-out; }
+      .pass-obj.anim-explode{ animation:kexplode .6s ease-out; }
+      .pass-obj.anim-shrink{ animation:kshrink .65s ease-in-out; }
+      @keyframes kflip{ 0%{transform:rotate(0) translateY(0)} 30%{transform:rotate(-16deg) translateY(-32px)} 100%{transform:rotate(-360deg) translateY(0)} }
+      @keyframes ktwirl{ 0%{transform:rotate(0) scale(1)} 50%{transform:rotate(360deg) scale(1.18)} 100%{transform:rotate(720deg) scale(1)} }
+      @keyframes kwiggle{ 0%,100%{transform:rotate(0)} 15%{transform:rotate(-16deg) translateX(-7px)} 35%{transform:rotate(15deg) translateX(7px)} 55%{transform:rotate(-13deg) translateX(-5px)} 75%{transform:rotate(12deg) translateX(5px)} }
+      @keyframes kboing{ 0%,100%{transform:translateY(0) scale(1,1)} 25%{transform:translateY(-36px) scale(.94,1.07)} 45%{transform:translateY(0) scale(1.13,.85)} 65%{transform:translateY(-18px) scale(.97,1.03)} 85%{transform:translateY(0) scale(1.05,.95)} }
+      @keyframes kexplode{ 0%{transform:scale(1) rotate(0)} 25%{transform:scale(1.3) rotate(5deg)} 45%{transform:scale(1.3) rotate(-6deg)} 70%{transform:scale(.88) rotate(3deg)} 100%{transform:scale(1) rotate(0)} }
+      @keyframes kshrink{ 0%{transform:scale(1) rotate(0)} 55%{transform:scale(.22) rotate(26deg)} 100%{transform:scale(1) rotate(0)} }
+      .pass-obj.rustling{ animation:rustle .45s ease-in-out infinite alternate; }
+      @keyframes rustle{ from{ transform:rotate(-2.6deg); } to{ transform:rotate(2.6deg); } }
+      .pass-obj .ears{
+        position:absolute; top:-16px; right:-4px; font-size:19px; pointer-events:none;
+        animation:bob .5s ease-in-out infinite alternate;
+      }
+      @keyframes bob{ from{ transform:translateY(0); } to{ transform:translateY(-4px); } }
+      .puff{
+        position:absolute; font-size:24px; z-index:6; pointer-events:none;
+        animation:puffup .6s ease-out forwards;
+      }
+      @keyframes puffup{ to{ transform:translateY(-38px) scale(1.3); opacity:0; } }
+      #goblinPop{
+        position:absolute; width:120px; margin-left:-60px; z-index:4; pointer-events:none;
+        transform:translateY(72%) scale(.6); opacity:0; transition:transform .16s ease-in, opacity .16s;
+      }
+      #goblinPop.up{ transform:translateY(0) scale(1); opacity:1; transition:transform .24s cubic-bezier(.2,2.4,.4,1), opacity .1s; }
+      .spark{ position:absolute; font-size:24px; z-index:7; pointer-events:none; animation:fly .75s ease-out forwards; }
+      @keyframes fly{ to{ transform:translate(var(--dx),var(--dy)) scale(.4) rotate(160deg); opacity:0; } }
+      #foundTag{
+        position:absolute; top:12px; left:50%; transform:translateX(-50%) scale(0);
+        background:var(--accent); border:3px solid var(--ink); border-radius:10px;
+        box-shadow:3px 3px 0 var(--shadow); font-weight:900; padding:7px 16px; font-size:21px; z-index:8; white-space:nowrap;
+      }
+      #foundTag.show{ animation:pop 1.5s forwards; }
+      @keyframes pop{ 0%{transform:translateX(-50%) scale(0)} 14%{transform:translateX(-50%) scale(1.18)} 24%{transform:translateX(-50%) scale(1)} 82%{transform:translateX(-50%) scale(1)} 100%{transform:translateX(-50%) scale(0)} }
+      #hintLine{
+        position:absolute; left:50%; bottom:8px; transform:translateX(-50%); z-index:5;
+        font-size:13px; font-weight:800; background:var(--panel); border:2.5px solid var(--ink);
+        border-radius:8px; padding:3px 10px; white-space:nowrap; opacity:.92; pointer-events:none;
+      }
+      /* ---------- feedback line ---------- */
+      #feedback{
+        flex:0 0 26px; display:flex; align-items:center; justify-content:center;
+        font-weight:800; font-size:16px; text-align:center; overflow:hidden; white-space:nowrap;
+      }
+      /* ---------- odds panel ---------- */
+      #odds{
+        flex:0 0 auto; background:var(--panel); border:3px solid var(--ink); border-radius:12px;
+        box-shadow:4px 4px 0 var(--shadow); padding:8px 12px 10px;
+        display:flex; align-items:center; gap:12px;
+      }
+      #oddsBig{ font-size:30px; font-weight:900; line-height:1; white-space:nowrap; }
+      #oddsBig small{ font-size:14px; font-weight:800; display:block; letter-spacing:.5px; }
+      #oddsRight{ flex:1; min-width:0; }
+      #chanceTrack{ height:16px; border:3px solid var(--ink); border-radius:8px; background:var(--bar-track); overflow:hidden; }
+      #chanceFill{ height:100%; background:var(--good); width:10%; transition:width .25s; }
+      #oddsMeta{ display:flex; justify-content:space-between; font-size:13px; font-weight:800; margin-top:4px; gap:6px; }
+      #trailNum{ color:var(--danger); }
+      /* ---------- controls ---------- */
+      #controls{ flex:0 0 auto; display:flex; gap:8px; align-items:stretch; }
+      .bigbtn{
+        border:3px solid var(--ink); border-radius:12px; box-shadow:4px 4px 0 var(--shadow);
+        font-family:inherit; font-weight:900; cursor:pointer; color:var(--ink);
+        display:flex; align-items:center; justify-content:center; gap:7px;
+      }
+      .bigbtn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--shadow); }
+      #rewindBtn{ flex:1; background:var(--danger); font-size:17px; padding:14px 4px; }
+      #rewindBtn.armed{ background:var(--ink); color:var(--accent); }
+      #controlsHint{
+        flex:1.6; display:flex; align-items:center; justify-content:center; text-align:center;
+        font-weight:800; font-size:14px; line-height:1.3; padding:4px 8px;
+      }
+      /* ---------- overlays / sheets ---------- */
+      .overlay{
+        position:fixed; inset:0; background:rgba(10,20,5,.62); z-index:20;
+        display:none; align-items:center; justify-content:center; padding:18px;
+      }
+      .overlay.open{ display:flex; }
+      .card{
+        background:var(--panel); color:var(--ink); border:3px solid var(--ink); border-radius:14px;
+        box-shadow:6px 6px 0 var(--shadow); max-width:440px; width:100%; padding:20px;
+        max-height:calc(100dvh - 36px); overflow-y:auto;
+      }
+      .card h2{ margin:0 0 8px; font-size:24px; line-height:1.1; }
+      .card p{ margin:0 0 14px; font-size:16px; line-height:1.45; font-weight:600; }
+      .card .gobface{ width:110px; display:block; margin:0 auto 10px; }
+      .cardbtn{
+        width:100%; background:var(--accent); border:3px solid var(--ink); border-radius:12px;
+        box-shadow:4px 4px 0 var(--shadow); font-family:inherit; font-weight:900; font-size:18px;
+        padding:13px; cursor:pointer; color:var(--ink);
+      }
+      .cardbtn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--shadow); }
+      .cardbtn.ghost{ background:var(--panel); margin-top:10px; }
+      .cardbtn.danger{ background:var(--danger); }
+      .sheethead{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+      .sheethead h2{ margin:0; }
+      .xbtn{ background:var(--panel); border:3px solid var(--ink); border-radius:9px; width:36px; height:36px; font-weight:900; font-size:16px; cursor:pointer; color:var(--ink); box-shadow:2px 2px 0 var(--shadow); }
+      .statsline{ font-size:14px; font-weight:700; line-height:1.7; }
+      /* draft cards — stacked full-width so nothing is squeezed skinny */
+      #draftWrap{ display:flex; flex-direction:column; gap:14px; }
+      .draftcard{
+        width:100%; min-width:0; border:3px solid var(--ink); border-radius:14px; padding:16px;
+        background:var(--bg); display:flex; flex-direction:column; box-shadow:4px 4px 0 var(--shadow);
+      }
+      @media (prefers-color-scheme: dark){ .draftcard{ background:#1a2c1e; } }
+      .draftcard .name{ font-weight:900; font-size:22px; line-height:1.15; }
+      .draftcard .pips{ font-size:15px; letter-spacing:3px; margin:5px 0 8px; }
+      .draftcard .desc{ font-size:16px; font-weight:600; line-height:1.5; }
+      .draftcard .next{
+        font-size:15px; font-weight:900; line-height:1.4; margin:12px 0 12px;
+        background:var(--panel); border:2.5px solid var(--ink); border-radius:9px; padding:9px 11px;
+      }
+      .buybtn{
+        width:100%; border:3px solid var(--ink); border-radius:11px; box-shadow:3px 3px 0 var(--shadow);
+        background:var(--good); font-family:inherit; font-weight:900; font-size:18px; padding:14px 8px; cursor:pointer; color:var(--ink);
+        display:flex; align-items:center; justify-content:center; gap:6px;
+      }
+      .achrow{ display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:2px dashed var(--bar-track); font-size:15px; line-height:1.35; }
+      .achrow .ach-ic{ font-size:22px; line-height:1; flex:0 0 auto; }
+      .achrow.locked{ opacity:.55; }
+      .achrow b{ display:block; font-size:16px; }
+      .buybtn:disabled{ background:#9a9a8e; cursor:default; }
+      .buybtn:not(:disabled):active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadow); }
+      @media (prefers-reduced-motion: reduce){
+        *{ animation-duration:.01s !important; transition-duration:.01s !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <div class="chip" aria-label="Gold coins">
+          <svg class="coin" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#ffd23f" stroke="#16240c" stroke-width="2.4"/><text x="12" y="16.5" text-anchor="middle" font-size="11" font-weight="900" fill="#16240c">G</text></svg>
+          <span id="goldNum">0</span>
+        </div>
+        <div class="chip" id="biomeChip">Biome 1 · The Cellar</div>
+        <button class="iconbtn" id="soundBtn" aria-label="Toggle sound">🔊</button>
+        <button class="iconbtn" id="gearBtn" aria-label="Settings">⚙️</button>
+      </header>
+
+      <section id="scene" aria-label="Mountain pass — tap things as they pass to search them">
+        <div class="plx" id="plxFar"><div class="plx-strip" id="stripFar">
+          <svg viewBox="0 0 500 220" preserveAspectRatio="none" aria-hidden="true"><path d="M0 220 L0 150 L70 58 L128 128 L208 26 L292 122 L362 52 L432 140 L500 150 L500 220 Z" fill="#8fb8c9" opacity=".55"/><path d="M208 26 L232 62 L184 62 Z" fill="#ffffff" opacity=".9"/><path d="M70 58 L88 84 L52 84 Z" fill="#ffffff" opacity=".85"/><path d="M362 52 L378 76 L346 76 Z" fill="#ffffff" opacity=".8"/></svg>
+          <svg viewBox="0 0 500 220" preserveAspectRatio="none" aria-hidden="true"><path d="M0 220 L0 150 L70 58 L128 128 L208 26 L292 122 L362 52 L432 140 L500 150 L500 220 Z" fill="#8fb8c9" opacity=".55"/><path d="M208 26 L232 62 L184 62 Z" fill="#ffffff" opacity=".9"/><path d="M70 58 L88 84 L52 84 Z" fill="#ffffff" opacity=".85"/><path d="M362 52 L378 76 L346 76 Z" fill="#ffffff" opacity=".8"/></svg>
+        </div></div>
+        <div class="plx" id="plxMid"><div class="plx-strip" id="stripMid">
+          <svg viewBox="0 0 500 220" preserveAspectRatio="none" aria-hidden="true"><path d="M0 220 L0 168 L82 108 L162 158 L252 92 L342 154 L424 112 L500 168 L500 220 Z" fill="#6f9a5e" opacity=".85"/></svg>
+          <svg viewBox="0 0 500 220" preserveAspectRatio="none" aria-hidden="true"><path d="M0 220 L0 168 L82 108 L162 158 L252 92 L342 154 L424 112 L500 168 L500 220 Z" fill="#6f9a5e" opacity=".85"/></svg>
+        </div></div>
+        <div class="plx" id="plxNear"><div class="plx-strip" id="stripNear">
+          <svg viewBox="0 0 500 220" preserveAspectRatio="none" aria-hidden="true"><path d="M0 220 L0 178 L64 138 L128 182 L206 132 L286 178 L366 140 L442 184 L500 178 L500 220 Z" fill="#4a7a35"/><path d="M96 152 l11 -36 l11 36 Z M308 150 l11 -38 l11 38 Z M424 160 l10 -32 l10 32 Z" fill="#2e5b21"/></svg>
+          <svg viewBox="0 0 500 220" preserveAspectRatio="none" aria-hidden="true"><path d="M0 220 L0 178 L64 138 L128 182 L206 132 L286 178 L366 140 L442 184 L500 178 L500 220 Z" fill="#4a7a35"/><path d="M96 152 l11 -36 l11 36 Z M308 150 l11 -38 l11 38 Z M424 160 l10 -32 l10 32 Z" fill="#2e5b21"/></svg>
+        </div></div>
+        <div id="pathBand"></div>
+        <svg id="goblinPop" viewBox="0 0 200 190" role="img" aria-label="The Mad Goblin">
+          <path d="M38 62 L4 40 L22 92 Z" fill="#57b531" stroke="#16240c" stroke-width="6" stroke-linejoin="round"/>
+          <path d="M162 62 L196 40 L178 92 Z" fill="#57b531" stroke="#16240c" stroke-width="6" stroke-linejoin="round"/>
+          <path d="M100 8 L138 52 L62 52 Z" fill="#8a4fff" stroke="#16240c" stroke-width="6" stroke-linejoin="round"/>
+          <circle cx="100" cy="42" r="9" fill="#ffd23f" stroke="#16240c" stroke-width="4"/>
+          <ellipse cx="100" cy="112" rx="64" ry="72" fill="#6fce3f" stroke="#16240c" stroke-width="6"/>
+          <ellipse cx="76" cy="98" rx="13" ry="17" fill="#fff" stroke="#16240c" stroke-width="4"/>
+          <ellipse cx="124" cy="98" rx="13" ry="17" fill="#fff" stroke="#16240c" stroke-width="4"/>
+          <circle cx="79" cy="103" r="5.5" fill="#16240c"/><circle cx="121" cy="93" r="5.5" fill="#16240c"/>
+          <path d="M64 78 L88 86 M136 78 L112 86" stroke="#16240c" stroke-width="5" stroke-linecap="round"/>
+          <ellipse cx="100" cy="126" rx="9" ry="12" fill="#57b531" stroke="#16240c" stroke-width="4"/>
+          <path d="M66 148 Q100 176 134 148 L128 162 L116 152 L106 165 L95 153 L84 165 L73 153 L66 162 Z" fill="#fff" stroke="#16240c" stroke-width="4" stroke-linejoin="round"/>
+        </svg>
+        <div id="travelLayer"></div>
+        <div id="foundTag">FOUND HIM! +1 🪙</div>
+        <div id="flash"></div>
+        <div id="biomeBanner" aria-live="polite"><div class="bb-kicker">⚡ NEW BIOME ⚡</div><div class="bb-name">—</div><div class="bb-odds">—</div></div>
+        <div id="findPanel" aria-live="polite"></div>
+        <div id="hintLine">👆 Tap anything that rolls past to search it</div>
+      </section>
+
+      <div id="feedback" aria-live="polite">He's hiding in there somewhere…</div>
+
+      <section id="odds">
+        <div id="oddsBig"><small>ODDS</small><span id="oddsNum">1 in 10</span></div>
+        <div id="oddsRight">
+          <div id="chanceTrack"><div id="chanceFill"></div></div>
+          <div id="oddsMeta"><span id="pctNum">10% chance</span><span id="trailNum"></span><span id="triesNum">0 tries here</span></div>
+        </div>
+      </section>
+
+      <nav id="controls">
+        <div id="controlsHint">Psst… psst… every tap is a search.<br>Shaking things hide him best. 👂</div>
+        <button class="bigbtn" id="rewindBtn">💀 REWIND</button>
+      </nav>
+    </div>
+
+    <!-- Story / how-to overlay -->
+    <div class="overlay" id="storyOverlay">
+      <div class="card">
+        <svg class="gobface" viewBox="0 0 200 190" aria-hidden="true">
+          <path d="M38 62 L4 40 L22 92 Z" fill="#57b531" stroke="#16240c" stroke-width="6" stroke-linejoin="round"/>
+          <path d="M162 62 L196 40 L178 92 Z" fill="#57b531" stroke="#16240c" stroke-width="6" stroke-linejoin="round"/>
+          <ellipse cx="100" cy="112" rx="64" ry="72" fill="#6fce3f" stroke="#16240c" stroke-width="6"/>
+          <ellipse cx="76" cy="98" rx="13" ry="17" fill="#fff" stroke="#16240c" stroke-width="4"/>
+          <ellipse cx="124" cy="98" rx="13" ry="17" fill="#fff" stroke="#16240c" stroke-width="4"/>
+          <circle cx="79" cy="103" r="5.5" fill="#16240c"/><circle cx="121" cy="93" r="5.5" fill="#16240c"/>
+          <path d="M66 148 Q100 176 134 148 L128 162 L116 152 L106 165 L95 153 L84 165 L73 153 L66 162 Z" fill="#fff" stroke="#16240c" stroke-width="4" stroke-linejoin="round"/>
+        </svg>
+        <div id="storyText">
+          <h2>A mad goblin is hiding.</h2>
+          <p>He's quick, he's rude, and every time you catch him he hides somewhere even harder to reach, further up the pass.</p>
+        </div>
+        <button class="cardbtn" id="storyBtn">NEXT →</button>
+      </div>
+    </div>
+
+    <!-- Post-rewind upgrade draft -->
+    <div class="overlay" id="draftOverlay">
+      <div class="card">
+        <div class="sheethead"><h2>💀 You rewound.</h2></div>
+        <p style="margin-bottom:10px">Death has its perks. Pick <b>one</b> upgrade — if you can pay for it. The shop only opens here, between lives.</p>
+        <div class="chip" style="margin-bottom:12px">
+          <svg class="coin" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#ffd23f" stroke="#16240c" stroke-width="2.4"/><text x="12" y="16.5" text-anchor="middle" font-size="11" font-weight="900" fill="#16240c">G</text></svg>
+          <span id="goldNumDraft">0</span>&nbsp;gold — yours forever, even after a rewind
+        </div>
+        <div id="draftWrap"></div>
+        <button class="cardbtn ghost" id="draftSkip">SKIP — START THE CLIMB →</button>
+      </div>
+    </div>
+
+    <!-- Settings sheet -->
+    <div class="overlay" id="settingsOverlay">
+      <div class="card">
+        <div class="sheethead">
+          <h2>⚙️ Settings</h2>
+          <button class="xbtn" data-close="settingsOverlay" aria-label="Close settings">✕</button>
+        </div>
+        <div class="statsline" id="statsBox"></div>
+        <div class="statsline" id="upgradesBox" style="margin-top:10px"></div>
+        <div id="achBox" style="margin-top:14px"></div>
+        <button class="cardbtn danger" id="abandonBtn" style="margin-top:14px">ABANDON EVERYTHING</button>
+        <button class="cardbtn ghost" id="abandonArm" style="display:none">TAP AGAIN — ERASE ALL PROGRESS</button>
+      </div>
+    </div>
+
+    <script>
+      "use strict";
+      /* ================= data ================= */
+      var LADDER = [5,10,20,40,60,75,80,100,200,400,500,750,1000];
+      function baseOdds(depth){
+        if (depth <= LADDER.length) return LADDER[depth-1];
+        return 1000 + (depth - LADDER.length) * 250;
+      }
+      /* each area is a different-looking stretch of the pass; themes cycle, then repeat */
+      var THEMES = [
+        { name:"Greenhorn Pass", sky:"#aee7ff", sky2:"#dff6ff", ground:"#7ec850", path:"#d9b878",
+          far:"#8fb8c9", cap:"#ffffff", mid:"#6f9a5e", near:"#4a7a35", nearDetail:"#2e5b21" },
+        { name:"Snowcap Peaks", sky:"#cfe9f7", sky2:"#f2fafd", ground:"#e8f2f8", path:"#b9cfdd",
+          far:"#a9c6dd", cap:"#ffffff", mid:"#cfdff0", near:"#8fb0c9", nearDetail:"#4d7194" },
+        { name:"Ember Dunes", sky:"#ffd98a", sky2:"#fff0cf", ground:"#f0c96a", path:"#d9a856", mesa:true,
+          far:"#d98a4e", cap:null, mid:"#e3ac55", near:"#c98d3f", nearDetail:"#5f7d2a" },
+        { name:"Jungle Gorge", sky:"#a8ecc0", sky2:"#e4ffe9", ground:"#3f9e4d", path:"#8a6a3f",
+          far:"#2e7d4f", cap:null, mid:"#35985a", near:"#1f6b38", nearDetail:"#0f4523" },
+        { name:"Ashen Caldera", sky:"#ffab8a", sky2:"#ffd9b0", ground:"#57504e", path:"#7a6a58",
+          far:"#6b4a52", cap:"#ff7a2f", mid:"#57424a", near:"#3d3138", nearDetail:"#ff7a2f" },
+        { name:"Twilight Summit", sky:"#2b3a67", sky2:"#7a86b8", ground:"#3d5a45", path:"#6b5a43", stars:true,
+          far:"#46538a", cap:"#dfe8ff", mid:"#37477a", near:"#232f52", nearDetail:"#0d1730" }
+      ];
+      function themeIndex(depth){ return (depth - 1) % THEMES.length; }
+      function themeFor(depth){ return THEMES[themeIndex(depth)]; }
+      function biomeName(depth){
+        var cyc = Math.floor((depth - 1) / THEMES.length);
+        return themeFor(depth).name + (cyc > 0 ? " " + (cyc + 1) : "");
+      }
+      var UPGRADES = [
+        { id:"head", icon:"⏩", name:"Head Start",
+          desc:"Each new climb, your scout visibly races ahead and finds him the first times for you — watch it happen.",
+          next:function(l){ return "Scout finds: " + l + " → " + (l+1) + " per climb"; },
+          costs:[2,5,10,18,30] },
+        { id:"eyes", icon:"👀", name:"Sharp Eyes", lockText:"Reach Biome 5 to unlock",
+          desc:"Shaves 1 off every odds number. 1 in 5 becomes 1 in 4.",
+          next:function(l){ return "Odds shaved: −" + l + " → −" + (l+1); },
+          costs:[5,10,25,50] },
+        { id:"luck", icon:"🍀", name:"Lucky First Peek",
+          desc:"Your first search in each new biome can just… work, on top of the normal odds.",
+          next:function(l){ return "Peek chance: " + (l ? ("1 in " + [12,8,6][l-1]) : "none") + " → 1 in " + [12,8,6][l]; },
+          costs:[5,10,25], luckDenoms:[12,8,6] },
+        { id:"trail", icon:"🔥", name:"Warm Trail",
+          desc:"Every miss in a biome warms his trail: +1% find chance per miss, stacking until you catch him.",
+          next:function(l){ return "Trail heat: +" + l + "% → +" + (l+1) + "% per miss"; },
+          costs:[4,9,20,40,70] },
+        { id:"ears", icon:"👂", name:"Big Ears",
+          desc:"More passing things rustle as he hides in them. A rustling thing is 4× as likely to be hiding him.",
+          next:function(l){ return "Rustle rate: " + [6,14,22,32,44][l] + "% → " + [6,14,22,32,44][l+1] + "%"; },
+          costs:[4,9,20,40], rustleRates:[6,14,22,32,44] },
+        { id:"sniffer", icon:"🪙", name:"Coin Sniffer",
+          desc:"He drops loose change when caught. Chance each find pays +1 bonus gold.",
+          next:function(l){ return "Bonus chance: " + [0,25,50,80][l] + "% → " + [0,25,50,80][l+1] + "%"; },
+          costs:[6,14,30], bonusChances:[0,25,50,80] },
+        { id:"magnet", icon:"🧲", name:"Goblin Magnet",
+          desc:"Once per biome, a passing thing gets yanked right to you, glowing — searching it is a guaranteed find.",
+          next:function(l){ return l === 0 ? "Magnet pulls: 0 → 1 per biome" : "Magnet pulls: " + l + " → " + (l+1) + " per biome"; },
+          costs:[15,35,70] },
+        { id:"bounty", icon:"💰", name:"Bigger Bounty",
+          desc:"He is worth more every single time you catch him. Each level adds +1 gold to every find, forever.",
+          next:function(l){ return "Gold per find: " + (1 + l) + " → " + (2 + l) + " 🪙"; },
+          costs:[8,20,45,90] },
+        { id:"lucky", icon:"🌟", name:"Lucky Find",
+          desc:"Any catch can turn into a LUCKY FIND: a shower of +10 bonus gold. It starts rare — 1 in 50 — and tops out at a 50% chance.",
+          next:function(l){ return "Lucky chance: " + [0,2,5,10,18,28,40,50][l] + "% → " + [0,2,5,10,18,28,40,50][l+1] + "%" + (l === 0 ? " (1 in 50)" : ""); },
+          costs:[6,12,25,50,90,150,220], luckyChances:[0,2,5,10,18,28,40,50] }
+      ];
+      var ACHIEVEMENTS = [
+        { id:"first_pick", icon:"🎯", name:"First-Pick Sniper", desc:"Find him on the very first search of a biome." },
+        { id:"longshot20", icon:"🍀", name:"Against the Odds", desc:"Find him when there was only a 20% or lower chance you would have found him by then." },
+        { id:"fifty", icon:"⚖️", name:"Fifty-Fifty", desc:"Find him when your chance of having found him by then sat right around 50% (40–60%)." },
+        { id:"drought", icon:"🏜️", name:"Drought Breaker", desc:"Find him after the hunt dragged past a 99% cumulative chance — a 1-in-10 that took forever." },
+        { id:"needle", icon:"🪡", name:"Needle in the Pass", desc:"Find him when a single search had a 1% or lower chance of working." },
+        { id:"century", icon:"💯", name:"Century Club", desc:"Find him in a biome with odds of 1 in 100 or worse." },
+        { id:"golden", icon:"🌟", name:"Golden Shower", desc:"Trigger a Lucky Find and get showered with +10 gold." },
+        { id:"ten_finds", icon:"🔁", name:"Repeat Offender", desc:"Catch him 10 times in total." },
+        { id:"twentyfive_finds", icon:"👑", name:"Goblin Nemesis", desc:"Catch him 25 times in total." }
+      ];
+      function rarityFor(exact, magnet){
+        if (magnet) return { label:"GUARANTEED — MAGNET PULL", emoji:"🧲" };
+        if (exact >= 0.40) return { label:"EVERYDAY CATCH", emoji:"🙂" };
+        if (exact >= 0.20) return { label:"SOLID FIND", emoji:"👍" };
+        if (exact >= 0.10) return { label:"UNCOMMON FIND", emoji:"👀" };
+        if (exact >= 0.05) return { label:"RARE FIND", emoji:"✨" };
+        if (exact >= 0.02) return { label:"VERY RARE FIND", emoji:"💎" };
+        if (exact >= 0.005) return { label:"EPIC FIND", emoji:"🔥" };
+        if (exact >= 0.001) return { label:"LEGENDARY FIND", emoji:"👑" };
+        return { label:"MYTHIC FIND — ALMOST IMPOSSIBLE", emoji:"🌌" };
+      }
+      function fmtChancePct(c){
+        var p = c * 100;
+        if (p >= 10) return (Math.round(p*10)/10) + "%";
+        if (p >= 1) return (Math.round(p*100)/100) + "%";
+        if (p >= 0.01) return p.toFixed(3).replace(/0+$/,"").replace(/\.$/,"") + "%";
+        return p.toExponential(1) + "%";
+      }
+      function upgradeById(id){ for (var i=0;i<UPGRADES.length;i++) if (UPGRADES[i].id===id) return UPGRADES[i]; return null; }
+      var MISSES = ["Not here.","Nope. Just a smell.","Empty. He was here though.","A decoy sock!","Nothing but crumbs.","He giggles somewhere far off.","Dust. Only dust.","So close you can taste it.","Psst… nope, that was you.","A very suspicious potato. Not him."];
+      var RUSTLE_MISSES = ["The rustling stops. He slipped out!","It WAS shaking — he's quick, not invisible.","Something green darted away. Next time!"];
+
+      /* passing-object art (mountain pass clutter) */
+      var INK = "#16240c";
+      var OBJ_ART = [
+        '<svg viewBox="0 0 120 80"><path d="M6 78 Q0 40 28 34 Q30 8 60 12 Q90 6 94 32 Q118 38 114 78 Z" fill="#2f8f2a" stroke="' + INK + '" stroke-width="5"/><circle cx="38" cy="42" r="6" fill="#ff6b9d" stroke="' + INK + '" stroke-width="3"/><circle cx="82" cy="52" r="6" fill="#ffd23f" stroke="' + INK + '" stroke-width="3"/></svg>',
+        '<svg viewBox="0 0 120 80"><path d="M10 78 L24 30 Q28 14 52 16 L92 20 Q112 24 110 48 L106 78 Z" fill="#9aa3a8" stroke="' + INK + '" stroke-width="5"/><path d="M34 44 L58 40 M66 58 L92 54" stroke="' + INK + '" stroke-width="4" stroke-linecap="round"/></svg>',
+        '<svg viewBox="0 0 120 80"><path d="M60 78 L44 26 L60 4 L76 26 Z" fill="#2e7d32" stroke="' + INK + '" stroke-width="5" stroke-linejoin="round"/><path d="M60 78 L50 44 L60 30 L70 44 Z" fill="#256b29" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/><rect x="55" y="70" width="10" height="10" fill="#7a4a21" stroke="' + INK + '" stroke-width="3"/></svg>',
+        '<svg viewBox="0 0 120 80"><path d="M14 78 L20 34 Q22 22 34 22 L86 22 Q98 22 100 34 L106 78 Z" fill="#b07a3f" stroke="' + INK + '" stroke-width="5"/><path d="M17 46 L103 46 M19 64 L101 64" stroke="' + INK + '" stroke-width="4"/><circle cx="60" cy="32" r="5" fill="#ffd23f" stroke="' + INK + '" stroke-width="3"/></svg>',
+        '<svg viewBox="0 0 120 80"><ellipse cx="60" cy="70" rx="42" ry="9" fill="#7a4a21" stroke="' + INK + '" stroke-width="4"/><path d="M22 70 Q14 30 40 26 L80 26 Q106 30 98 70" fill="#c98d4b" stroke="' + INK + '" stroke-width="5"/><path d="M24 48 Q60 40 96 48" stroke="' + INK + '" stroke-width="4" fill="none"/></svg>',
+        '<svg viewBox="0 0 120 80"><path d="M30 78 L36 20 Q38 10 48 10 L54 10 Q64 10 66 20 L72 78 Z" fill="#e8e2d0" stroke="' + INK + '" stroke-width="5"/><path d="M38 34 L70 34 M40 54 L68 54" stroke="' + INK + '" stroke-width="4"/><path d="M84 78 L88 44 Q90 36 96 36 Q102 36 104 44 L108 78 Z" fill="#cfc7ae" stroke="' + INK + '" stroke-width="4"/></svg>',
+        '<svg viewBox="0 0 120 80"><path d="M14 78 Q20 44 52 46 Q56 22 84 30 Q110 36 104 78 Z" fill="#7ec850" stroke="' + INK + '" stroke-width="5"/><circle cx="44" cy="58" r="9" fill="#ff5d5d" stroke="' + INK + '" stroke-width="3.5"/><circle cx="46.5" cy="55.5" r="2.6" fill="#fff"/><circle cx="76" cy="64" r="7" fill="#ff5d5d" stroke="' + INK + '" stroke-width="3.5"/><circle cx="78" cy="62" r="2" fill="#fff"/></svg>',
+        '<svg viewBox="0 0 120 80"><path d="M60 8 L112 78 L8 78 Z" fill="#ff8c42" stroke="' + INK + '" stroke-width="5" stroke-linejoin="round"/><path d="M60 36 L84 78 L36 78 Z" fill="#c2571f" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/><path d="M60 8 L60 22" stroke="' + INK + '" stroke-width="4" stroke-linecap="round"/><circle cx="60" cy="5" r="4" fill="#ffd23f" stroke="' + INK + '" stroke-width="3"/></svg>',
+        '<svg viewBox="0 0 120 80"><path d="M14 78 Q16 30 60 26 Q104 30 106 78 Z" fill="#f2b134" stroke="' + INK + '" stroke-width="5"/><path d="M34 46 Q60 38 86 46 M30 62 Q60 54 90 62" stroke="' + INK + '" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M60 26 L60 10" stroke="' + INK + '" stroke-width="4" stroke-linecap="round"/></svg>',
+        '<svg viewBox="0 0 120 80"><rect x="54" y="18" width="12" height="60" fill="#8a5a2b" stroke="' + INK + '" stroke-width="4"/><path d="M60 22 L102 22 L112 31 L102 40 L60 40 Z" fill="#b07a3f" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/><path d="M60 44 L26 44 L16 53 L26 62 L60 62 Z" fill="#b07a3f" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/></svg>',
+        '<svg viewBox="0 0 120 80"><path d="M6 78 Q10 44 44 42 Q52 20 78 28 Q108 32 114 78 Z" fill="#ffffff" stroke="' + INK + '" stroke-width="5"/><circle cx="36" cy="60" r="3.5" fill="#cfe8f5"/><circle cx="80" cy="54" r="3" fill="#cfe8f5"/><path d="M26 26 l2.5 6 6 2.5 -6 2.5 -2.5 6 -2.5 -6 -6 -2.5 6 -2.5 Z" fill="#aee7ff" stroke="' + INK + '" stroke-width="2.5" stroke-linejoin="round"/></svg>',
+        '<svg viewBox="0 0 120 80"><path d="M8 40 Q8 22 34 22 L96 22 Q112 22 112 40 Q112 58 96 58 L34 58 Q8 58 8 40 Z" fill="#a06a35" stroke="' + INK + '" stroke-width="5"/><ellipse cx="98" cy="40" rx="12" ry="17" fill="#d9b878" stroke="' + INK + '" stroke-width="4"/><ellipse cx="98" cy="40" rx="5.5" ry="8" fill="#7a4a21" stroke="' + INK + '" stroke-width="3"/><path d="M22 32 Q50 28 78 32" stroke="' + INK + '" stroke-width="4" fill="none" stroke-linecap="round"/></svg>'
+      ];
+
+      /* extra hiding spots that only grow in their own stretch of the pass */
+      var THEME_OBJS = [
+        [ /* Greenhorn Pass */
+          '<svg viewBox="0 0 120 80"><path d="M60 78 L60 36" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/><circle cx="60" cy="26" r="17" fill="#ffd23f" stroke="' + INK + '" stroke-width="5"/><circle cx="60" cy="26" r="7" fill="#8a5a2b" stroke="' + INK + '" stroke-width="3"/><path d="M60 50 Q40 42 34 28 M60 58 Q80 50 86 36" stroke="' + INK + '" stroke-width="4" fill="none" stroke-linecap="round"/></svg>',
+          '<svg viewBox="0 0 120 80"><ellipse cx="60" cy="34" rx="36" ry="12" fill="#c98d4b" stroke="' + INK + '" stroke-width="5"/><path d="M24 34 L24 62 Q24 74 38 74 L82 74 Q96 74 96 62 L96 34" fill="#a06a35" stroke="' + INK + '" stroke-width="5"/><ellipse cx="60" cy="34" rx="14" ry="5" fill="none" stroke="' + INK + '" stroke-width="3"/></svg>',
+          '<svg viewBox="0 0 120 80"><path d="M34 78 L34 54 M62 78 L62 44 M96 78 L96 56" stroke="#2f8f2a" stroke-width="7" stroke-linecap="round"/><circle cx="34" cy="46" r="8" fill="#ff6b9d" stroke="' + INK + '" stroke-width="3"/><circle cx="62" cy="35" r="8" fill="#ffd23f" stroke="' + INK + '" stroke-width="3"/><circle cx="96" cy="48" r="8" fill="#ff8c42" stroke="' + INK + '" stroke-width="3"/></svg>'
+        ],
+        [ /* Snowcap Peaks */
+          '<svg viewBox="0 0 120 80"><circle cx="60" cy="58" r="19" fill="#ffffff" stroke="' + INK + '" stroke-width="5"/><circle cx="60" cy="30" r="13" fill="#ffffff" stroke="' + INK + '" stroke-width="5"/><circle cx="56" cy="28" r="2.2" fill="' + INK + '"/><circle cx="64" cy="28" r="2.2" fill="' + INK + '"/><path d="M60 31 L73 34 L60 37 Z" fill="#ff8c42" stroke="' + INK + '" stroke-width="2.5" stroke-linejoin="round"/><path d="M43 42 Q60 50 77 42" stroke="#ff5d5d" stroke-width="6" fill="none" stroke-linecap="round"/></svg>',
+          '<svg viewBox="0 0 120 80"><path d="M60 4 L84 34 L72 34 L92 62 L28 62 L48 34 L36 34 Z" fill="#dcecf5" stroke="' + INK + '" stroke-width="5" stroke-linejoin="round"/><rect x="54" y="62" width="12" height="14" fill="#7a4a21" stroke="' + INK + '" stroke-width="4"/></svg>',
+          '<svg viewBox="0 0 120 80"><path d="M36 76 L47 30 L58 76 Z" fill="#aee7ff" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/><path d="M58 76 L73 12 L88 76 Z" fill="#cfeeff" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/><path d="M82 76 L91 44 L100 76 Z" fill="#aee7ff" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/></svg>'
+        ],
+        [ /* Ember Dunes */
+          '<svg viewBox="0 0 120 80"><path d="M52 78 L52 24 Q52 12 62 12 Q72 12 72 24 L72 78 Z" fill="#3f9e4d" stroke="' + INK + '" stroke-width="5"/><path d="M52 46 L38 46 Q28 46 28 34 L28 28 Q28 22 34 22 Q40 22 40 30 L40 36 L52 36 Z" fill="#3f9e4d" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/><path d="M72 40 L84 40 Q96 40 96 30 L96 24 Q96 18 90 18 Q84 18 84 26 L84 30 L72 30 Z" fill="#3f9e4d" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/><circle cx="62" cy="10" r="5" fill="#ff6b9d" stroke="' + INK + '" stroke-width="3"/></svg>',
+          '<svg viewBox="0 0 120 80"><circle cx="60" cy="44" r="30" fill="#d9b878" stroke="' + INK + '" stroke-width="5"/><path d="M36 30 Q60 50 84 30 M34 52 Q58 34 88 54 M44 66 Q62 40 78 64 M60 16 Q50 44 66 70" stroke="#a9823f" stroke-width="4" fill="none" stroke-linecap="round"/></svg>',
+          '<svg viewBox="0 0 120 80"><path d="M30 44 Q28 16 60 16 Q92 16 90 44 Q90 58 78 62 L78 72 L42 72 L42 62 Q30 58 30 44 Z" fill="#f2ead8" stroke="' + INK + '" stroke-width="5"/><ellipse cx="47" cy="46" rx="7" ry="9" fill="' + INK + '"/><ellipse cx="73" cy="46" rx="7" ry="9" fill="' + INK + '"/><path d="M60 54 L55 64 L65 64 Z" fill="' + INK + '"/><path d="M20 28 Q8 20 12 10 M100 28 Q112 20 108 10" stroke="' + INK + '" stroke-width="5" fill="none" stroke-linecap="round"/></svg>'
+        ],
+        [ /* Jungle Gorge */
+          '<svg viewBox="0 0 120 80"><path d="M58 78 Q56 46 60 30" stroke="#7a4a21" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M60 32 Q34 8 14 20 Q36 30 58 34 M60 30 Q62 4 84 2 Q84 24 64 33 M62 34 Q88 16 106 26 Q86 38 64 36" fill="#57b531" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/><path d="M52 44 q4 10 -2 16 M62 46 q5 9 1 15 M70 42 q6 8 3 14" stroke="#ffd23f" stroke-width="6" fill="none" stroke-linecap="round"/></svg>',
+          '<svg viewBox="0 0 120 80"><path d="M60 78 Q58 40 30 22 M60 78 Q60 34 60 12 M60 78 Q62 40 90 22 M60 78 Q48 48 22 44 M60 78 Q72 48 98 44" stroke="#2f8f2a" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="30" cy="20" r="4.5" fill="#2f8f2a"/><circle cx="60" cy="10" r="4.5" fill="#2f8f2a"/><circle cx="90" cy="20" r="4.5" fill="#2f8f2a"/></svg>',
+          '<svg viewBox="0 0 120 80"><rect x="44" y="8" width="32" height="68" fill="#b07a3f" stroke="' + INK + '" stroke-width="5"/><path d="M44 30 L76 30 M44 54 L76 54" stroke="' + INK + '" stroke-width="4"/><circle cx="53" cy="19" r="3.5" fill="' + INK + '"/><circle cx="67" cy="19" r="3.5" fill="' + INK + '"/><path d="M52 44 L68 44 L60 51 Z" fill="#ff5d5d" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/><circle cx="53" cy="65" r="3.5" fill="#ffd23f"/><circle cx="67" cy="65" r="3.5" fill="#ffd23f"/></svg>'
+        ],
+        [ /* Ashen Caldera */
+          '<svg viewBox="0 0 120 80"><path d="M14 78 L26 34 Q30 18 52 16 L84 20 Q104 24 106 46 L108 78 Z" fill="#3d3138" stroke="' + INK + '" stroke-width="5"/><path d="M36 66 Q48 48 44 32 M70 70 Q66 52 78 38 M90 62 Q93 50 89 42" stroke="#ff7a2f" stroke-width="4.5" fill="none" stroke-linecap="round"/></svg>',
+          '<svg viewBox="0 0 120 80"><path d="M28 78 L43 22 L56 78 Z" fill="#2b2733" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/><path d="M54 78 L72 8 L90 78 Z" fill="#3a3444" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/><path d="M71 30 L77 52" stroke="#aee7ff" stroke-width="3" stroke-linecap="round"/></svg>',
+          '<svg viewBox="0 0 120 80"><path d="M22 78 L38 44 L82 44 L98 78 Z" fill="#57424a" stroke="' + INK + '" stroke-width="5" stroke-linejoin="round"/><ellipse cx="60" cy="44" rx="22" ry="7" fill="#ff7a2f" stroke="' + INK + '" stroke-width="4"/><ellipse cx="60" cy="44" rx="11" ry="3.5" fill="#ffd23f"/><path d="M48 30 q4 -8 0 -14 M64 32 q4 -8 0 -14" stroke="#c9c2bb" stroke-width="4" fill="none" stroke-linecap="round"/></svg>'
+        ],
+        [ /* Twilight Summit */
+          '<svg viewBox="0 0 120 80"><path d="M20 52 Q22 26 48 26 Q74 26 76 52 Q48 42 20 52 Z" fill="#37c8d9" stroke="' + INK + '" stroke-width="5"/><rect x="42" y="50" width="12" height="24" fill="#e8f6f8" stroke="' + INK + '" stroke-width="4"/><path d="M78 62 Q80 44 96 44 Q110 44 111 62 Q95 55 78 62 Z" fill="#7ae0ee" stroke="' + INK + '" stroke-width="4"/><rect x="90" y="60" width="9" height="15" fill="#e8f6f8" stroke="' + INK + '" stroke-width="3.5"/><circle cx="36" cy="36" r="3" fill="#eaffff"/><circle cx="58" cy="33" r="2.4" fill="#eaffff"/></svg>',
+          '<svg viewBox="0 0 120 80"><path d="M40 78 L40 14 L84 14" stroke="' + INK + '" stroke-width="7" fill="none" stroke-linecap="round"/><rect x="72" y="14" width="24" height="30" rx="5" fill="#ffd23f" stroke="' + INK + '" stroke-width="5"/><path d="M79 22 L79 36 M89 22 L89 36" stroke="#ff9d2e" stroke-width="3.5" stroke-linecap="round"/></svg>',
+          '<svg viewBox="0 0 120 80"><path d="M52 8 L74 38 L64 74 L38 74 L28 38 Z" fill="#8fa8e8" stroke="' + INK + '" stroke-width="5" stroke-linejoin="round"/><path d="M52 8 L48 74 M28 38 L74 38" stroke="#5f78c9" stroke-width="3.5"/><path d="M100 6 A13 13 0 1 0 100 34 A10.5 10.5 0 1 1 100 6 Z" fill="#ffeeb0" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/></svg>'
+        ]
+      ];
+
+      /* ================= state ================= */
+      var KEY = "madgoblin-save-v2", OLDKEY = "madgoblin-save-v1";
+      var S = null;
+      function freshState(){
+        return { gold:0, depth:1, tries:0, peekUsed:false, magnetsUsed:0, muted:false,
+          up:{ head:0, eyes:0, luck:0, trail:0, ears:0, sniffer:0, magnet:0, bounty:0, lucky:0 },
+          stats:{ searches:0, finds:0, rewinds:0, best:1, luckyFinds:0 },
+          ach:{},
+          seenIntro:false, eyesAnnounced:false, rewindTipped:false };
+      }
+      function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+      function migrate(){
+        var f = freshState();
+        if (!S.up) S.up = {};
+        for (var k in f.up) if (typeof S.up[k] !== "number") S.up[k] = 0;
+        if (!S.stats) S.stats = f.stats;
+        if (typeof S.stats.luckyFinds !== "number") S.stats.luckyFinds = 0;
+        if (!S.ach || typeof S.ach !== "object") S.ach = {};
+      }
+      function load(){
+        try{
+          var raw = localStorage.getItem(KEY);
+          if (raw){ S = JSON.parse(raw); migrate(); return true; }
+          var old = localStorage.getItem(OLDKEY);
+          if (old){
+            var o = JSON.parse(old), f = freshState();
+            f.gold = o.gold||0; f.depth = o.depth||1; f.seenIntro = !!o.seenIntro;
+            f.up.head = (o.up&&o.up.head)||0; f.up.eyes = (o.up&&o.up.eyes)||0; f.up.luck = (o.up&&o.up.luck)||0;
+            if (o.stats) f.stats = o.stats;
+            S = f; save(); return true;
+          }
+        }catch(e){}
+        S = freshState(); return false;
+      }
+      function effOdds(){
+        return Math.max(2, baseOdds(S.depth) - S.up.eyes);
+      }
+      function trailBonus(){ return S.tries * S.up.trail * 0.01; } /* +1% per miss per Warm Trail level */
+      function effChance(){ return Math.min(0.95, 1 / effOdds() + trailBonus()); }
+      function rustleRate(){
+        var u = upgradeById("ears");
+        return u.rustleRates[S.up.ears] / 100;
+      }
+
+      /* ================= audio (all synthesized) ================= */
+      var AC = null, musicTimer = null, musicStep = 0, noiseBuf = null;
+      function audio(){
+        if (AC) { if (AC.state === "suspended") AC.resume(); return AC; }
+        try{
+          AC = new (window.AudioContext || window.webkitAudioContext)();
+          var len = AC.sampleRate * 0.5, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+          for (var i=0;i<len;i++) d[i] = Math.random()*2 - 1;
+          noiseBuf = buf;
+          startMusic();
+        }catch(e){ AC = null; }
+        return AC;
+      }
+      function psstSyllable(t, vol){ /* one "psst": a long sibilant hiss, pinched shut by a soft "t" */
+        var src = AC.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+        var bp = AC.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.1;
+        bp.frequency.setValueAtTime(4800, t);
+        bp.frequency.exponentialRampToValueAtTime(7600, t + .035);
+        bp.frequency.exponentialRampToValueAtTime(4300, t + .13);
+        var g = AC.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(vol, t + .018);
+        g.gain.setValueAtTime(vol, t + .09);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + .145);
+        src.connect(bp); bp.connect(g); g.connect(AC.destination);
+        src.start(t); src.stop(t + .18);
+        var tsrc = AC.createBufferSource(); tsrc.buffer = noiseBuf; /* the closing "t": a tiny dry tick of air */
+        var hp = AC.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 3500;
+        var tg = AC.createGain();
+        tg.gain.setValueAtTime(vol * .8, t + .145);
+        tg.gain.exponentialRampToValueAtTime(0.0001, t + .185);
+        tsrc.connect(hp); hp.connect(tg); tg.connect(AC.destination);
+        tsrc.start(t + .145); tsrc.stop(t + .22);
+      }
+      function psst(){ /* "psst… psst!" — two hissed syllables, like calling a cat */
+        if (!AC || S.muted) return;
+        var t0 = AC.currentTime;
+        psstSyllable(t0, .34);
+        psstSyllable(t0 + .19, .48);
+      }
+      function tone(freq, t, dur, type, vol){
+        var o = AC.createOscillator(), g = AC.createGain();
+        o.type = type; o.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(vol, t + .02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g); g.connect(AC.destination);
+        o.start(t); o.stop(t + dur + .05);
+      }
+      function fanfare(){
+        if (!AC || S.muted) return;
+        var t = AC.currentTime;
+        [523,659,784,1047].forEach(function(f,i){ tone(f, t + i*.09, .22, "square", .12); });
+        tone(1319, t + .38, .4, "square", .12);
+        tone(262, t, .45, "triangle", .1);
+      }
+      function thud(){
+        if (!AC || S.muted) return;
+        tone(140, AC.currentTime, .12, "sine", .15);
+      }
+      var MELODY = [262,0,330,392, 330,0,262,0, 294,0,349,440, 392,0,0,0, 262,0,330,392, 523,0,392,330, 294,262,0,0, 0,0,0,0];
+      var BASS = [131,0,0,0, 98,0,0,0, 110,0,0,0, 98,0,0,0];
+      function startMusic(){
+        if (musicTimer || !AC) return;
+        musicTimer = setInterval(function(){
+          if (!AC || S.muted || AC.state !== "running") return;
+          var t = AC.currentTime + .03, s = musicStep % 32;
+          var m = MELODY[s];
+          if (m) tone(m, t, .19, "triangle", .055);
+          if (s % 8 === 0){ var b = BASS[(s/8) % 4]; if (b) tone(b, t, .5, "sine", .06); }
+          musicStep++;
+        }, 175);
+      }
+
+      /* ================= dom ================= */
+      var $ = function(id){ return document.getElementById(id); };
+      var goldNum=$("goldNum"), goldNumDraft=$("goldNumDraft"), biomeChip=$("biomeChip"),
+          feedback=$("feedback"), oddsNum=$("oddsNum"), pctNum=$("pctNum"), triesNum=$("triesNum"),
+          trailNum=$("trailNum"), chanceFill=$("chanceFill"), goblinPop=$("goblinPop"), scene=$("scene"),
+          foundTag=$("foundTag"), travelLayer=$("travelLayer"), rewindBtn=$("rewindBtn"),
+          soundBtn=$("soundBtn"), hintLine=$("hintLine"),
+          flashEl=$("flash"), biomeBanner=$("biomeBanner"), findPanel=$("findPanel");
+
+      function fmtPct(c){
+        var p = c * 100;
+        if (p >= 10) return (Math.round(p*10)/10) + "% chance";
+        if (p >= 1) return (Math.round(p*100)/100) + "% chance";
+        return p.toFixed(3).replace(/0+$/,"").replace(/\.$/,"") + "% chance";
+      }
+      /* ================= themed parallax ================= */
+      var curTheme = -1;
+      function farSVG(t){
+        var s = '<svg viewBox="0 0 500 220" preserveAspectRatio="none" aria-hidden="true">';
+        if (t.stars) s += '<circle cx="60" cy="30" r="3" fill="#ffffff"/><circle cx="150" cy="62" r="2.4" fill="#ffffff"/><circle cx="300" cy="24" r="3" fill="#ffffff"/><circle cx="420" cy="54" r="2.4" fill="#ffffff"/><circle cx="472" cy="20" r="2" fill="#ffffff"/><circle cx="252" cy="72" r="2" fill="#ffffff"/>';
+        if (t.mesa) s += '<path d="M0 220 L0 128 L84 128 L104 92 L236 92 L256 132 L356 132 L378 102 L500 102 L500 220 Z" fill="' + t.far + '"/>';
+        else s += '<path d="M0 220 L0 150 L70 58 L128 128 L208 26 L292 122 L362 52 L432 140 L500 150 L500 220 Z" fill="' + t.far + '"/>';
+        if (t.cap) s += '<path d="M208 26 L232 62 L184 62 Z" fill="' + t.cap + '" opacity=".9"/><path d="M70 58 L88 84 L52 84 Z" fill="' + t.cap + '" opacity=".85"/><path d="M362 52 L378 76 L346 76 Z" fill="' + t.cap + '" opacity=".8"/>';
+        return s + "</svg>";
+      }
+      function midSVG(t){
+        return '<svg viewBox="0 0 500 220" preserveAspectRatio="none" aria-hidden="true"><path d="M0 220 L0 168 L82 108 L162 158 L252 92 L342 154 L424 112 L500 168 L500 220 Z" fill="' + t.mid + '"/></svg>';
+      }
+      function nearSVG(t){
+        return '<svg viewBox="0 0 500 220" preserveAspectRatio="none" aria-hidden="true"><path d="M0 220 L0 178 L64 138 L128 182 L206 132 L286 178 L366 140 L442 184 L500 178 L500 220 Z" fill="' + t.near + '"/><path d="M96 152 l11 -36 l11 36 Z M308 150 l11 -38 l11 38 Z M424 160 l10 -32 l10 32 Z" fill="' + t.nearDetail + '"/></svg>';
+      }
+      function applyTheme(){
+        var idx = themeIndex(S.depth);
+        if (idx === curTheme) return;
+        curTheme = idx;
+        var t = THEMES[idx];
+        scene.style.setProperty("--scene-sky", t.sky);
+        scene.style.setProperty("--scene-sky2", t.sky2);
+        scene.style.setProperty("--scene-ground", t.ground);
+        scene.style.setProperty("--scene-path", t.path);
+        $("stripFar").innerHTML = farSVG(t) + farSVG(t);
+        $("stripMid").innerHTML = midSVG(t) + midSVG(t);
+        $("stripNear").innerHTML = nearSVG(t) + nearSVG(t);
+      }
+
+      function render(){
+        applyTheme();
+        goldNum.textContent = S.gold;
+        goldNumDraft.textContent = S.gold;
+        biomeChip.textContent = "Biome " + S.depth + " · " + biomeName(S.depth);
+        var n = effOdds();
+        oddsNum.textContent = "1 in " + n.toLocaleString("en-US");
+        pctNum.textContent = fmtPct(effChance());
+        chanceFill.style.width = Math.max(1.5, Math.min(100, effChance() * 100)) + "%";
+        var tb = trailBonus();
+        trailNum.textContent = tb > 0 ? "🔥 trail +" + Math.round(tb*100) + "%" : "";
+        triesNum.textContent = S.tries + (S.tries === 1 ? " try here" : " tries here");
+        soundBtn.textContent = S.muted ? "🔇" : "🔊";
+      }
+      function say(msg){ feedback.textContent = msg; }
+
+      /* ================= travel engine ================= */
+      var objects = [], spawnIn = 400, lastT = null;
+      var stripFar = $("stripFar"), stripMid = $("stripMid"), stripNear = $("stripNear");
+      var plxOff = { far:0, mid:0, near:0 };
+      var reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      var celebrating = false, cinematic = false;
+      function travelPaused(){
+        return celebrating || cinematic ||
+          document.querySelector(".overlay.open") !== null;
+      }
+      function makeObject(forced){
+        var el = document.createElement("div");
+        el.className = "pass-obj";
+        var pool = OBJ_ART.concat(THEME_OBJS[themeIndex(S.depth)] || []);
+        el.innerHTML = pool[Math.floor(Math.random() * pool.length)];
+        var roll = Math.random();
+        var row = forced === "magnet" ? 2 : (roll < .45 ? 0 : (roll < .75 ? 1 : 2)); /* most traffic rides the back rows */
+        var rustling = forced === "magnet" ? false : Math.random() < rustleRate();
+        var magnet = forced === "magnet";
+        if (magnet) el.style.filter = "drop-shadow(0 0 10px #ffd23f)";
+        if (rustling){
+          el.classList.add("rustling");
+          var ears = document.createElement("span");
+          ears.className = "ears"; ears.textContent = "👂";
+          el.appendChild(ears);
+        }
+        var w = scene.clientWidth;
+        var ROWP = [
+          { scale:.48 + Math.random()*.1,  bottom:40 + Math.random()*5, speed:82 + Math.random()*20 },
+          { scale:.72 + Math.random()*.14, bottom:25 + Math.random()*6, speed:114 + Math.random()*24 },
+          { scale:.98 + Math.random()*.28, bottom:3 + Math.random()*5,  speed:150 + Math.random()*32 }
+        ][row];
+        var obj = { el:el, x:w + 70, row:row, far:row === 0, rustling:rustling, magnet:magnet, searched:false,
+          speed:ROWP.speed, scale:ROWP.scale, bottom:ROWP.bottom };
+        el.style.bottom = obj.bottom + "%";
+        el.style.zIndex = row + 1;
+        el.style.width = Math.round(96 * obj.scale) + "px";
+        el.style.marginLeft = -Math.round(48 * obj.scale) + "px";
+        el.addEventListener("click", function(){ searchObject(obj); });
+        travelLayer.appendChild(el);
+        objects.push(obj);
+        return obj;
+      }
+      function clearObjects(){
+        objects.forEach(function(o){ o.el.remove(); });
+        objects = [];
+      }
+      function frame(ts){
+        if (lastT === null) lastT = ts;
+        var dt = Math.min(.05, (ts - lastT) / 1000); lastT = ts;
+        if (!travelPaused()){
+          spawnIn -= dt * 1000;
+          if (spawnIn <= 0){
+            if (objects.length < 24) makeObject();
+            spawnIn = 360 + Math.random()*300;
+          }
+          var w = scene.clientWidth;
+          if (!reduceMotion){ /* parallax: far peaks crawl, mid hills drift, near ridge rolls */
+            var sc = w / 420;
+            plxOff.far = (plxOff.far + dt * 9 * sc) % w;
+            plxOff.mid = (plxOff.mid + dt * 24 * sc) % w;
+            plxOff.near = (plxOff.near + dt * 52 * sc) % w;
+            stripFar.style.transform = "translateX(" + (-plxOff.far) + "px)";
+            stripMid.style.transform = "translateX(" + (-plxOff.mid) + "px)";
+            stripNear.style.transform = "translateX(" + (-plxOff.near) + "px)";
+          }
+          for (var i = objects.length - 1; i >= 0; i--){
+            var o = objects[i];
+            o.x -= o.speed * dt * (w / 420);
+            if (o.x < -150){ o.el.remove(); objects.splice(i,1); continue; }
+            o.el.style.left = o.x + "px";
+          }
+        }
+        requestAnimationFrame(frame);
+      }
+
+      /* ================= searching ================= */
+      function sparks(x, y){
+        var glyphs = ["⭐","✨","💥","🪙"];
+        for (var i=0;i<8;i++){
+          var s = document.createElement("span");
+          s.className = "spark"; s.textContent = glyphs[i % glyphs.length];
+          s.style.left = x + "%"; s.style.top = y + "%";
+          s.style.setProperty("--dx", (Math.random()*170-85) + "px");
+          s.style.setProperty("--dy", (-40 - Math.random()*100) + "px");
+          scene.appendChild(s);
+          (function(el){ setTimeout(function(){ el.remove(); }, 800); })(s);
+        }
+      }
+      function puff(obj, glyph){
+        var p = document.createElement("span");
+        p.className = "puff"; p.textContent = glyph;
+        var w = scene.clientWidth, h = scene.clientHeight;
+        p.style.left = (obj.x / w * 100) + "%";
+        p.style.top = ((h - (obj.bottom/100)*h - 70) / h * 100) + "%";
+        p.style.transform = "translateX(-50%)";
+        scene.appendChild(p);
+        setTimeout(function(){ p.remove(); }, 650);
+      }
+      function ringBurst(obj){
+        var w = scene.clientWidth, h = scene.clientHeight;
+        for (var i=0;i<2;i++){
+          var r = document.createElement("span");
+          r.className = "ring";
+          r.style.left = (obj ? (obj.x / w * 100) : 50) + "%";
+          r.style.top = ((h - (obj ? (obj.bottom/100)*h : 40) - 40) / h * 100) + "%";
+          r.style.animationDelay = (i * 0.14) + "s";
+          if (i === 1) r.style.borderColor = "#ff6b9d";
+          scene.appendChild(r);
+          (function(el){ setTimeout(function(){ el.remove(); }, 1100); })(r);
+        }
+      }
+      function coinShower(){
+        for (var i=0;i<14;i++){
+          var c = document.createElement("span");
+          c.className = "coinfall"; c.textContent = i % 3 === 0 ? "⭐" : "🪙";
+          c.style.left = (4 + Math.random()*90) + "%";
+          c.style.animationDelay = (Math.random()*0.35) + "s";
+          c.style.fontSize = (22 + Math.random()*16) + "px";
+          scene.appendChild(c);
+          (function(el){ setTimeout(function(){ el.remove(); }, 1750); })(c);
+        }
+      }
+      function biomeTransition(){
+        flashEl.classList.remove("go"); void flashEl.offsetWidth; flashEl.classList.add("go");
+        scene.classList.remove("warp"); void scene.offsetWidth; scene.classList.add("warp");
+        scene.classList.remove("bigshake"); void scene.offsetWidth; scene.classList.add("bigshake");
+        var bbName = biomeBanner.querySelector(".bb-name");
+        var bbOdds = biomeBanner.querySelector(".bb-odds");
+        if (bbName) bbName.textContent = "Biome " + S.depth + " · " + biomeName(S.depth);
+        if (bbOdds) bbOdds.textContent = "Now 1 in " + effOdds().toLocaleString("en-US") + " per search — good luck.";
+        biomeBanner.classList.remove("show"); void biomeBanner.offsetWidth; biomeBanner.classList.add("show");
+        /* speed-burst the parallax so the pass visibly lurches forward */
+        plxOff.far += 90; plxOff.mid += 150; plxOff.near += 230;
+      }
+      function checkAchievements(ctx){
+        var unlocked = [];
+        function grant(id){
+          if (!S.ach[id]){ S.ach[id] = Date.now(); unlocked.push(id); }
+        }
+        if (ctx.attempts === 1) grant("first_pick");
+        if (!ctx.magnet && ctx.cumulative <= 0.20) grant("longshot20");
+        if (!ctx.magnet && ctx.cumulative >= 0.40 && ctx.cumulative <= 0.60) grant("fifty");
+        if (!ctx.magnet && ctx.cumulative >= 0.99) grant("drought");
+        if (!ctx.magnet && ctx.pSingle <= 0.01) grant("needle");
+        if (ctx.oddsN >= 100) grant("century");
+        if (ctx.luckyTriggered) grant("golden");
+        if (S.stats.finds >= 10) grant("ten_finds");
+        if (S.stats.finds >= 25) grant("twentyfive_finds");
+        return unlocked;
+      }
+      function achName(id){
+        for (var i=0;i<ACHIEVEMENTS.length;i++) if (ACHIEVEMENTS[i].id === id) return ACHIEVEMENTS[i];
+        return { icon:"🏆", name:id };
+      }
+      function currentChance(obj){
+        var c = effChance();
+        if (obj.rustling) c = Math.min(.95, c * 4);
+        if (obj.magnet) c = 1;
+        return c;
+      }
+      function searchObject(obj){
+        if (obj.searched || travelPaused()) return;
+        audio(); psst();
+        obj.searched = true;
+        obj.el.classList.remove("rustling");
+        obj.el.classList.add("searched");
+        hintLine.style.display = "none";
+
+        S.stats.searches += 1;
+        var firstPeek = !S.peekUsed;
+        S.peekUsed = true;
+        var hit = Math.random() < currentChance(obj);
+        if (!hit && firstPeek && S.up.luck > 0){ /* Lucky First Peek: separate bonus roll */
+          var d = upgradeById("luck").luckDenoms[S.up.luck - 1];
+          if (Math.random() < 1 / d) hit = true;
+        }
+        if (hit){
+          obj.el.classList.add("searching");
+          setTimeout(function(){ obj.el.classList.remove("searching"); }, 320);
+          celebrate(obj); return;
+        }
+
+        S.tries += 1;
+        /* a wrong guess does something wild */
+        var wild = ["anim-flip","anim-twirl","anim-wiggle2","anim-boing","anim-explode","anim-shrink"][Math.floor(Math.random()*6)];
+        obj.el.classList.add(wild);
+        setTimeout(function(){ obj.el.classList.remove(wild); }, 720);
+        if (wild === "anim-explode"){
+          puff(obj, "💥");
+          sparks(obj.x / scene.clientWidth * 100, Math.max(6, 92 - obj.bottom));
+        } else {
+          puff(obj, "💨");
+        }
+        thud();
+        if (obj.rustling) say(RUSTLE_MISSES[Math.floor(Math.random()*RUSTLE_MISSES.length)]);
+        else if (S.up.trail > 0 && S.tries >= 3) say("Not here. 🔥 Trail warms: +" + Math.round(trailBonus()*100) + "% and climbing.");
+        else say(MISSES[Math.floor(Math.random()*MISSES.length)]);
+        if (!S.rewindTipped && S.depth >= 4){
+          S.rewindTipped = true;
+          say("Too deep? 💀 REWIND keeps your gold — and opens the shop.");
+        }
+        render(); save();
+      }
+      function celebrate(obj){
+        celebrating = true;
+        fanfare();
+        /* --- the math of THIS find, captured before tries/depth reset --- */
+        var pSingle = obj ? currentChance(obj) : effChance();
+        var isMagnet = !!(obj && obj.magnet);
+        if (isMagnet) pSingle = 1;
+        var attempts = S.tries + 1;
+        var cumulative = pSingle >= 1 ? 1 : 1 - Math.pow(1 - pSingle, attempts);
+        var exact = pSingle >= 1 ? 1 : Math.pow(1 - pSingle, attempts - 1) * pSingle;
+        var oddsN = effOdds();
+        var rarity = rarityFor(exact, isMagnet);
+        /* --- gold: base + Bigger Bounty + Coin Sniffer + Lucky Find shower --- */
+        var snifferBonus = 0;
+        if (S.up.sniffer > 0 && Math.random() * 100 < upgradeById("sniffer").bonusChances[S.up.sniffer]) snifferBonus = 1;
+        var luckyChance = S.up.lucky > 0 ? upgradeById("lucky").luckyChances[S.up.lucky] : 0;
+        var luckyTriggered = luckyChance > 0 && (Math.random() * 100 < luckyChance);
+        var luckyGold = luckyTriggered ? 10 : 0;
+        if (luckyTriggered) S.stats.luckyFinds += 1;
+        var goldGain = 1 + S.up.bounty + snifferBonus + luckyGold;
+        S.gold += goldGain; S.stats.finds += 1;
+        var unlocked = checkAchievements({ attempts:attempts, cumulative:cumulative, pSingle:pSingle, oddsN:oddsN, magnet:isMagnet, luckyTriggered:luckyTriggered });
+        S.depth += 1; S.tries = 0; S.peekUsed = false; S.magnetsUsed = 0;
+        if (S.depth > S.stats.best) S.stats.best = S.depth;
+
+        var w = scene.clientWidth;
+        goblinPop.style.left = (obj ? obj.x : w/2) + "px";
+        goblinPop.style.bottom = (obj ? obj.bottom : 6) + "%";
+        goblinPop.style.zIndex = obj && obj.far ? 2 : 5;
+        goblinPop.classList.remove("hyper"); void goblinPop.offsetWidth;
+        goblinPop.classList.add("up"); goblinPop.classList.add("hyper");
+        sparks((obj ? obj.x : w/2) / w * 100, 38);
+        sparks((obj ? obj.x : w/2) / w * 100, 55);
+        ringBurst(obj);
+        if (luckyTriggered) coinShower();
+        foundTag.textContent = luckyTriggered ? "🌟 LUCKY FIND! +" + goldGain + " 🪙" : "FOUND HIM! +" + goldGain + " 🪙";
+        foundTag.classList.remove("show"); void foundTag.offsetWidth; foundTag.classList.add("show");
+        scene.classList.remove("shake"); void scene.offsetWidth; scene.classList.add("shake");
+        /* --- find panel: chance, cumulative chance, exact rarity --- */
+        var achHtml = "";
+        if (unlocked.length){
+          achHtml = '<div class="fp-ach">🏆 ACHIEVEMENT' + (unlocked.length > 1 ? "S" : "") + " UNLOCKED!<br>" +
+            unlocked.map(function(id){ var a = achName(id); return a.icon + " " + a.name; }).join("<br>") + "</div>";
+        }
+        findPanel.innerHTML =
+          '<div class="fp-rarity">' + rarity.emoji + " " + rarity.label + "</div>" +
+          '<div class="fp-grid">' +
+            '<div><b>' + fmtChancePct(pSingle) + '</b><span>chance per search</span></div>' +
+            '<div><b>' + attempts + (attempts === 1 ? "st" : "") + '</b><span>' + (attempts === 1 ? "try — first pick!" : "tries it took") + '</span></div>' +
+            '<div><b>' + fmtChancePct(cumulative) + '</b><span>chance by now</span></div>' +
+          '</div>' +
+          '<div style="font-size:13.5px;font-weight:700;line-height:1.4;margin-top:8px">Landing this exact find — on try ' + attempts + ' at those odds — was itself a <b>' + fmtChancePct(exact) + '</b> shot.</div>' +
+          (luckyTriggered ? '<div class="fp-lucky">🌟 LUCKY FIND! A shower of +10 🪙!</div>' : "") +
+          (snifferBonus ? '<div style="font-weight:800;font-size:13px;margin-top:4px">🪙 Coin Sniffer found +1 loose gold.</div>' : "") +
+          achHtml;
+        findPanel.classList.remove("show"); void findPanel.offsetWidth; findPanel.classList.add("show");
+        say("FOUND HIM! He fled to Biome " + S.depth + " · " + biomeName(S.depth) + ".");
+        render(); save();
+        biomeTransition();
+
+        setTimeout(function(){
+          goblinPop.classList.remove("up"); goblinPop.classList.remove("hyper");
+          celebrating = false;
+          if (S.depth === 5 && !S.eyesAnnounced){
+            S.eyesAnnounced = true; save();
+            say("Biome 5! Dying now can offer you Sharp Eyes 👀");
+          }
+          maybeMagnet();
+        }, 3000);
+      }
+      function maybeMagnet(){
+        if (S.up.magnet > S.magnetsUsed && !travelPaused()){
+          S.magnetsUsed += 1;
+          var o = makeObject("magnet");
+          o.x = scene.clientWidth * .62;
+          say("🧲 Your Goblin Magnet yanked something over — tap it, he's IN there!");
+        }
+      }
+
+      /* ================= head start (shown, never silent) ================= */
+      function runHeadStart(count, done){
+        if (count <= 0){ done(); return; }
+        cinematic = true;
+        clearObjects();
+        var left = count;
+        (function step(){
+          if (left <= 0){ cinematic = false; clearObjects(); done(); return; }
+          left -= 1;
+          say("⏩ Head Start: your scout pssts ahead… (" + (count - left) + "/" + count + ")");
+          var o = makeObject();
+          o.x = scene.clientWidth * .55;
+          o.speed = 0;
+          setTimeout(function(){
+            audio(); psst();
+            celebrating = true;
+            S.gold += 1; S.stats.finds += 1;
+            S.depth += 1; S.tries = 0; S.peekUsed = false; S.magnetsUsed = 0;
+            if (S.depth > S.stats.best) S.stats.best = S.depth;
+            goblinPop.style.left = o.x + "px";
+            goblinPop.style.bottom = o.bottom + "%";
+            goblinPop.style.zIndex = 5;
+            goblinPop.classList.add("up");
+            sparks(o.x / scene.clientWidth * 100, 38);
+            foundTag.textContent = "SCOUT FOUND HIM! +" + (1 + S.up.bounty) + " 🪙";
+            S.gold += S.up.bounty;
+            foundTag.classList.remove("show"); void foundTag.offsetWidth; foundTag.classList.add("show");
+            fanfare();
+            render(); save();
+            biomeTransition();
+            setTimeout(function(){
+              goblinPop.classList.remove("up");
+              celebrating = false;
+              o.el.remove();
+              var ix = objects.indexOf(o); if (ix >= 0) objects.splice(ix,1);
+              setTimeout(step, 350);
+            }, 1150);
+          }, 600);
+        })();
+      }
+
+      /* ================= rewind + draft shop ================= */
+      var rewindArmTimer = null;
+      rewindBtn.addEventListener("click", function(){
+        if (travelPaused() && !celebrating) return;
+        if (!rewindBtn.classList.contains("armed")){
+          rewindBtn.classList.add("armed");
+          rewindBtn.textContent = "💀 SURE? END THIS CLIMB";
+          clearTimeout(rewindArmTimer);
+          rewindArmTimer = setTimeout(function(){
+            rewindBtn.classList.remove("armed"); rewindBtn.textContent = "💀 REWIND";
+          }, 2600);
+          return;
+        }
+        clearTimeout(rewindArmTimer);
+        rewindBtn.classList.remove("armed"); rewindBtn.textContent = "💀 REWIND";
+        audio(); thud();
+        S.stats.rewinds += 1;
+        S.depth = 1; S.tries = 0; S.peekUsed = false; S.magnetsUsed = 0;
+        clearObjects();
+        save(); render();
+        openDraft();
+      });
+      function draftPool(){
+        return UPGRADES.filter(function(u){
+          if (S.up[u.id] >= u.costs.length) return false;
+          if (u.id === "eyes" && S.stats.best < 5) return false;
+          return true;
+        });
+      }
+      function pips(level, max){
+        var out = "";
+        for (var i=0;i<max;i++) out += i < level ? "●" : "○";
+        return out;
+      }
+      function openDraft(){
+        var pool = draftPool();
+        for (var i = pool.length - 1; i > 0; i--){ /* shuffle */
+          var j = Math.floor(Math.random() * (i + 1)), t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+        }
+        var picks = pool.slice(0, 2);
+        var wrap = $("draftWrap"); wrap.innerHTML = "";
+        if (!picks.length){
+          wrap.innerHTML = '<p style="font-weight:800">Every upgrade is maxed out. You are the perfect goblin hunter.</p>';
+        }
+        picks.forEach(function(u){
+          var lvl = S.up[u.id], cost = u.costs[lvl];
+          var card = document.createElement("div");
+          card.className = "draftcard";
+          card.innerHTML =
+            '<div class="name">' + u.icon + " " + u.name + '</div>' +
+            '<div class="pips">' + pips(lvl, u.costs.length) + '</div>' +
+            '<div class="desc">' + u.desc + '</div>' +
+            '<div class="next">' + u.next(lvl) + '</div>';
+          var btn = document.createElement("button");
+          btn.className = "buybtn";
+          btn.textContent = "BUY — " + cost + " 🪙";
+          btn.disabled = S.gold < cost;
+          if (S.gold < cost) btn.textContent = "NEED " + cost + " 🪙 (have " + S.gold + ")";
+          btn.addEventListener("click", function(){
+            if (S.gold < cost) return;
+            S.gold -= cost; S.up[u.id] += 1;
+            save(); render();
+            say(u.icon + " " + u.name + " Lv " + S.up[u.id] + "! New climb, new tricks.");
+            closeDraftAndStart();
+          });
+          card.appendChild(btn);
+          wrap.appendChild(card);
+        });
+        render();
+        $("draftOverlay").classList.add("open");
+      }
+      function closeDraftAndStart(){
+        $("draftOverlay").classList.remove("open");
+        runHeadStart(S.up.head, function(){
+          say("New climb. He's hiding in Biome " + S.depth + "…");
+          render();
+          maybeMagnet();
+        });
+      }
+      $("draftSkip").addEventListener("click", closeDraftAndStart);
+
+      /* ================= settings / sound ================= */
+      soundBtn.addEventListener("click", function(){
+        S.muted = !S.muted; save(); render();
+        if (!S.muted){ audio(); psst(); }
+      });
+      $("gearBtn").addEventListener("click", function(){
+        $("statsBox").innerHTML =
+          "🔍 Searches: " + S.stats.searches.toLocaleString("en-US") + "<br>" +
+          "🎯 Times found: " + S.stats.finds.toLocaleString("en-US") + "<br>" +
+          "🏆 Deepest biome: " + S.stats.best + "<br>" +
+          "🌟 Lucky finds: " + (S.stats.luckyFinds || 0) + "<br>" +
+          "💀 Rewinds: " + S.stats.rewinds;
+        var owned = UPGRADES.filter(function(u){ return S.up[u.id] > 0; });
+        $("upgradesBox").innerHTML = "<b>Your upgrades:</b><br>" + (owned.length
+          ? owned.map(function(u){ return u.icon + " " + u.name + " Lv " + S.up[u.id]; }).join("<br>")
+          : "None yet — 💀 REWIND to open the shop.");
+        var unlockedCount = ACHIEVEMENTS.filter(function(a){ return !!S.ach[a.id]; }).length;
+        $("achBox").innerHTML = "<b>🏆 Achievements — " + unlockedCount + " / " + ACHIEVEMENTS.length + "</b>" +
+          ACHIEVEMENTS.map(function(a){
+            var got = !!S.ach[a.id];
+            return '<div class="achrow' + (got ? "" : " locked") + '"><span class="ach-ic">' + (got ? a.icon : "🔒") + '</span><span><b>' + a.name + (got ? " ✓" : "") + '</b>' + a.desc + '</span></div>';
+          }).join("");
+        $("settingsOverlay").classList.add("open");
+      });
+      $("abandonBtn").addEventListener("click", function(){
+        $("abandonBtn").style.display = "none";
+        $("abandonArm").style.display = "block";
+      });
+      $("abandonArm").addEventListener("click", function(){
+        try{ localStorage.removeItem(KEY); localStorage.removeItem(OLDKEY); }catch(e){}
+        S = freshState(); save();
+        clearObjects();
+        $("settingsOverlay").classList.remove("open");
+        $("abandonBtn").style.display = "block";
+        $("abandonArm").style.display = "none";
+        render();
+        say("A fresh timeline. He's hiding…");
+        startIntro();
+      });
+      document.querySelectorAll("[data-close]").forEach(function(b){
+        b.addEventListener("click", function(){ $(b.getAttribute("data-close")).classList.remove("open"); });
+      });
+      document.addEventListener("pointerdown", function(){ audio(); }, { once:true });
+
+      /* ================= intro (2 story cards, story only) ================= */
+      var storyStep = 0;
+      function startIntro(){
+        storyStep = 0;
+        $("storyText").innerHTML = "<h2>A mad goblin is hiding.</h2><p>He's quick, he's rude, and every time you catch him he hides somewhere even harder to reach, further up the pass.</p>";
+        $("storyBtn").textContent = "NEXT →";
+        $("storyOverlay").classList.add("open");
+      }
+      $("storyBtn").addEventListener("click", function(){
+        audio();
+        if (storyStep === 0){
+          storyStep = 1;
+          $("storyText").innerHTML = "<h2>The odds only get worse.</h2><p>Sooner or later they beat everyone. That's fine — die on purpose, keep every coin, and the shop opens between lives. Come back sneakier.</p>";
+          $("storyBtn").textContent = "START HUNTING →";
+        } else {
+          $("storyOverlay").classList.remove("open");
+          S.seenIntro = true; save();
+          say("Tap anything rolling past to search it. Psst psst."); /* the one-sentence how-to */
+        }
+      });
+
+      /* ================= boot ================= */
+      load();
+      render();
+      requestAnimationFrame(frame);
+      if (!S.seenIntro) startIntro();
+      else { say("He's hiding in there somewhere…"); maybeMagnet(); }
+    </script>
+  </body>
+</html>

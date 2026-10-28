@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<link rel="icon" href="data:," />
+<title>Daily Roguelike — Mirrorlight (2026-10-27)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#171208;
+    --cream:#fff3d6;
+    --paper:#fffaf0;
+    --yellow:#ffd23f;
+    --pink:#ff8fb2;
+    --teal:#5eead4;
+    --blue:#93c5fd;
+    --orange:#ffb25e;
+    --violet:#c4b5fd;
+    --green:#86efac;
+    --red:#ff6b5e;
+    --darkfill:#312e81;
+    --abyss:#1b1440;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--ink); color:var(--ink);
+    font-family:"Archivo",system-ui,sans-serif;
+    overflow:hidden;
+  }
+  button{font-family:inherit; cursor:pointer;}
+  #app{
+    height:100dvh; max-width:520px; margin:0 auto;
+    background:var(--cream);
+    display:flex; flex-direction:column;
+    overflow:hidden; position:relative;
+    border-left:3px solid var(--ink); border-right:3px solid var(--ink);
+  }
+  /* ---------- generic screens ---------- */
+  .screen{display:none; flex-direction:column; height:100%; min-height:0; overflow:hidden;}
+  .screen.on{display:flex;}
+  .card-wrap{flex:1; display:flex; align-items:center; justify-content:center; padding:18px; min-height:0;}
+  .story-card{
+    background:var(--paper); border:3px solid var(--ink);
+    box-shadow:8px 8px 0 var(--ink);
+    padding:26px 22px; max-width:420px; width:100%;
+  }
+  .story-card .kicker{
+    display:inline-block; background:var(--yellow); border:2px solid var(--ink);
+    font-weight:900; font-size:12px; letter-spacing:.12em; padding:3px 8px; margin-bottom:14px;
+  }
+  .story-card p{font-size:21px; line-height:1.45; font-weight:700; margin:0 0 8px;}
+  .big-btn{
+    background:var(--yellow); color:var(--ink); border:3px solid var(--ink);
+    box-shadow:5px 5px 0 var(--ink); font-weight:900; font-size:17px;
+    letter-spacing:.04em; padding:13px 22px; width:100%; margin-top:18px;
+    text-transform:uppercase;
+  }
+  .big-btn:active{transform:translate(3px,3px); box-shadow:2px 2px 0 var(--ink);}
+  .big-btn.pink{background:var(--pink);}
+  .big-btn.teal{background:var(--teal);}
+  /* ---------- play layout ---------- */
+  #play{position:relative;}
+  #hud{
+    flex:0 0 auto; padding:8px 10px 7px; background:var(--cream);
+    border-bottom:3px solid var(--ink);
+  }
+  #hud-row{display:flex; align-items:center; gap:8px;}
+  .chip{
+    background:var(--paper); border:2px solid var(--ink); box-shadow:3px 3px 0 var(--ink);
+    font-weight:900; font-size:13px; padding:4px 8px; white-space:nowrap;
+  }
+  .chip.floorchip{background:var(--yellow);}
+  .chip.bosschip{background:var(--abyss); color:var(--cream);}
+  #dark-wrap{flex:1; min-width:0;}
+  #dark-label{font-size:11px; font-weight:900; letter-spacing:.1em; display:flex; justify-content:space-between;}
+  #dark-track{
+    height:16px; border:3px solid var(--ink); background:var(--paper); margin-top:2px; overflow:hidden;
+  }
+  #dark-fill{height:100%; width:0%; background:var(--darkfill); transition:width .12s linear;}
+  #dark-fill.hot{background:var(--red);}
+  #boss-wrap{display:none; margin-top:7px;}
+  #boss-wrap.on{display:block;}
+  #boss-label{font-size:11px; font-weight:900; letter-spacing:.1em; display:flex; justify-content:space-between; color:var(--abyss);}
+  #boss-track{height:14px; border:3px solid var(--ink); background:var(--abyss); margin-top:2px; overflow:hidden;}
+  #boss-fill{height:100%; width:100%; background:var(--red); transition:width .12s linear;}
+  #laws{
+    flex:0 0 auto; display:flex; gap:6px; padding:6px 10px; min-height:34px;
+    background:var(--paper); border-bottom:3px solid var(--ink); overflow:hidden; align-items:center;
+  }
+  #laws .law{
+    border:2px solid var(--ink); font-weight:900; font-size:11px; padding:2px 7px; white-space:nowrap;
+    box-shadow:2px 2px 0 var(--ink);
+  }
+  #laws .none{font-weight:700; font-size:12px; color:var(--ink);}
+  #scene-wrap{flex:1 1 auto; min-height:0; position:relative; overflow:hidden;}
+  #scene{position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none;}
+  #flash{
+    position:absolute; inset:0; background:#fff8dc; opacity:0; pointer-events:none;
+  }
+  #flash.go{animation:flashA .38s ease-out;}
+  @keyframes flashA{0%{opacity:.95;}100%{opacity:0;}}
+  /* spotlight: the one message */
+  #spot{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:min(86%,330px); background:var(--paper); border:3px solid var(--ink);
+    box-shadow:7px 7px 0 var(--ink); padding:18px 16px 14px; text-align:center;
+    display:none; z-index:5;
+  }
+  #spot.on{display:block;}
+  #spot .law-name{font-family:"Archivo Black",sans-serif; font-size:26px; letter-spacing:.02em;}
+  #spot .law-sub{font-weight:700; font-size:15px; margin-top:6px;}
+  #spot button{
+    margin-top:13px; background:var(--teal); border:3px solid var(--ink);
+    box-shadow:4px 4px 0 var(--ink); font-weight:900; font-size:15px; padding:9px 18px; width:100%;
+  }
+  #spot button:active{transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink);}
+  #hintbar{
+    flex:0 0 auto; text-align:center; font-weight:900; font-size:12px; letter-spacing:.08em;
+    padding:6px 8px; background:var(--ink); color:var(--cream);
+  }
+  .shake{animation:shk .35s linear;}
+  @keyframes shk{0%,100%{transform:translate(0,0);}20%{transform:translate(-6px,2px);}40%{transform:translate(6px,-2px);}60%{transform:translate(-5px,-2px);}80%{transform:translate(5px,2px);}}
+  /* ---------- end screens ---------- */
+  .end-card{text-align:center;}
+  .end-card h2{font-family:"Archivo Black",sans-serif; font-size:34px; margin:0 0 10px; line-height:1.05;}
+  .end-card .tally{
+    border:3px solid var(--ink); background:var(--cream); padding:10px; margin-top:14px;
+    font-weight:900; font-size:15px; line-height:1.7; box-shadow:4px 4px 0 var(--ink);
+  }
+  .confetti{position:absolute; inset:0; overflow:hidden; pointer-events:none;}
+  .confetti i{position:absolute; top:-14px; width:10px; height:16px; border:2px solid var(--ink); animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(105dvh) rotate(560deg);}}
+  @media (prefers-reduced-motion: reduce){
+    .shake{animation:none;} #flash.go{animation-duration:.1s;}
+    .confetti i{animation-duration:.01s !important;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- STORY 1 -->
+  <section class="screen on" id="s-story1">
+    <div class="card-wrap">
+      <div class="story-card">
+        <span class="kicker">MIRRORLIGHT</span>
+        <p>The cathedral sank, but its tower still stands. You are the last lamplighter, and the dawn is coming.</p>
+        <button class="big-btn" id="btn-story1">Continue</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STORY 2 -->
+  <section class="screen" id="s-story2">
+    <div class="card-wrap">
+      <div class="story-card">
+        <span class="kicker">MIRRORLIGHT</span>
+        <p>Seven floors sleep in the dark. Wake them, one beam at a time, before the dark wakes you.</p>
+        <button class="big-btn pink" id="btn-story2">Continue</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW TO (exactly one sentence) -->
+  <section class="screen" id="s-howto">
+    <div class="card-wrap">
+      <div class="story-card">
+        <span class="kicker">HOW TO PLAY</span>
+        <p>Drag to aim — hold the beam steady on each wick to light it, bounce off mirrors where the dark blocks the way, and light all 7 floors before the dark meter fills.</p>
+        <button class="big-btn teal" id="btn-howto">Start</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section class="screen" id="play">
+    <div id="hud">
+      <div id="hud-row">
+        <span class="chip floorchip" id="floor-chip">FLOOR 1 / 7</span>
+        <div id="dark-wrap">
+          <div id="dark-label"><span>DARK</span><span id="dark-pct">0%</span></div>
+          <div id="dark-track"><div id="dark-fill"></div></div>
+        </div>
+        <span class="chip" id="lit-chip">LIT 0</span>
+      </div>
+      <div id="boss-wrap">
+        <div id="boss-label"><span>THE DARK ARISEN</span><span id="boss-pct">100%</span></div>
+        <div id="boss-track"><div id="boss-fill"></div></div>
+      </div>
+    </div>
+    <div id="laws"><span class="none">No tower laws yet</span></div>
+    <div id="scene-wrap">
+      <canvas id="scene"></canvas>
+      <div id="flash"></div>
+      <div id="spot" role="alertdialog" aria-live="polite">
+        <div class="law-name" id="spot-name">SWAY</div>
+        <div class="law-sub" id="spot-sub"></div>
+        <button id="spot-btn">Got it</button>
+      </div>
+    </div>
+    <div id="hintbar">DRAG TO AIM · HOLD STEADY ON THE WICK</div>
+  </section>
+
+  <!-- WIN -->
+  <section class="screen" id="s-win">
+    <div class="confetti" id="confetti"></div>
+    <div class="card-wrap">
+      <div class="story-card end-card">
+        <span class="kicker">DAWN</span>
+        <h2>DARK DESTROYED!</h2>
+        <p style="font-size:17px;">All seven floors burn bright — and the thing that rose against the light is gone.</p>
+        <div class="tally" id="win-tally"></div>
+        <button class="big-btn" id="btn-retry-win">Retry</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOSE -->
+  <section class="screen" id="s-lose">
+    <div class="card-wrap">
+      <div class="story-card end-card">
+        <span class="kicker" style="background:var(--red);">DARK</span>
+        <h2>THE DARK WON</h2>
+        <p style="font-size:17px;">The tower sleeps again.</p>
+        <div class="tally" id="lose-tally"></div>
+        <button class="big-btn pink" id="btn-retry-lose">Retry</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ================= state (session-only tally) ================= */
+var tally = { runs:0, wins:0, best:0 };
+var S = null; // run state
+var FLOOR_BG = ["#ffe9a8","#ffd6e0","#c9f2e4","#d7e7ff","#ffe3c2","#e6dcff","#ffd9d2"];
+var LAW_COLORS = { SWAY:"#93c5fd", BOUNCE:"#ffb25e", DARKNESS:"#c4b5fd", SHADE:"#ff8fb2" };
+
+/* Floor configs. Coordinates are fractions of the scene (x,w of width; y,h of height).
+   zones: [x,y,w,h] patches of darkness that swallow the beam.
+   mirrors: [x,y] bounce discs, listed in intended bounce order (normals are
+   computed from the chain origin -> mirrors -> wick, so the intended shot works;
+   the player still steers the reflection by aiming).
+   shade: a moving blocker that drifts up/down and swallows the beam. */
+var FLOORS = [
+  { wick:[0.79,0.44], r:27, dwell:0.70, rate:1.5, sway:null,
+    mirrors:[], zones:[], shade:null },
+  { wick:[0.79,0.36], r:26, dwell:0.80, rate:1.9, sway:{amp:0.09, per:1400},
+    mirrors:[], zones:[], shade:null },
+  { wick:[0.80,0.40], r:26, dwell:0.90, rate:2.2, sway:{amp:0.05, per:1600},
+    mirrors:[[0.44,0.15]], zones:[[0.39,0.34,0.17,0.32]], shade:null },
+  { wick:[0.80,0.55], r:25, dwell:0.95, rate:2.5, sway:{amp:0.05, per:1500},
+    mirrors:[[0.40,0.12]], zones:[[0.38,0.33,0.16,0.29],[0.58,0.58,0.12,0.28]], shade:null },
+  { wick:[0.80,0.38], r:24, dwell:1.00, rate:2.8, sway:{amp:0.06, per:1500},
+    mirrors:[[0.45,0.13]], zones:[], shade:{x:0.52, w:0.10, h:0.30, cy:0.50, range:0.20, per:1900} },
+  { wick:[0.81,0.48], r:24, dwell:1.05, rate:3.2, sway:{amp:0.07, per:1300},
+    mirrors:[[0.40,0.13],[0.70,0.66]], zones:[[0.36,0.30,0.12,0.28],[0.60,0.10,0.12,0.30]], shade:null },
+  { wick:[0.82,0.42], r:21, dwell:1.10, rate:3.7, sway:{amp:0.09, per:1050},
+    mirrors:[[0.42,0.12],[0.64,0.30]], zones:[[0.34,0.32,0.14,0.32],[0.56,0.55,0.12,0.30]],
+    shade:{x:0.70, w:0.08, h:0.26, cy:0.45, range:0.18, per:1500} }
+];
+var BOSS_CFG = {
+  rate:3.4, drain:17,
+  mirrors:[[0.40,0.13]], zones:[[0.34,0.38,0.12,0.32]],
+  center:[0.63,0.40]
+};
+var WEAK_R = 19;
+
+function lawsFor(floor){
+  var laws = [];
+  if (floor >= 5) laws.push("SHADE");
+  if (floor >= 4) laws.push("DARKNESS");
+  if (floor >= 3) laws.push("BOUNCE");
+  if (floor >= 2) laws.push("SWAY");
+  return laws; // newest-first
+}
+var SPOTS = {
+  2:{name:"SWAY", sub:"The wick sways. Track it and hold steady."},
+  3:{name:"BOUNCE", sub:"A wall of dark blocks the beam. Bounce it off the mirror."},
+  4:{name:"DARKNESS", sub:"Patches of dark swallow light whole. Bounce around them."},
+  5:{name:"SHADE", sub:"A shade drifts across the room. Time the gap — or bounce past it."},
+  6:{name:"DOUBLE BOUNCE", sub:"Two mirrors now. Chain the bounce."},
+  7:{name:"THE GAUNTLET", sub:"Everything at once, and faster. Hold steady."}
+};
+var BOSS_SPOT = { name:"THE DARK ARISES", sub:"It has come to snuff out your light. Bounce your beam onto its burning eye — and hold it there." };
+
+function cfg(){ return S.boss ? BOSS_CFG : FLOORS[S.floor-1]; }
+
+function newRun(){
+  tally.runs++;
+  S = {
+    floor:1, dark:0, lit:0,
+    aim:-1.3,                // radians; starts off-target
+    dragging:false,
+    spot:false, over:false, won:false,
+    charge:0,                // 0..100 hold-to-light charge on the wick
+    boss:false, bossHP:100,
+    particles:[],
+    milestones:{50:false,75:false,90:false},
+    spotFloor:0,
+    geom:null
+  };
+  $("boss-wrap").classList.remove("on");
+  $("floor-chip").classList.remove("bosschip");
+  layoutFloor();
+  updateHUD(); renderLaws();
+}
+
+/* ================= audio (never breaks input) ================= */
+var AC = null;
+function beep(freq, dur, type, vol, when){
+  try{
+    if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state === "suspended") AC.resume();
+    var t = AC.currentTime + (when||0);
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = type||"sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol||0.12, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  }catch(e){/* audio is decoration only */}
+}
+function sfx(kind){
+  try{
+    if(kind==="light"){ beep(660,.12,"triangle",.14,0); beep(990,.16,"triangle",.12,.07); }
+    if(kind==="bounce"){ beep(1180,.06,"square",.06,0); }
+    if(kind==="win"){ [523,659,784,1046].forEach(function(f,i){ beep(f,.22,"triangle",.13,i*.1); }); }
+    if(kind==="lose"){ beep(220,.4,"sawtooth",.08,0); beep(147,.55,"sawtooth",.08,.18); }
+    if(kind==="spot"){ beep(440,.09,"square",.07,0); }
+    if(kind==="boss"){ beep(98,.6,"sawtooth",.12,0); beep(65,.7,"sawtooth",.10,.12); }
+    if(kind==="hit"){ beep(180+Math.random()*60,.08,"sawtooth",.07,0); }
+  }catch(e){}
+}
+
+/* ================= DOM ================= */
+function $(id){ return document.getElementById(id); }
+var screens = ["s-story1","s-story2","s-howto","play","s-win","s-lose"];
+function show(id){
+  screens.forEach(function(s){ $(s).classList.toggle("on", s===id); });
+  if(id==="play"){ resizeCanvas(); }
+}
+$("btn-story1").addEventListener("click", function(){ show("s-story2"); });
+$("btn-story2").addEventListener("click", function(){ show("s-howto"); });
+$("btn-howto").addEventListener("click", function(){ newRun(); show("play"); });
+$("btn-retry-win").addEventListener("click", function(){ newRun(); show("play"); });
+$("btn-retry-lose").addEventListener("click", function(){ newRun(); show("play"); });
+$("spot-btn").addEventListener("click", function(){
+  if(!S) return;
+  S.spot = false;
+  $("spot").classList.remove("on");
+});
+
+/* ================= HUD ================= */
+function updateHUD(){
+  if(!S) return;
+  if(S.boss){
+    $("floor-chip").textContent = "THE DARK ARISEN";
+  } else {
+    $("floor-chip").textContent = "FLOOR " + S.floor + " / 7";
+  }
+  $("lit-chip").textContent = "LIT " + S.lit;
+  var pct = Math.max(0, Math.min(100, Math.round(S.dark)));
+  $("dark-pct").textContent = pct + "%";
+  var fill = $("dark-fill");
+  fill.style.width = pct + "%";
+  fill.classList.toggle("hot", S.dark >= 75);
+  if(S.boss){
+    var bp = Math.max(0, Math.min(100, Math.round(S.bossHP)));
+    $("boss-pct").textContent = bp + "%";
+    $("boss-fill").style.width = bp + "%";
+  }
+}
+function renderLaws(){
+  var box = $("laws");
+  if(S.boss){
+    box.innerHTML = '<span class="law" style="background:#1b1440;color:#fff3d6;">THE DARK ARISES</span>' +
+      '<span class="law" style="background:'+LAW_COLORS.BOUNCE+'">BOUNCE</span>';
+    return;
+  }
+  var laws = lawsFor(S.floor);
+  if(!laws.length){ box.innerHTML = '<span class="none">No tower laws yet — hold the beam on the wick</span>'; return; }
+  box.innerHTML = laws.map(function(l){
+    return '<span class="law" style="background:'+LAW_COLORS[l]+'">'+l+'</span>';
+  }).join("");
+}
+function tallyHTML(){
+  var bossLine = S.won ? "THE DARK: DESTROYED<br>" : (S.lit >= 7 ? "THE DARK: SURVIVED<br>" : "");
+  return "FLOORS LIT: " + S.lit + " / 7<br>" + bossLine +
+    "RUNS: " + tally.runs + " · WINS: " + tally.wins + "<br>BEST FLOORS: " + tally.best;
+}
+
+/* ================= geometry ================= */
+var cv = $("scene"), ctx = cv.getContext("2d");
+var W = 0, H = 0, DPR = 1;
+function resizeCanvas(){
+  var wrap = $("scene-wrap");
+  var r = wrap.getBoundingClientRect();
+  DPR = Math.min(2, window.devicePixelRatio||1);
+  W = Math.max(280, r.width); H = Math.max(240, r.height);
+  cv.width = W * DPR; cv.height = H * DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  layoutFloor();
+}
+window.addEventListener("resize", resizeCanvas);
+
+function mirrorPos(){ return { x: W*0.16, y: H*0.64 }; }
+
+/* Build pixel geometry for the current floor/boss from the fraction configs.
+   Mirror normals come from the intended chain so the designed shot connects. */
+function layoutFloor(){
+  if(!S || W === 0) { if(S) S.geom = null; return; }
+  var c = cfg();
+  var o = mirrorPos();
+  var wick = S.boss ? null : { x: c.wick[0]*W, y: c.wick[1]*H };
+  var target = S.boss ? { x: BOSS_CFG.center[0]*W, y: BOSS_CFG.center[1]*H } : wick;
+  var mirrors = (c.mirrors||[]).map(function(m){ return { x:m[0]*W, y:m[1]*H, r:19, nx:0, ny:-1, face:0 }; });
+  var chain = [o].concat(mirrors).concat([target]);
+  for(var i=0;i<mirrors.length;i++){
+    var prev = chain[i], m = mirrors[i], next = chain[i+2];
+    var dix = m.x-prev.x, diy = m.y-prev.y, dl = Math.hypot(dix,diy)||1; dix/=dl; diy/=dl;
+    var dox = next.x-m.x, doy = next.y-m.y, ol = Math.hypot(dox,doy)||1; dox/=ol; doy/=ol;
+    var nx = dox-dix, ny = doy-diy, nl = Math.hypot(nx,ny)||1;
+    m.nx = nx/nl; m.ny = ny/nl; m.face = Math.atan2(m.ny, m.nx);
+  }
+  S.geom = {
+    wick: wick,
+    mirrors: mirrors,
+    zones: (c.zones||[]).map(function(z){ return { x:z[0]*W, y:z[1]*H, w:z[2]*W, h:z[3]*H }; }),
+    shade: c.shade || null
+  };
+}
+function swayOffset(now){
+  var c = cfg();
+  if(S.boss || !c.sway) return 0;
+  return Math.sin(now * Math.PI*2 / c.sway.per) * c.sway.amp * W;
+}
+function wickPos(now){
+  var g = S.geom;
+  return { x: g.wick.x + swayOffset(now), y: g.wick.y };
+}
+function shadeRect(now){
+  var s = S.geom.shade;
+  if(!s) return null;
+  var cy = s.cy*H + Math.sin(now * Math.PI*2 / s.per) * s.range * H;
+  return { x: s.x*W, y: cy - s.h*H/2, w: s.w*W, h: s.h*H, cy: cy };
+}
+/* --- boss --- */
+function bossCenter(){ return { x: BOSS_CFG.center[0]*W, y: BOSS_CFG.center[1]*H }; }
+function bossSpeedMul(){
+  if(S.bossHP < 25) return 1.8;
+  if(S.bossHP < 50) return 1.4;
+  return 1;
+}
+function weakPos(now){
+  var c = bossCenter(), m = bossSpeedMul();
+  return {
+    x: c.x + Math.sin(now * 0.0011 * m) * W * 0.13,
+    y: c.y + Math.cos(now * 0.0017 * m) * H * 0.11
+  };
+}
+function bossCovered(now){
+  return (now % 5400) > 4100; // a tentacle shields the eye ~1.3s in every 5.4s
+}
+
+/* ================= beam tracing (bounces + absorption) ================= */
+function rayCircle(o, d, c, r){
+  var ox = c.x - o.x, oy = c.y - o.y;
+  var tca = ox*d.x + oy*d.y;
+  var d2 = ox*ox + oy*oy - tca*tca;
+  var r2 = r*r;
+  if(d2 > r2) return null;
+  var thc = Math.sqrt(r2 - d2);
+  var t = tca - thc;
+  if(t < 0.5) t = tca + thc;
+  return t > 0.5 ? t : null;
+}
+function rayRect(o, d, rc){
+  var tmin = -Infinity, tmax = Infinity, t;
+  if(Math.abs(d.x) < 1e-9){ if(o.x < rc.x || o.x > rc.x+rc.w) return null; }
+  else{
+    var t1 = (rc.x - o.x)/d.x, t2 = (rc.x+rc.w - o.x)/d.x;
+    tmin = Math.max(tmin, Math.min(t1,t2)); tmax = Math.min(tmax, Math.max(t1,t2));
+  }
+  if(Math.abs(d.y) < 1e-9){ if(o.y < rc.y || o.y > rc.y+rc.h) return null; }
+  else{
+    var t3 = (rc.y - o.y)/d.y, t4 = (rc.y+rc.h - o.y)/d.y;
+    tmin = Math.max(tmin, Math.min(t3,t4)); tmax = Math.min(tmax, Math.max(t3,t4));
+  }
+  if(tmax < Math.max(tmin, 0)) return null;
+  return tmin > 0.5 ? tmin : null;
+}
+/* Trace the beam from the player's mirror. Returns polyline points, whether it
+   is resting on the target (wick / weak eye), and whether the dark swallowed it. */
+function traceBeam(now){
+  var g = S.geom;
+  var pts = [ mirrorPos() ];
+  var cur = mirrorPos();
+  var dir = { x: Math.cos(S.aim), y: Math.sin(S.aim) };
+  var hit = false, absorbed = false, bounced = false;
+  var covered = S.boss && bossCovered(now);
+  var target = S.boss ? weakPos(now) : wickPos(now);
+  var targetR = S.boss ? WEAK_R : cfg().r;
+  var srect = shadeRect(now);
+  for(var b=0; b<4; b++){
+    var best = null; // {t, kind, m}
+    if(!covered){
+      var tt = rayCircle(cur, dir, target, targetR);
+      if(tt !== null) best = { t: tt, kind: "target" };
+    }
+    for(var i=0;i<g.mirrors.length;i++){
+      var tm = rayCircle(cur, dir, g.mirrors[i], g.mirrors[i].r);
+      if(tm !== null && (!best || tm < best.t)) best = { t: tm, kind: "mirror", m: g.mirrors[i] };
+    }
+    for(var j=0;j<g.zones.length;j++){
+      var tz = rayRect(cur, dir, g.zones[j]);
+      if(tz !== null && (!best || tz < best.t)) best = { t: tz, kind: "dark" };
+    }
+    if(srect){
+      var ts = rayRect(cur, dir, srect);
+      if(ts !== null && (!best || ts < best.t)) best = { t: ts, kind: "dark" };
+    }
+    // scene bounds as the final stop
+    var bound = rayRect(cur, dir, { x:-80, y:-80, w:W+160, h:H+160 });
+    var tEnd = bound !== null ? bound : Math.max(W,H)*1.6;
+    if(!best || best.t > tEnd){
+      pts.push({ x: cur.x + dir.x*tEnd, y: cur.y + dir.y*tEnd });
+      break;
+    }
+    var hp = { x: cur.x + dir.x*best.t, y: cur.y + dir.y*best.t };
+    pts.push(hp);
+    if(best.kind === "target"){ hit = true; break; }
+    if(best.kind === "dark"){ absorbed = true; break; }
+    // mirror: reflect across the mirror's normal and keep going
+    var n = { x: best.m.nx, y: best.m.ny };
+    var dn = dir.x*n.x + dir.y*n.y;
+    dir = { x: dir.x - 2*dn*n.x, y: dir.y - 2*dn*n.y };
+    var dl = Math.hypot(dir.x, dir.y) || 1; dir.x/=dl; dir.y/=dl;
+    cur = { x: hp.x + dir.x*2.5, y: hp.y + dir.y*2.5 };
+    bounced = true;
+  }
+  return { pts: pts, hit: hit, absorbed: absorbed, bounced: bounced };
+}
+
+/* ================= outcome resolution (interval tick only) ================= */
+function lightFloor(now){
+  var w = wickPos(now);
+  S.lit++;
+  S.dark = Math.max(0, S.dark - 12);
+  S.charge = 0;
+  spawnParticles(w.x, w.y, 26);
+  flashFX();
+  sfx("light");
+  if(S.lit >= 7){ startBoss(); return; }
+  S.floor++;
+  S.aim = -1.3;
+  layoutFloor();
+  renderLaws();
+  updateHUD();
+  maybeSpot();
+}
+function startBoss(){
+  S.boss = true;
+  S.bossHP = 100;
+  S.dark = Math.min(S.dark, 35); // the dark gathers — a fair start to the fight
+  S.aim = -1.3;
+  layoutFloor();
+  $("boss-wrap").classList.add("on");
+  $("floor-chip").classList.add("bosschip");
+  renderLaws();
+  updateHUD();
+  S.spotFloor = 8;
+  S.spot = true;
+  $("spot-name").textContent = BOSS_SPOT.name;
+  $("spot-sub").textContent = BOSS_SPOT.sub;
+  $("spot").classList.add("on");
+  sfx("boss");
+  shakeFX();
+}
+function maybeSpot(){
+  if(SPOTS[S.floor] && S.spotFloor !== S.floor){
+    S.spotFloor = S.floor;
+    S.spot = true;
+    $("spot-name").textContent = SPOTS[S.floor].name;
+    $("spot-sub").textContent = SPOTS[S.floor].sub;
+    $("spot").classList.add("on");
+    sfx("spot");
+  }
+}
+function endRun(won){
+  S.over = true; S.won = won;
+  tally.best = Math.max(tally.best, S.lit);
+  if(won){ tally.wins++; sfx("win"); makeConfetti(); $("win-tally").innerHTML = tallyHTML(); show("s-win"); }
+  else { sfx("lose"); $("lose-tally").innerHTML = tallyHTML(); show("s-lose"); }
+}
+
+/* ================= juice ================= */
+function spawnParticles(x,y,n){
+  var colors = ["#ffd23f","#ff8fb2","#5eead4","#171208","#ffb25e"];
+  for(var i=0;i<n;i++){
+    var a = Math.random()*Math.PI*2, sp = 40 + Math.random()*170;
+    S.particles.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-60,life:1,c:colors[i%colors.length],s:3+Math.random()*5});
+  }
+}
+function flashFX(){
+  var f = $("flash");
+  f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
+}
+function shakeFX(){
+  var p = $("play");
+  p.classList.remove("shake"); void p.offsetWidth; p.classList.add("shake");
+}
+function makeConfetti(){
+  var box = $("confetti"); box.innerHTML = "";
+  var colors = ["#ffd23f","#ff8fb2","#5eead4","#93c5fd","#ffb25e","#86efac"];
+  for(var i=0;i<42;i++){
+    var el = document.createElement("i");
+    el.style.left = (Math.random()*100) + "%";
+    el.style.background = colors[i%colors.length];
+    el.style.animationDuration = (1.6 + Math.random()*1.8) + "s";
+    el.style.animationDelay = (Math.random()*0.7) + "s";
+    box.appendChild(el);
+  }
+}
+
+/* ================= input: aim only (outcomes resolve in the tick) ================= */
+function pointerAim(e){
+  if(!S || S.over || S.spot) return;
+  var r = cv.getBoundingClientRect();
+  var x = e.clientX - r.left, y = e.clientY - r.top;
+  var o = mirrorPos();
+  S.aim = Math.atan2(y - o.y, x - o.x);
+}
+cv.addEventListener("pointerdown", function(e){
+  if(!S) return;
+  S.dragging = true;
+  try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+  pointerAim(e);
+});
+cv.addEventListener("pointermove", function(e){
+  if(!S || !S.dragging) return;
+  pointerAim(e);
+});
+function endDrag(){ if(S) S.dragging = false; }
+cv.addEventListener("pointerup", endDrag);
+cv.addEventListener("pointercancel", endDrag);
+
+window.addEventListener("keydown", function(e){
+  if(!S || S.over || !$("play").classList.contains("on")) return;
+  if(S.spot){
+    if(e.key === "Enter" || e.key === " "){ $("spot-btn").click(); e.preventDefault(); }
+    return;
+  }
+  var step = 0.05, used = true;
+  if(e.key === "ArrowLeft" || e.key === "ArrowDown") S.aim -= step;
+  else if(e.key === "ArrowRight" || e.key === "ArrowUp") S.aim += step;
+  else used = false;
+  if(used) e.preventDefault();
+});
+
+/* ================= game tick: dark meter + hold-to-light + boss drain ================= */
+var lastBounceSfx = 0;
+setInterval(function(){
+  if(!S || S.over || S.spot || !S.geom) return;
+  if(!$("play").classList.contains("on")) return;
+  var now = performance.now();
+  var c = cfg();
+  var tr = traceBeam(now);
+  S.beamOn = tr.hit;
+  if(tr.bounced && now - lastBounceSfx > 250){ lastBounceSfx = now; sfx("bounce"); }
+
+  if(S.boss){
+    if(tr.hit){
+      S.bossHP -= BOSS_CFG.drain * 0.05;
+      var wp = weakPos(now);
+      if(Math.random() < 0.5) spawnParticles(wp.x, wp.y, 2);
+      if(Math.random() < 0.3) sfx("hit");
+      if(S.bossHP <= 0){
+        S.bossHP = 0;
+        var bc = bossCenter();
+        spawnParticles(bc.x, bc.y, 60);
+        flashFX();
+        updateHUD();
+        endRun(true);
+        return;
+      }
+    }
+    var brate = BOSS_CFG.rate * (S.bossHP < 35 ? 1.3 : 1);
+    S.dark += brate * 0.05;
+  } else {
+    if(tr.hit){
+      S.charge += (100 / c.dwell) * 0.05;
+      if(S.charge >= 100){ lightFloor(now); }
+    } else {
+      S.charge = Math.max(0, S.charge - 220 * 0.05);
+    }
+    S.dark += c.rate * 0.05;
+  }
+  [50,75,90].forEach(function(m){
+    if(S.dark >= m && !S.milestones[m]){ S.milestones[m] = true; shakeFX(); beep(196,.15,"square",.08,0); }
+  });
+  if(S.dark >= 100){
+    S.dark = 100; updateHUD();
+    endRun(false);
+    return;
+  }
+  updateHUD();
+}, 50);
+
+/* ================= render loop (draws only; never resolves outcomes) ================= */
+function draw(now){
+  requestAnimationFrame(draw);
+  if(!S || !$("play").classList.contains("on") || W === 0 || !S.geom) return;
+  var g = S.geom;
+  var f = S.floor;
+  // backdrop: tower cross-section (boss floor goes abyss-dark)
+  ctx.fillStyle = S.boss ? "#241b4d" : FLOOR_BG[f-1];
+  ctx.fillRect(0,0,W,H);
+  // stone bands
+  ctx.fillStyle = S.boss ? "rgba(0,0,0,0.25)" : "rgba(23,18,8,0.10)";
+  for(var y=26; y<H; y+=54) ctx.fillRect(0,y,W,7);
+  if(!S.boss){
+    // arch window (decor)
+    ctx.strokeStyle = "#171208"; ctx.lineWidth = 3;
+    ctx.strokeRect(W*0.40, H*0.10, W*0.17, H*0.20);
+    ctx.beginPath(); ctx.moveTo(W*0.485, H*0.10); ctx.lineTo(W*0.485, H*0.30); ctx.stroke();
+  }
+  // floor planks
+  ctx.fillStyle = S.boss ? "#0d0924" : "#171208";
+  ctx.fillRect(0, H*0.86, W, 4);
+  ctx.fillStyle = S.boss ? "rgba(0,0,0,0.35)" : "rgba(23,18,8,0.16)";
+  ctx.fillRect(0, H*0.875, W, H*0.125);
+  // lit floor pips on tower edge
+  for(var i=0;i<7;i++){
+    ctx.fillStyle = i < S.lit ? "#ffd23f" : "#fffaf0";
+    ctx.fillRect(W-24, 14 + i*20, 12, 12);
+    ctx.strokeStyle = "#171208"; ctx.lineWidth = 2;
+    ctx.strokeRect(W-24, 14 + i*20, 12, 12);
+  }
+
+  var o = mirrorPos();
+
+  // darkness zones: light-swallowing patches
+  g.zones.forEach(function(z){ drawZone(z); });
+  // drifting shade
+  var srect = shadeRect(now);
+  if(srect) drawShade(srect, now);
+
+  // beam (traced polyline, so bounces render as bent light)
+  var tr = (!S.over && !S.spot) ? traceBeam(now) : null;
+  if(tr){
+    var split = false;
+    for(var s=0;s<tr.pts.length-1;s++){
+      var a = tr.pts[s], b = tr.pts[s+1];
+      ctx.strokeStyle = "#171208"; ctx.lineWidth = 15; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+      ctx.strokeStyle = tr.hit ? "#ffd23f" : "#f5c93f"; ctx.lineWidth = 9;
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+      ctx.strokeStyle = "#fff7cc"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    }
+    // sparkle at each bounce point
+    for(var k=1;k<tr.pts.length-1;k++){
+      var p = tr.pts[k];
+      ctx.fillStyle = "#fff7cc";
+      ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = "#171208"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.stroke();
+    }
+    if(tr.absorbed){
+      var ep = tr.pts[tr.pts.length-1];
+      ctx.fillStyle = "rgba(27,20,64,0.85)";
+      ctx.beginPath(); ctx.arc(ep.x, ep.y, 11 + Math.sin(now*0.02)*2, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  // bounce mirrors
+  g.mirrors.forEach(function(m){ drawMirrorDisc(m); });
+
+  if(S.boss){ drawBoss(now, tr); }
+  else { drawWick(now, tr); }
+
+  // player's mirror: brass disc on stand, rotated to aim
+  ctx.fillStyle = S.boss ? "#0d0924" : "#171208";
+  ctx.fillRect(o.x-4, o.y+14, 8, H*0.86 - (o.y+14));
+  ctx.fillRect(o.x-20, H*0.86-4, 40, 6);
+  ctx.save();
+  ctx.translate(o.x, o.y);
+  ctx.rotate(S.aim);
+  ctx.fillStyle = "#171208";
+  ctx.fillRect(-6,-24,12,48);
+  ctx.fillStyle = "#e8a33d";
+  ctx.beginPath(); ctx.arc(4,0,23,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = "#171208"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(4,0,23,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = "#fff3c4";
+  ctx.beginPath(); ctx.arc(4,0,16,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = "#171208"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(4,0,16,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+
+  // particles (visual only)
+  var dt = 1/60;
+  S.particles = S.particles.filter(function(p){ return p.life > 0; });
+  S.particles.forEach(function(p){
+    p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 300*dt; p.life -= dt*1.4;
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle = p.c;
+    ctx.fillRect(p.x - p.s/2, p.y - p.s/2, p.s, p.s);
+    ctx.strokeStyle = "#171208"; ctx.lineWidth = 1;
+    ctx.strokeRect(p.x - p.s/2, p.y - p.s/2, p.s, p.s);
+    ctx.globalAlpha = 1;
+  });
+}
+
+function drawZone(z){
+  ctx.fillStyle = "#1b1440";
+  ctx.beginPath();
+  var r = 14;
+  ctx.moveTo(z.x+r, z.y);
+  ctx.lineTo(z.x+z.w-r, z.y); ctx.quadraticCurveTo(z.x+z.w, z.y, z.x+z.w, z.y+r);
+  ctx.lineTo(z.x+z.w, z.y+z.h-r); ctx.quadraticCurveTo(z.x+z.w, z.y+z.h, z.x+z.w-r, z.y+z.h);
+  ctx.lineTo(z.x+r, z.y+z.h); ctx.quadraticCurveTo(z.x, z.y+z.h, z.x, z.y+z.h-r);
+  ctx.lineTo(z.x, z.y+r); ctx.quadraticCurveTo(z.x, z.y, z.x+r, z.y);
+  ctx.fill();
+  ctx.strokeStyle = "#171208"; ctx.lineWidth = 3; ctx.stroke();
+  // dim stars trapped in the dark
+  ctx.fillStyle = "rgba(196,181,253,0.5)";
+  var sx = [0.25,0.6,0.8,0.42], sy = [0.3,0.55,0.25,0.75];
+  for(var i=0;i<4;i++){
+    ctx.fillRect(z.x + sx[i]*z.w - 1.5, z.y + sy[i]*z.h - 1.5, 3, 3);
+  }
+}
+function drawShade(rc, now){
+  ctx.fillStyle = "#1b1440";
+  ctx.fillRect(rc.x, rc.y, rc.w, rc.h);
+  ctx.strokeStyle = "#171208"; ctx.lineWidth = 3;
+  ctx.strokeRect(rc.x, rc.y, rc.w, rc.h);
+  // ragged fringe at the bottom
+  ctx.fillStyle = "#1b1440";
+  var n = Math.max(3, Math.floor(rc.w/14));
+  for(var i=0;i<n;i++){
+    var fx = rc.x + (i+0.5)*(rc.w/n);
+    ctx.beginPath();
+    ctx.moveTo(fx-6, rc.y+rc.h); ctx.lineTo(fx+6, rc.y+rc.h); ctx.lineTo(fx, rc.y+rc.h+10);
+    ctx.closePath(); ctx.fill();
+  }
+  // watching eyes
+  var ey = rc.y + rc.h*0.3 + Math.sin(now*0.003)*2;
+  ctx.fillStyle = "#ffd23f";
+  ctx.beginPath(); ctx.arc(rc.x + rc.w*0.35, ey, 3.5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(rc.x + rc.w*0.65, ey, 3.5, 0, Math.PI*2); ctx.fill();
+}
+function drawMirrorDisc(m){
+  // stand
+  ctx.fillStyle = "#171208";
+  ctx.fillRect(m.x-3, m.y+14, 6, Math.max(0, H*0.86 - (m.y+14)));
+  ctx.save();
+  ctx.translate(m.x, m.y);
+  ctx.rotate(m.face);
+  ctx.fillStyle = "#171208";
+  ctx.fillRect(-4,-m.r-3,8,m.r*2+6);
+  ctx.fillStyle = "#e8a33d";
+  ctx.beginPath(); ctx.arc(3,0,m.r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = "#171208"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(3,0,m.r,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = "#dff6ff";
+  ctx.beginPath(); ctx.arc(3,0,m.r-6,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = "#171208"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(3,0,m.r-6,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+function drawWick(now, tr){
+  var c = cfg();
+  var w = wickPos(now);
+  var on = tr && tr.hit;
+  // lamp post
+  ctx.fillStyle = "#171208";
+  ctx.fillRect(w.x-3, w.y+16, 6, H*0.86 - (w.y+16));
+  var glowR = 44 + (S.charge/100)*26 + (on ? 8 : 0);
+  var glow = ctx.createRadialGradient(w.x,w.y,2,w.x,w.y,glowR);
+  glow.addColorStop(0,"rgba(255,210,63," + (0.55 + (S.charge/100)*0.4) + ")");
+  glow.addColorStop(1,"rgba(255,210,63,0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath(); ctx.arc(w.x,w.y,glowR,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#fff7cc";
+  ctx.beginPath(); ctx.arc(w.x,w.y,c.r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = "#171208"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(w.x,w.y,c.r,0,Math.PI*2); ctx.stroke();
+  // flame
+  ctx.fillStyle = "#ff8a3d";
+  ctx.beginPath();
+  ctx.moveTo(w.x, w.y-15);
+  ctx.quadraticCurveTo(w.x+8, w.y-2, w.x, w.y+7);
+  ctx.quadraticCurveTo(w.x-8, w.y-2, w.x, w.y-15);
+  ctx.fill();
+  ctx.strokeStyle = "#171208"; ctx.lineWidth = 2; ctx.stroke();
+  // hold-to-light charge ring
+  if(S.charge > 0.5){
+    ctx.strokeStyle = "#0d9488"; ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(w.x, w.y, c.r + 9, -Math.PI/2, -Math.PI/2 + Math.PI*2*(S.charge/100));
+    ctx.stroke();
+    ctx.strokeStyle = "#171208"; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(w.x, w.y, c.r + 12.5, -Math.PI/2, -Math.PI/2 + Math.PI*2*(S.charge/100));
+    ctx.stroke();
+  }
+}
+function drawBoss(now, tr){
+  var c = bossCenter();
+  var R = Math.min(W,H) * 0.21;
+  var enrage = S.bossHP < 35;
+  var pulse = 1 + Math.sin(now * (enrage ? 0.012 : 0.006)) * 0.03;
+  // tentacles
+  ctx.strokeStyle = "#120c2e"; ctx.lineCap = "round";
+  for(var i=0;i<6;i++){
+    var a0 = (i/6) * Math.PI * 2 + Math.sin(now*0.0007 + i) * 0.2;
+    var sway = Math.sin(now * 0.002 + i * 1.7) * 22;
+    var x0 = c.x + Math.cos(a0) * R * 0.8, y0 = c.y + Math.sin(a0) * R * 0.8;
+    var x1 = c.x + Math.cos(a0) * R * 1.5 + sway, y1 = c.y + Math.sin(a0) * R * 1.5;
+    var x2 = c.x + Math.cos(a0) * R * 2.0 - sway, y2 = c.y + Math.sin(a0) * R * 2.0 + Math.cos(now*0.002 + i)*14;
+    ctx.lineWidth = 13 - (i % 3) * 2;
+    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.quadraticCurveTo(x1,y1,x2,y2); ctx.stroke();
+  }
+  // body: layered blob
+  ctx.fillStyle = "#1b1440";
+  ctx.beginPath(); ctx.arc(c.x, c.y, R * pulse, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#241a56";
+  ctx.beginPath(); ctx.arc(c.x - R*0.3, c.y - R*0.25, R*0.62*pulse, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(c.x + R*0.38, c.y + R*0.3, R*0.5*pulse, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = "#0d0924"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(c.x, c.y, R * pulse, 0, Math.PI*2); ctx.stroke();
+  // lesser eyes, blinking out of sync
+  var eyes = [[-0.45,-0.4],[0.5,-0.35],[-0.15,0.5],[0.42,0.42],[-0.55,0.12],[0.1,-0.62]];
+  eyes.forEach(function(e, i){
+    var ex = c.x + e[0]*R, ey = c.y + e[1]*R;
+    var blink = (Math.sin(now * 0.0016 + i * 2.3) > -0.92) ? 1 : 0.15;
+    ctx.fillStyle = "#fff3d6";
+    ctx.beginPath(); ctx.ellipse(ex, ey, 7, 7*blink, 0, 0, Math.PI*2); ctx.fill();
+    if(blink > 0.5){
+      ctx.fillStyle = "#171208";
+      ctx.beginPath(); ctx.arc(ex, ey, 3, 0, Math.PI*2); ctx.fill();
+    }
+  });
+  // mouth: jagged maw
+  ctx.fillStyle = "#0d0924";
+  var my = c.y + R*0.55;
+  ctx.beginPath();
+  ctx.moveTo(c.x - R*0.4, my);
+  for(var txi=0; txi<=6; txi++){
+    ctx.lineTo(c.x - R*0.4 + (txi/6)*R*0.8, my + (txi % 2 === 0 ? 9 : 0));
+  }
+  ctx.lineTo(c.x + R*0.4, my + R*0.22);
+  ctx.lineTo(c.x - R*0.4, my + R*0.22);
+  ctx.closePath(); ctx.fill();
+  // the weak point: one burning eye, roaming the body
+  var wp = weakPos(now);
+  var covered = bossCovered(now);
+  var on = tr && tr.hit;
+  var wg = ctx.createRadialGradient(wp.x, wp.y, 2, wp.x, wp.y, 40);
+  wg.addColorStop(0, covered ? "rgba(255,107,94,0.25)" : "rgba(255,107,94,0.9)");
+  wg.addColorStop(1, "rgba(255,107,94,0)");
+  ctx.fillStyle = wg;
+  ctx.beginPath(); ctx.arc(wp.x, wp.y, 40, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = covered ? "#7a2d26" : "#ff6b5e";
+  ctx.beginPath(); ctx.arc(wp.x, wp.y, WEAK_R, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = "#171208"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(wp.x, wp.y, WEAK_R, 0, Math.PI*2); ctx.stroke();
+  ctx.fillStyle = "#fff3d6";
+  ctx.beginPath(); ctx.arc(wp.x, wp.y, on ? 5 : 8, 0, Math.PI*2); ctx.fill();
+  if(covered){
+    // tentacle band shielding the eye
+    ctx.strokeStyle = "#120c2e"; ctx.lineWidth = 15; ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(wp.x - 26, wp.y + 14);
+    ctx.quadraticCurveTo(wp.x, wp.y - 12, wp.x + 26, wp.y + 10);
+    ctx.stroke();
+  }
+  if(on){
+    ctx.strokeStyle = "#ffd23f"; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(wp.x, wp.y, WEAK_R + 7 + Math.sin(now*0.03)*2, 0, Math.PI*2); ctx.stroke();
+  }
+}
+requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
