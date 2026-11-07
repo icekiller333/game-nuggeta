@@ -3,50 +3,319 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Games in Development</title>
+<title>Game Nuggeta — Play the Games</title>
 <style>
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: system-ui, sans-serif; background: #1e1b2e; color: #fff; padding: 24px 16px 48px; }
-  h1 { margin: 0 0 8px; font-size: 28px; }
-  h2 { margin: 32px 0 16px; font-size: 22px; }
-  p { margin: 0 0 24px; color: #cfc8e8; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; max-width: 960px; }
-  a.card { display: block; padding: 28px 20px; text-decoration: none; color: #151515; font-weight: 800; font-size: 20px;
-    border: 3px solid #000; box-shadow: 6px 6px 0 #000; border-radius: 0; }
-  a.card span { display: block; margin-top: 8px; font-weight: 400; font-size: 14px; color: #333; }
-  a.card:nth-child(8n+1) { background: #ffd6e8; }
-  a.card:nth-child(8n+2) { background: #ffe66d; }
-  a.card:nth-child(8n+3) { background: #8dd9ff; }
-  a.card:nth-child(8n+4) { background: #b8f1a8; }
-  a.card:nth-child(8n+5) { background: #ffb26b; }
-  a.card:nth-child(8n+6) { background: #d3b3ff; }
-  a.card:nth-child(8n+7) { background: #7ef0d4; }
-  a.card:nth-child(8n+8) { background: #ff9fb2; }
-  a.card:active { transform: translate(3px, 3px); box-shadow: 3px 3px 0 #000; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #0d0a14;
+    color: #fff;
+    padding-bottom: 56px;
+    overflow-x: hidden;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    background: rgba(13, 10, 20, 0.92);
+    border-bottom: 3px solid #000;
+  }
+  .wordmark {
+    font-weight: 900; font-size: 22px; letter-spacing: 1px;
+    color: #ff2e63; text-transform: uppercase;
+    text-shadow: 2px 2px 0 #000;
+    white-space: nowrap;
+  }
+  .wordmark b { color: #ffe66d; }
+  .topbar .tagline {
+    margin-left: auto; font-size: 12px; font-weight: 700;
+    color: #cfc8e8; background: #1e1b2e; border: 2px solid #000;
+    padding: 4px 8px; box-shadow: 3px 3px 0 #000; white-space: nowrap;
+  }
+
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative;
+    margin: 0;
+    padding: 40px 20px 28px;
+    border-bottom: 3px solid #000;
+    overflow: hidden;
+    transition: background 0.5s ease;
+  }
+  .hero .big-emoji {
+    position: absolute; right: -10px; top: -30px;
+    font-size: 220px; line-height: 1; opacity: 0.35;
+    transform: rotate(12deg); pointer-events: none;
+    filter: drop-shadow(6px 6px 0 rgba(0,0,0,0.35));
+  }
+  .hero-inner { position: relative; max-width: 960px; margin: 0 auto; }
+  .hero .kicker {
+    display: inline-block; font-size: 12px; font-weight: 900; letter-spacing: 2px;
+    text-transform: uppercase; color: #151515; background: #ffe66d;
+    border: 2px solid #000; box-shadow: 3px 3px 0 #000; padding: 4px 10px;
+  }
+  .hero h1 {
+    margin: 16px 0 8px; font-size: clamp(34px, 9vw, 64px); line-height: 0.95;
+    font-weight: 900; text-shadow: 4px 4px 0 #000; max-width: 640px;
+  }
+  .hero p.pitch {
+    margin: 0 0 20px; font-size: clamp(15px, 4vw, 19px); font-weight: 600;
+    max-width: 520px; text-shadow: 2px 2px 0 rgba(0,0,0,0.45);
+  }
+  .hero .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .hero .meta span {
+    font-size: 12px; font-weight: 800; color: #fff; background: rgba(0,0,0,0.55);
+    border: 2px solid #000; padding: 4px 8px;
+  }
+  .play-btn {
+    display: inline-block; text-decoration: none; font-weight: 900; font-size: 18px;
+    color: #151515; background: #fff; border: 3px solid #000;
+    box-shadow: 6px 6px 0 #000; padding: 12px 28px;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .play-btn:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 #000; }
+  .play-btn:active { transform: translate(3px, 3px); box-shadow: 3px 3px 0 #000; }
+  .hero-dots { display: flex; gap: 8px; margin-top: 22px; }
+  .hero-dots button {
+    width: 26px; height: 8px; border: 2px solid #000; background: rgba(255,255,255,0.45);
+    padding: 0; cursor: pointer; box-shadow: 2px 2px 0 #000;
+  }
+  .hero-dots button.on { background: #ffe66d; }
+  .hero.fade .hero-inner { opacity: 0; }
+  .hero-inner { transition: opacity 0.25s ease; }
+
+  .hero-0 { background: linear-gradient(140deg, #ff5d8f 0%, #7b2fff 55%, #2b0a4d 100%); }
+  .hero-1 { background: linear-gradient(140deg, #ffb26b 0%, #c0392b 55%, #3d0f0a 100%); }
+
+  /* ---------- rows ---------- */
+  main { max-width: 1100px; margin: 0 auto; }
+  section.row { margin-top: 30px; }
+  section.row h2 {
+    margin: 0 0 4px 16px; font-size: 21px; font-weight: 900;
+    text-shadow: 2px 2px 0 #000;
+  }
+  section.row h2 .n { color: #ffe66d; }
+  section.row .row-sub {
+    margin: 0 0 12px 16px; font-size: 13px; color: #cfc8e8;
+  }
+  .rail {
+    display: flex; gap: 14px; overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 10px 16px 18px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .rail::-webkit-scrollbar { display: none; }
+
+  /* ---------- poster cards ---------- */
+  a.card {
+    flex: 0 0 188px; scroll-snap-align: start;
+    display: flex; flex-direction: column;
+    height: 262px; padding: 16px 14px 12px;
+    text-decoration: none; color: #151515;
+    border: 3px solid #000; border-radius: 0;
+    box-shadow: 5px 5px 0 #000;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    position: relative; overflow: hidden;
+  }
+  a.card:hover, a.card:focus-visible {
+    transform: translateY(-6px) scale(1.04);
+    box-shadow: 8px 12px 0 #000, 0 0 26px rgba(255, 230, 109, 0.55);
+    filter: saturate(1.15);
+    outline: none;
+  }
+  a.card:active { transform: translate(2px, 2px) scale(0.99); box-shadow: 3px 3px 0 #000; }
+  .card .emblem {
+    font-size: 58px; line-height: 1; text-align: center;
+    filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.3));
+    margin: 6px 0 12px;
+  }
+  .card h3 {
+    margin: 0 0 6px; font-size: 18px; font-weight: 900; line-height: 1.05;
+  }
+  .card .blurb {
+    margin: 0; font-size: 12.5px; line-height: 1.35; font-weight: 600;
+    color: rgba(21,21,21,0.82);
+  }
+  .card.dark .blurb { color: rgba(255,255,255,0.85); }
+  .card .tag {
+    margin-top: auto; align-self: flex-start;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
+    color: #fff; background: #000; padding: 4px 8px;
+  }
+  .card.dark { color: #fff; }
+  .card .play-hint {
+    position: absolute; top: 10px; right: 10px;
+    font-size: 11px; font-weight: 900; color: #151515;
+    background: #fff; border: 2px solid #000; padding: 2px 6px;
+    opacity: 0; transition: opacity 0.15s ease;
+  }
+  a.card:hover .play-hint, a.card:focus-visible .play-hint { opacity: 1; }
+
+  /* distinct poster per game */
+  .p-paper    { background: linear-gradient(165deg, #ffe66d, #ffb26b); }
+  .p-peel     { background: linear-gradient(165deg, #2b2350, #1b1440 45%, #8dd9ff); }
+  .p-yesno    { background: linear-gradient(165deg, #ffd6e8, #d3b3ff); }
+  .p-gladiator{ background: linear-gradient(165deg, #ff9fb2, #ff5d5d); }
+  .p-mud      { background: linear-gradient(165deg, #d9b380, #a06b2e); }
+  .p-mtd      { background: linear-gradient(165deg, #8dd9ff, #7ef0d4); }
+  .p-goat     { background: linear-gradient(165deg, #ffe66d, #b8f1a8); }
+  .p-goblins  { background: linear-gradient(165deg, #ff5d8f, #7b2fff); }
+  .p-find     { background: linear-gradient(165deg, #7ef0d4, #2fbf8f); }
+  .p-mirror   { background: linear-gradient(165deg, #f5e6ff, #ffd6e8); }
+  .p-post     { background: linear-gradient(165deg, #ffe66d, #ff9fb2); }
+  .p-archive  { background: linear-gradient(165deg, #3a2d6b, #0f0c22); }
+  .p-minotaur { background: linear-gradient(165deg, #ffb26b, #c0392b); }
+  .p-orbit    { background: linear-gradient(165deg, #8dd9ff, #b388ff); }
+  .p-bug      { background: linear-gradient(165deg, #b8f1a8, #2fbf8f); }
+  .p-shrink   { background: linear-gradient(165deg, #ff9fb2, #ffe66d); }
+  .p-brick    { background: linear-gradient(165deg, #ffb26b, #e2725b); }
+  .p-cow      { background: linear-gradient(165deg, #e8f7ff, #b8f1a8); }
+
+  footer {
+    margin: 36px 16px 0; text-align: center; color: #8f86ad; font-size: 13px;
+  }
+  footer b { color: #ffe66d; }
+
+  @media (max-width: 480px) {
+    .wordmark { font-size: 19px; }
+    .topbar .tagline { display: none; }
+    a.card { flex-basis: 158px; height: 248px; padding: 12px 12px 10px; }
+    .card .emblem { font-size: 50px; }
+    .card h3 { font-size: 16px; }
+    .hero .big-emoji { font-size: 150px; top: -14px; }
+    section.row h2 { font-size: 19px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+    html { scroll-behavior: auto; }
+  }
 </style>
 </head>
 <body>
-<h1>Games in Development</h1>
-<p>Click a game to play it.</p>
-<div class="grid">
-  <a class="card" href="paper-route/index.html">Paper Route<span>In development</span></a>
-  <a class="card" href="peel-the-moon/index.html">Peel the Moon<span>In development</span></a>
-  <a class="card" href="yes-no-town-rpg/index.html">Yes/No Town RPG<span>In development</span></a>
-  <a class="card" href="gladiator-timing-combat-turn-based/index.html">Gladiator Timing Combat<span>Turn-based</span></a>
-  <a class="card" href="mud-golem/index.html">Mud Golem<span>In development</span></a>
-  <a class="card" href="monster-tap-defense/index.html">Monster Tap Defense<span>In development</span></a>
-  <a class="card" href="scape-goat/index.html">Scape Goat<span>In development</span></a>
-  <a class="card" href="kill-a-billion-goblins-to-marry-my-daughter/index.html">Kill a Billion Goblins<span>In development</span></a>
-  <a class="card" href="find-the-mad-goblin/index.html">Find the Mad Goblin<span>In development</span></a>
-  <a class="card" href="daily-roguelike-mirrorlight-2026-10-27/index.html">Mirrorlight<span>Daily roguelike</span></a>
-  <a class="card" href="daily-roguelike-the-last-post-2026-10-28/index.html">The Last Post<span>Daily roguelike</span></a>
-  <a class="card" href="daily-roguelike-the-dark-archive-2026-10-29/index.html">The Dark Archive<span>In development</span></a>
-  <a class="card" href="the-minotaur-s-maze/index.html">The Minotaur's Maze<span>In development</span></a>
-</div>
-<h2>Graduated demos</h2>
-<div class="grid">
-  <a class="card" href="brick-by-brick/index.html">Brick by Brick<span>Graduated demo</span></a>
-  <a class="card" href="spot-the-cow/index.html">Spot the Cow<span>Graduated demo</span></a>
-</div>
+
+<header class="topbar">
+  <div class="wordmark">Game <b>Nuggeta</b></div>
+  <div class="tagline">tiny games, big weird energy</div>
+</header>
+
+<section class="hero hero-0" id="hero" aria-label="Featured game">
+  <div class="big-emoji" id="heroEmoji" aria-hidden="true">👺</div>
+  <div class="hero-inner" id="heroInner">
+    <span class="kicker" id="heroKicker">★ Featured — the flagship</span>
+    <h1 id="heroTitle">Kill a Billion Goblins</h1>
+    <p class="pitch" id="heroPitch">The king set an impossible task: slay one billion goblins to marry the princess. So get slaying.</p>
+    <div class="meta" id="heroMeta"><span>Idle / automation</span><span>1,000,000,000 goblins</span><span>One wedding</span></div>
+    <a class="play-btn" id="heroPlay" href="kill-a-billion-goblins-to-marry-my-daughter/index.html">▶ Play now</a>
+    <div class="hero-dots" role="tablist" aria-label="Featured games">
+      <button class="on" data-i="0" aria-label="Kill a Billion Goblins"></button>
+      <button data-i="1" aria-label="The Minotaur's Maze"></button>
+    </div>
+  </div>
+</section>
+
+<main>
+  <section class="row">
+    <h2><span class="n">▸</span> In Development</h2>
+    <p class="row-sub">Fresh from the workshop — swipe through and tap one to play.</p>
+    <div class="rail">
+      <a class="card p-paper" href="paper-route/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">📰</span><h3>Paper Route</h3><p class="blurb">Toss papers, dodge dogs, own the morning route.</p><span class="tag">In development</span></a>
+      <a class="card p-peel dark" href="peel-the-moon/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🌙</span><h3>Peel the Moon</h3><p class="blurb">Peel back the night, one glowing layer at a time.</p><span class="tag">In development</span></a>
+      <a class="card p-yesno" href="yes-no-town-rpg/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🏘️</span><h3>Yes/No Town RPG</h3><p class="blurb">A town where every answer is yes or no. Choose wrong and the bell rings.</p><span class="tag">In development</span></a>
+      <a class="card p-gladiator" href="gladiator-timing-combat-turn-based/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">⚔️</span><h3>Gladiator Timing Combat</h3><p class="blurb">Turn-based arena duels won on perfect timing.</p><span class="tag">Turn-based</span></a>
+      <a class="card p-mud" href="mud-golem/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🪨</span><h3>Mud Golem</h3><p class="blurb">Dig mud, stack golems, pillage the town.</p><span class="tag">In development</span></a>
+      <a class="card p-mtd" href="monster-tap-defense/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">👾</span><h3>Monster Tap Defense</h3><p class="blurb">Tap the horde before it reaches your house.</p><span class="tag">In development</span></a>
+      <a class="card p-goat" href="scape-goat/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🐐</span><h3>Scape Goat</h3><p class="blurb">One goat, a hail of arrows, and very good timing.</p><span class="tag">In development</span></a>
+      <a class="card p-goblins dark" href="kill-a-billion-goblins-to-marry-my-daughter/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">👺</span><h3>Kill a Billion Goblins</h3><p class="blurb">Slay a billion goblins. Marry the princess.</p><span class="tag">In development</span></a>
+      <a class="card p-find" href="find-the-mad-goblin/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🔍</span><h3>Find the Mad Goblin</h3><p class="blurb">One mad goblin hides in the pass. Beat the odds, find him.</p><span class="tag">In development</span></a>
+      <a class="card p-archive dark" href="daily-roguelike-the-dark-archive-2026-10-29/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🏮</span><h3>The Dark Archive</h3><p class="blurb">Sweep the lantern. Find six clues before the oil runs out.</p><span class="tag">In development</span></a>
+      <a class="card p-minotaur" href="the-minotaur-s-maze/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🐂</span><h3>The Minotaur's Maze</h3><p class="blurb">You are the minotaur. Build the maze. Hunt the intruders.</p><span class="tag">In development</span></a>
+      <a class="card p-orbit" href="orbit-gardener/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🪐</span><h3>Orbit Gardener</h3><p class="blurb">Grow starflowers on a tiny planet, then rocket to the moon.</p><span class="tag">In development</span></a>
+      <a class="card p-bug" href="alien-bug-inspector/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🐛</span><h3>Alien Bug Inspector</h3><p class="blurb">Customs for the weird: find the alien bugs, stamp PASS.</p><span class="tag">In development</span></a>
+      <a class="card p-shrink" href="shrink-ray/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🔬</span><h3>Shrink Ray</h3><p class="blurb">Hold near, never touch — shrink critters into the jar.</p><span class="tag">In development</span></a>
+    </div>
+  </section>
+
+  <section class="row">
+    <h2><span class="n">▸</span> Daily Roguelikes</h2>
+    <p class="row-sub">One new bite-sized roguelike a day.</p>
+    <div class="rail">
+      <a class="card p-mirror" href="daily-roguelike-mirrorlight-2026-10-27/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🪞</span><h3>Mirrorlight</h3><p class="blurb">Aim the dawn beam. Light seven floors before dark wins.</p><span class="tag">Daily roguelike</span></a>
+      <a class="card p-post" href="daily-roguelike-the-last-post-2026-10-28/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">✉️</span><h3>The Last Post</h3><p class="blurb">Sort thirty letters across five villages before the post is late.</p><span class="tag">Daily roguelike</span></a>
+    </div>
+  </section>
+
+  <section class="row">
+    <h2><span class="n">▸</span> Graduated Demos</h2>
+    <p class="row-sub">These ones made it out of the workshop.</p>
+    <div class="rail">
+      <a class="card p-brick" href="brick-by-brick/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🧱</span><h3>Brick by Brick</h3><p class="blurb">Bake bricks, build the wall, mind the hand.</p><span class="tag">Graduated demo</span></a>
+      <a class="card p-cow" href="spot-the-cow/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🐄</span><h3>Spot the Cow</h3><p class="blurb">One cow in the crowd. Spot it.</p><span class="tag">Graduated demo</span></a>
+    </div>
+  </section>
+</main>
+
+<footer>Made with <b>Game Nuggeta</b> — pick a card, any card.</footer>
+
+<script>
+(function () {
+  var featured = [
+    {
+      cls: 'hero-0', emoji: '👺', kicker: '★ Featured — the flagship',
+      title: "Kill a Billion Goblins",
+      pitch: 'The king set an impossible task: slay one billion goblins to marry the princess. So get slaying.',
+      meta: ['Idle / automation', '1,000,000,000 goblins', 'One wedding'],
+      href: 'kill-a-billion-goblins-to-marry-my-daughter/index.html'
+    },
+    {
+      cls: 'hero-1', emoji: '🐂', kicker: '★ Featured — first-person maze combat',
+      title: "The Minotaur's Maze",
+      pitch: 'You are the new minotaur. Build the maze, parry the intruders, and never let them escape.',
+      meta: ['3D maze-builder', 'Parry / block / deflect', 'Escape meter'],
+      href: 'the-minotaur-s-maze/index.html'
+    }
+  ];
+  var hero = document.getElementById('hero');
+  var emoji = document.getElementById('heroEmoji');
+  var kicker = document.getElementById('heroKicker');
+  var title = document.getElementById('heroTitle');
+  var pitch = document.getElementById('heroPitch');
+  var meta = document.getElementById('heroMeta');
+  var play = document.getElementById('heroPlay');
+  var dots = Array.prototype.slice.call(document.querySelectorAll('.hero-dots button'));
+  var i = 0, timer = null;
+
+  function show(n) {
+    i = n;
+    var f = featured[n];
+    hero.classList.add('fade');
+    setTimeout(function () {
+      hero.className = 'hero ' + f.cls;
+      emoji.textContent = f.emoji;
+      kicker.textContent = f.kicker;
+      title.textContent = f.title;
+      pitch.textContent = f.pitch;
+      meta.innerHTML = f.meta.map(function (m) { return '<span>' + m + '</span>'; }).join('');
+      play.href = f.href;
+      dots.forEach(function (d, di) { d.classList.toggle('on', di === n); });
+      hero.classList.remove('fade');
+    }, 260);
+  }
+  function next() { show((i + 1) % featured.length); }
+  function arm() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    clearInterval(timer);
+    timer = setInterval(next, 7000);
+  }
+  dots.forEach(function (d) {
+    d.addEventListener('click', function () { show(parseInt(d.getAttribute('data-i'), 10)); arm(); });
+  });
+  arm();
+})();
+</script>
 </body>
 </html>

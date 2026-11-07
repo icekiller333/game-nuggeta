@@ -1,0 +1,1194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Shrink Ray</title>
+    <style>
+      :root{
+        --ink:#161616;
+        --paper:#FFF3D6;
+        --bar:#FFE9A8;
+        --card:#FFFFFF;
+        --cardink:#161616;
+        --yellow:#FFD93D;
+        --pink:#FFB3C7;
+        --cyan:#7FE7F2;
+        --red:#FF6B6B;
+        --green:#8FE388;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --ink:#FFF3D6;
+          --paper:#191930;
+          --bar:#23234A;
+          --card:#26264A;
+          --cardink:#FFF3D6;
+        }
+      }
+      *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+      html,body{ height:100%; }
+      body{
+        margin:0;
+        font-family:"Trebuchet MS","Segoe UI",system-ui,-apple-system,sans-serif;
+        color:var(--ink);
+        background:var(--paper);
+        overflow:hidden;
+      }
+      #app{
+        position:fixed; inset:0; height:100dvh;
+        display:flex; flex-direction:column;
+        overflow:hidden; background:var(--paper);
+      }
+      /* ---------- HUD ---------- */
+      #hud{
+        display:flex; align-items:center; gap:8px;
+        padding:7px 10px;
+        border-bottom:3px solid var(--ink);
+        background:var(--bar);
+        z-index:6; flex:0 0 auto;
+      }
+      #lvBadge{
+        border:3px solid #161616; background:var(--yellow); color:#161616;
+        font-weight:900; font-size:16px; padding:3px 8px;
+        box-shadow:3px 3px 0 #161616; white-space:nowrap;
+      }
+      #jars{ display:flex; gap:5px; align-items:flex-end; margin:0 auto; }
+      .jar{
+        width:19px; height:26px; border:3px solid #161616;
+        background:#FFFFFF; position:relative; overflow:hidden;
+      }
+      .jar::before{
+        content:""; position:absolute; top:0; left:0; right:0; height:5px;
+        background:#161616;
+      }
+      .jar i{
+        position:absolute; left:0; right:0; bottom:0; height:0%;
+        background:var(--green); display:block;
+        transition:height .25s ease;
+      }
+      .jar.full i{ height:100%; }
+      #jars.wiggle{ animation:wig .4s ease; }
+      @keyframes wig{ 0%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 60%{transform:rotate(5deg)} 100%{transform:rotate(0)} }
+      #strikes{ display:flex; gap:4px; }
+      .stk{
+        width:24px; height:24px; border:3px solid #161616; background:#FFFFFF;
+        color:rgba(0,0,0,.18); font-weight:900; font-size:15px; line-height:19px;
+        text-align:center;
+      }
+      .stk.hit{ background:var(--red); color:#FFFFFF; }
+      #combo{
+        display:flex; align-items:center; gap:3px;
+        border:3px solid #161616; background:var(--yellow); color:#161616;
+        font-weight:900; font-size:16px; padding:2px 7px 2px 4px;
+        box-shadow:3px 3px 0 #161616; visibility:hidden; min-width:52px;
+        justify-content:center;
+      }
+      #combo.pop{ animation:cpop .3s ease; }
+      #combo.hot{ animation:chot .45s ease infinite alternate; }
+      @keyframes chot{ from{ transform:scale(1); background:var(--yellow);} to{ transform:scale(1.12); background:#FFC400;} }
+      @keyframes cpop{ 0%{transform:scale(1)} 40%{transform:scale(1.25)} 100%{transform:scale(1)} }
+      #gearBtn{
+        margin-left:auto; width:38px; height:38px; flex:0 0 auto;
+        border:3px solid #161616; background:var(--cyan); color:#161616;
+        box-shadow:3px 3px 0 #161616; cursor:pointer; padding:5px;
+      }
+      #gearBtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 #161616; }
+      #gearBtn svg{ display:block; width:100%; height:100%; }
+      /* ---------- Field ---------- */
+      #fieldWrap{ flex:1 1 auto; position:relative; overflow:hidden; }
+      canvas{
+        position:absolute; inset:0; width:100%; height:100%;
+        display:block; touch-action:none;
+      }
+      #flash{
+        position:absolute; inset:0; background:var(--yellow);
+        opacity:0; pointer-events:none; transition:opacity .35s ease;
+      }
+      #toast{
+        position:absolute; top:10px; left:50%; transform:translateX(-50%);
+        max-width:88%; background:#161616; color:#FFF3D6;
+        font-weight:900; font-size:16px; text-align:center;
+        padding:8px 14px; border:3px solid #161616;
+        box-shadow:4px 4px 0 rgba(0,0,0,.35);
+        display:none; z-index:8; pointer-events:none;
+      }
+      /* ---------- Overlays ---------- */
+      .ov{
+        position:absolute; inset:0; z-index:20;
+        display:none; align-items:center; justify-content:center;
+        background:rgba(20,16,40,.45); padding:18px;
+      }
+      .ov.show{ display:flex; }
+      .card{
+        background:var(--card); color:var(--cardink);
+        border:4px solid #161616; box-shadow:8px 8px 0 #161616;
+        padding:22px 20px; max-width:340px; width:100%; text-align:center;
+      }
+      .card h1{
+        margin:0 0 10px; font-size:40px; font-weight:900; letter-spacing:1px;
+        line-height:1.05; color:var(--cardink);
+      }
+      .card h2{ margin:0 0 10px; font-size:27px; font-weight:900; line-height:1.15; color:var(--cardink); }
+      .card p{ margin:0 0 16px; font-size:18px; font-weight:700; line-height:1.35; color:var(--cardink); }
+      .card .stats{ font-size:15px; font-weight:900; margin-bottom:16px; color:var(--cardink); }
+      .btn{
+        display:inline-block; border:3px solid #161616; background:var(--yellow);
+        color:#161616; font-family:inherit; font-weight:900; font-size:19px;
+        padding:12px 26px; cursor:pointer; box-shadow:5px 5px 0 #161616;
+        letter-spacing:.5px;
+      }
+      .btn:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 #161616; }
+      .btn.pink{ background:var(--pink); }
+      .btn.cyan{ background:var(--cyan); }
+      .btn.red{ background:var(--red); color:#161616; }
+      .btn.small{ font-size:16px; padding:9px 16px; }
+      .btnrow{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+      /* Tour */
+      #ovTour{ background:transparent; pointer-events:none; align-items:stretch; justify-content:flex-start; padding:0; }
+      #tourBox{
+        position:absolute; border:4px solid #FFC400;
+        box-shadow:0 0 0 4px rgba(0,0,0,.35), 0 0 0 9999px rgba(20,16,40,.45);
+        pointer-events:none; display:none;
+      }
+      #tourCard{
+        position:absolute; left:50%; transform:translateX(-50%); bottom:22px;
+        width:min(320px,88%); background:var(--card); color:var(--cardink);
+        border:4px solid #161616; box-shadow:7px 7px 0 #161616;
+        padding:16px; text-align:center; pointer-events:auto; display:none;
+      }
+      #tourCard p{ margin:0 0 12px; font-size:18px; font-weight:800; line-height:1.3; }
+      /* Settings */
+      .setrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+      .setrow span{ font-weight:900; font-size:17px; }
+      #abandonConfirm{ display:none; background:var(--pink); border:3px solid #161616; padding:12px; margin-bottom:14px; }
+      #abandonConfirm p{ margin:0 0 10px; font-size:16px; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="hud">
+        <div id="lvBadge">LV 1</div>
+        <div id="jars" aria-label="Jarred this level">
+          <div class="jar"><i></i></div>
+          <div class="jar"><i></i></div>
+          <div class="jar"><i></i></div>
+          <div class="jar"><i></i></div>
+          <div class="jar"><i></i></div>
+        </div>
+        <div id="strikes" aria-label="Strikes">
+          <div class="stk">✕</div>
+          <div class="stk">✕</div>
+          <div class="stk">✕</div>
+        </div>
+        <div id="combo" aria-label="Combo">
+          <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M12 1.8c.9 3.9-4.2 5.9-4.2 10A4.7 4.7 0 0 0 17.2 12c0-1.9-1-3-1-3s3.1 1.2 3.1 5a7.3 7.3 0 1 1-14.6 0C4.7 7.9 11 5.9 12 1.8z" fill="#E4572E" stroke="#161616" stroke-width="1.4"/></svg>
+          <span id="comboN">×2</span>
+        </div>
+        <button id="gearBtn" aria-label="Settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="#161616"><rect x="10.7" y="1.6" width="2.6" height="5.2"/><rect x="10.7" y="1.6" width="2.6" height="5.2" transform="rotate(45 12 12)"/><rect x="10.7" y="1.6" width="2.6" height="5.2" transform="rotate(90 12 12)"/><rect x="10.7" y="1.6" width="2.6" height="5.2" transform="rotate(135 12 12)"/><rect x="10.7" y="1.6" width="2.6" height="5.2" transform="rotate(180 12 12)"/><rect x="10.7" y="1.6" width="2.6" height="5.2" transform="rotate(225 12 12)"/><rect x="10.7" y="1.6" width="2.6" height="5.2" transform="rotate(270 12 12)"/><rect x="10.7" y="1.6" width="2.6" height="5.2" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="5.4"/></g><circle cx="12" cy="12" r="2.3" fill="#7FE7F2"/></svg>
+        </button>
+      </div>
+
+      <div id="fieldWrap">
+        <canvas id="cv"></canvas>
+        <div id="flash"></div>
+        <div id="toast"></div>
+      </div>
+
+      <div class="ov show" id="ovStart">
+        <div class="card">
+          <h1>SHRINK<br>RAY</h1>
+          <p id="startStats" class="stats" style="display:none"></p>
+          <button class="btn" id="playBtn">PLAY</button>
+          <div style="height:12px"></div>
+          <button class="btn small cyan" id="startSettingsBtn">SETTINGS</button>
+        </div>
+      </div>
+
+      <div class="ov" id="ovStory">
+        <div class="card">
+          <p id="storyText"></p>
+          <button class="btn" id="storyBtn">NEXT</button>
+        </div>
+      </div>
+
+      <div class="ov" id="ovHow">
+        <div class="card">
+          <p>Hold NEAR a critter to shrink it — never touch it!</p>
+          <button class="btn" id="howBtn">GOT IT</button>
+        </div>
+      </div>
+
+      <div class="ov" id="ovTour">
+        <div id="tourBox"></div>
+        <div id="tourCard">
+          <p id="tourText"></p>
+          <button class="btn small" id="tourBtn">NEXT</button>
+        </div>
+      </div>
+
+      <div class="ov" id="ovClear">
+        <div class="card">
+          <h2 id="clearTitle">LEVEL 1 CLEAR</h2>
+          <p id="chapterText"></p>
+          <button class="btn" id="nextLevelBtn">NEXT LEVEL</button>
+        </div>
+      </div>
+
+      <div class="ov" id="ovFail">
+        <div class="card">
+          <h2>The critters got away…</h2>
+          <button class="btn pink" id="retryBtn">RETRY LEVEL</button>
+        </div>
+      </div>
+
+      <div class="ov" id="ovSettings">
+        <div class="card">
+          <h2>SETTINGS</h2>
+          <div class="setrow">
+            <span>SOUND</span>
+            <button class="btn small cyan" id="soundBtn">ON</button>
+          </div>
+          <div id="abandonConfirm">
+            <p>Wipe all progress?</p>
+            <div class="btnrow">
+              <button class="btn small red" id="abandonYes">YES, WIPE</button>
+              <button class="btn small" id="abandonNo">CANCEL</button>
+            </div>
+          </div>
+          <div class="setrow" id="abandonRow">
+            <span>RUN</span>
+            <button class="btn small pink" id="abandonBtn">ABANDON RUN</button>
+          </div>
+          <button class="btn" id="settingsClose">DONE</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function(){
+    "use strict";
+    var $ = function(id){ return document.getElementById(id); };
+    function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+    function lerp(a,b,t){ return a+(b-a)*t; }
+    function rand(a,b){ return a+Math.random()*(b-a); }
+
+    /* ---------------- Save ---------------- */
+    var SKEY = "shrinkray-save-v1";
+    function freshSave(){ return { best:0, total:0, sound:true, played:false, seen:{} }; }
+    var save = freshSave();
+    try{
+      var raw = localStorage.getItem(SKEY);
+      if(raw){ var p = JSON.parse(raw); if(p && typeof p==="object"){ save = Object.assign(freshSave(), p); save.seen = p.seen||{}; } }
+    }catch(e){}
+    function persist(){ try{ localStorage.setItem(SKEY, JSON.stringify(save)); }catch(e){} }
+
+    /* ---------------- Audio ---------------- */
+    var AC = null, humOsc = null, humGain = null;
+    function ac(){
+      if(!save.sound) return null;
+      try{
+        if(!AC){ var Ctor = window.AudioContext || window.webkitAudioContext; if(!Ctor) return null; AC = new Ctor(); }
+        if(AC.state === "suspended"){ AC.resume(); }
+        return AC;
+      }catch(e){ return null; }
+    }
+    function tone(freq, dur, type, vol, delay, slideTo){
+      var ctx = ac(); if(!ctx) return;
+      try{
+        var t0 = ctx.currentTime + (delay||0);
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = type||"sine"; o.frequency.setValueAtTime(freq, t0);
+        if(slideTo){ o.frequency.exponentialRampToValueAtTime(slideTo, t0+dur); }
+        g.gain.setValueAtTime(vol||0.2, t0);
+        g.gain.exponentialRampToValueAtTime(0.001, t0+dur);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(t0); o.stop(t0+dur+0.05);
+      }catch(e){}
+    }
+    function sndClick(){ tone(640, 0.07, "square", 0.12); }
+    function sndPlink(){ tone(1046,0.12,"sine",0.25,0); tone(1318,0.12,"sine",0.25,0.06); tone(1760,0.2,"sine",0.28,0.12); }
+    function sndThud(){ tone(82, 0.28, "sine", 0.5); tone(55, 0.32, "triangle", 0.4, 0.02); }
+    function sndBoing(){ tone(170, 0.22, "sine", 0.3, 0, 540); }
+    function sndPop(){ tone(520, 0.08, "square", 0.3, 0, 90); tone(180, 0.22, "sawtooth", 0.28, 0.02, 40); tone(900, 0.06, "square", 0.18, 0); }
+    function startHum(){
+      var ctx = ac(); if(!ctx || humOsc) return;
+      try{
+        humOsc = ctx.createOscillator(); humGain = ctx.createGain();
+        var f = ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value = 900;
+        humOsc.type = "sawtooth"; humOsc.frequency.value = 75;
+        humGain.gain.value = 0.045;
+        humOsc.connect(f); f.connect(humGain); humGain.connect(ctx.destination);
+        humOsc.start();
+      }catch(e){ humOsc=null; humGain=null; }
+    }
+    function stopHum(){
+      if(humOsc){ try{ humOsc.stop(); }catch(e){} try{ humOsc.disconnect(); }catch(e){} humOsc=null; }
+      if(humGain){ try{ humGain.disconnect(); }catch(e){} humGain=null; }
+    }
+    function updateHum(c){
+      if(humOsc && AC){
+        var fr = 90;
+        if(c){ fr = 70 + (1 - c.r/c.r0)*320; }
+        try{ humOsc.frequency.setTargetAtTime(fr, AC.currentTime, 0.03); }catch(e){}
+      }
+    }
+
+    /* ---------------- Game state ---------------- */
+    var CATCH_R = 12;
+    var BOUNCES_PER_CREATURE = 3;
+    var FIELD_RADIUS = 90;
+    /* Hopper jumps: base range 40–70px (was a flat 70–110px teleport).
+       Distance scales INVERSELY with the frog's size fraction (r/r0):
+       a full-size frog (r/r0 = 1) hops the SHORTEST (~40px, stays inside
+       the field), a nearly-caught frog (r/r0 → CATCH_R/r0) hops the
+       LONGEST (~70px) — the challenge grows as it shrinks. */
+    var HOP_MIN = 40;
+    var HOP_MAX = 70;
+    /* While a hopper is airborne the field still shrinks it (never zero),
+       but at this fraction of the field's normal efficiency. */
+    var AIRBORNE_SHRINK_MULT = 0.5;
+    /* Regrow (a creature outside the field puffs back toward r0):
+       radius multiplies by (1 + REGROW_RATE * regrowMult() * dt) per second.
+       Level ladder for regrowMult(): L1 0.5×, L2 0.6×, L3 0.7×, L4 0.8×,
+       L5 0.9×, L6+ 1.0× (the original full rate). */
+    var REGROW_RATE = 0.25;
+    var REGROW_EARLY_MULT = 0.5;
+    var REGROW_LEVEL_STEP = 0.1;
+    var TYPES = {
+      waddler:   { r0:38, shrink:0.30, speed:55 },
+      zigzagger: { r0:32, shrink:0.26, speed:80 },
+      hopper:    { r0:30, shrink:0.26, speed:0  }
+    };
+    var CHAPTERS = [
+      "Shelf one is full of tiny jars. The shop breathes easier.",
+      "A note on the counter: \u201CThey chew through everything. Hurry.\u201D",
+      "You find critter tracks in the flour by the register.",
+      "The bell over the door jingles. Nothing came in. Something went out.",
+      "Deeper shelves, darker corners \u2014 they are learning the shop.",
+      "A jar on the top shelf is already full. You don\u2019t remember filling it.",
+      "The critters have started watching you work.",
+      "Whatever sleeps in the back room is awake now. Keep shrinking."
+    ];
+    var TEACH = {
+      zig:     "Zigzaggers dart \u2014 keep the field on them!",
+      hopper:  "Frogs shrink mid-jump, but weaker!",
+      release: "It puffs back up when the field leaves it!",
+      blowup:  "TOO CLOSE!"
+    };
+
+    var cv = $("cv"), ctx2d = cv.getContext("2d");
+    var wrap = $("fieldWrap");
+    var W = 300, H = 400, DPR = 1;
+
+    var level = 1, jarred = 0, strikes = 0, combo = 0;
+    var creatures = [], particles = [], sparks = [], floaters = [];
+    var field = { active:false, x:0, y:0, pointerId:null };
+    var pointer = { x:0, y:0, down:false };
+    var holdHadCatch = false, catchesThisHold = 0;
+    var tourDemoActive = false;
+    var tourDemoField = { x:0, y:0 };
+    var paused = true, started = false;
+    var nextId = 1, time = 0, shake = 0;
+    var spawnTimer = 0, endTimer = -1, endKind = null;
+    var tourStep = -1, settingsReturn = "start";
+
+    function levelSpeedF(){ return 1 + 0.08*(level-1); }
+    function levelShrinkF(){ return Math.max(0.70, 1 - 0.04*(level-1)); }
+    function regrowMult(){ return Math.min(1, REGROW_EARLY_MULT + REGROW_LEVEL_STEP*(level-1)); }
+    function maxConc(){ return level===1 ? 1 : 2; }
+    function speedMult(c){ return 1 + (1 - c.r/c.r0)*0.9; }
+    function fieldEff(dist){ return clamp(1 - 0.5*(dist/FIELD_RADIUS), 0.5, 1); }
+    function findCreature(id){ for(var i=0;i<creatures.length;i++){ if(creatures[i].id===id) return creatures[i]; } return null; }
+
+    /* ---------------- HUD ---------------- */
+    var jarEls = document.querySelectorAll("#jars .jar");
+    var stkEls = document.querySelectorAll("#strikes .stk");
+    function updateHUD(){
+      $("lvBadge").textContent = "LV " + level;
+      for(var i=0;i<jarEls.length;i++){ jarEls[i].classList.toggle("full", i<jarred); }
+      for(var j=0;j<stkEls.length;j++){ stkEls[j].classList.toggle("hit", j<strikes); }
+      var cb = $("combo");
+      cb.style.visibility = combo>=2 ? "visible" : "hidden";
+      cb.classList.toggle("hot", combo>=3);
+      $("comboN").textContent = "\u00D7" + combo;
+    }
+    function refreshStartStats(){
+      var el = $("startStats");
+      if(save.best>0 || save.total>0){
+        el.style.display = "block";
+        el.textContent = "BEST LV " + Math.max(1,save.best) + " \u00B7 JARRED " + save.total;
+      } else { el.style.display = "none"; }
+    }
+
+    /* ---------------- Overlays ---------------- */
+    var OV = ["ovStart","ovStory","ovHow","ovTour","ovClear","ovFail","ovSettings"];
+    function showOv(id){
+      for(var i=0;i<OV.length;i++){ $(OV[i]).classList.toggle("show", OV[i]===id); }
+      paused = !!id;
+      if(id !== "ovTour"){ tourStep = -1; tourDemoActive = false; $("tourBox").style.display="none"; $("tourCard").style.display="none"; }
+    }
+    function anyOv(){ for(var i=0;i<OV.length;i++){ if($(OV[i]).classList.contains("show")) return OV[i]; } return null; }
+
+    /* ---------------- Teachings (queued toasts) ---------------- */
+    var teachQueue = [], toastBusy = false;
+    function queueTeach(key){
+      if(save.seen[key]) return;
+      save.seen[key] = true; persist();
+      teachQueue.push(TEACH[key]);
+      pumpToast();
+    }
+    function pumpToast(){
+      if(toastBusy) return;
+      if(anyOv()){ setTimeout(pumpToast, 400); return; }
+      var msg = teachQueue.shift();
+      if(!msg) return;
+      toastBusy = true;
+      var t = $("toast");
+      t.textContent = msg; t.style.display = "block";
+      setTimeout(function(){
+        t.style.display = "none"; toastBusy = false;
+        setTimeout(pumpToast, 250);
+      }, 2500);
+    }
+
+    /* ---------------- Creatures ---------------- */
+    function spawnCreature(type){
+      var T = TYPES[type]; if(!T) return null;
+      var c = {
+        id: nextId++, type: type,
+        x: rand(W*0.28, W*0.72), y: rand(H*0.28, H*0.72),
+        r: T.r0, r0: T.r0,
+        dead:false, inField:false, danger:false,
+        bouncesLeft: BOUNCES_PER_CREATURE, bounceT:0, eff:0, perfect:false, pendingBounce:false,
+        seed: Math.random()*100, age:0,
+        tx:0, ty:0, ang: rand(0, Math.PI*2), dirT: rand(0.6,1.2),
+        hopT: rand(0.9,1.4), hopping:false, hopP:0,
+        fx:0, fy:0, hx:0, hy:0, escapeJump:false, arc:0
+      };
+      if(type==="waddler"){
+        var edge = Math.floor(Math.random()*4);
+        if(edge===0){ c.tx = rand(0,W); c.ty = -20; }
+        else if(edge===1){ c.tx = W+20; c.ty = rand(0,H); }
+        else if(edge===2){ c.tx = rand(0,W); c.ty = H+20; }
+        else { c.tx = -20; c.ty = rand(0,H); }
+      }
+      if(type==="zigzagger"){
+        var a = Math.atan2(H/2 - c.y, W/2 - c.x);
+        c.ang = a + rand(-0.6, 0.6);
+      }
+      creatures.push(c);
+      return c;
+    }
+    function pickType(){
+      if(level===1){
+        if(jarred<2) return "waddler";
+        if(!save.seen.zig){ queueTeach("zig"); return "zigzagger"; }
+        return Math.random()<0.5 ? "waddler" : "zigzagger";
+      }
+      if(!save.seen.hopper){ queueTeach("hopper"); return "hopper"; }
+      var r = Math.random();
+      return r<0.40 ? "waddler" : (r<0.72 ? "zigzagger" : "hopper");
+    }
+    function spawnNext(){ return spawnCreature(pickType()); }
+
+    function blowUpCreature(c){
+      if(!c || c.dead) return;
+      c.dead = true;
+      sndPop();
+      shake = 7;
+      for(var i=0;i<22;i++){
+        var a = rand(0, Math.PI*2), sp = rand(40,170);
+        particles.push({ x:c.x, y:c.y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, r:rand(3,8), life:0.6, max:0.6 });
+      }
+      floaters.push({ x:c.x, y:c.y-14, t:0, text:"POP!" });
+      strikes++; updateHUD();
+      if(!save.seen.blowup){ queueTeach("blowup"); }
+      if(strikes>=3 && endTimer<0){ endTimer = 0.55; endKind = "fail"; }
+    }
+    function pressField(x, y, pid){
+      if(field.active) return false;
+      pointer.x = x; pointer.y = y; pointer.down = true;
+      /* blow-up checked on press ONLY */
+      for(var i=0;i<creatures.length;i++){
+        var c = creatures[i];
+        if(c.dead || c.hopping) continue;
+        var d = Math.hypot(x - c.x, y - (c.y - (c.arc||0)));
+        if(d <= c.r){ pointer.down = false; blowUpCreature(c); return false; }
+      }
+      field.active = true; field.x = x; field.y = y; field.pointerId = (pid!=null?pid:null);
+      catchesThisHold = 0;
+      startHum();
+      return true;
+    }
+    function moveField(x, y){
+      pointer.x = x; pointer.y = y;
+      if(field.active){ field.x = x; field.y = y; }
+    }
+    function releaseField(){
+      var wasActive = field.active;
+      field.active = false; field.pointerId = null;
+      pointer.down = false;
+      stopHum();
+      if(wasActive){
+        /* combo is per unbroken hold */
+        combo = 0; catchesThisHold = 0; updateHUD();
+        for(var i=0;i<creatures.length;i++){
+          if(creatures[i].r < creatures[i].r0*0.985){ queueTeach("release"); break; }
+        }
+      }
+    }
+    /* legacy alias used by older hooks */
+    function releasePointer(){ releaseField(); }
+    function catchCreature(c){
+      c.dead = true;
+      jarred++; save.total++;
+      if(save.best < level){ save.best = level; }
+      persist();
+      if(field.active){
+        catchesThisHold++;
+        combo = catchesThisHold;
+        if(combo>=3) comboFlash();
+        if(combo>=2){ var cb=$("combo"); cb.classList.remove("pop"); void cb.offsetWidth; cb.classList.add("pop"); }
+      }
+      updateHUD();
+      sndPlink();
+      var jars = $("jars"); jars.classList.remove("wiggle"); void jars.offsetWidth; jars.classList.add("wiggle");
+      floaters.push({ x:c.x, y:c.y-10, t:0, text:"+1" });
+      for(var i=0;i<14;i++){
+        var a = rand(0, Math.PI*2), sp = rand(30,110);
+        particles.push({ x:c.x, y:c.y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, r:rand(3,7), life:0.55, max:0.55 });
+      }
+      if(jarred>=5 && endTimer<0){ endTimer = 0.7; endKind = "clear"; }
+    }
+    function escapeCreature(c){
+      c.dead = true;
+      strikes++; updateHUD();
+      shake = 9; sndThud();
+      if(strikes>=3 && endTimer<0){ endTimer = 0.55; endKind = "fail"; }
+    }
+    function comboFlash(){
+      var f = $("flash");
+      f.style.transition = "none"; f.style.opacity = "0.4";
+      requestAnimationFrame(function(){
+        f.style.transition = "opacity .35s ease"; f.style.opacity = "0";
+      });
+    }
+
+    function startJump(c){
+      /* Shorter hops, scaled by size: full-size frog → ~HOP_MIN,
+         nearly-caught frog → ~HOP_MAX (see constants note). */
+      var sizeFrac = clamp(c.r / c.r0, 0, 1);
+      var a = rand(0, Math.PI*2), d = (HOP_MIN + (HOP_MAX - HOP_MIN)*(1 - sizeFrac)) * rand(0.9, 1.1);
+      c.fx = c.x; c.fy = c.y;
+      c.hx = c.x + Math.cos(a)*d; c.hy = c.y + Math.sin(a)*d;
+      c.pendingBounce = false;
+      c.hopping = true; c.hopP = 0;
+      c.escapeJump = (c.hx < 10 || c.hx > W-10 || c.hy < 10 || c.hy > H-10);
+    }
+    function edgeBounce(c, hitX, hitY){
+      if(c.bouncesLeft > 0) c.bouncesLeft--;
+      c.bounceT = 0.22;
+      if(c.type === "waddler"){
+        if(hitX){ c.tx = c.x < W/2 ? W+20 : -20; c.ty = rand(0, H); }
+        if(hitY){ c.ty = c.y < H/2 ? H+20 : -20; c.tx = rand(0, W); }
+      } else if(c.type === "zigzagger"){
+        if(hitX) c.ang = Math.PI - c.ang;
+        if(hitY) c.ang = -c.ang;
+        c.dirT = Math.max(c.dirT, 0.35);
+      }
+    }
+    function newZigAngle(c){
+      var a = rand(0, Math.PI*2);
+      var fx = c.x + Math.cos(a)*80, fy = c.y + Math.sin(a)*80;
+      if(fx < 46 || fx > W-46 || fy < 46 || fy > H-46){
+        a = Math.atan2(H/2 - c.y, W/2 - c.x) + rand(-0.7, 0.7);
+      }
+      c.ang = a; c.dirT = rand(0.6, 1.2);
+    }
+
+    function updateCreature(c, dt){
+      c.age += dt;
+      if(c.bounceT > 0) c.bounceT = Math.max(0, c.bounceT - dt);
+      var T = TYPES[c.type];
+      /* movement */
+      if(c.type==="hopper"){
+        if(c.hopping){
+          c.hopP += dt/0.22;
+          if(c.hopP >= 1){
+            c.hopping = false; c.arc = 0;
+            if(c.escapeJump){
+              if(c.bouncesLeft <= 0){ escapeCreature(c); return; }
+              c.bouncesLeft--; c.bounceT = 0.22;
+              c.x = clamp(c.hx, 10, W-10); c.y = clamp(c.hy, 10, H-10);
+            } else {
+              c.x = c.hx; c.y = c.hy;
+              if(c.pendingBounce){
+                c.pendingBounce = false;
+                if(c.bouncesLeft > 0) c.bouncesLeft--;
+                c.bounceT = 0.22;
+              }
+            }
+            c.hopT = rand(0.9, 1.4) / speedMult(c);
+          } else {
+            c.x = lerp(c.fx, c.hx, c.hopP);
+            c.y = lerp(c.fy, c.hy, c.hopP);
+            c.arc = Math.sin(c.hopP*Math.PI)*30;
+          }
+        } else {
+          c.hopT -= dt;
+          if(c.hopT <= 0) startJump(c);
+        }
+      } else {
+        var spd = T.speed * levelSpeedF() * speedMult(c);
+        if(c.type==="waddler"){
+          var dx = c.tx - c.x, dy = c.ty - c.y, len = Math.hypot(dx,dy)||1;
+          c.x += dx/len*spd*dt; c.y += dy/len*spd*dt;
+        } else {
+          c.dirT -= dt;
+          if(c.dirT <= 0) newZigAngle(c);
+          c.x += Math.cos(c.ang)*spd*dt; c.y += Math.sin(c.ang)*spd*dt;
+        }
+        var hitX = c.x < 10 || c.x > W-10;
+        var hitY = c.y < 10 || c.y > H-10;
+        if(hitX || hitY){
+          if(c.bouncesLeft <= 0){ escapeCreature(c); return; }
+          c.x = clamp(c.x, 10, W-10); c.y = clamp(c.y, 10, H-10);
+          edgeBounce(c, hitX, hitY);
+        }
+      }
+      /* shrink / regrow — field model */
+      var fActive = field.active || tourDemoActive;
+      var fx = tourDemoActive ? tourDemoField.x : field.x;
+      var fy = tourDemoActive ? tourDemoField.y : field.y;
+      var dist = fActive ? Math.hypot(fx - c.x, fy - (c.y - (c.arc||0))) : 1e9;
+      /* Hoppers shrink while airborne too — no more unholdable mid-jump. */
+      c.inField = fActive && dist <= FIELD_RADIUS;
+      c.danger = field.active && dist <= c.r + 20;
+      if(c.inField){
+        c.eff = fieldEff(dist);
+        if(c.hopping) c.eff *= AIRBORNE_SHRINK_MULT;
+        c.perfect = dist <= FIELD_RADIUS*0.25;
+        var rate = T.shrink * levelShrinkF() * c.eff;
+        c.r *= Math.max(0, 1 - rate*dt);
+        updateHum(c);
+        if(Math.random() < dt*9){
+          var pa = rand(0, Math.PI*2);
+          particles.push({ x:c.x+Math.cos(pa)*c.r*0.8, y:c.y+Math.sin(pa)*c.r*0.8, vx:rand(-8,8), vy:rand(-16,-4), r:rand(4,7), life:0.5, max:0.5 });
+        }
+        if(c.r <= CATCH_R){ catchCreature(c); return; }
+      } else {
+        c.eff = 0; c.perfect = false;
+        if(c.r < c.r0){ c.r = Math.min(c.r0, c.r*(1 + REGROW_RATE*regrowMult()*dt)); }
+      }
+    }
+
+    /* ---------------- Level flow ---------------- */
+    function resetLevel(){
+      jarred = 0; strikes = 0; combo = 0; catchesThisHold = 0;
+      creatures = []; particles = []; sparks = []; floaters = [];
+      field.active = false; field.pointerId = null; pointer.down = false; tourDemoActive = false; stopHum();
+      endTimer = -1; endKind = null; spawnTimer = 0;
+      updateHUD();
+      var guard = 0;
+      while(creatures.length < maxConc() && guard++ < 4){ spawnNext(); }
+    }
+    function doClear(){
+      endTimer = -1;
+      if(save.best < level+1){ /* best updated on next-level entry */ }
+      $("clearTitle").textContent = "LEVEL " + level + " CLEAR";
+      $("chapterText").textContent = CHAPTERS[(level-1) % CHAPTERS.length];
+      showOv("ovClear");
+      sndPlink();
+    }
+    function doFail(){
+      endTimer = -1;
+      showOv("ovFail");
+      sndThud();
+    }
+    function nextLevel(){
+      level++;
+      if(save.best < level){ save.best = level; persist(); }
+      resetLevel();
+      showOv(null);
+    }
+    function retryLevel(){
+      resetLevel();
+      showOv(null);
+    }
+
+    /* ---------------- Drawing ---------------- */
+    function drawEyes(c, ex, ey, er, panicked){
+      ctx2d.fillStyle = "#FFFFFF"; ctx2d.strokeStyle = "#161616"; ctx2d.lineWidth = 2;
+      var offs = [-ex, ex];
+      for(var i=0;i<2;i++){
+        var cxp = offs[i], cyp = ey;
+        if(panicked){
+          ctx2d.beginPath(); ctx2d.arc(cxp, cyp, er, 0, Math.PI*2); ctx2d.fill(); ctx2d.stroke();
+          ctx2d.fillStyle = "#161616";
+          ctx2d.beginPath(); ctx2d.arc(cxp, cyp+er*0.15, er*0.42, 0, Math.PI*2); ctx2d.fill();
+          ctx2d.fillStyle = "#FFFFFF";
+        } else if(c.type==="waddler"){
+          ctx2d.strokeStyle = "#161616"; ctx2d.lineWidth = 2.6;
+          ctx2d.beginPath(); ctx2d.arc(cxp, cyp, er, Math.PI*0.15, Math.PI*0.85); ctx2d.stroke();
+          ctx2d.strokeStyle = "#161616";
+        } else {
+          ctx2d.beginPath(); ctx2d.arc(cxp, cyp, er*0.52, 0, Math.PI*2); ctx2d.fillStyle="#161616"; ctx2d.fill();
+          ctx2d.fillStyle = "#FFFFFF";
+        }
+      }
+    }
+    function drawCreature(c){
+      var pop = clamp(c.age/0.18, 0, 1);
+      ctx2d.save();
+      ctx2d.translate(c.x, c.y - (c.arc||0));
+      if(c.inField){
+        var glowA = c.perfect ? clamp(1 - Math.hypot((field.active?field.x:tourDemoField.x)-c.x,(field.active?field.y:tourDemoField.y)-c.y)/(FIELD_RADIUS*0.25),0.25,1) : clamp((c.eff - 0.5)*2, 0, 1)*0.6;
+        if(glowA > 0.02){
+          var gg = ctx2d.createRadialGradient(0, 0, c.r*0.4, 0, 0, c.r*2.1);
+          gg.addColorStop(0, "rgba(255,196,0," + (0.65*glowA).toFixed(3) + ")");
+          gg.addColorStop(1, "rgba(255,196,0,0)");
+          ctx2d.fillStyle = gg;
+          ctx2d.beginPath(); ctx2d.arc(0, 0, c.r*2.1, 0, Math.PI*2); ctx2d.fill();
+        }
+      }
+      if(c.danger && Math.floor(time*8)%2===0){
+        ctx2d.fillStyle = "rgba(255,40,40,0.35)";
+        ctx2d.beginPath(); ctx2d.arc(0, 0, c.r+7, 0, Math.PI*2); ctx2d.fill();
+        ctx2d.strokeStyle = "#FF2222"; ctx2d.lineWidth = 3;
+        ctx2d.beginPath(); ctx2d.arc(0, 0, c.r+7, 0, Math.PI*2); ctx2d.stroke();
+      }
+      if(c.hopping){
+        ctx2d.save();
+        ctx2d.translate(0, (c.arc||0));
+        ctx2d.fillStyle = "rgba(0,0,0,.18)";
+        ctx2d.beginPath(); ctx2d.ellipse(0, c.r*0.95, c.r*0.7, c.r*0.22, 0, 0, Math.PI*2); ctx2d.fill();
+        ctx2d.restore();
+      }
+      var sq = c.inField ? Math.sin(time*24 + c.seed)*0.11 : Math.sin(time*3 + c.seed)*0.03;
+      var rot = 0;
+      if(c.type==="zigzagger") rot = Math.sin(time*2.2 + c.seed)*0.35;
+      else if(c.type==="waddler") rot = Math.sin(time*2 + c.seed)*0.08;
+      if(c.inField) rot += Math.sin(time*31 + c.seed)*0.16;
+      var bsq = c.bounceT > 0 ? Math.sin((c.bounceT/0.22)*Math.PI)*0.32 : 0;
+      ctx2d.rotate(rot);
+      ctx2d.scale((1+sq+bsq)*pop, (1-sq-bsq)*pop);
+      var r = c.r, ink = "#161616";
+      ctx2d.lineWidth = 3; ctx2d.strokeStyle = ink;
+      if(c.type==="waddler"){
+        ctx2d.fillStyle = "#7A4FD0";
+        ctx2d.beginPath(); ctx2d.ellipse(-r*0.45, r*0.86, r*0.30, r*0.16, 0, 0, Math.PI*2); ctx2d.fill(); ctx2d.stroke();
+        ctx2d.beginPath(); ctx2d.ellipse( r*0.45, r*0.86, r*0.30, r*0.16, 0, 0, Math.PI*2); ctx2d.fill(); ctx2d.stroke();
+        ctx2d.fillStyle = "#B388FF";
+        ctx2d.beginPath(); ctx2d.arc(0, 0, r, 0, Math.PI*2); ctx2d.fill(); ctx2d.stroke();
+        ctx2d.fillStyle = "#D6BCFA";
+        ctx2d.beginPath(); ctx2d.ellipse(0, r*0.30, r*0.55, r*0.42, 0, 0, Math.PI*2); ctx2d.fill();
+        drawEyes(c, r*0.34, -r*0.14, Math.max(2.4, r*0.17), c.inField);
+        ctx2d.strokeStyle = ink; ctx2d.lineWidth = 2.2;
+        ctx2d.beginPath(); ctx2d.arc(0, r*0.18, r*0.16, Math.PI*1.15, Math.PI*1.85); ctx2d.stroke();
+      } else if(c.type==="zigzagger"){
+        var verts = [], i, a;
+        for(i=0;i<3;i++){ a = -Math.PI/2 + i*2*Math.PI/3; verts.push([Math.cos(a)*r, Math.sin(a)*r]); }
+        ctx2d.fillStyle = "#FF9F2E";
+        ctx2d.beginPath();
+        for(i=0;i<3;i++){
+          var A = verts[i], B = verts[(i+1)%3];
+          var dx = B[0]-A[0], dy = B[1]-A[1], ln = Math.hypot(dx,dy)||1;
+          var nx = dy/ln, ny = -dx/ln;
+          if(i===0) ctx2d.moveTo(A[0], A[1]); else ctx2d.lineTo(A[0], A[1]);
+          ctx2d.lineTo(A[0]+dx*0.33+nx*r*0.24, A[1]+dy*0.33+ny*r*0.24);
+          ctx2d.lineTo(A[0]+dx*0.50-nx*r*0.04, A[1]+dy*0.50-ny*r*0.04);
+          ctx2d.lineTo(A[0]+dx*0.66+nx*r*0.24, A[1]+dy*0.66+ny*r*0.24);
+        }
+        ctx2d.closePath(); ctx2d.fill(); ctx2d.stroke();
+        ctx2d.strokeStyle = ink; ctx2d.lineWidth = 3;
+        ctx2d.beginPath(); ctx2d.moveTo(-r*0.52, -r*0.34); ctx2d.lineTo(-r*0.10, -r*0.20); ctx2d.stroke();
+        ctx2d.beginPath(); ctx2d.moveTo( r*0.52, -r*0.34); ctx2d.lineTo( r*0.10, -r*0.20); ctx2d.stroke();
+        drawEyes(c, r*0.30, -r*0.02, Math.max(2.4, r*0.17), c.inField);
+        ctx2d.lineWidth = 2.2;
+        ctx2d.beginPath();
+        ctx2d.moveTo(-r*0.24, r*0.42);
+        ctx2d.lineTo(-r*0.08, r*0.30); ctx2d.lineTo(r*0.08, r*0.42); ctx2d.lineTo(r*0.24, r*0.30);
+        ctx2d.stroke();
+      } else { /* hopper */
+        ctx2d.strokeStyle = ink; ctx2d.lineWidth = 2.6;
+        var side;
+        for(side=-1; side<=1; side+=2){
+          ctx2d.beginPath();
+          var bx = side*r*0.72, by = r*0.55;
+          ctx2d.moveTo(bx, by);
+          ctx2d.lineTo(bx + side*r*0.20, by + r*0.14);
+          ctx2d.lineTo(bx - side*r*0.05, by + r*0.26);
+          ctx2d.lineTo(bx + side*r*0.22, by + r*0.38);
+          ctx2d.stroke();
+        }
+        ctx2d.fillStyle = "#58C24A";
+        ctx2d.beginPath(); ctx2d.ellipse(0, r*0.08, r*0.92, r*0.82, 0, 0, Math.PI*2); ctx2d.fill(); ctx2d.stroke();
+        ctx2d.fillStyle = "#BDF0AC";
+        ctx2d.beginPath(); ctx2d.ellipse(0, r*0.34, r*0.52, r*0.38, 0, 0, Math.PI*2); ctx2d.fill();
+        ctx2d.fillStyle = "#58C24A"; ctx2d.strokeStyle = ink; ctx2d.lineWidth = 3;
+        ctx2d.beginPath(); ctx2d.arc(-r*0.36, -r*0.62, r*0.30, 0, Math.PI*2); ctx2d.fill(); ctx2d.stroke();
+        ctx2d.beginPath(); ctx2d.arc( r*0.36, -r*0.62, r*0.30, 0, Math.PI*2); ctx2d.fill(); ctx2d.stroke();
+        ctx2d.fillStyle = "#FFFFFF";
+        ctx2d.beginPath(); ctx2d.arc(-r*0.36, -r*0.62, r*0.21, 0, Math.PI*2); ctx2d.fill();
+        ctx2d.beginPath(); ctx2d.arc( r*0.36, -r*0.62, r*0.21, 0, Math.PI*2); ctx2d.fill();
+        ctx2d.fillStyle = ink;
+        var pr = Math.max(1.8, r*0.10);
+        ctx2d.beginPath(); ctx2d.arc(-r*0.36, -r*0.60, pr, 0, Math.PI*2); ctx2d.fill();
+        ctx2d.beginPath(); ctx2d.arc( r*0.36, -r*0.60, pr, 0, Math.PI*2); ctx2d.fill();
+        ctx2d.strokeStyle = ink; ctx2d.lineWidth = 2.2;
+        ctx2d.beginPath(); ctx2d.arc(0, r*0.05, r*0.30, Math.PI*0.15, Math.PI*0.85); ctx2d.stroke();
+      }
+      ctx2d.restore();
+      /* target ring (pocket size) */
+      ctx2d.save();
+      ctx2d.translate(c.x, c.y - (c.arc||0));
+      ctx2d.strokeStyle = "#C77F00"; ctx2d.lineWidth = 2;
+      ctx2d.setLineDash([4,3]);
+      ctx2d.beginPath(); ctx2d.arc(0, 0, CATCH_R, 0, Math.PI*2); ctx2d.stroke();
+      ctx2d.setLineDash([]);
+      if(c.inField){
+        var prog = clamp((c.r0 - c.r)/(c.r0 - CATCH_R), 0, 1);
+        ctx2d.lineWidth = 5;
+        ctx2d.strokeStyle = "#161616";
+        ctx2d.beginPath(); ctx2d.arc(0, 0, c.r + 10, -Math.PI/2, -Math.PI/2 + prog*Math.PI*2); ctx2d.stroke();
+        ctx2d.strokeStyle = "#FFC400"; ctx2d.lineWidth = 3;
+        ctx2d.beginPath(); ctx2d.arc(0, 0, c.r + 10, -Math.PI/2, -Math.PI/2 + prog*Math.PI*2); ctx2d.stroke();
+      }
+      ctx2d.restore();
+      /* bounce pips */
+      var pipY = c.y - (c.arc||0) - c.r - 15;
+      for(var pi=0; pi<BOUNCES_PER_CREATURE; pi++){
+        var pipX = c.x + (pi - (BOUNCES_PER_CREATURE-1)/2)*15;
+        ctx2d.beginPath(); ctx2d.arc(pipX, pipY, 5, 0, Math.PI*2);
+        ctx2d.fillStyle = pi < c.bouncesLeft ? "#FFC400" : "rgba(22,22,22,.28)";
+        ctx2d.fill();
+        ctx2d.strokeStyle = "#161616"; ctx2d.lineWidth = 1.8; ctx2d.stroke();
+      }
+      if(c.inField && c.perfect){
+        ctx2d.font = "900 13px 'Trebuchet MS', sans-serif";
+        ctx2d.textAlign = "center";
+        ctx2d.lineWidth = 4; ctx2d.strokeStyle = "#161616";
+        ctx2d.strokeText("PERFECT", c.x, pipY - 11);
+        ctx2d.fillStyle = "#FFC400";
+        ctx2d.fillText("PERFECT", c.x, pipY - 11);
+      }
+    }
+    function drawFieldAt(fx, fy){
+      ctx2d.save();
+      /* fill first — creatures draw on top, never covered */
+      ctx2d.fillStyle = "rgba(127,231,242,0.22)";
+      ctx2d.beginPath(); ctx2d.arc(fx, fy, FIELD_RADIUS, 0, Math.PI*2); ctx2d.fill();
+      ctx2d.fillStyle = "rgba(255,201,0,0.14)";
+      ctx2d.beginPath(); ctx2d.arc(fx, fy, FIELD_RADIUS*0.25, 0, Math.PI*2); ctx2d.fill();
+      ctx2d.strokeStyle = "#161616"; ctx2d.lineWidth = 5;
+      ctx2d.beginPath(); ctx2d.arc(fx, fy, FIELD_RADIUS, 0, Math.PI*2); ctx2d.stroke();
+      ctx2d.strokeStyle = "#00A8B5"; ctx2d.lineWidth = 3;
+      ctx2d.beginPath(); ctx2d.arc(fx, fy, FIELD_RADIUS, 0, Math.PI*2); ctx2d.stroke();
+      ctx2d.strokeStyle = "#C77F00"; ctx2d.lineWidth = 2; ctx2d.setLineDash([5,4]);
+      ctx2d.beginPath(); ctx2d.arc(fx, fy, FIELD_RADIUS*0.25, 0, Math.PI*2); ctx2d.stroke();
+      ctx2d.setLineDash([]);
+      ctx2d.fillStyle = "#FF6B6B"; ctx2d.strokeStyle = "#161616"; ctx2d.lineWidth = 2.5;
+      ctx2d.beginPath(); ctx2d.arc(fx, fy, 6, 0, Math.PI*2); ctx2d.fill(); ctx2d.stroke();
+      ctx2d.restore();
+    }
+    function drawField(){
+      if(field.active) drawFieldAt(field.x, field.y);
+      if(tourDemoActive) drawFieldAt(tourDemoField.x, tourDemoField.y);
+    }
+    function render(){
+      ctx2d.setTransform(DPR,0,0,DPR,0,0);
+      var ox = 0, oy = 0;
+      if(shake > 0.3){ ox = rand(-shake,shake)*0.5; oy = rand(-shake,shake)*0.5; }
+      ctx2d.translate(ox, oy);
+      ctx2d.fillStyle = "#B9F0C9";
+      ctx2d.fillRect(-12, -12, W+24, H+24);
+      ctx2d.fillStyle = "rgba(22,22,22,.10)";
+      var gx, gy;
+      for(gx=18; gx<W; gx+=36){ for(gy=18; gy<H; gy+=36){ ctx2d.beginPath(); ctx2d.arc(gx, gy, 2, 0, Math.PI*2); ctx2d.fill(); } }
+      ctx2d.strokeStyle = "#161616"; ctx2d.lineWidth = 3;
+      ctx2d.strokeRect(1.5, 1.5, W-3, H-3);
+      var i, c;
+      drawField();
+      for(i=0;i<creatures.length;i++) drawCreature(creatures[i]);
+      for(i=0;i<particles.length;i++){
+        var p = particles[i], al = clamp(p.life/p.max, 0, 1);
+        ctx2d.globalAlpha = al*0.85;
+        ctx2d.fillStyle = "#FFFFFF";
+        ctx2d.beginPath(); ctx2d.arc(p.x, p.y, Math.max(0.5, p.r*al), 0, Math.PI*2); ctx2d.fill();
+      }
+      ctx2d.globalAlpha = 1;
+      for(i=0;i<sparks.length;i++){
+        var s = sparks[i];
+        ctx2d.strokeStyle = "#FFE93D"; ctx2d.lineWidth = 2;
+        ctx2d.beginPath();
+        ctx2d.moveTo(s.x-4, s.y); ctx2d.lineTo(s.x+4, s.y);
+        ctx2d.moveTo(s.x, s.y-4); ctx2d.lineTo(s.x, s.y+4);
+        ctx2d.stroke();
+      }
+      for(i=0;i<floaters.length;i++){
+        var f = floaters[i];
+        ctx2d.font = "900 24px 'Trebuchet MS', sans-serif";
+        ctx2d.textAlign = "center";
+        ctx2d.globalAlpha = clamp(1 - f.t/0.9, 0, 1);
+        ctx2d.lineWidth = 5; ctx2d.strokeStyle = "#FFFFFF";
+        ctx2d.strokeText(f.text, f.x, f.y);
+        ctx2d.fillStyle = "#161616";
+        ctx2d.fillText(f.text, f.x, f.y);
+      }
+      ctx2d.globalAlpha = 1;
+    }
+
+    /* ---------------- Main loop ---------------- */
+    var lastTs = 0;
+    function loop(ts){
+      requestAnimationFrame(loop);
+      var dt = Math.min(0.033, (ts - lastTs)/1000 || 0.016);
+      lastTs = ts;
+      time += dt;
+      if(shake > 0.3) shake *= Math.pow(0.02, dt); else shake = 0;
+      /* tour demo: step 2 shrinks a creature in view even while paused */
+      if(paused && tourDemoActive && creatures.length){
+        var dc = creatures[0];
+        if(dc && !dc.dead){
+          var dd = Math.hypot(tourDemoField.x - dc.x, tourDemoField.y - dc.y);
+          dc.inField = dd <= FIELD_RADIUS; dc.perfect = dd <= FIELD_RADIUS*0.25; dc.eff = fieldEff(dd);
+          dc.r = Math.max(CATCH_R+4, dc.r * (1 - 0.18*dt));
+        }
+        for(var pi2=particles.length-1;pi2>=0;pi2--){ particles[pi2].life-=dt; if(particles[pi2].life<=0) particles.splice(pi2,1); }
+      }
+      if(!paused && started){
+        if(endTimer > 0){
+          endTimer -= dt;
+          if(endTimer <= 0){ if(endKind==="clear") doClear(); else doFail(); }
+        }
+        for(var i=creatures.length-1;i>=0;i--){
+          updateCreature(creatures[i], dt);
+          if(creatures[i].dead) creatures.splice(i,1);
+        }
+        if(endTimer < 0 && jarred < 5){
+          if(creatures.length < maxConc()){
+            spawnTimer -= dt;
+            if(spawnTimer <= 0){ spawnNext(); spawnTimer = 0.45; }
+          }
+        }
+        for(var j=particles.length-1;j>=0;j--){ var p=particles[j]; p.life-=dt; p.x+=p.vx*dt; p.y+=p.vy*dt; if(p.life<=0) particles.splice(j,1); }
+        for(var k=sparks.length-1;k>=0;k--){ sparks[k].life-=dt; if(sparks[k].life<=0) sparks.splice(k,1); }
+        for(var m=floaters.length-1;m>=0;m--){ floaters[m].t+=dt; floaters[m].y-=42*dt; if(floaters[m].t>0.9) floaters.splice(m,1); }
+      }
+      render();
+    }
+
+    /* ---------------- Sizing ---------------- */
+    function fit(){
+      var r = wrap.getBoundingClientRect();
+      W = Math.max(200, r.width); H = Math.max(200, r.height);
+      DPR = Math.min(2, window.devicePixelRatio||1);
+      cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+      for(var i=0;i<creatures.length;i++){
+        creatures[i].x = clamp(creatures[i].x, 20, W-20);
+        creatures[i].y = clamp(creatures[i].y, 20, H-20);
+      }
+    }
+    window.addEventListener("resize", fit);
+
+    /* ---------------- Pointer input ---------------- */
+    function evPos(e){
+      var r = cv.getBoundingClientRect();
+      return { x:e.clientX - r.left, y:e.clientY - r.top };
+    }
+    cv.addEventListener("pointerdown", function(e){
+      ac();
+      if(paused || !started) return;
+      if(field.active) return;
+      e.preventDefault();
+      var p = evPos(e);
+      try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+      pressField(p.x, p.y, e.pointerId);
+    });
+    cv.addEventListener("pointermove", function(e){
+      if(field.active && field.pointerId!=null && e.pointerId!==field.pointerId) return;
+      var p = evPos(e);
+      moveField(p.x, p.y);
+    });
+    function onPointerEnd(e){
+      if(field.active && field.pointerId!=null && e.pointerId!==field.pointerId) return;
+      releaseField();
+    }
+    cv.addEventListener("pointerup", onPointerEnd);
+    cv.addEventListener("pointercancel", onPointerEnd);
+    cv.addEventListener("pointerleave", function(e){ if(field.active) releaseField(); });
+
+    /* ---------------- Tour ---------------- */
+    var TOUR = [
+      { text:"Press-and-hold an EMPTY spot \u2014 this ring is your shrink field.", target:"field" },
+      { text:"Hold the field NEAR a critter \u2014 watch it shrink in full view. Closer to the center is faster!", target:"critter" },
+      { text:"Touch a critter and it BLOWS UP! Keep your press off the critter \u2014 near, never on.", target:"critter" }
+    ];
+    function tourShow(step){
+      tourStep = step;
+      tourDemoActive = false;
+      var box = $("tourBox"), card = $("tourCard");
+      $("tourText").textContent = TOUR[step].text;
+      $("tourBtn").textContent = step===TOUR.length-1 ? "GO!" : "NEXT";
+      var appR = $("app").getBoundingClientRect();
+      var rect;
+      if(TOUR[step].target==="field"){ rect = wrap.getBoundingClientRect(); }
+      else if(TOUR[step].target==="jars"){ rect = $("jars").getBoundingClientRect(); }
+      else {
+        var c = creatures[0];
+        if(c){
+          var cr = cv.getBoundingClientRect();
+          rect = { left:cr.left + c.x - 62, top:cr.top + c.y - 62, width:124, height:124 };
+          if(step===1){
+            /* demo field offset from creature so it shrinks in view */
+            tourDemoField.x = clamp(c.x + 42, FIELD_RADIUS*0.4, W - FIELD_RADIUS*0.4);
+            tourDemoField.y = clamp(c.y - 10, 30, H - 30);
+            tourDemoActive = true;
+          }
+        } else { rect = wrap.getBoundingClientRect(); }
+      }
+      box.style.display = "block";
+      box.style.left = (rect.left - appR.left - 5) + "px";
+      box.style.top = (rect.top - appR.top - 5) + "px";
+      box.style.width = (rect.width + 10) + "px";
+      box.style.height = (rect.height + 10) + "px";
+      card.style.display = "block";
+    }
+    $("tourBtn").addEventListener("click", function(){
+      sndClick();
+      if(tourStep < TOUR.length-1){ tourShow(tourStep+1); }
+      else { tourDemoActive = false; /* reset demo-shrunk creature */ if(creatures[0]){ creatures[0].r = creatures[0].r0; creatures[0].inField=false; creatures[0].perfect=false; creatures[0].eff=0; } showOv(null); }
+    });
+
+    /* ---------------- Flow wiring ---------------- */
+    var storyStep = 0; // 0 welcome, 1 card1, 2 card2
+    $("playBtn").addEventListener("click", function(){
+      ac(); sndClick();
+      if(save.played){
+        storyStep = 0;
+        $("storyText").textContent = "Welcome back. The critters are loose again.";
+        $("storyBtn").textContent = "CONTINUE";
+        showOv("ovStory");
+      } else {
+        storyStep = 1;
+        $("storyText").textContent = "You found a shrink ray in the back of the shop.";
+        $("storyBtn").textContent = "NEXT";
+        showOv("ovStory");
+      }
+    });
+    $("storyBtn").addEventListener("click", function(){
+      sndClick();
+      if(storyStep === 0){
+        startRun(false);
+      } else if(storyStep === 1){
+        storyStep = 2;
+        $("storyText").textContent = "The critters got loose. Jar them all.";
+        $("storyBtn").textContent = "START";
+      } else {
+        showOv("ovHow");
+      }
+    });
+    $("howBtn").addEventListener("click", function(){
+      sndClick();
+      save.played = true; persist();
+      startRun(true);
+    });
+    function startRun(withTour){
+      started = true;
+      level = 1;
+      resetLevel();
+      if(withTour){ showOv("ovTour"); tourShow(0); }
+      else { showOv(null); }
+    }
+    $("nextLevelBtn").addEventListener("click", function(){ sndClick(); nextLevel(); pumpToast(); });
+    $("retryBtn").addEventListener("click", function(){ sndClick(); retryLevel(); pumpToast(); });
+
+    /* ---------------- Settings ---------------- */
+    function openSettings(from){
+      settingsReturn = from;
+      $("soundBtn").textContent = save.sound ? "ON" : "OFF";
+      $("abandonConfirm").style.display = "none";
+      $("abandonRow").style.display = "flex";
+      showOv("ovSettings");
+    }
+    $("gearBtn").addEventListener("click", function(){ ac(); sndClick(); openSettings(anyOv()==="ovStart" ? "start" : "game"); });
+    $("startSettingsBtn").addEventListener("click", function(){ ac(); sndClick(); openSettings("start"); });
+    $("soundBtn").addEventListener("click", function(){
+      save.sound = !save.sound; persist();
+      $("soundBtn").textContent = save.sound ? "ON" : "OFF";
+      if(!save.sound) stopHum();
+      sndClick();
+    });
+    $("abandonBtn").addEventListener("click", function(){
+      sndClick();
+      $("abandonConfirm").style.display = "block";
+      $("abandonRow").style.display = "none";
+    });
+    $("abandonNo").addEventListener("click", function(){
+      sndClick();
+      $("abandonConfirm").style.display = "none";
+      $("abandonRow").style.display = "flex";
+    });
+    $("abandonYes").addEventListener("click", function(){
+      sndClick();
+      var keepSound = save.sound;
+      save = freshSave(); save.sound = keepSound; persist();
+      started = false; level = 1;
+      creatures = []; field.active = false; field.pointerId = null; stopHum();
+      jarred = 0; strikes = 0; combo = 0; updateHUD();
+      refreshStartStats();
+      showOv("ovStart");
+    });
+    $("settingsClose").addEventListener("click", function(){
+      sndClick();
+      if(settingsReturn === "start" && !started){ showOv("ovStart"); }
+      else if(started){ showOv(null); }
+      else { showOv("ovStart"); }
+      pumpToast();
+    });
+
+    /* ---------------- Test hooks ---------------- */
+    function shrinkState(){
+      return {
+        level: level, jarred: jarred, totalJarred: save.total,
+        strikes: strikes, combo: combo, started: started, paused: paused,
+        overlay: anyOv(),
+        field: { active: field.active, x: Math.round(field.x), y: Math.round(field.y), radius: FIELD_RADIUS },
+        creatures: creatures.map(function(c){
+          return { id:c.id, x:Math.round(c.x), y:Math.round(c.y), r:Math.round(c.r*10)/10, r0:c.r0, type:c.type, hopping:c.hopping, bouncesLeft:c.bouncesLeft, eff:Math.round((c.eff||0)*100)/100, perfect:!!c.perfect, inField:!!c.inField, danger:!!c.danger };
+        })
+      };
+    }
+    window.__shrink = {
+      state: function(){ return shrinkState(); },
+      press: function(x, y){ return pressField(x, y, 999); },
+      move: function(x, y){ moveField(x, y); },
+      release: function(){ releaseField(); },
+      spawn: function(type){ var c = spawnCreature(type); return c ? c.id : null; },
+      /* legacy aliases */
+      startHoldOn: function(id){
+        var c = findCreature(id); if(!c) return false;
+        /* offset press so it does not blow up: place field center near creature */
+        return pressField(c.x + c.r + 12, c.y, 999);
+      },
+      moveHold: function(x, y){ moveField(x, y); },
+      endHold: function(){ releaseField(); },
+      clearLevel: function(){ jarred = 5; updateHUD(); doClear(); },
+      failLevel: function(){ strikes = 3; updateHUD(); doFail(); }
+    };
+
+    /* ---------------- Boot ---------------- */
+    fit();
+    refreshStartStats();
+    updateHUD();
+    showOv("ovStart");
+    requestAnimationFrame(loop);
+    setTimeout(fit, 60);
+    })();
+    </script>
+  </body>
+</html>
