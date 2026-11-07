@@ -71,7 +71,8 @@ h1,h2,.disp{font-family:var(--disp);font-weight:400;letter-spacing:.01em;line-he
 .cardZone{flex:1;min-height:0;position:relative;z-index:3;margin:14px 0 10px}
 
 /* ---------- CARDS: fixed 300x236 design, scaled into a grid ---------- */
-.cw{position:absolute;left:0;top:0;width:300px;height:236px;transform-origin:0 0;transition:transform .55s cubic-bezier(.2,1,.3,1);touch-action:none;cursor:grab;outline:none}
+.cw{position:absolute;left:0;top:0;width:300px;height:236px;transform-origin:0 0;transition:transform .55s cubic-bezier(.2,1,.3,1),opacity .4s ease;touch-action:none;cursor:grab;outline:none}
+.cw.you.rz{transition:transform .8s cubic-bezier(.3,.9,.25,1),opacity .4s ease}
 .cw:active{cursor:grabbing}
 .cw .card{position:absolute;inset:0;perspective:900px}
 .cw .card.dealing{animation:deal .5s cubic-bezier(.2,1.4,.4,1)}
@@ -105,6 +106,20 @@ h1,h2,.disp{font-family:var(--disp);font-weight:400;letter-spacing:.01em;line-he
 .gob svg{width:100%;flex:1;min-height:0;display:block;overflow:visible}
 .gob.hurt svg{animation:wob .45s ease}@keyframes wob{25%{transform:rotate(-7deg) translateX(-3px)}60%{transform:rotate(5deg)}}
 .gob.dead{opacity:0}.gob.back{filter:brightness(.92)}
+.gob.gen{display:none}
+.sil{position:absolute;transform:translateX(-50%);aspect-ratio:.86;display:flex}
+.sil svg{width:100%;height:100%;display:block;overflow:visible;filter:brightness(0) opacity(.38)}
+html.g3d .cave .sil svg{visibility:hidden}
+.hordeRow.lineRow{display:block;position:relative;padding-top:0}
+.lineRow .soloGob{position:absolute;left:50%;bottom:0;height:100%;transform:translateX(-50%);aspect-ratio:.86}
+.frameFx{position:absolute;inset:0;pointer-events:none;z-index:1}
+.frameFx svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.frameFx.skl i{position:absolute;display:block;width:22px;height:22px}.frameFx.skl svg{position:static;width:100%;height:100%;filter:drop-shadow(0 0 3px rgba(170,110,255,.9))}
+.face.l-spiky{border-color:#1f6a2a}.face.l-shaman{border-color:#5a2a9a}.face.l-swift{border-color:#9ab50f}.face.l-brute{border-color:#8a3a1a}.face.l-goldskin{border-color:#b67700}.face.l-elite{border-color:#8e1630}
+html.g3d .cw .face.l-spiky::before{border-color:rgba(70,200,100,.8)}html.g3d .cw .face.l-shaman::before{border-color:rgba(175,120,255,.85)}
+html.g3d .cw.you .face.l-spiky{box-shadow:inset 0 0 0 2px rgba(70,200,100,.6),0 0 0 3px #1f8a3a,0 0 24px 4px rgba(40,170,80,.55)}
+html.g3d .cw.you .face.l-shaman{box-shadow:inset 0 0 0 2px rgba(175,120,255,.6),0 0 0 3px #7a3fc0,0 0 24px 4px rgba(140,80,230,.55)}
+html.g3d .cw .face.l-elite{background:linear-gradient(180deg,rgba(255,120,120,.18),rgba(200,30,50,.05))!important}
 .hp{width:84%;height:10px;border:2px solid var(--ink);border-radius:999px;background:#2A1630;overflow:hidden;margin-top:2px;flex:none}
 .hp i{display:block;height:100%;background:linear-gradient(#B6F04A,#5FA312);border-radius:999px;transition:width .2s}
 .hp.low i{background:linear-gradient(#FFB36B,#E0661A)}
@@ -286,6 +301,12 @@ h1,h2,.disp{font-family:var(--disp);font-weight:400;letter-spacing:.01em;line-he
 .typeFx b{font-family:var(--disp);font-weight:400;font-size:15px;display:block}
 .achRow{display:flex;gap:10px;align-items:center}.achRow .ico{opacity:.35;filter:grayscale(1)}.ach.done .achRow .ico{opacity:1;filter:none}
 .draft{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 2px}
+.rtile{border:var(--line);border-radius:16px;background:linear-gradient(#FFF8E6,#F3DDB0);color:#2A1630;padding:12px 4px 10px;box-shadow:0 4px 0 var(--ink);display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--disp);font-size:14px;line-height:1.15;animation:mIn .4s backwards;transition:transform .12s,box-shadow .12s,opacity .12s}
+.rtile:nth-child(2){animation-delay:.08s}.rtile:nth-child(3){animation-delay:.16s}
+.rtile.sel{background:linear-gradient(#FFF3B8,#FFD24A);transform:translateY(-4px) scale(1.04);box-shadow:0 8px 0 var(--ink),0 0 0 4px var(--teal)}
+.rtile.dim{opacity:.7}
+.draftInfo{min-height:74px;text-align:left;margin:10px 0 8px}.draftInfo b{display:block;font-size:16px}.draftInfo .plus{display:block;margin-top:4px;font-size:12px;color:#11826B;font-weight:900}
+#draftOk{width:100%}#draftOk:disabled{opacity:.5}
 .rcard{border:var(--line);border-radius:14px;background:linear-gradient(#FFF8E6,#F3DDB0);color:#2A1630;padding:10px 6px;box-shadow:0 4px 0 var(--ink);display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;line-height:1.3;animation:mIn .4s backwards}
 .rcard:nth-child(2){animation-delay:.08s}.rcard:nth-child(3){animation-delay:.16s}
 .rcard b{font-family:var(--disp);font-weight:400;font-size:15px}
@@ -354,7 +375,7 @@ html.g3d .cw .face.l-goldskin::after{display:block;border:none;background:linear
 html.g3d .cw .face.l-shaman{background:linear-gradient(180deg,rgba(201,166,255,.2),rgba(120,60,200,.05))!important}
 html.g3d .cw .face.l-brute{background:linear-gradient(180deg,rgba(255,170,130,.16),rgba(200,90,50,.04))!important}
 html.g3d .cw .face.l-swift{background:linear-gradient(180deg,rgba(230,255,140,.16),rgba(180,220,60,.04))!important}
-html.g3d .cw .face.l-spiky{background:linear-gradient(180deg,rgba(140,255,200,.16),rgba(60,200,130,.04))!important}
+html.g3d .cw .face.l-spiky{background:linear-gradient(180deg,rgba(60,170,90,.26),rgba(20,90,40,.1))!important}
 html.g3d .cw .face.l-rune{background:linear-gradient(180deg,rgba(127,227,255,.18),rgba(30,40,100,.12))!important}
 html.g3d .cw.you .face{box-shadow:inset 0 0 0 2px rgba(255,226,122,.55),0 0 0 3px #F6BE1E,0 0 24px 4px rgba(246,190,30,.45)}
 html.g3d .corner{color:#FBEFD5;-webkit-text-stroke:4px #2A1630;paint-order:stroke fill}
@@ -437,8 +458,10 @@ input.sw:focus-visible,input[type=range]:focus-visible{outline:3px solid var(--g
 #advStory p.advText{text-align:left;font-size:15.5px;line-height:1.55;margin:8px 0 12px}
 .advQuote{font-family:var(--disp);font-size:19px;line-height:1.2;background:var(--panel2);border:2.5px solid var(--ink);border-radius:12px;padding:10px 12px;transform:rotate(-1deg)}
 
-/* goblin quips linger half a second longer so they can be read */
-.flt.quip{animation-duration:1.4s}
+/* goblin quips: 1.9s on screen, fully readable for most of it, then a short fade */
+@keyframes fltq{0%{transform:translate(-50%,-30%) scale(.5);opacity:0}12%{transform:translate(-50%,-70%) scale(1.15);opacity:1}72%{transform:translate(-50%,-135%) scale(1);opacity:1}100%{transform:translate(-50%,-190%) scale(1);opacity:0}}
+.flt.quip{animation-name:fltq;animation-duration:1.9s}
+.flt.loot{font-size:30px;color:#FFE27A;-webkit-text-stroke:6px #2A1630;animation-name:fltq;animation-duration:2.8s}
 
 /* hunter level chip */
 .lvlChip{align-self:center;margin-left:6px;font-family:var(--disp);font-size:13px;line-height:1;padding:4px 7px;border-radius:999px;background:var(--gold);color:#2A1630;border:2px solid var(--ink);white-space:nowrap}
@@ -582,7 +605,8 @@ button,.ctl,.tab,.buy,.hire,.mini,.gearBtn,.tBtn,.cta{touch-action:manipulation;
 <div class="overlay menuPop" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="setH"><div class="modal">
  <h2 id="setH">Settings</h2>
  <div class="setGroup"><h3>Audio</h3>
-  <label class="setRow"><span><b>Sound effects</b><small>Swipes, kills, coins and fanfares</small></span><input type="checkbox" class="sw" id="optSound"></label>
+  <label class="setRow"><span><b>Sound</b><small>Master switch for all audio</small></span><input type="checkbox" class="sw" id="optSound"></label>
+  <label class="setRow" id="musRow"><span><b>Music</b><small>Background tune. It gets busier when you frenzy</small></span><input type="checkbox" class="sw" id="optMusic"></label>
   <label class="setRow" id="volRow"><span><b>Volume</b><small id="volVal">100%</small></span><input type="range" id="optVol" min="0" max="100" step="5" aria-label="Volume"></label>
  </div>
  <div class="setGroup"><h3>Haptic feedback</h3>
@@ -761,6 +785,8 @@ button,.ctl,.tab,.buy,.hire,.mini,.gearBtn,.tBtn,.cta{touch-action:manipulation;
  <h2 id="draftTitle">Choose a relic</h2>
  <p id="draftText" style="font-size:14px"></p>
  <div class="draft" id="draft"></div>
+ <div class="info draftInfo" id="draftInfo"></div>
+ <button class="cta red" id="draftOk" disabled>Pick a relic</button>
 </div></div>
 <div class="overlay" id="winModal"><div class="modal">
  <div class="cast" id="castWin"></div>
@@ -836,6 +862,7 @@ var OVK_AT=[100000,1000000,200000000];var OVK_COSTS=[120000,6000000,6000000000];
 var OVK=[{f:0,k:0},{f:.5,k:1},{f:.75,k:10},{f:1,k:1e12}];
 var UPG_DEF=[];function buildUpg(){UPG_DEF.length=0;UPG_DEF.push(
  {id:"weapon",name:"Weapon Quality",base:30,growth:TUNE.wpnG,max:DMG_T.length-1},
+ {id:"crit",name:"Critical Strike",base:50,growth:4,max:10},
  {id:"sharp",name:"Sharpness",base:45,growth:1.6,max:18,per:2},
  {id:"heft",name:"Weight",base:55,growth:1.6,max:18,per:2},
  {id:"abyss",name:"Abyssal Might",base:724000000.0,growth:1.917,max:20,eper:2,endless:true},
@@ -857,7 +884,7 @@ var RELICS={
  midas:{name:"Midas Itch",desc:"Golden goblins show up more often and pay ×1.5."},
  trophy:{name:"Trophy Hunter",desc:"Warlords and Rune Goblins show up twice as often and drop ×1.5 loot."},
  taxman:{name:"Hired Taxman",desc:"Ears sell themselves, and for 15% more."},
- frenzy:{name:"Battle Drums",desc:"Your combo frenzy builds faster and peaks higher."},
+ frenzy:{name:"Battle Drums",desc:"Your combo frenzy builds 50% faster."},
  surge:{name:"Market Insider",desc:"Surges pay ×3 instead of ×2."}
 };
 var RELIC_IDS=Object.keys(RELICS);
@@ -873,15 +900,16 @@ var GTYPES={
 };
 
 function defState(){return{v:2,kills:0,total:0,gold:0,parts:0,frac:0,
- upg:{weapon:0,sharp:0,heft:0,sweep:0,abyss:0,bait:0,sack:0,haggle:0,whet:0,lure:0,greed:0,overkill:0},slotsUnlocked:1,party:[null],card:null,
+ upg:{weapon:0,crit:0,sharp:0,heft:0,sweep:0,abyss:0,bait:0,sack:0,haggle:0,whet:0,lure:0,greed:0,overkill:0},slotsUnlocked:1,party:[null],card:null,
  relics:[],biome:0,pendingDraft:0,won:false,muted:false,vol:1,haptics:true,met:{},plev:-1,storySeen:-1,endless:false,ekills:0,ewon:false,lastSeen:Date.now(),startedAt:0,playMs:0,
- seenStory:false,surgeUntil:0,nextSurge:0,stats:{golden:0,surgeSales:0,elites:0,maxCombo:0},
+ seenStory:false,musicOff:false,surgeUntil:0,nextSurge:0,stats:{golden:0,surgeSales:0,elites:0,maxCombo:0},
  seenTypes:{},seenSize:{},best:{seen:{},kills:{}},nextElite:400,elitePending:false,flags:{},pcards:[],ach:{},cnt:{},plv:[]};}
 
 function hasRelic(S,id){return S.relics.indexOf(id)>=0;}
 function costMult(S){return hasRelic(S,"thrift")?0.85:1;}
 function damage(S){return damageFor(S.upg.weapon)*(1+0.2*(S.upg.sharp||0))*(1+0.15*(S.upg.heft||0))*Math.pow(ABY_K,S.upg.abyss||0)*(hasRelic(S,"edge")?3:1);}
 function encSize(S){return Math.round(encSizeFor(S.upg.bait)*(hasRelic(S,"bait")?2:1));}
+function critChance(S){return Math.min(.5,(S.upg.crit||0)*.01);}
 function partsPerKill(S){return partsPerKillFor(S.upg.sack);}
 var KIT=["weapon","bait","sack","haggle","whet"];
 function fullKit(S){return KIT.every(function(k){return S.upg[k]>=1;});}
@@ -908,7 +936,7 @@ function partyMult(S){var m=partyMultFor(S.upg.whet)*Math.pow(ABY_K,S.upg.abyss|
 function achCount(S){var n=0;if(S.ach)for(var k in S.ach)if(S.ach[k])n++;return n;}
 var AVG_HP=5.1;
 function partyDPS(S,combo){return partyKPS(S,combo)*AVG_HP;}
-function frenzyMult(S,combo){if(combo<5)return 1;var per=hasRelic(S,"frenzy")?0.08:0.05;return Math.min(hasRelic(S,"frenzy")?TUNE.frenzyCap*1.35:TUNE.frenzyCap,1+(combo-4)*per);}
+function frenzyMult(S,combo){if(combo<5)return 1;var per=hasRelic(S,"frenzy")?0.015:0.01;return 1+(combo-4)*per;}
 function partyKPS(S,combo){return partyBase(S)*partyMult(S)*frenzyMult(S,combo||0);}
 
 var VARIANT_WEIGHTS=[["brute",.10],["swift",.14],["goldskin",.03],["spiky",.06],["shaman",.04]];
@@ -922,6 +950,7 @@ function hpMul(S){return S.endless?50:1;}
 var LEAD={normal:{hp:1,ears:1},swift:{hp:2,ears:1},brute:{hp:5,ears:2},goldskin:{hp:1,ears:10},spiky:{hp:3,ears:2},shaman:{hp:3,ears:3}};
 function newCard(S,rnd){var n=encSize(S);if(n<=5){var a=[];for(var i=0;i<n;i++){var g=mkGob(rollType(S,rnd));g.hp*=hpMul(S);g.max=g.hp;a.push(g);}return{kind:"few",gobs:a};}
  var lead=rollType(S,rnd),H=5*LEAD[lead].hp*hpMul(S);return{kind:"horde",n:n,size:n,lead:lead,H:H,fhp:H};}
+function frontT(c){if(!c)return null;if(c.kind==="few"){for(var i=0;i<c.gobs.length;i++)if(c.gobs[i].hp>0)return c.gobs[i].t;return null;}if(c.kind==="horde")return c.n>0?(c.lead||"normal"):null;return c.kind==="rune"?"rune":null;}
 function cardAlive(c){if(c.kind==="few")return c.gobs.filter(function(g){return g.hp>0;}).length;if(c.kind==="rune")return c.done?0:1;return c.n;}
 function cardHPLeft(c){if(c.kind==="few")return c.gobs.reduce(function(a,g){return a+Math.max(0,g.hp);},0);if(c.kind==="horde")return (c.n>0?c.fhp+(c.n-1)*c.H:0)/(LEAD[c.lead].dmg||1);return 1e18;}
 function partsOf(S,g){if(g.t==="elite")return Math.round(Math.max(80,g.max*.06)*(S.stats.elites>=3?2:1)*(hasRelic(S,"trophy")?1.5:1));return GTYPES[g.t].parts;}
@@ -1334,7 +1363,7 @@ function load(){var d=defState();try{var r=localStorage.getItem(KEY);if(r){var p
  return d;}
 function save(){try{S.lastSeen=Date.now();localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 var F=S.flags,C=S.cnt;
-if(!S.card)S.card=newCard(S,rnd);
+if(!S.card||(S.card.kind==="rune"&&S.card.done))S.card=newCard(S,rnd);
 S.elitePending=(S.card.kind==="few"&&S.card.gobs.some(function(x){return x.t==="elite"&&x.hp>0;}))||S.card.kind==="rune";
 if(!S.nextSurge)S.nextSurge=Date.now()+50000;
 function killRate(){return partyDPS(S,0)/AVG_HP+Math.min(encSize(S),damage(S)/5)*2;}
@@ -1392,7 +1421,14 @@ function renderJourneyOld(){$("jfill").style.width=(jpos(S.total)*100)+"%";var n
  if(nb<BIOMES.length){$("jNow").textContent="Next: "+BIOMES[nb].name;$("jNext").textContent=fmt(BIOMES[nb].at);}else{$("jNow").textContent="Next: the wedding";$("jNext").textContent="1B";}}
 
 /* ===== CARD FACES ===== */
-var FORM={1:[[50,0,100]],2:[[29,0,86],[71,0,86]],3:[[50,30,66],[23,0,72],[77,0,72]],4:[[30,32,60],[70,32,60],[24,0,64],[76,0,64]],5:[[33,34,56],[67,34,56],[17,0,60],[50,0,60],[83,0,60]]};
+/* the line: you fight whoever is in front; up to two more stand behind it, and past three goblins the rest are just a dark outline */
+function lineSlot(rk,nA){if(nA===2)return[80,22,60];return rk===1?[17,22,60]:[83,22,60];}
+function silHTML(k){var o="";for(var i=0;i<k;i++){var p=i?[83,22,60]:[17,22,60];o+='<div class="sil" data-s="'+i+'" style="left:'+p[0]+'%;bottom:'+p[1]+'%;height:'+p[2]+'%">'+useSym("g-normal")+"</div>";}return o;}
+var SPIKE_FRAME=(function(){var W=292,H=228,s=15,g=12,t="",x,y;function tri(a,b,c,d,e,f){t+='<path d="M'+a+" "+b+" L"+c+" "+d+" L"+e+" "+f+'Z" fill="#1f6a2a" stroke="#0b3a14" stroke-width="1.5" stroke-linejoin="round"/>';}
+ for(x=6;x+s<=W-6;x+=s+4){tri(x,0,x+s,0,x+s/2,g);tri(x,H,x+s,H,x+s/2,H-g);}for(y=10;y+s<=H-8;y+=s+4){tri(0,y,0,y+s,g,y+s/2);tri(W,y,W,y+s,W-g,y+s/2);}
+ return '<svg viewBox="0 0 '+W+" "+H+'" preserveAspectRatio="none" aria-hidden="true">'+t+"</svg>";})();
+function frameFx(t){if(t==="spiky")return'<div class="frameFx spk">'+SPIKE_FRAME+"</div>";
+ if(t==="shaman")return'<div class="frameFx skl"><i style="right:9px;top:9px">'+icon("skull",22)+'</i><i style="left:9px;bottom:9px">'+icon("skull",22)+'</i><i style="left:6px;top:46%">'+icon("skull",20)+'</i><i style="right:6px;top:46%">'+icon("skull",20)+"</i></div>";return"";}
 var TYPE_PIP={swift:"bolt",brute:"shield",goldskin:"coin",spiky:"spike",shaman:"eye3",elite:"crown"};
 var LEAD_LBL={normal:"Goblin horde",swift:"Swift horde",brute:"Brute horde",goldskin:"Goldskin horde",spiky:"Spiky horde",shaman:"Shaman horde"};
 var LEAD_FX={normal:"",swift:"Bolts if no kill for 5s",brute:"×5 HP, ×2 ears",goldskin:"×10 ears!",spiky:"Alternate your swipes",shaman:"Hexes your party, heals"};
@@ -1403,20 +1439,25 @@ function hpBar(hp,max){var p=Math.max(0,Math.min(100,hp/max*100));return '<div c
 function piles(n){var a=[],L=Math.floor(n/1000),W=Math.floor(n%1000/100),Q=Math.floor(n%100/10),O=n%10;
  if(L)a.push({id:"p-legion",k:L,each:"1,000 each"});if(W)a.push({id:"p-warband",k:W,each:"100 each"});if(Q)a.push({id:"p-squad",k:Q,each:"10 each"});if(O)a.push({id:"g-normal",k:O,each:O===1?"just one":"1 each"});return a;}
 function cardSig(c){if(c.kind==="few")return "f"+c.gobs.map(function(g){return g.t+g.hp;}).join(",");if(c.kind==="rune")return "r"+c.i+c.seq.join("");return "h"+c.n+c.lead+Math.ceil(c.fhp/c.H*20);}
-function faceCls(c){return c.kind==="horde"&&c.lead!=="normal"?"l-"+c.lead:c.kind==="rune"?"l-rune":"";}
+function faceCls(c){var t=frontT(c);return c.kind==="rune"?"l-rune":(t&&t!=="normal")?"l-"+t:"";}
 function faceHTML(c){var n=cardAlive(c);
  if(c.kind==="rune"){var h='<div class="runePips">';c.seq.forEach(function(d,i){h+='<i class="'+(i<c.i?"done":"")+'"></i>';});h+='</div><div class="stage"><div class="gobRow"><div class="gob" style="left:50%;bottom:0;height:100%">'+useSym("g-rune")+'</div></div></div>';
   if(c.i<c.seq.length)h+='<div class="runeArrow" style="--rot:'+ROT[c.seq[c.i]]+'deg"><svg viewBox="0 0 40 40">'+'<path d="M4 20 L28 20 M18 9 L30 20 L18 31" fill="none" stroke="#FFD43B" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20 L28 20 M18 9 L30 20 L18 31" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
   return h+'<div class="runeHint">Swipe the way the arrow points</div>';}
  var corner='<span>×'+(n>=10000?fmt(n):full(n))+'</span><small>'+(n===1?"goblin":"goblins")+'</small>';
  var h='<div class="corner tl">'+corner+'</div><div class="corner br">'+corner+'</div><div class="bigCount">×'+fmt(n)+'</div><div class="stage">';
- if(c.kind==="few"){var cnt=c.gobs.length,L=FORM[Math.min(cnt,5)];h+='<div class="gobRow">';
-  c.gobs.map(function(g,i){return i;}).sort(function(a,b){return L[b][1]-L[a][1];}).forEach(function(i){var g=c.gobs[i],p=L[i];
-   h+='<div class="gob'+(p[1]>0?" back":"")+(g.hp<=0?" dead":"")+(g.hp>0&&g.hp<g.max?" hurt":"")+'" data-i="'+i+'" style="left:'+p[0]+'%;bottom:'+p[1]+'%;height:'+p[2]+'%">'+useSym("g-"+g.t)+(g.hp>0?pip(g.t):"")+(g.hp>0?hpBar(g.hp,g.max):'<div class="hp" style="visibility:hidden"></div>')+'</div>';});h+='</div>';}
- else{h+='<div class="hordeRow"><div class="soloGob">'+useSym("g-"+(c.lead||"normal"))+'</div></div>';
+ if(c.kind==="few"){var alive=[];c.gobs.forEach(function(g,i){if(g.hp>0)alive.push(i);});var nA=alive.length;h+='<div class="gobRow">';
+  c.gobs.map(function(g,i){return i;}).sort(function(a,b){var ra=c.gobs[a].hp>0?alive.indexOf(a):-1,rb=c.gobs[b].hp>0?alive.indexOf(b):-1;return rb-ra;}).forEach(function(i){var g=c.gobs[i],rk=g.hp>0?alive.indexOf(i):-1;
+   if(rk>0&&nA>3){h+='<div class="gob gen" data-i="'+i+'"></div>';return;}
+   var p=rk>0?lineSlot(rk,nA):[50,0,100];
+   h+='<div class="gob'+(rk>0?" back":rk===0?" front":"")+(g.hp<=0?" dead":"")+(g.hp>0&&g.hp<g.max?" hurt":"")+'" data-i="'+i+'" style="left:'+p[0]+'%;bottom:'+p[1]+'%;height:'+p[2]+'%">'+useSym("g-"+g.t)+(rk===0?hpBar(g.hp,g.max):rk<0?'<div class="hp" style="visibility:hidden"></div>':"")+'</div>';});
+  h+=silHTML(nA>3?2:0)+'</div>';}
+ else{var hn=c.n,ld=c.lead||"normal";h+='<div class="hordeRow lineRow">';if(hn>3)h+=silHTML(2);else for(var bk=1;bk<hn;bk++){var bp=lineSlot(bk,hn);h+='<div class="gob back" data-b="'+(bk-1)+'" style="left:'+bp[0]+'%;bottom:'+bp[1]+'%;height:'+bp[2]+'%">'+useSym("g-"+ld)+'</div>';}
+  h+='<div class="soloGob">'+useSym("g-"+ld)+'</div></div>';
   h+='<div class="fstrip">'+useSym("g-"+(c.lead==="normal"?"normal":c.lead),"fmini")+'<span class="lbl">'+(c.lead==="normal"?"Front goblin":LEAD_FX[c.lead])+'</span>'+hpBar(c.fhp,c.H)+'</div>';}
  h+='</div>';
  if(c.kind==="horde"&&c.lead!=="normal")h+='<div class="leadTag">'+useSym("g-"+c.lead)+'<span>'+LEAD_LBL[c.lead]+'</span></div>';
+ h+=frameFx(frontT(c));
  return h;}
 
 /* ===== VIEWS: one per card on screen (you + each party member) ===== */
@@ -1435,9 +1476,11 @@ function makeView(k){var e=document.createElement("div");e.className="cw"+(k==="
 function syncViews(){var want=["you"];S.party.forEach(function(a,i){if(a!==null&&a!==undefined){want.push("s"+i);if(!S.pcards[i])S.pcards[i]=newCard(S,rnd);}else S.pcards[i]=null;});
  Object.keys(views).forEach(function(k){if(want.indexOf(k)<0){views[k].el.remove();delete views[k];}});
  want.forEach(function(k){if(!views[k])views[k]=makeView(k);});layout();want.forEach(function(k){renderView(views[k],true);});}
-var lastRune=false;
-function runeFull(W,H){var yv=views.you,c=yv&&cardOf("you"),on=!!(c&&c.kind==="rune");
- for(var k in views){if(k==="you")continue;var v=views[k];if(!!v.hidden!==on){v.hidden=on;v.el.style.visibility=on?"hidden":"";}}
+var lastRune=false,runeFocus=!!(S.card&&S.card.kind==="rune"&&!S.card.done),runeRz=null;
+function runeBoss(){var c=views.you&&cardOf("you");return !!(c&&c.kind==="rune");}
+function runeFull(W,H){var yv=views.you,c=yv&&cardOf("you"),on=!!(runeFocus&&c&&c.kind==="rune");
+ if(yv){clearTimeout(runeRz);if(on||yv.el.classList.contains("rz")){yv.el.classList.add("rz");if(!on)runeRz=setTimeout(function(){yv.el.classList.remove("rz");},900);}}
+ for(var k in views){if(k==="you")continue;var v=views[k];if(!!v.hidden!==on){v.hidden=on;v.el.style.opacity=on?"0":"";v.el.style.pointerEvents=on?"none":"";}}
  if(!on)return false;
  var sc=Math.min((W-8)/CW,(H-8)/CH),x=(W-CW*sc)/2,y=(H-CH*sc)/2;yv.x=x;yv.y=y;yv.scale=sc;yv.el.style.transform="translate("+x+"px,"+y+"px) scale("+sc+")";yv.el.classList.remove("compact");return true;}
 function layout(){var W=el.zone.clientWidth,H=el.zone.clientHeight;if(!W||!H)return;var keys=Object.keys(views),m=keys.length,gap=m>1?14:0,best=null;if(runeFull(W,H))return;
@@ -1453,7 +1496,8 @@ if(window.ResizeObserver)new ResizeObserver(function(){layout();}).observe(el.zo
 /* only the side facing you is redrawn on hits; both sides are redrawn when the card flips */
 function renderView(v,both){var c=cardOf(v.k);if(!c)return;var rn=cardOf("you");rn=!!(rn&&rn.kind==="rune");if(rn!==lastRune){lastRune=rn;layout();}var a=memberOf(v.k),sig=cardSig(c)+"|"+a;
  if(sig!==v.sig||both){v.sig=sig;var h=faceHTML(c),cl=faceCls(c),frontUp=(Math.round(v.angle/180)%2)===0;
-  if(both||frontUp){v.ff.innerHTML=h;v.ff.className="face front "+cl;}if(both||!frontUp){v.fb.innerHTML=h;v.fb.className="face back "+cl;}
+  var bf=both||v.flipping;   /* while spinning, keep both faces current so the one that lands is right */
+  if(bf||frontUp){v.ff.innerHTML=h;v.ff.className="face front "+cl;}if(bf||!frontUp){v.fb.innerHTML=h;v.fb.className="face back "+cl;}
   if(v.who&&v.whoA!==a){v.whoA=a;v.who.innerHTML=usePortrait("adv-"+a);}}}
 function deal(v){var sg=JSON.stringify(cardOf(v.k)||null);if(sg!==v.dsig){v.dsig=sg;v.wave=(v.wave||0)+1;}v.card.classList.remove("dealing");void v.card.offsetWidth;v.card.classList.add("dealing");v.dealUntil=performance.now()+560;}
 function renderAllViews(){for(var k in views)renderView(views[k],true);}
@@ -1461,7 +1505,7 @@ function renderAllViews(){for(var k in views)renderView(views[k],true);}
 /* ===== FX ===== */
 function caveXY(r){var vr=el.cave.getBoundingClientRect();return{x:r.left-vr.left+r.width/2,y:r.top-vr.top+r.height/2};}
 function viewPt(v,fx,fy){var r=v.el.getBoundingClientRect(),vr=el.cave.getBoundingClientRect();return{x:r.left-vr.left+r.width*fx,y:r.top-vr.top+r.height*fy};}
-function floatTxt(txt,cls,x,y){if(el.fx.childElementCount>60)return;var f=document.createElement("div");f.className="flt "+cls;f.textContent=txt;f.style.left=x+"px";f.style.top=y+"px";el.fx.appendChild(f);setTimeout(function(){f.remove();},cls.indexOf("quip")>=0?1450:950);}
+function floatTxt(txt,cls,x,y){if(el.fx.childElementCount>60)return;var f=document.createElement("div");f.className="flt "+cls;f.textContent=txt;f.style.left=x+"px";f.style.top=y+"px";el.fx.appendChild(f);setTimeout(function(){f.remove();},cls.indexOf("quip")>=0?1950:cls.indexOf("loot")>=0?2850:950);}
 var PCOL=["#FFE27A","#fff","#C7EC4A","#FF8A3D"];
 function sparks(x,y,n,cols){if(REDUCED||el.fx.childElementCount>70)return;n=Math.min(n,22);cols=cols||PCOL;for(var i=0;i<n;i++){var p=document.createElement("div");p.className="prt";
  p.innerHTML='<svg viewBox="0 0 20 20" width="12" height="12"><path d="M10 0 L13 7 L20 10 L13 13 L10 20 L7 13 L0 10 L7 7Z" fill="'+cols[i%cols.length]+'" stroke="#2A1630" stroke-width="1.5"/></svg>';p.style.left=x+"px";p.style.top=y+"px";el.fx.appendChild(p);
@@ -1513,39 +1557,50 @@ function applyHit(v,res,player){var c0=cardOf(v.k),deaths=res.deaths,parts=res.p
  if(gsN>0&&!document.hidden){var gb=viewPt(v,.5,.5);earBurst(gb.x,gb.y,6+gsN*3);if(player)SND.ping();}
  try{GFX.noteKills(v.k,c0,res);}catch(e){}
  S.kills+=deaths;S.total+=deaths;if(S.endless)S.ekills+=deaths;S.parts+=parts;
- if(tk.elite){S.stats.elites++;S.elitePending=false;scheduleBoss();toast("Warlord down! Its loot spills everywhere.",3000);SND.fanfare();var pe=viewPt(v,.5,.5);sparks(pe.x,pe.y,22,["#FFE27A","#E2434B","#fff"]);}
+ if(tk.elite){S.stats.elites++;S.elitePending=false;scheduleBoss();var lootE=res.parts;toast("Warlord down! Loot: +"+fmt(lootE)+" ears",3600);SND.fanfare();var pe=viewPt(v,.5,.5);sparks(pe.x,pe.y,22,["#FFE27A","#E2434B","#fff"]);floatTxt("Warlord loot +"+fmt(lootE)+" ears","loot",pe.x,pe.y-20);earBurst(pe.x,pe.y,16);}
  if(tk.lead_shaman||tk.shaman)C.shaman=(C.shaman||0)+(tk.lead_shaman||0)+(tk.shaman||0);
  if(player&&deaths>=10000)unlock("overkill10k");
- if(clears){if(clears>1&&player){var pc=viewPt(v,.5,.15);floatTxt(clears+" cards!","small",pc.x,pc.y);}flip(v,next);}
- else{setCardOf(v.k,res.card);renderView(v);if(!quiet||player){v.card.classList.remove("hit");void v.card.offsetWidth;v.card.classList.add(player?"hit":"bump");}}
+ if(clears){if(clears>1&&player){var pc=viewPt(v,.5,.15);floatTxt(clears+" cards!","small",pc.x,pc.y);}flip(v,next,player?deaths:1);}
+ else{setCardOf(v.k,res.card);renderView(v);if(player&&deaths>0)spinCard(v,deaths);if(!quiet||player){v.card.classList.remove("hit");void v.card.offsetWidth;v.card.classList.add(player?"hit":"bump");}}
  return deaths;}
 /* flip ONLY when every goblin on the card is dead */
-function flip(v,next){v.wave=(v.wave||0)+1;v.dsig=JSON.stringify(next||null);setCardOf(v.k,next);checkTypes(next);
+function spinAnim(v,n,dur){var a0=v.angle,kf=[{transform:"rotateY("+a0+"deg) scale(1)"}];
+ for(var i=1;i<=n;i++){kf.push({transform:"rotateY("+(a0+180*(i-.5))+"deg) scale(.9)",offset:(i-.5)/n});kf.push({transform:"rotateY("+(a0+180*i)+"deg) scale(1)",offset:i/n});}
+ return v.inner.animate(kf,{duration:dur,easing:"cubic-bezier(.25,.7,.3,1)"});}
+function spinTime(n){return n<=1?340:Math.min(900,150+n*190);}
+/* a new card arrives: it flips 180 degrees for every goblin killed by the swipe (up to 4) */
+function flip(v,next,n){n=Math.max(1,Math.min(4,n|0||1));v.wave=(v.wave||0)+1;v.dsig=JSON.stringify(next||null);setCardOf(v.k,next);checkTypes(next);
  if(v.flipping||REDUCED||document.hidden){renderView(v,true);if(!v.flipping){deal(v);}return;}
- v.flipping=true;SND.flip();var a0=v.angle,a1=a0+180,swapped=false;
+ v.flipping=true;v.lock=true;SND.flip();var a1=v.angle+180*n,swapped=false;
  setTimeout(function(){swapped=true;renderView(v,true);if(v.k==="you")checkSizeIntro();},150);
- var an=v.inner.animate([{transform:"rotateY("+a0+"deg) scale(1)"},{transform:"rotateY("+(a0+100)+"deg) scale(.88)",offset:.5},{transform:"rotateY("+a1+"deg) scale(1)"}],{duration:340,easing:"cubic-bezier(.25,.7,.3,1)"});
- an.onfinish=function(){v.angle=a1%360;v.inner.style.transform="rotateY("+v.angle+"deg)";v.flipping=false;if(!swapped)renderView(v);};}
+ var an=spinAnim(v,n,spinTime(n));
+ an.onfinish=function(){v.angle=a1%360;v.inner.style.transform="rotateY("+v.angle+"deg)";v.flipping=false;v.lock=false;if(!swapped)renderView(v);};}
+/* the same flip, for a kill that leaves goblins standing: you keep seeing them on the other side */
+function spinCard(v,n){n=Math.max(1,Math.min(4,n|0||1));if(v.flipping||REDUCED||document.hidden)return;
+ v.flipping=true;SND.flip();var a1=v.angle+180*n;
+ setTimeout(function(){renderView(v,true);},120);
+ var an=spinAnim(v,n,spinTime(n));
+ an.onfinish=function(){v.angle=a1%360;v.inner.style.transform="rotateY("+v.angle+"deg)";v.flipping=false;renderView(v,true);};}
 
 /* ===== YOUR SWIPE (swipe only, no taps) ===== */
 var swipeLog=[],lastSwipeT=Date.now();
-function hasSpiky(c){if(!c)return false;if(c.kind==="few")return c.gobs.some(function(g){return g.t==="spiky"&&g.hp>0;});return c.kind==="horde"&&c.lead==="spiky"&&c.n>0;}
-function swipeOn(v,dir){if(spot.active&&spot.act==="swipe"&&spot.elm===v.el)endSpot();if(paused()||sheetOpen()||v.flipping)return;var c=cardOf(v.k);if(!c)return;ac();
+function hasSpiky(c){return frontT(c)==="spiky";}
+function swipeOn(v,dir){if(spot.active&&spot.act==="swipe"&&spot.elm===v.el)endSpot();if(paused()||sheetOpen()||v.lock)return;var c=cardOf(v.k);if(!c)return;ac();
  if(hasSpiky(c)){if(v.spikyWave===v.wave&&v.spikyDir===dir){var bp=viewPt(v,.5,.45);floatTxt("Blocked! Switch direction","dmg",bp.x,bp.y);SND.block();v.card.classList.remove("bonk");void v.card.offsetWidth;v.card.classList.add("bonk");if(!F.spikyTip){F.spikyTip=1;toast("Spiky goblins block a repeat swipe. Alternate your directions.",3200);}return;}v.spikyWave=v.wave;v.spikyDir=dir;}
  lastSwipeT=Date.now();swipeLog.push(lastSwipeT);if(swipeLog.length>15)swipeLog.shift();if(swipeLog.length===15&&lastSwipeT-swipeLog[0]<3000)unlock("speed");
  C["sw_"+dir]=(C["sw_"+dir]||0)+1;if(v.k!=="you")C.helps=(C.helps||0)+1;
  if(c.kind==="rune"){runeSwipe(v,c,dir);return;}
  SND.slash();bumpCombo();slashFX(v,dir);GFX.attack(v.k,dir);
- var res=resolveStrike(S,c,damage(S),rnd),hp=viewPt(v,.5,.5);sparks(hp.x,hp.y,6);
+ var crit=Math.random()<critChance(S),res=resolveStrike(S,c,damage(S)*(crit?2:1),rnd),hp=viewPt(v,.5,.5);sparks(hp.x,hp.y,6);if(crit){floatTxt("CRIT ×2!","big",hp.x,hp.y-64);sparks(hp.x,hp.y,14,["#FFE27A","#fff","#FF8A3D"]);SND.ping();}
  var deaths=applyHit(v,res,true);
  if(deaths===0)floatTxt("-"+fmt(res.scar),"dmg",hp.x+(Math.random()-.5)*60,hp.y-20);
- else{SND.kill(deaths);var big=deaths>=Math.max(10,encSize(S)*.5);floatTxt("+"+fmt(deaths),big?"big":"kill",hp.x+(Math.random()-.5)*40,hp.y-30);sparks(hp.x,hp.y,6+Math.min(16,deaths),big?["#FFE27A","#FF8A3D","#fff"]:null);if(deaths>=4||big)shake();}
+ else{SND.kill(deaths);var big=deaths>=Math.max(10,encSize(S)*.5);if(deaths>=2)floatTxt("+"+fmt(deaths),big?"big":"kill",hp.x+(Math.random()-.5)*40,hp.y-30);sparks(hp.x,hp.y,6+Math.min(16,deaths),big?["#FFE27A","#FF8A3D","#fff"]:null);if(deaths>=4||big)shake();}
  if(combo>0&&combo%10===0&&variantsOn(S)){var bonus=partsPerKill(S)*Math.max(3,Math.round(deaths*.5));S.parts+=bonus;floatTxt("Combo +"+fmt(bonus)+" ears","small",hp.x,hp.y+40);}
  if(!F.unlockSell&&S.parts>0){F.unlockSell=1;queueSpot("sell");}
  afterGain();}
 function bindSwipe(v){var st=null;
  v.el.addEventListener("pointerdown",function(e){if(paused()&&!(spot.active&&spot.act==="swipe"&&spot.elm===v.el))return;st={x:e.clientX,y:e.clientY,id:e.pointerId};try{v.el.setPointerCapture(e.pointerId);}catch(_){}});
- v.el.addEventListener("pointermove",function(e){if(!st||v.flipping)return;var dx=e.clientX-st.x,dy=e.clientY-st.y;v.card.style.transform="translate("+Math.max(-30,Math.min(30,dx*.25))+"px,"+Math.max(-20,Math.min(20,dy*.2))+"px) rotate("+Math.max(-6,Math.min(6,dx*.05))+"deg)";
+ v.el.addEventListener("pointermove",function(e){if(!st||v.lock)return;var dx=e.clientX-st.x,dy=e.clientY-st.y;v.card.style.transform="translate("+Math.max(-30,Math.min(30,dx*.25))+"px,"+Math.max(-20,Math.min(20,dy*.2))+"px) rotate("+Math.max(-6,Math.min(6,dx*.05))+"deg)";
   /* fire as soon as the swipe is long enough: snappier than waiting for release */
   if(Math.abs(dx)>42||Math.abs(dy)>42){var dir=Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up");st=null;release();swipeOn(v,dir);startSweep(v,e,dir);}});
  function release(){v.card.style.transition="transform .16s";v.card.style.transform="";setTimeout(function(){v.card.style.transition="";},170);}
@@ -1556,18 +1611,19 @@ document.addEventListener("keydown",function(e){var m={ArrowRight:"right",ArrowL
 
 /* ===== RUNE GOBLIN: swipe the arrows ===== */
 function makeRune(){var len=Math.min(8,4+S.biome),seq=[],prev="";for(var i=0;i<len;i++){var d;do{d=DIRS[Math.floor(Math.random()*4)];}while(d===prev&&Math.random()<.7);seq.push(d);prev=d;}return{kind:"rune",seq:seq,i:0,miss:0};}
-function runeSwipe(v,c,dir){var p=viewPt(v,.5,.6);
+function runeSwipe(v,c,dir){if(c.done)return;var p=viewPt(v,.5,.6);
  if(dir===c.seq[c.i]){c.i++;SND.rune(c.i);slashFX(v,dir);GFX.attack(v.k,dir);sparks(p.x,p.y,10,["#7FE3FF","#fff","#C9A6FF"]);bumpCombo();
   if(c.i>=c.seq.length){var loot=Math.round(killRate()*14*partsPerKill(S)*(hasRelic(S,"trophy")?1.5:1));S.parts+=loot;S.kills++;S.total++;S.stats.runes=(S.stats.runes||0)+1;try{GFX.noteKill("rune",1);}catch(e){}
    if(c.miss===0)unlock("rune");floatTxt("Rune Goblin down!","big",p.x,p.y-40);floatTxt("+"+fmt(loot)+" ears","gold",p.x,p.y+10);kflyer(p.x,p.y,"g-rune",80*v.scale,true);shake();SND.fanfare();
-   S.elitePending=false;scheduleBoss();flip(v,newCard(S,rnd));afterGain();}
+   c.done=true;runeFocus=false;layout();   /* the card eases back to its normal spot */
+   setTimeout(function(){if(S.card!==c)return;S.elitePending=false;scheduleBoss();flip(v,newCard(S,rnd));afterGain();save();},850);}
   else renderView(v);}
  else{c.miss++;c.i=Math.max(0,c.i-1);SND.block();floatTxt("Blocked!","dmg",p.x,p.y-30);v.card.classList.remove("hit");void v.card.offsetWidth;v.card.classList.add("hit");renderView(v);}
  save();}
 
 /* ===== PARTY: each member hits their own card ===== */
 setInterval(function(){var now=performance.now(),hidden=document.hidden;
- for(var k in views){var v=views[k];if(k==="you")continue;if(paused()){v.last=now;v.next=Math.max(v.next,now+300);continue;}if(now<v.next)continue;
+ for(var k in views){var v=views[k];if(k==="you")continue;if(paused()||runeBoss()){v.last=now;v.next=Math.max(v.next,now+300);continue;}if(now<v.next)continue;
   var a=memberOf(k),c=cardOf(k);if(a===null||a===undefined||!c)continue;
   var dt=Math.min(30,(now-v.last)/1000);v.last=now;v.next=now+(hidden?0:560+Math.random()*260);
   var dmg=memberDPS(a,combo,+k.slice(1))*dt,res=resolveStrike(S,c,dmg,rnd);
@@ -1576,7 +1632,7 @@ setInterval(function(){var now=performance.now(),hidden=document.hidden;
   applyHit(v,res,false);}
  if(!paused())afterGainLite();},100);
 /* shamans revive their fallen */
-setInterval(function(){if(paused())return;for(var k in views){var c=cardOf(k);if(c&&c.kind==="horde"&&c.lead==="shaman"&&c.n>0&&c.n<c.size){var r=Math.max(1,Math.ceil((c.size-c.n)*.05));c.n=Math.min(c.size,c.n+r);var v=views[k];renderView(v);var p=viewPt(v,.5,.4);floatTxt("+"+fmt(r)+" revived","small",p.x,p.y);}}},2000);
+setInterval(function(){if(paused()||runeBoss())return;for(var k in views){var c=cardOf(k);if(c&&c.kind==="horde"&&c.lead==="shaman"&&c.n>0&&c.n<c.size){var r=Math.max(1,Math.ceil((c.size-c.n)*.05));c.n=Math.min(c.size,c.n+r);var v=views[k];renderView(v);var p=viewPt(v,.5,.4);floatTxt("+"+fmt(r)+" revived","small",p.x,p.y);}}},2000);
 setInterval(function(){for(var k in views){var v=views[k];if(v.dps){var a=memberOf(k);if(a!==null&&a!==undefined)v.dps.textContent=fmt(Math.round(memberDPS(a,combo,+k.slice(1))))+"/s";}}},400);
 
 /* ===== SELL / SHOP buttons ===== */
@@ -1611,7 +1667,9 @@ setInterval(function(){if(!F.unlockShop||!S.seenTypes.brute||S.elitePending||S.t
  var rune=S.biome>=1&&(S.cnt.boss=(S.cnt.boss||0)+1)%2===0;
  if(rune){if(!S.seenTypes.rune){S.seenTypes.rune=1;showType("rune",function(){startRune();});}else{startRune();toast("A Rune Goblin! Swipe the way its arrows point.",3000);}}
  else{$("eliteText").textContent="It has "+fmt(eliteHP())+" HP and a ridiculous amount of loot. Fight it on your card, or sneak past and keep hunting.";$("eliteModal").classList.add("show");SND.thud();}},1500);
-function startRune(){var v=views.you;S.card=makeRune();v.sig="";renderView(v);deal(v);SND.thud();save();}
+function startRune(){var v=views.you;S.card=makeRune();runeFocus=false;v.sig="";renderView(v);deal(v);SND.thud();save();
+ /* it shows up on your card first, then swells to fill the screen */
+ setTimeout(function(){var c=S.card;if(c&&c.kind==="rune"&&!c.done&&!runeFocus){runeFocus=true;layout();SND.flip();}},700);}
 $("eliteFight").addEventListener("click",function(){$("eliteModal").classList.remove("show");var hp=eliteHP();S.card={kind:"few",gobs:[{hp:hp,max:hp,t:"elite"}]};views.you.sig="";renderView(views.you);deal(views.you);shake();SND.thud();save();});
 $("eliteSkip").addEventListener("click",function(){$("eliteModal").classList.remove("show");S.elitePending=false;C.sneak=(C.sneak||0)+1;S.nextElite=S.total+Math.max(500,S.total*.4);toast("You tiptoe past the Warlord.");save();});
 
@@ -1723,6 +1781,7 @@ var OVK_TXT=["None yet. Leftover damage is lost when a card dies.","50% of lefto
 function dmgWith(id,l){var u={};for(var k in S.upg)u[k]=S.upg[k];u[id]=l;return damage({upg:u,relics:S.relics});}
 var UPG_UI={
  weapon:{ico:"sword",desc:function(l){return '<em>'+fmt(dmgWith("weapon",l))+' → '+fmt(dmgWith("weapon",l+1))+'</em> damage per swipe<br>'+WEAPON_NAMES[Math.min(l,WEAPON_NAMES.length-1)];}},
+ crit:{ico:"bolt",desc:function(l){return l>=10?'<em>10%</em> chance for a double-damage swipe. Maxed.':'<em>'+l+'% → '+(l+1)+'%</em> chance a swipe crits for double damage';}},
  sharp:{ico:"sharp",desc:function(l){return l>=18?'<em>'+fmt(dmgWith("sharp",l))+'</em> damage per swipe. Razor sharp. Maxed.':'<em>'+fmt(dmgWith("sharp",l))+' → '+fmt(dmgWith("sharp",l+1))+'</em> damage per swipe';}},
  abyss:{ico:"spark",desc:function(l){return '<em>×'+fmt(Math.pow(ABY_K,l))+' → ×'+fmt(Math.pow(ABY_K,l+1))+'</em> swipe and party damage';}},
  sweep:{ico:"swipe",desc:function(l){return l>=3?'<em>4 cards</em> per swipe. Maxed.':'<em>'+(1+l)+(1+l===1?" card":" cards")+' → '+(2+l)+' cards</em> per swipe';}},
@@ -1739,9 +1798,10 @@ function buildSheet(){$("tabParty").classList.toggle("hidden",!F.unlockParty);
  var rh="";if(S.relics.length){rh='<div class="sec">Relics</div><div class="relics">';S.relics.forEach(function(r){rh+='<div class="relicChip">'+relicSVG(r,40)+'<div><b>'+RELICS[r].name+'</b>'+RELICS[r].desc+'</div></div>';});rh+='</div>';}$("relicBox").innerHTML=rh;
  var kc=kitCount(S);$("kitBox").style.display=KIT.every(function(k){return visibleUpg(UPG_DEF.filter(function(u){return u.id===k;})[0]);})?"":"none";$("kitBox").innerHTML='<div class="info'+(fullKit(S)?" on":"")+'"><b>'+(fullKit(S)?"Full kit active":"Full kit: "+kc+" of 5")+'</b>'+(fullKit(S)?"Party ×1.2 and ear prices +10%. Spreading out beats stacking.":"Own at least one level of Weapon, Bait, Sack, Haggling and Whetstone for party ×1.2 and ear prices +10%.")+'</div>';
  var pl=playerLevel(S),h='<div class="sec">Upgrades</div><div class="info lvInfo"><b>Hunter level '+pl+'</b>'+(pl<lvAt(S).length-1?'Reach '+fmt(lvAt(S)[pl])+' kills for hunter level '+(pl+1)+'. Each level unlocks the next level of every upgrade.':'Every upgrade level is unlocked.')+'</div>';
- UPG_DEF.forEach(function(u){if(!visibleUpg(u))return;var l=S.upg[u.id]||0,mx=u.max!==undefined&&l>=u.max,lock=upgLocked(S,u),c=upgCost(S,u),ui=UPG_UI[u.id];
-  h+='<div class="upg" data-row="'+u.id+'"><button class="ic uinfo" data-info="'+u.id+'" aria-label="About '+u.name+'">'+icon(ui.ico,38)+'<i aria-hidden="true">?</i></button><div><b>'+u.name+' <small style="font-family:var(--body);font-size:12px;color:#7A6A70">Lv '+l+(u.max&&u.id!=="bait"?" of "+u.max:"")+'</small></b><span>'+ui.desc(l)+'</span></div>'+
-  (mx?'<button class="buy max" disabled>Max</button>':lock?'<button class="buy" disabled>At '+fmt(u.id==="overkill"?OVK_AT[l]:lvAt(S)[upgGate(S,u)-1])+' kills</button>':'<button class="buy" data-upg="'+u.id+'" data-cost="'+c+'">'+icon("coin",18)+fmt(c)+'</button>')+'</div>';});
+ var avl=[],lkd=[],mxd=[];UPG_DEF.forEach(function(u){if(!visibleUpg(u))return;var l=S.upg[u.id]||0,mx=u.max!==undefined&&l>=u.max,lock=upgLocked(S,u),c=upgCost(S,u),ui=UPG_UI[u.id];
+  var rowH='<div class="upg" data-row="'+u.id+'"><button class="ic uinfo" data-info="'+u.id+'" aria-label="About '+u.name+'">'+icon(ui.ico,38)+'<i aria-hidden="true">?</i></button><div><b>'+u.name+' <small style="font-family:var(--body);font-size:12px;color:#7A6A70">Lv '+l+(u.max&&u.id!=="bait"?" of "+u.max:"")+'</small></b><span>'+ui.desc(l)+'</span></div>'+
+  (mx?'<button class="buy max" disabled>Max</button>':lock?'<button class="buy" disabled>At '+fmt(u.id==="overkill"?OVK_AT[l]:lvAt(S)[upgGate(S,u)-1])+' kills</button>':'<button class="buy" data-upg="'+u.id+'" data-cost="'+c+'">'+icon("coin",18)+fmt(c)+'</button>')+'</div>';(mx?mxd:lock?lkd:avl).push(rowH);});
+ h+=avl.concat(lkd,mxd).join("");
  $("upgrades").innerHTML=h;
  var ah='<div class="sec">Achievements: '+achCount(S)+' of '+ACH.length+'</div><div class="info">Every achievement gives your party +3% damage, forever.</div>';
  ACH.forEach(function(a){var d=!!S.ach[a.id],p=a.p?a.p():null;ah+='<div class="ach'+(d?" done":"")+'"><div class="achRow">'+icon("trophy",30)+'<div style="flex:1"><b>'+a.n+'</b><br>'+a.d+(p&&!d?'<div class="bar"><i style="width:'+Math.min(100,p[0]/p[1]*100)+'%"></i></div>':"")+'</div></div></div>';});$("achBox").innerHTML=ah;
@@ -1850,11 +1910,11 @@ function checkSizeIntro(){var c=S.card;if(c.kind==="rune")return;var n=cardAlive
 
 /* ===== NEW GOBLIN TYPE: the game pauses until you’ve read it ===== */
 var TYPE_INFO={
- swift:{n:"Swift Goblin",a:"10 HP, and it won’t stick around. If it’s still alive 5 seconds after the card appears, it bolts and takes the whole card with it. No ears for you.",h:"Swift hordes bolt too: go 5 seconds without a kill and the rest of the horde runs off."},
+ swift:{n:"Swift Goblin",a:"10 HP, and it won’t stick around. If it’s at the front of the line and still alive 5 seconds later, it bolts and takes the whole card with it. No ears for you.",h:"Swift hordes bolt too: go 5 seconds without a kill and the rest of the horde runs off."},
  brute:{n:"Brute",a:"25 HP, but drops double ears.",h:"Brute hordes are five times as tough, and pay twice the ears for every goblin."},
  goldskin:{n:"Goldskin",a:"Drops ×10 ears.",h:"A Goldskin horde turns the whole card gold: every goblin on it drops ×10 ears. Help that card!"},
- spiky:{n:"Spiky Goblin",a:"15 HP and covered in quills that flatten toward your blade. Swipe it from the same direction twice in a row and the second swipe bounces off. Alternate: left, right, left.",h:"Spiky hordes bristle the same way: never swipe the same direction twice. ×3 HP, ×2 ears."},
- shaman:{n:"Shaman",a:"20 HP and a nasty hex: while any shaman is alive, your whole party does half damage. Hunt it down first. Drops ×3 ears.",h:"A shaman horde hexes your party until the last of it falls, and raises 5% of its fallen every 2 seconds. ×3 HP, ×3 ears."},
+ spiky:{n:"Spiky Goblin",a:"15 HP and a cactus for a head. While it’s at the front of the line, swiping it from the same direction twice in a row bounces off. Alternate: left, right, left.",h:"Spiky hordes bristle the same way: never swipe the same direction twice. ×3 HP, ×2 ears."},
+ shaman:{n:"Shaman",a:"20 HP and a nasty hex: while a shaman is at the front of any card, your whole party does half damage. Take it down. Drops ×3 ears.",h:"A shaman horde hexes your party until the last of it falls, and raises 5% of its fallen every 2 seconds. ×3 HP, ×3 ears."},
  rune:{n:"Rune Goblin",a:"Its stone shield blocks normal attacks. A glowing arrow shows how to break each rune.",h:"Swipe your card the way the arrow points: up, down, left or right. A wrong swipe repairs a rune. Break them all for a big pile of ears."}};
 function checkTypes(c){if(!c||c.kind==="rune")return;var ts=c.kind==="few"?c.gobs.map(function(g){return g.t;}):[c.lead];ts.forEach(function(t){if(TYPE_INFO[t]&&!S.seenTypes[t]){S.seenTypes[t]=1;queueSpot("type:"+t);}});}
 var typeCb=null;
@@ -1865,10 +1925,15 @@ $("typeOk").addEventListener("click",function(){$("typeModal").classList.remove(
 /* ===== DESCEND + DRAFT ===== */
 function runDescend(){cutToast();var b=S.biome;setScene(b);$("descTitle").textContent=BIOMES[b].name;$("descSmall").textContent="Depth "+(b+1)+" of 5";var d=$("descend");d.classList.remove("show");void d.offsetWidth;d.classList.add("show");SND.thud();setTimeout(SND.fanfare,500);shake();
  setTimeout(function(){d.classList.remove("show");if(S.pendingDraft>0)openDraft();else pumpToast();},REDUCED?600:2400);}
+var draftPick=null;
 function openDraft(){var pool=RELIC_IDS.filter(function(r){return S.relics.indexOf(r)<0;}),opts=[];while(opts.length<3&&pool.length)opts.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
- $("draftTitle").textContent=S.relics.length?"Choose another relic":"Choose a relic";$("draftText").textContent="Keep one for the rest of the quest. Every relic also makes your party 20% stronger.";
- var h="";opts.forEach(function(r){h+='<button class="rcard" data-relic="'+r+'">'+relicSVG(r,58)+'<b>'+RELICS[r].name+'</b>'+RELICS[r].desc+'<span class="plus">+20% party</span></button>';});$("draft").innerHTML=h;$("draftModal").classList.add("show");}
-$("draft").addEventListener("click",function(e){var b=e.target.closest("[data-relic]");if(!b)return;var r=b.getAttribute("data-relic");S.relics.push(r);S.pendingDraft=Math.max(0,S.pendingDraft-1);SND.fanfare();$("draftModal").classList.remove("show");
+ $("draftTitle").textContent=S.relics.length?"Choose another relic":"Choose a relic";$("draftText").textContent="Tap a relic to read what it does, then confirm your pick.";
+ var h="";opts.forEach(function(r){h+='<button class="rtile" data-relic="'+r+'">'+relicSVG(r,72)+'<b>'+RELICS[r].name+'</b></button>';});$("draft").innerHTML=h;
+ draftPick=null;$("draftInfo").innerHTML="Tap a relic to see what it does.";$("draftOk").disabled=true;$("draftOk").textContent="Pick a relic";$("draftModal").classList.add("show");}
+$("draft").addEventListener("click",function(e){var b=e.target.closest("[data-relic]");if(!b)return;var r=b.getAttribute("data-relic");draftPick=r;SND.click();
+ Array.prototype.forEach.call($("draft").children,function(x){x.classList.toggle("sel",x===b);x.classList.toggle("dim",x!==b);});
+ $("draftInfo").innerHTML="<b>"+RELICS[r].name+"</b>"+RELICS[r].desc+'<span class="plus">Every relic also makes your party 20% stronger.</span>';$("draftOk").disabled=false;$("draftOk").textContent="Confirm "+RELICS[r].name;});
+$("draftOk").addEventListener("click",function(){var r=draftPick;if(!r)return;draftPick=null;S.relics.push(r);S.pendingDraft=Math.max(0,S.pendingDraft-1);SND.fanfare();$("draftModal").classList.remove("show");
  toast(RELICS[r].name+" is yours.",2600);renderAllViews();renderAll();save();if(S.pendingDraft>0)setTimeout(openDraft,300);});
 
 /* ===== WIN ===== */
@@ -3129,7 +3194,7 @@ const GK={
   normal:{skin:0x7fae45,dk:0x5f8a34,cloth:0x5a3a6b,cloth2:0x2a1a38,helm:1,R:'cleaver',L:'lantern'},
   swift:{skin:0xcfe338,dk:0x9aae10,cloth:0x3b3f6b,cloth2:0x22244a,band:0xe2434b,R:'dagger',L:'dagger',slim:1},
   goldskin:{skin:0xffd23f,dk:0xd99400,cloth:0x8e1630,cloth2:0x5a0a1e,R:'cleaver',L:'sack',coins:1},
-  spiky:{skin:0x3cc985,dk:0x14824f,cloth:0x2a4a3a,cloth2:0x16301f,spikes:1,R:'club'},
+  spiky:{skin:0x3cc985,dk:0x14824f,cloth:0x2a4a3a,cloth2:0x16301f,spikes:1,cactus:1,R:'club'},
   rune:{skin:0x8aa2d4,dk:0x4f6497,cloth:0x3a4466,cloth2:0x1e2550,helm:1,helmCol:0x6e7896,L:'shield'},
   golden:{skin:0xffd23f,dk:0xd99400,cloth:0x8e1630,cloth2:0x5a0a1e,crown:1,L:'sack',R:'sack',coins:1},
   defector:{skin:0x7fae45,dk:0x5f8a34,cloth:0x2f4ba0,cloth2:0x1a2a6a,band:0x3fa7d6,R:'dagger',clean:1}
@@ -3163,8 +3228,9 @@ function buildGobKind(kind,ov){
   item(o.R,aR,ARM_R,1); item(o.L,aL,ARM_L,-1);
   const h=mark(G(up,[0,1.1,.08],[0,0,0],o.slim?1.3:1.35),'head');
   const SK=[[0,0,0],[.575,.46,.5]];
-  put(h,M(S(.5),P.skin),[0,0,0],[1.15,.92,1]);
-  put(h,M(S(.34),P.skin),[0,-.25,.12],[1.1,.6,1]);
+  const HC=o.cactus?0x4fae3c:P.skin;                                          // spiky goblins wear a cactus for a head
+  put(h,M(S(.5),HC),[0,0,0],[1.15,.92,1]);
+  put(h,M(S(.34),HC),[0,-.25,.12],[1.1,.6,1]);
   [-1,1].forEach(sd=>makeEar(P,h,sd,{len:o.slim?1.7:1.5,angle:o.slim?1.0:1.15}));
   [-1,1].forEach(sd=>makeEye(P,h,sd*.21,.1,.43,o.slim?.12:.144));
   put(h,M(C(.12,.48),P.skinDark),[0,-.04,.52],[1,1,1],[1.35,0,0]);
@@ -3186,8 +3252,15 @@ function buildGobKind(kind,ov){
   if(o.band&&hat!=='bandana'){put(h,M(T(.52,.05,TAU,8),o.band),[0,.22,0],[1.12,1,1],[PI/2,0,0]);
     [-1,1].forEach(sd=>put(h,M(B(.08,.28,.04),o.band),[sd*.08,.12,-.55],[1,1,1],[.5,0,sd*.4]));}
   if(o.crown){const c=crown(0xf6be1e,0xe2434b);c.position.set(0,.36,0);h.add(c);}
+  if(o.cactus){const rib=0x2f7d2a,cream=0xf6efc8;
+    for(let i=0;i<10;i++){const a=i/10*TAU;if(Math.cos(a)>.5)continue;put(h,M(S(.1),rib),[Math.sin(a)*.545,0,Math.cos(a)*.47],[.45,4.3,.45],[0,a,0]);}
+    let sd=7;const rnd=()=>{sd=(sd*9301+49297)%233280;return sd/233280;};
+    for(let k=0,n=0;k<400&&n<64;k++){const th=rnd()*TAU,y=rnd()*1.7-.55,rr=Math.sqrt(Math.max(0,1-y*y)),v=new THREE.Vector3(Math.sin(th)*rr,y,Math.cos(th)*rr);
+      if(v.z>.4&&v.y<.62)continue; if(Math.abs(v.x)>.78&&Math.abs(v.y)<.5)continue; if(v.y<-.2)continue; n++;
+      const s2=put(h,M(C(.05,.4,8),cream),[v.x*.585,v.y*.47,v.z*.5],[1,1,1]);s2.position.addScaledVector(v,.14);s2.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v);}
+    [0,1,2,3,4].forEach(i=>{const a=i/5*TAU;put(h,M(S(.075),0xff5d9e),[Math.sin(a)*.09+.05,.55,Math.cos(a)*.09-.04]);});put(h,M(S(.06),0xffd23f),[.05,.57,-.04]);}
   if(o.spikes){const dirs=[];for(let i=0;i<9;i++){const a=-1+i*.25;dirs.push([Math.sin(a)*.6,Math.cos(a)*.75+.15,-.25-.3*Math.abs(Math.cos(a))]);}
-    dirs.forEach(d=>{const v=new THREE.Vector3(...d).normalize();const s=put(h,M(C(.08,.34,8),0x1e9e63),[v.x*.5,v.y*.42,v.z*.45]);s.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v);});
+    if(!o.cactus)dirs.forEach(d=>{const v=new THREE.Vector3(...d).normalize();const s=put(h,M(C(.08,.34,8),0x1e9e63),[v.x*.5,v.y*.42,v.z*.45]);s.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v);});
     for(let i=0;i<8;i++){const a=(i%4-1.5)*.45,y=.2+Math.floor(i/4)*.35,v=new THREE.Vector3(Math.sin(a),.25,-1).normalize();const s=put(up,M(C(.08,.32,8),0x1e9e63),[v.x*.45,y,-.42]);s.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v);}}
   return root;
 }
@@ -3614,12 +3687,19 @@ function setBiome(b){if(!R.ready||R.b===b)return;R.b=b;const E=BIO[b];
   R.hemi.color.set(E.hemi[0]);R.hemi.groundColor.set(E.hemi[1]);R.hemi.intensity=E.hemi[2]*.62;R.key.color.set(E.key[0]);R.key.intensity=E.key[1]*.75;R.rim.color.set(E.rim);R.pt.color.set(E.light);}
 
 /* per-card state */
-function vstate(v){let s=VS[v.k];if(!s){s=VS[v.k]={slots:{},banners:[],hero:null,heroName:'',wave:-1,lastN:-1,lastF:-1,plat:inst('platform'),perch:inst('platform'),leader:null,spawnT:0};s.plat.wrap.children[0].visible=false;s.perch.wrap.children[0].visible=false;R.world.add(s.plat.wrap);R.world.add(s.perch.wrap);}return s;}
-function dropState(k){const s=VS[k];if(!s)return;[s.plat,s.perch,s.hero,s.leader].forEach(I=>I&&R.world.remove(I.wrap));Object.keys(s.slots).forEach(i=>s.slots[i].I&&R.world.remove(s.slots[i].I.wrap));s.banners.forEach(b=>b&&R.world.remove(b.I.wrap));delete VS[k];}
+function vstate(v){let s=VS[v.k];if(!s){s=VS[v.k]={slots:{},banners:[],backs:[],sils:[],hero:null,heroName:'',wave:-1,lastN:-1,lastF:-1,plat:inst('platform'),perch:inst('platform'),leader:null,spawnT:0};s.plat.wrap.children[0].visible=false;s.perch.wrap.children[0].visible=false;R.world.add(s.plat.wrap);R.world.add(s.perch.wrap);}return s;}
+function dropState(k){const s=VS[k];if(!s)return;[s.plat,s.perch,s.hero,s.leader].concat(s.backs||[],s.sils||[]).forEach(I=>I&&R.world.remove(I.wrap));Object.keys(s.slots).forEach(i=>s.slots[i].I&&R.world.remove(s.slots[i].I.wrap));s.banners.forEach(b=>b&&R.world.remove(b.I.wrap));delete VS[k];}
 function heroName(k){if(k==='you')return 'prince';const a=memberOf(k);return (a===null||a===undefined)?null:'hero'+a;}
+const SIL_MAT=new THREE.MeshBasicMaterial({color:0x2f2140});
+/* a plain dark outline of a goblin: stands in for everyone past the first three */
+function addSil(t){const I=inst('gob_normal');I.o.traverse(m=>{if(m.isMesh)m.material=SIL_MAT;});I.born=t;I.sil=true;R.world.add(I.wrap);return I;}
+/* glide toward the spot instead of snapping, so the next goblin walks up to the front */
+function placeSm(I,x,yb,hPx,t){if(I.px===undefined){I.px=x;I.py=yb;I.ph=hPx;}else{const k=Math.min(1,Math.max(0,t-(I.pt||t))*11);I.px+=(x-I.px)*k;I.py+=(yb-I.py)*k;I.ph+=(hPx-I.ph)*k;}I.pt=t;place(I,I.px,I.py,I.ph);}
+function syncSils(st,face,t){const els=face.querySelectorAll('.sil');while(st.sils.length>els.length){R.world.remove(st.sils.pop().wrap);}
+  els.forEach((ge,i)=>{let I=st.sils[i];if(!I)I=st.sils[i]=addSil(t);const sv=ge.querySelector('svg')||ge,r=rel(sv.getBoundingClientRect());if(r.h>4)placeSm(I,r.l+r.w/2,r.t+r.h*.97,r.h*.9,t);});}
 function addI(name,t){if(BEST[name])discover(name);const I=inst(name);I.born=t;R.world.add(I.wrap);return I;}
 
-function eachInst(st,f){if(st.plat)f(st.plat);if(st.perch)f(st.perch);if(st.hero)f(st.hero);if(st.leader)f(st.leader);Object.keys(st.slots).forEach(function(i){var sl=st.slots[i];if(sl&&sl.I)f(sl.I);});}
+function eachInst(st,f){if(st.plat)f(st.plat);if(st.perch)f(st.perch);if(st.hero)f(st.hero);if(st.leader)f(st.leader);(st.backs||[]).forEach(f);(st.sils||[]).forEach(f);Object.keys(st.slots).forEach(function(i){var sl=st.slots[i];if(sl&&sl.I)f(sl.I);});}
 function hideSt(st){if(st.hid)return;st.hid=true;eachInst(st,function(I){I.wrap.visible=false;});}
 function showSt(st){st.hid=false;eachInst(st,function(I){I.wrap.visible=true;});}
 var crowdBuf=[];
@@ -3633,6 +3713,7 @@ function syncView(v,t){
   st.plat.wrap.scale.setScalar(st.plat.s||1);
   // a new card arrived: whoever is still standing pops, the new ones drop in
   if(st.wave!==v.wave){Object.keys(st.slots).forEach(i=>{const sl=st.slots[i];if(sl.I&&!sl.dead)pop(sl.I);});st.slots={};if(st.leader){pop(st.leader);st.leader=null;}
+    (st.backs||[]).forEach(b=>pop(b,true));st.backs=[];(st.sils||[]).forEach(i=>R.world.remove(i.wrap));st.sils=[];
     st.wave=v.wave;st.spawnT=t+.02;st.crowd=[];st.lastN=-1;st.lastF=-1;}
   // hero
   const hn=heroName(v.k);
@@ -3645,22 +3726,29 @@ function syncView(v,t){
   if(c.kind==='few'||c.kind==='rune'){
     const frenzy=!el.combo.classList.contains('hide'), alive=c.kind==='few'?c.gobs.filter(x=>x.hp>0).length:1, many=c.kind==='few'&&c.gobs.length>1;
     face.querySelectorAll('.gob').forEach(ge=>{
+      if(ge.classList.contains('gen')) return;
       const i=ge.hasAttribute('data-i')?+ge.getAttribute('data-i'):0, g=c.kind==='rune'?{t:'rune',hp:c.done?0:1,max:1}:c.gobs[i]; if(!g) return;
       const sv=ge.querySelector('svg'); if(!sv) return; const r=rel(sv.getBoundingClientRect());
       let sl=st.slots[i];
       if(g.hp>0){ if(sl&&!sl.dead&&sl.I.base!==(GS.endless?'eld_':'gob_')+g.t){pop(sl.I,true);sl=null;}
         if(!sl||sl.dead){sl=st.slots[i]={I:addI(pickVariant(g.t),t),hp:g.hp,hurtT:-9};}
         if(g.hp<sl.hp)sl.hurtT=t; sl.hp=g.hp; sl.max=g.max; sl.scared=g.t!=='rune'&&(g.hp/g.max<.5||(many&&alive===1)||frenzy);
-        if(r.h>4) place(sl.I,r.l+r.w/2,r.t+r.h*.97,r.h*.92);
+        if(r.h>4) placeSm(sl.I,r.l+r.w/2,r.t+r.h*.97,r.h*.92,t);
       } else if(sl&&!sl.dead){pop(sl.I);sl.dead=true;}
     });
   } else {
     // horde: front goblin (leader type) + crowds for each pile
     const lead=(GS.endless?'eld_':'gob_')+(c.lead||'normal');
     if(!st.leader||st.leader.base!==lead){if(st.leader)R.world.remove(st.leader.wrap);st.leader=addI(pickVariant(c.lead||'normal'),t);st.leader.hurtT=-9;}
+    // a short line: the front goblin falls and the next one steps up
+    if(st.lastN>=0&&c.n<st.lastN&&c.n<=3&&st.backs.length&&st.leader){pop(st.leader);st.leader=st.backs.shift();st.leader.hurtT=-9;}
     if(st.lastF>=0&&c.fhp<st.lastF)st.leader.hurtT=t; st.lastF=c.fhp; st.leader.scared=c.n<=Math.max(2,Math.ceil(c.size*.1))||!el.combo.classList.contains('hide');
     const row=face.querySelector('.hordeRow'), fs=face.querySelector('.fstrip');
-    if(row&&fs){const rr=rel(row.getBoundingClientRect()),fr=rel(fs.getBoundingClientRect());place(st.leader,rr.l+rr.w/2,fr.t-2,rr.h*.95);}
+    if(row&&fs){const rr=rel(row.getBoundingClientRect()),fr=rel(fs.getBoundingClientRect());placeSm(st.leader,rr.l+rr.w/2,fr.t-2,rr.h*.95,t);}
+    const needB=c.n>3?0:Math.max(0,c.n-1);
+    while(st.backs.length>needB)R.world.remove(st.backs.pop().wrap);
+    while(st.backs.length<needB)st.backs.push(addI(pickVariant(c.lead||'normal'),t));
+    face.querySelectorAll('.gob.back').forEach(ge=>{const b=st.backs[+ge.getAttribute('data-b')],sv=ge.querySelector('svg');if(!b||!sv)return;const r=rel(sv.getBoundingClientRect());if(r.h>4)placeSm(b,r.l+r.w/2,r.t+r.h*.97,r.h*.92,t);});
     const piles=face.querySelectorAll('.pile'); let j=0;
     piles.forEach(pe=>{const sv=pe.querySelector('svg'),u=sv&&sv.querySelector('use');if(!sv||!u)return;const id=(u.getAttribute('href')||'').replace('#','');
       const r=rel(sv.getBoundingClientRect()), kind=id==='p-legion'?'legion':id==='p-warband'?'warband':id==='p-squad'?'squad':null;
@@ -3677,30 +3765,43 @@ function syncView(v,t){
     if(st.lastN>=0&&c.n<st.lastN){const kn=Math.min(3,st.lastN-c.n);for(let q=0;q<kn;q++){const cb=crowdBuf[crowdBuf.length-1-Math.floor(Math.random()*Math.min(6,crowdBuf.length))];if(cb)popMini(cb.p,cb.s);}}
     st.lastN=c.n; st.crowd=crowdBuf.slice(cb0);
   }
+  syncSils(st,face,t);
 }
 const CROWD3=[0x8fd12a,0xa9e24a,0x6fb51c,0xcfe338,0x5c9420,0x3cc985,0x9bcb56].map(c=>new THREE.Color(c));
 var qT=new THREE.Quaternion(), eT=new THREE.Euler();
-const SCPOSE={gob_brute:{L:[-2.2,0,.75],R:[-2.2,0,-.75]},gob_elite:{L:[-2.2,0,.75],R:[-2.2,0,-.75]},gob_shaman:{L:[-1.9,0,-.3],R:[-1.7,0,.35]},def:{L:[-1.6,0,-.15],R:[-1.6,0,.15]}};
+/* Fear moves. Each goblin picks one of three at random every time it gets scared:
+   0 = hands up and shivering, 1 = hunch down and hug itself, 2 = panicked hop and flail.
+   Arm angles are per type; the big ones keep their fists well clear of their faces. */
+const FEAR_BIG=[{L:[-.5,0,-2.45],R:[-.5,0,2.45],up:.12,head:[-.15,0]},{L:[-1,0,.55],R:[-1,0,-.55],up:.5,head:[-.45,0],dn:.12},{L:[-1.1,0,-.5],R:[-1.1,0,.5],amp:.6,up:.2,head:[-.05,0]}];
+const FEAR={def:[{L:[-1.9,0,-.45],R:[-1.9,0,.45],up:.16,head:[-.12,0]},{L:[-1,0,.9],R:[-1,0,-.9],up:.45,head:[-.4,0],dn:.1},{L:[-1,0,-.5],R:[-1,0,.5],amp:.7,up:.2,head:[-.05,0]}],
+  gob_brute:FEAR_BIG,gob_elite:FEAR_BIG,
+  gob_shaman:[{L:[-1.9,0,-.3],R:[-1.7,0,.35],up:.16,head:[-.12,0]},{L:[-1,0,.7],R:[-1,0,-.7],up:.4,head:[-.4,0],dn:.1},{L:[-1.1,0,-.5],R:[-1.1,0,.5],amp:.6,up:.2,head:[-.05,0]}]};
 const SCLINES={def:['Please, no!','Not the ears!','Mercy!','I give up!','Truce?!','I have a family!','Eep!',"I'm just a lil' guy!"],
   gob_brute:['N-NOT THE FACE!','I bruise easy!!',"I'm actually really nice!"],gob_elite:['I yield! I YIELD!','Keep the crown!'],
   gob_shaman:['I surrender!','Only SMALL skeletons!','Truce! TRUCE!'],gob_goldskin:['Take the gold!','It was never mine!']};
 var lastQuip=0, qS=new THREE.Quaternion();
-function quip(I,t){if(t-lastQuip<1.6)return;lastQuip=t;const L=SCLINES[I.base]||SCLINES.def;
+function quip(I,t){if(t-lastQuip<2.2)return;lastQuip=t;const L=SCLINES[I.base]||SCLINES.def;
   const p=I.wrap.position.clone();p.y+=I.t.h*(I.s||1)*1.05;p.project(R.cam);if(p.z>1)return;
   floatTxt(L[Math.floor(Math.random()*L.length)],'small quip',(p.x+1)/2*R.W,(1-p.y)/2*R.H);}
 function animGob(I,t,hurtT,lowHp,scared){
   const dt=Math.min(.05,t-(I.lt||t)); I.lt=t; const was=I.sc||0; I.sc=Math.max(0,Math.min(1,was+(scared?dt*4:-dt*3))); const sc=I.sc;
+  if(scared&&was<.001)I.fv=Math.floor(Math.random()*3); const fv=I.fv||0, FE=(FEAR[I.base]||FEAR.def)[fv];
   if(scared&&was<.5&&sc>=.5&&(I.quipped||0)<2&&Math.random()<.7){I.quipped=(I.quipped||0)+1;quip(I,t);}
   const age=t-(I.born||0), k=Math.min(1,age/.16), pop=k<1?1+Math.sin(k*PI)*.25*(1-k):1;
   I.wrap.scale.setScalar((I.s||1)*Math.max(.001,k<1?k*pop:1));
   I.o.position.set(lowHp?Math.sin(t*55)*.012:0,(1-k)*1.4+Math.abs(Math.sin(t*3+I.phase))*.035,0);
   const ht=t-(hurtT||-9); I.o.rotation.set(I.tilt||0,(I.face||0)+Math.sin(t*.7+I.phase)*.2,ht<.4?Math.sin(ht*42)*.22*(1-ht/.4):0);
-  const h=I.nodes.head; if(h){h.quaternion.copy(h.userData.q0).multiply(qT.setFromEuler(eT.set(-.12*sc,Math.sin(t*1.1+I.phase)*.25*(1-sc)+Math.sin(t*11)*.32*sc,Math.sin(t*1.7+I.phase)*.05)));}
-  if(sc>.001){ const P=SCPOSE[I.base]||SCPOSE.def;
-    [['arm-1','L'],['arm1','R']].forEach(([nm,k],i)=>{const a=I.nodes[nm];if(!a)return;const e=P[k];
-      qS.setFromEuler(eT.set(e[0]+Math.sin(t*50+i)*.03,e[1],e[2]+Math.sin(t*10+i*PI)*.18));a.quaternion.copy(a.userData.q0).slerp(qS,sc);});
-    const up=I.nodes.up; if(up) up.quaternion.copy(up.userData.q0).multiply(qT.setFromEuler(eT.set(.16*sc,0,0)));
-    I.o.position.x+=Math.sin(t*55+I.phase)*.025*sc; I.o.position.y-=.04*sc;
+  const h=I.nodes.head; if(h){h.quaternion.copy(h.userData.q0).multiply(qT.setFromEuler(eT.set(FE.head[0]*sc,Math.sin(t*1.1+I.phase)*.25*(1-sc)+(fv===0?Math.sin(t*11)*.32:fv===1?Math.sin(t*5+I.phase)*.14:Math.sin(t*16)*.5)*sc,Math.sin(t*1.7+I.phase)*.05)));}
+  if(sc>.001){
+    [['arm-1','L'],['arm1','R']].forEach(([nm,k],i)=>{const a=I.nodes[nm];if(!a)return;const e=FE[k];let ex=e[0],ez=e[2];
+      if(fv===0){ex+=Math.sin(t*50+i)*.03;ez+=Math.sin(t*10+i*PI)*.18;}
+      else if(fv===1){ex+=Math.sin(t*7+i*2)*.05;ez+=Math.sin(t*6+i*PI)*.06;}
+      else{ex+=Math.sin(t*13+i*PI)*FE.amp;ez+=Math.sin(t*13+i*PI+1.2)*FE.amp*.5;}
+      qS.setFromEuler(eT.set(ex,e[1],ez));a.quaternion.copy(a.userData.q0).slerp(qS,sc);});
+    const up=I.nodes.up; if(up) up.quaternion.copy(up.userData.q0).multiply(qT.setFromEuler(eT.set(FE.up*sc,fv===2?Math.sin(t*9)*.12*sc:0,0)));
+    if(fv===2){I.o.position.y+=Math.abs(Math.sin(t*9+I.phase))*.07*sc;I.o.rotation.z+=Math.sin(t*7+I.phase)*.06*sc;}
+    else I.o.position.x+=Math.sin(t*(fv===0?55:30)+I.phase)*(fv===0?.025:.02)*sc;
+    I.o.position.y-=(FE.dn||.04)*sc;
   } else { ['arm-1','arm1','up'].forEach(nm=>{const a=I.nodes[nm];if(a)a.quaternion.copy(a.userData.q0);}); }
 }
 function animHero(I,t){
@@ -3766,7 +3867,7 @@ function loop(){requestAnimationFrame(loop); if(document.hidden||R.paused)return
   Object.keys(VS).forEach(k=>{if(!views[k])dropState(k);});
   Object.keys(views).forEach(k=>syncView(views[k],t));
   Object.keys(VS).forEach(k=>{const s=VS[k];Object.keys(s.slots).forEach(i=>{const sl=s.slots[i];if(sl.I&&!sl.dead)animGob(sl.I,t,sl.hurtT,sl.max&&sl.hp/sl.max<.5,sl.scared);});
-    if(s.leader)animGob(s.leader,t,s.leader.hurtT,false,s.leader.scared); s.banners.forEach(b=>b&&animGob(b.I,t,-9,false)); if(s.hero)animHero(s.hero,t);});
+    if(s.leader)animGob(s.leader,t,s.leader.hurtT,false,s.leader.scared); (s.backs||[]).forEach(b=>animGob(b,t,-9,false,!!(s.leader&&s.leader.scared))); (s.sils||[]).forEach(I=>animGob(I,t,-9,false,false)); s.banners.forEach(b=>b&&animGob(b.I,t,-9,false)); if(s.hero)animHero(s.hero,t);});
   syncGolden(t); updateFx(dt); updateCrowd(t);
   R.rd.render(R.scene,R.cam);
 }
@@ -4049,12 +4150,13 @@ function titleFallback(host){var k=0,box=document.createElement("div");box.class
  return {steps:[],start:function(){},stop:function(){}};}
 
 /* settings */
-function renderSettings(){$("optSound").checked=!S.muted;$("optVol").value=Math.round((S.vol==null?1:S.vol)*100);$("volVal").textContent=$("optVol").value+"%";
+function renderSettings(){$("optSound").checked=!S.muted;$("optMusic").checked=!S.musicOff;$("optMusic").disabled=S.muted;$("musRow").classList.toggle("off",S.muted);$("optVol").value=Math.round((S.vol==null?1:S.vol)*100);$("volVal").textContent=$("optVol").value+"%";
  $("optVol").disabled=S.muted;$("volRow").classList.toggle("off",S.muted);$("optHaptics").checked=!!S.haptics;
  $("hapNote").textContent=canBuzz()?"A short buzz on hits, kills and purchases":"This device or browser doesn’t support vibration";$("optHaptics").disabled=!canBuzz();}
 $("optSound").addEventListener("change",function(){S.muted=!this.checked;renderMute();renderSettings();save();SND.click();});
 $("optVol").addEventListener("input",function(){setVolume(this.value/100);$("volVal").textContent=this.value+"%";});
 $("optVol").addEventListener("change",function(){save();SND.coin();});
+$("optMusic").addEventListener("change",function(){S.musicOff=!this.checked;save();SND.click();});
 $("optHaptics").addEventListener("change",function(){S.haptics=this.checked;save();buzz(30);});
 $("muteBtn").addEventListener("click",renderSettings);
 
@@ -4130,19 +4232,18 @@ window.addEventListener("blur",goBG);window.addEventListener("focus",backFromBG)
 if(document.hidden)goBG();
 $("pauseGo").addEventListener("click",function(){$("pauseModal").classList.remove("show");SND.click();setTimeout(pumpToast,200);});
 
-/* ===== FRENZY: explained the first time your party gets to ×1.5 ===== */
-function frenzyTut(){if(F.frenzyTut||partyBase(S)<=0||frenzyMult(S,combo)<1.5||spot.active||anyOverlay()||sheetOpen())return;F.frenzyTut=1;
- var cap=(hasRelic(S,"frenzy")?TUNE.frenzyCap*1.35:TUNE.frenzyCap).toFixed(1);
- showSpot(el.combo,"Frenzy ×1.5! Every swipe in an unbroken streak fires up your party. After 5 quick swipes their damage starts climbing, up to ×"+cap+". Stop swiping for more than a second and it cools off.","Got it",null,false,"",{});}
+/* ===== FRENZY: explained the first time your party gets to ×1.1 ===== */
+function frenzyTut(){if(F.frenzyTut||partyBase(S)<=0||frenzyMult(S,combo)<1.1||spot.active||anyOverlay()||sheetOpen())return;F.frenzyTut=1;
+ showSpot(el.combo,"Frenzy! After 5 quick swipes, every swipe in an unbroken streak adds 1% to your whole party’s damage, and there is no cap. Stop swiping for a moment and it resets, so decide when to keep going and when to sell and shop.","Got it",null,false,"",{});}
 
 /* ===== SWIFT GOBLINS BOLT ===== */
 var SWIFT_MS=5000,swiftTick=performance.now();
-function hasSwift(c){if(!c)return false;if(c.kind==="few")return c.gobs.some(function(g){return g.t==="swift"&&g.hp>0;});return c.kind==="horde"&&c.lead==="swift"&&c.n>0;}
+function hasSwift(c){return frontT(c)==="swift";}
 function swiftClock(v){if(!v.clock){v.clock=document.createElement("div");v.clock.className="swiftClock";v.clock.setAttribute("aria-hidden","true");v.el.appendChild(v.clock);}return v.clock;}
 setInterval(function(){var now=performance.now(),el2=Math.min(500,now-swiftTick);swiftTick=now;for(var k in views){var v=views[k],c=cardOf(k);
   if(!hasSwift(c)){v.swiftLeft=null;if(v.clock)v.clock.classList.remove("on");continue;}
-  if(v.swiftWave!==v.wave||v.swiftLeft==null){v.swiftWave=v.wave;v.swiftLeft=SWIFT_MS;v.swiftN=c.n;}
-  if(c.kind==="horde"&&c.n<v.swiftN){v.swiftLeft=SWIFT_MS;v.swiftN=c.n;}   /* a kill buys a swift horde another 5 seconds */
+  if(v.swiftWave!==v.wave||v.swiftLeft==null){v.swiftWave=v.wave;v.swiftLeft=SWIFT_MS;v.swiftN=cardAlive(c);}
+  if(cardAlive(c)<v.swiftN){v.swiftLeft=SWIFT_MS;v.swiftN=cardAlive(c);}   /* each kill gives the next swift goblin in line a fresh 5 seconds */
   if(!paused()&&!v.flipping&&!sheetOpen())v.swiftLeft-=el2;
   var ck=swiftClock(v),s=Math.max(0,Math.ceil(v.swiftLeft/1000));ck.textContent=s;ck.classList.add("on");ck.classList.toggle("hurry",v.swiftLeft<=2000);
   if(v.swiftLeft<=0){v.swiftLeft=null;ck.classList.remove("on");C.swiftEsc=(C.swiftEsc||0)+1;
@@ -4165,6 +4266,7 @@ setInterval(function(){var pl=playerLevel(S);$("lvlChip").textContent="Lv "+pl;
 
 /* ===== WHAT EACH UPGRADE DOES ===== */
 var UPG_ABOUT={
+ crit:"Every level adds 1% to the chance that one of your swipes is a critical hit and does double damage. Only your own swipes can crit, not your party's.",
  weapon:"Your weapon sets the damage of every swipe. A better one kills goblins in fewer swipes.",
  bait:"Goblin Bait lures more goblins onto every card. More goblins per card means more kills per swipe, as long as your weapon keeps up.",
  sack:"A bigger Loot Sack collects more ears from every goblin you kill.",
@@ -4215,7 +4317,7 @@ startLabel();
 var _openTitle=openTitle;openTitle=function(){startLabel();_openTitle();};
 
 /* ===== SHAMAN HEX ===== */
-setInterval(function(){var on=false;for(var k in views){var c=cardOf(k);if(!c)continue;if(c.kind==="few"&&c.gobs.some(function(g){return g.t==="shaman"&&g.hp>0;}))on=true;if(c.kind==="horde"&&c.lead==="shaman"&&c.n>0)on=true;}
+setInterval(function(){var on=false;for(var k in views){var c=cardOf(k);if(!c)continue;if(frontT(c)==="shaman")on=true;}
  if(on!==hexOn){hexOn=on;$("hexTag").classList.toggle("hide",!on);el.cave.classList.toggle("hexed",on);if(on&&!F.hexTip&&partyBase(S)>0){F.hexTip=1;toast("A shaman has hexed your party: half damage until it dies.",3400);}}},250);
 
 /* ===== ENDLESS MODE ===== */
@@ -4235,6 +4337,51 @@ $("winClose").addEventListener("click",function(){endlessLook();});
 setInterval(function(){if(S.endless&&!S.ewon&&S.ekills>=1e12&&!anyOverlay()&&!spot.active){S.ewon=true;S.end=S.end||{};S.end.true=1;save();$("trillionModal").classList.add("show");SND.fanfare();setTimeout(SND.fanfare,500);}},1000);
 $("trGo").addEventListener("click",function(){$("trillionModal").classList.remove("show");SND.click();});
 setInterval(function(){if(S.endless&&$("biomeTag").textContent!=="The Abyss")$("biomeTag").textContent="The Abyss";},1000);
+
+/* ===== MUSIC: a procedural upbeat loop (8 bars, chiptune funk). Key and tempo climb with each depth. ===== */
+var MUS=(function(){
+ var BPMS=[124,126,128,130,132],SHIFT=[0,2,3,5,7],CH=[0,7,9,5,0,7,5,7],MINOR=[0,0,1,0,0,0,0,0];
+ var BASSP={0:0,3:0,6:12,8:0,11:0,14:12},ARP=[0,1,2,3,2,1,2,3];
+ var LEAD=[
+  [[0,76,2],[3,76,1],[4,79,2],[6,76,2],[8,74,2],[10,72,2],[12,74,4]],
+  [[0,71,2],[3,74,1],[4,79,2],[6,74,2],[8,71,2],[10,74,2],[12,67,4]],
+  [[0,72,2],[2,76,2],[4,81,3],[8,79,2],[10,76,2],[12,72,4]],
+  [[0,77,2],[3,76,1],[4,72,2],[6,69,2],[8,72,4],[12,77,2],[14,79,2]],
+  [[0,84,2],[3,84,1],[4,83,2],[6,79,2],[8,76,2],[10,79,2],[12,84,4]],
+  [[0,83,2],[3,79,1],[4,74,2],[6,79,2],[8,83,2],[10,86,2],[12,83,4]],
+  [[0,81,2],[3,77,1],[4,72,2],[6,77,2],[8,81,2],[10,84,2],[12,81,4]],
+  [[0,79,2],[2,81,2],[4,83,2],[6,86,2],[8,83,4],[12,79,2],[14,74,2]]];
+ var bus=null,comp=null,step=0,next=0,active=false,bpm=124,shift=0,lastAC=null;
+ function mtof(m){return 440*Math.pow(2,(m-69)/12);}
+ function mk(){if(bus&&lastAC===AC)return;lastAC=AC;bus=AC.createGain();bus.gain.value=0;comp=AC.createDynamicsCompressor();comp.threshold.value=-20;comp.ratio.value=4;comp.attack.value=.004;comp.release.value=.18;bus.connect(comp);comp.connect(AC.master||AC.destination);}
+ function env(g,t,v,d,end){g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+.008);g.gain.exponentialRampToValueAtTime(Math.max(.0008,v*(end||.3)),t+d);g.gain.exponentialRampToValueAtTime(.0004,t+d+.06);}
+ function kick(t){var o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.setValueAtTime(155,t);o.frequency.exponentialRampToValueAtTime(42,t+.13);g.gain.setValueAtTime(.62,t);g.gain.exponentialRampToValueAtTime(.001,t+.24);o.connect(g);g.connect(bus);o.start(t);o.stop(t+.26);}
+ function nz(t,d,v,type,f,q,dly){var s=AC.createBufferSource(),fl=AC.createBiquadFilter(),g=AC.createGain();s.buffer=noiseBuf;fl.type=type;fl.frequency.value=f;fl.Q.value=q||.7;t+=dly||0;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(fl);fl.connect(g);g.connect(bus);s.start(t);s.stop(t+d);}
+ function clap(t,v){nz(t,.1,v,"bandpass",1700,1.1);nz(t,.08,v*.8,"bandpass",2300,1,.012);nz(t,.14,v*.7,"bandpass",1500,1,.024);}
+ function hat(t,open,v){nz(t,open?.17:.045,v,"highpass",7500,.5);}
+ function bass(t,m,d){var o=AC.createOscillator(),o2=AC.createOscillator(),f=AC.createBiquadFilter(),g=AC.createGain();o.type="sawtooth";o2.type="square";o.frequency.value=mtof(m);o2.frequency.value=mtof(m-12);f.type="lowpass";f.Q.value=5;f.frequency.setValueAtTime(1500,t);f.frequency.exponentialRampToValueAtTime(260,t+d);env(g,t,.2,d,.5);o.connect(f);o2.connect(f);f.connect(g);g.connect(bus);o.start(t);o2.start(t);o.stop(t+d+.08);o2.stop(t+d+.08);}
+ function pluck(t,m,d,v,type,cut){var o=AC.createOscillator(),f=AC.createBiquadFilter(),g=AC.createGain();o.type=type||"square";o.frequency.value=mtof(m);f.type="lowpass";f.frequency.value=cut||2600;env(g,t,v,d,.15);o.connect(f);f.connect(g);g.connect(bus);o.start(t);o.stop(t+d+.08);}
+ function lead(t,m,d,v){var f=AC.createBiquadFilter(),g=AC.createGain();f.type="lowpass";f.frequency.value=4600;env(g,t,v,d*.9,.45);f.connect(g);g.connect(bus);[-8,8].forEach(function(c){var o=AC.createOscillator();o.type="square";o.frequency.value=mtof(m);o.detune.value=c;o.connect(f);o.start(t);o.stop(t+d+.08);});}
+ function pad(t,notes,d){notes.forEach(function(m){var o=AC.createOscillator(),g=AC.createGain();o.type="triangle";o.frequency.value=mtof(m);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.016,t+.3);g.gain.setValueAtTime(.016,t+d-.25);g.gain.linearRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(bus);o.start(t);o.stop(t+d+.02);});}
+ function playStep(s,t){var bi=(s/16)|0,st=s%16,sd=60/bpm/4,r=CH[bi]+shift,minor=MINOR[bi],hot=combo>=5,tones=[0,minor?3:4,7,12],rm=((r%12)+12)%12;
+  if(st%4===0||(st===10&&bi%2===1))kick(t);
+  if(st===4||st===12||(bi===7&&st>=13&&st<=15)||(bi===3&&st===15))clap(t,bi===7&&st>12?.16:.24);
+  if(st%4===2)hat(t,true,.06);else if(st%2===1)hat(t,false,hot?.034:.017);else if(hot&&st%4===0)hat(t,false,.02);
+  if(BASSP[st]!==undefined)bass(t,36+rm+BASSP[st],sd*(BASSP[st]?1.6:2.2));
+  if(st%2===0||hot){var ai=ARP[st%8];pluck(t,60+r+tones[ai%4],sd*1.4,hot?.03:.022,"square",2400);}
+  if(st===0)pad(t,[48+rm,48+rm+tones[1],48+rm+7],sd*16);
+  var ml=LEAD[bi];for(var i=0;i<ml.length;i++)if(ml[i][0]===st){lead(t,ml[i][1]+shift,ml[i][2]*sd*.96,.036);if(hot)lead(t,ml[i][1]+shift+12,ml[i][2]*sd*.9,.014);}}
+ function tick(){
+  var ok=AC&&AC.state==="running"&&!S.muted&&!S.musicOff&&!BG&&!document.hidden&&!titleOpen()&&S.seenStory;
+  if(!ok){if(bus&&AC){try{bus.gain.setTargetAtTime(0,AC.currentTime,.12);}catch(e){}}active=false;return;}
+  mk();var now=AC.currentTime;
+  if(!active){active=true;step=step-(step%16);next=now+.08;}
+  bus.gain.setTargetAtTime((anyOverlay()||spot.active)?.34:.62,now,.25);
+  var guard=0;while(next<now+.2&&guard++<8){if(step%16===0){var b=Math.max(0,Math.min(4,S.biome||0));bpm=BPMS[b];shift=SHIFT[b];}playStep(step,next);next+=60/bpm/4;step=(step+1)%128;}}
+ setInterval(function(){try{tick();}catch(e){}},40);
+ /* the browser only lets audio start after a touch, so wake it on the first one */
+ ["pointerup","keydown"].forEach(function(n){document.addEventListener(n,function(){if(!AC||AC.state!=="running")ac();},true);});
+ return{tick:tick};})();
 
 /* ===== FORGIVING TAPS: a finger that wobbles a little still presses the button ===== */
 (function(){var SEL="button,.ctl,.tab,.buy,.hire,.mini,.gearBtn,.tBtn,.cta,[role=button]",SLOP=22,rec=null,lastClick=0;
