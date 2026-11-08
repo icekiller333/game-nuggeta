@@ -121,15 +121,39 @@
       .wrow .wsub{ font-weight:600; font-size:13.5px; color:#5a4a28; line-height:1.15; }
       .wrow .btn{ min-height:40px; padding:6px 12px; font-size:15px; flex-shrink:0; }
 
+      /* ---------- Visitor & plant picker ---------- */
+      #visitor{
+        position:fixed; z-index:9; left:0; top:0; font-size:38px; line-height:1;
+        cursor:pointer; display:none; pointer-events:auto; padding:10px;
+        filter:drop-shadow(0 0 10px rgba(255,217,61,.9)) drop-shadow(2px 2px 0 rgba(0,0,0,.4));
+      }
+      .wrow.locked{ opacity:.55; }
+      button.prow{ width:100%; text-align:left; font-family:inherit; cursor:pointer; color:var(--ink); }
+      .prow .wname{ display:block; font-weight:800; font-size:16px; line-height:1.1; }
+      .prow .wsub{ display:block; font-weight:600; font-size:13.5px; color:#5a4a28; line-height:1.15; }
+      .prow .pay{ font-weight:800; font-size:15px; color:#7a4b00; flex-shrink:0; }
+
       /* ---------- Settings ---------- */
       #settings{
-        position:fixed; top:66px; right:12px; z-index:25; width:230px; display:none;
+        position:fixed; top:66px; right:12px; z-index:25; width:252px; display:none;
         background:var(--paper); border:3px solid var(--ink); box-shadow:var(--shadow);
         padding:12px 14px;
       }
       #settings h3{ margin:0 0 10px; font-size:17px; font-weight:800; }
       #settings .btn{ width:100%; margin-bottom:10px; }
       #settings .btn:last-child{ margin-bottom:0; }
+      #settings .snote{ font-size:13.5px; font-weight:600; color:#5a4a28; margin:-4px 0 10px; line-height:1.3; }
+      .jdot{ display:inline-block; width:20px; height:20px; border-radius:50%; border:2px solid var(--ink); flex-shrink:0; margin-right:8px; vertical-align:-4px; }
+      .goalsBox{ border-top:2px dashed #c9b98a; margin-top:10px; padding-top:8px; }
+      .goalsBox .gtitle{ font-weight:800; font-size:15px; margin-bottom:4px; }
+      .goalsBox .grow2{ display:flex; justify-content:space-between; font-weight:600; font-size:14.5px; padding:2px 0; color:#241c10; }
+      .goalsBox .grow2 .done{ color:#2c7a35; font-weight:800; }
+
+      /* ---------- Tutorial opening: everything else stays hidden ---------- */
+      body.tut #hud{ display:none; }
+      body.tut #padBtn{ display:none !important; }
+      body.tut #settings{ display:none !important; }
+      body.tut #visitor{ display:none !important; }
 
       #loadErr{
         position:fixed; inset:0; z-index:50; display:none; place-items:center; padding:20px;
@@ -165,6 +189,7 @@
   <body>
     <div id="stage"></div>
     <canvas id="fx"></canvas>
+    <div id="visitor" aria-hidden="true">🦋</div>
 
     <div id="hud">
       <div class="pill" id="dayPill"><span class="ico">☀</span><span id="dayTxt">Day 1 · Home</span></div>
@@ -185,7 +210,11 @@
 
     <div id="settings">
       <h3>Settings</h3>
+      <button class="btn alt" id="peacefulBtn">🌿 Peaceful: ON</button>
+      <p class="snote">Peaceful on: no pests, fires, strikes or weeds — and plants never wilt away. They just wait for water.</p>
+      <button class="btn alt" id="musicBtn">🎵 Music: ON</button>
       <button class="btn alt" id="soundBtn">🔊 Sound: ON</button>
+      <button class="btn alt" id="journalBtn">📖 Bloom Journal</button>
       <button class="btn danger" id="abandonBtn">Abandon Run</button>
     </div>
 
@@ -196,7 +225,14 @@
 <script>
 "use strict";
 /* ============================================================
-   ORBIT GARDENER v2 — four worlds, Star Petals, rocket pads.
+   ORBIT GARDENER v4 — four worlds, Star Petals, rocket pads.
+   v4: 3 plants per world (PLANTS catalog; per-plant grow/dry/wilt
+   + pay; unlocks by harvest count or world day; picker once a 2nd
+   plant is unlocked), weeds, visitors (+3 petals), golden blooms
+   (5%, +2 petals), and gentle hazards — pests (eat 1.5 growth/s,
+   tap to shoo), fires (4 growth/s, 3 taps to douse, burns down at
+   0 growth or 20s), asteroid damage (tap to repair, free). One
+   hazard max per patch; away-sim hazard caps in awaySim.
    PAD_COST 25 petals: a tended home planet yields ~1 bloom per
    15-20s of active play once 8 patches run, so 25 petals is
    ~4-6 days of casual play / ~10 min of focused tending.
@@ -218,6 +254,26 @@
    ============================================================ */
 var PAD_COST = 25;
 var AWAY_CAP_S = 120;
+/* ============================================================
+   v5 COZY PASS — Peaceful Mode, gentler hazards, ambient calm,
+   Bloom Journal, gentle daily goals, softer harvests.
+   PEACEFUL (S.peaceful): new saves start ON; existing saves load
+   as OFF (their current behavior) unless they saved a choice.
+   Peaceful ON = hazard spawns fully disabled (hazardTimers and
+   away-sim hazard rolls return early), turning it on clears any
+   live weed/pest/fire/damage everywhere, and wilt can never
+   reach death — a dry plant waits, growth still drains after
+   the dry grace period, but it cannot die.
+   GENTLER HAZARDS even with Peaceful OFF (v5 rates, halved
+   from v4): spawn-check intervals doubled — weed every 120s
+   (was 60s), pest every 150s (was 75s), fire every 240s (was
+   120s), strike every 300s (was 150s), same per-patch chances;
+   fire burn rate FIRE_BURN_PER_S 2 growth/s (was 4); pest eat
+   rate PEST_EAT_PER_S 0.75 growth/s (was 1.5); away-sim hazard
+   chances halved too (weed .10, pest .06, fire .05, strike .04).
+   ============================================================ */
+var FIRE_BURN_PER_S = 2;   /* v5: halved from 4/s — fires breathe slower */
+var PEST_EAT_PER_S = 0.75; /* v5: halved from 1.5/s — pests nibble slower */
 /* Water rule: once a plant is thirsty (water at/below its thirstyAt),
    growth stops. After DRY_GRACE_S seconds continuously thirsty, its
    growth meter drains at REGRESS_PER_S — slow on purpose, a nudge.
@@ -237,7 +293,7 @@ function unlockCostFor(wi){
 }
 
 var WORLDS = [
-  { id:"home", name:"Home", plantName:"starflower",
+  { id:"home", name:"Home", plantName:"starflower", visitor:"🦋",
     radius:2.0, daySecs:60, camZ:7.4, sunI:2.6, ambI:0.55,
     planet:0x63b06e, sky:0x0d1830, clouds:true, cloudCol:0xf4fbff,
     startUnlocked:4,
@@ -246,7 +302,7 @@ var WORLDS = [
               {lat:9,lon:240},{lat:-9,lon:300},{lat:64,lon:35},{lat:-64,lon:215} ],
     flower:{ petals:5, petal:0xffd93d, center:0xff9f1c, bud:0xff8fab, stem:0x2f9e44, glow:0.55 },
     blurb:"Bright side grows fast, dries fast. Dark side grows slow, stays damp." },
-  { id:"moon", name:"The Moon", plantName:"moonflower",
+  { id:"moon", name:"The Moon", plantName:"moonflower", visitor:"✨",
     radius:1.6, daySecs:90, camZ:6.6, sunI:2.0, ambI:0.45,
     planet:0x9aa7b8, sky:0x0a0f1e, clouds:false, cloudCol:0xffffff,
     startUnlocked:3,
@@ -255,7 +311,7 @@ var WORLDS = [
               {lat:55,lon:45},{lat:-55,lon:225} ],
     flower:{ petals:6, petal:0xdfe9ff, center:0x9fd8ff, bud:0xb9c8ff, stem:0x7d9bb5, glow:1.1 },
     blurb:"Moonflowers love the dark — they bloom fast in shadow, slow in sun. Long slow days here." },
-  { id:"ember", name:"Ember", plantName:"sunflare",
+  { id:"ember", name:"Ember", plantName:"sunflare", visitor:"🐝",
     radius:2.1, daySecs:60, camZ:7.6, sunI:3.4, ambI:0.5,
     planet:0xc25a3a, sky:0x1c0d10, clouds:true, cloudCol:0xffd0b0,
     startUnlocked:4,
@@ -264,7 +320,7 @@ var WORLDS = [
               {lat:4,lon:260},{lat:-4,lon:320},{lat:58,lon:100},{lat:-58,lon:280} ],
     flower:{ petals:8, petal:0xff7a3c, center:0xffd93d, bud:0xff5e5e, stem:0x4d7a3a, glow:0.7 },
     blurb:"A harsh sun. Sunflares dry out fast — but watered, they grow faster than anything." },
-  { id:"rock", name:"Little Rock", plantName:"cometbloom",
+  { id:"rock", name:"Little Rock", plantName:"cometbloom", visitor:"🌟",
     radius:1.3, daySecs:30, camZ:5.6, sunI:2.6, ambI:0.55,
     planet:0x8a7f9e, sky:0x120a24, clouds:false, cloudCol:0xffffff,
     startUnlocked:2,
@@ -274,27 +330,129 @@ var WORLDS = [
     blurb:"A tiny rock, quick little days. Rare cometblooms grow fast here — only four patches." }
 ];
 var PAD_SITE = { lat:-38, lon:150 };
+
+/* ============================================================
+   PLANT CATALOG (v4) — 3 plants per world. Each entry doubles as
+   its flower visual spec (petals/petal/center/bud/stem/glow) AND
+   its own tuning: grow/dry/wilt per second on bright/dark side,
+   pay = Star Petals per bloom. startWater/thirstyAt stay shared
+   per world (WORLDS tune). Base plant (index 0) starts unlocked;
+   the other two unlock per-world via harvest counts or day.
+   ============================================================ */
+var PLANTS = {
+  home: [
+    { id:"starflower", name:"Starflower", petals:5, petal:0xffd93d, center:0xff9f1c, bud:0xff8fab, stem:0x2f9e44, glow:0.55,
+      growB:4, growD:1.6, dryB:5, dryD:1.5, wiltB:8, wiltD:3, pay:1,
+      quirk:"The classic. Loves the bright side.", unlock:null },
+    { id:"dewdrop", name:"Dewdrop", petals:4, petal:0xa8d8ff, center:0xffffff, bud:0xcfe9ff, stem:0x2f9e44, glow:0.5,
+      growB:3, growD:1.4, dryB:3, dryD:1, wiltB:7, wiltD:3, pay:2,
+      quirk:"Sips slowly — barely ever thirsty.",
+      unlock:{ kind:"harvest", plant:"starflower", n:10, text:"Harvest 10 starflowers on Home" } },
+    { id:"sunbloom", name:"Sunbloom", petals:8, petal:0xff8c2e, center:0xffd93d, bud:0xff7a3c, stem:0x2f9e44, glow:0.6,
+      growB:1.8, growD:0.8, dryB:4, dryD:1.2, wiltB:6, wiltD:2.5, pay:4,
+      quirk:"A slow giant, worth 4 petals a bloom.",
+      unlock:{ kind:"day", n:7, text:"Reach Day 7 on Home" } }
+  ],
+  moon: [
+    { id:"moonflower", name:"Moonflower", petals:6, petal:0xdfe9ff, center:0x9fd8ff, bud:0xb9c8ff, stem:0x7d9bb5, glow:1.1,
+      growB:1.2, growD:3.6, dryB:4, dryD:1.2, wiltB:7, wiltD:2.5, pay:1,
+      quirk:"Loves the dark side of the Moon.", unlock:null },
+    { id:"shadowcap", name:"Shadowcap", petals:5, petal:0x5b2a9d, center:0xb388ff, bud:0x4a2a7a, stem:0x5e6b8a, glow:0.9,
+      growB:0.3, growD:4.5, dryB:3, dryD:1, wiltB:6, wiltD:2, pay:2,
+      quirk:"Grows almost only in the dark.",
+      unlock:{ kind:"harvest", plant:"moonflower", n:8, text:"Harvest 8 moonflowers on the Moon" } },
+    { id:"frostpetal", name:"Frostpetal", petals:6, petal:0xeaf6ff, center:0x9fe8ff, bud:0xd6f0ff, stem:0x7d9bb5, glow:0.8,
+      growB:2.5, growD:2.5, dryB:2, dryD:0.8, wiltB:5, wiltD:2, pay:3,
+      quirk:"Steady grower, sips almost nothing.",
+      unlock:{ kind:"day", n:5, text:"Reach Day 5 on the Moon" } }
+  ],
+  ember: [
+    { id:"sunflare", name:"Sunflare", petals:8, petal:0xff7a3c, center:0xffd93d, bud:0xff5e5e, stem:0x4d7a3a, glow:0.7,
+      growB:5.6, growD:2, dryB:9, dryD:3, wiltB:12, wiltD:5, pay:1,
+      quirk:"Fast under Ember's harsh sun.", unlock:null },
+    { id:"cinderpop", name:"Cinderpop", petals:7, petal:0xff5a2e, center:0xffc93d, bud:0xe63b1e, stem:0x4d7a3a, glow:0.8,
+      growB:8, growD:3, dryB:12, dryD:4, wiltB:10, wiltD:4, pay:3,
+      quirk:"Blazing fast — and always thirsty.",
+      unlock:{ kind:"harvest", plant:"sunflare", n:8, text:"Harvest 8 sunflares on Ember" } },
+    { id:"ashrose", name:"Ashrose", petals:6, petal:0xd9a7b0, center:0xd94f6a, bud:0xc98a96, stem:0x6b7a4d, glow:0.5,
+      growB:4, growD:2, dryB:7, dryD:2.5, wiltB:5, wiltD:2, pay:2,
+      quirk:"Barely wilts. Tough as ash.",
+      unlock:{ kind:"day", n:5, text:"Reach Day 5 on Ember" } }
+  ],
+  rock: [
+    { id:"cometbloom", name:"Cometbloom", petals:4, petal:0xc9a7ff, center:0x6ff2ff, bud:0x9d7bff, stem:0x5e7a4d, glow:1.0,
+      growB:6.4, growD:3.2, dryB:6, dryD:2, wiltB:9, wiltD:4, pay:1,
+      quirk:"Quick little rock-bloom.", unlock:null },
+    { id:"stardust", name:"Stardust", petals:3, petal:0xffffff, center:0xffe9a8, bud:0xf2f2f2, stem:0x5e7a4d, glow:0.9,
+      growB:9, growD:5, dryB:6, dryD:2, wiltB:8, wiltD:3, pay:1,
+      quirk:"Tiny and quick as a spark.",
+      unlock:{ kind:"harvest", plant:"cometbloom", n:6, text:"Harvest 6 cometblooms on Little Rock" } },
+    { id:"meteorflower", name:"Meteorflower", petals:9, petal:0x9d6bff, center:0xffd93d, bud:0x7b4fd0, stem:0x5e7a4d, glow:1.0,
+      growB:2.5, growD:1.5, dryB:5, dryD:1.8, wiltB:7, wiltD:3, pay:5,
+      quirk:"A slow giant, worth 5 petals a bloom.",
+      unlock:{ kind:"day", n:4, text:"Reach Day 4 on Little Rock" } }
+  ]
+};
+function plantList(wi){ return PLANTS[WORLDS[wi].id]; }
+function plantById(wi, id){
+  var list = plantList(wi);
+  for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+  return list[0];
+}
+function plantSpecFor(wi, p){ return plantById(wi, p.plant || plantList(wi)[0].id); }
+function checkUnlocks(wi){
+  var ws = S.worlds[wi];
+  plantList(wi).forEach(function(pl){
+    if (!pl.unlock || ws.unlockedPlants.indexOf(pl.id) >= 0) return;
+    var met = pl.unlock.kind === "harvest"
+      ? ((ws.harvests[pl.unlock.plant] || 0) >= pl.unlock.n)
+      : (ws.day >= pl.unlock.n);
+    if (!met) return;
+    ws.unlockedPlants.push(pl.id);
+    if (wi === S.cur){
+      sfx.chime();
+      enqueue({ center:true, title:"New plant unlocked! 🌱",
+        text: pl.name + " — " + pl.quirk + " Pays " + pl.pay + " ✿ a bloom. Tap empty soil to plant one.",
+        buttons:[{ label:"Lovely!" }] });
+    }
+  });
+  save();
+}
 var SAVE_KEY = "orbit-gardener-save-v2";
 var SAVE_KEY_V1 = "orbit-gardener-save-v1";
 
 /* ---------------- State ---------------- */
 function blankPatches(n, startUnlocked){
   var a = [];
-  for (var i = 0; i < n; i++) a.push({ state:"empty", water:0, growth:0, wilt:0, dryTime:0, locked: i >= startUnlocked });
+  for (var i = 0; i < n; i++) a.push({ state:"empty", water:0, growth:0, wilt:0, dryTime:0, locked: i >= startUnlocked,
+    plant:null, weed:false, pest:false, fire:0, fireTime:0, fireTaps:0, damaged:false, golden:false });
   return a;
 }
 function blankWorlds(){
   return WORLDS.map(function(w){
-    return { patches: blankPatches(w.patches.length, w.startUnlocked), pad:false, totalRot:0, day:1, sum5:0, lastSeen:0 };
+    return { patches: blankPatches(w.patches.length, w.startUnlocked), pad:false, totalRot:0, day:1, sum5:0, lastSeen:0,
+             unlockedPlants:[PLANTS[w.id][0].id], harvests:{} };
   });
 }
 var S = {
-  started:false, sound:true, petals:0, cur:0,
+  started:false, sound:true, music:true, peaceful:true, petals:0, cur:0,
   worlds: blankWorlds(),
+  journal:{}, daily:null,
+  /* v6 opening rework: tutorialDone persists in the save — once the
+     guided opening is finished it never replays. Existing (pre-v6)
+     saves have no tutorialDone field and load as done (past it). */
+  tutorialDone:false, tutorialStep:0, tutorialRot:0, tutStart:0, tutorialOrbitStart:0,
   flags:{ story:false, tour:false, teachWater:false, teachHarvest:false, teachThirst:false,
-          teachLocked:false, teachDry:false,
+          teachLocked:false, teachDry:false, backHint:false, teachSecondPatch:false,
+          teachWeed:false, teachPest:false, teachFire:false, teachStrike:false,
+          teachVisitor:false, teachGolden:false, teachPeaceful:false, teachGoals:false,
           ch3:false, ch7:false, teachPad:false, plantTaught:{ home:true }, win:false, winShown:false }
 };
+/* Tutorial planet starts half a turn from the patch: patch 0 sits
+   edge-on (invisible) at yaw PI, and ~90° of forward turning brings
+   it squarely into view. */
+var TUT_START_ROT = Math.PI;
+var DEFAULT_HINT = "Drag to spin, tap soil to plant, tap plants to water — blooms grow slowly, so be patient.";
 function curW(){ return S.worlds[S.cur]; }
 function curDef(){ return WORLDS[S.cur]; }
 function save(){
@@ -310,21 +468,63 @@ function load(){
       S.petals = d.petals|0; S.cur = d.cur|0 || 0;
       if (S.cur < 0 || S.cur >= WORLDS.length) S.cur = 0;
       S.sound = d.sound !== false; S.worlds = d.worlds; S.flags = d.flags || S.flags;
+      /* v5 migration: music defaults ON for everyone (new feature).
+         Peaceful: an existing save that never chose keeps its old
+         behavior — hazards on — so peaceful defaults OFF here;
+         only brand-new saves (no load) start Peaceful ON. */
+      S.music = d.music !== false;
+      S.peaceful = d.peaceful !== undefined ? !!d.peaceful : false;
+      S.journal = d.journal || {};
+      S.daily = d.daily || null;
+      if (S.flags.teachPeaceful === undefined) S.flags.teachPeaceful = false;
+      if (S.flags.teachGoals === undefined) S.flags.teachGoals = false;
       if (S.flags.teachLocked === undefined) S.flags.teachLocked = false;
       if (S.flags.teachDry === undefined) S.flags.teachDry = false;
+      ["teachWeed","teachPest","teachFire","teachStrike","teachVisitor","teachGolden"].forEach(function(k){
+        if (S.flags[k] === undefined) S.flags[k] = false;
+      });
       /* v2 -> v3 migration: old saves have no locked/dryTime fields.
          Existing patches stay unlocked (locked defaults false — never
-         take a patch away); only brand-new games start with locks. */
+         take a patch away); only brand-new games start with locks.
+         v3 -> v4 migration: patches gain plant/hazard fields (all
+         default to none), worlds gain unlockedPlants (base only)
+         and harvest counts at 0. Nothing is taken away. */
       S.worlds.forEach(function(ws, wi){
         if (!ws.patches || ws.patches.length !== WORLDS[wi].patches.length){
           ws.patches = blankPatches(WORLDS[wi].patches.length, 99);
         }
+        if (!ws.unlockedPlants) ws.unlockedPlants = [PLANTS[WORLDS[wi].id][0].id];
+        if (!ws.harvests) ws.harvests = {};
         ws.patches.forEach(function(p){
           if (p.locked === undefined) p.locked = false;
           if (typeof p.dryTime !== "number") p.dryTime = 0;
+          if (p.plant === undefined) p.plant = null;
+          if (p.weed === undefined) p.weed = false;
+          if (p.pest === undefined) p.pest = false;
+          if (p.fire === undefined) p.fire = 0;
+          if (p.fireTime === undefined) p.fireTime = 0;
+          if (p.fireTaps === undefined) p.fireTaps = 0;
+          if (p.damaged === undefined) p.damaged = false;
+          if (p.golden === undefined) p.golden = false;
         });
       });
       S.started = !!d.flags && !!d.flags.story;
+      /* v6: a pre-rework save has no tutorialDone — it is past the
+         opening, so it loads as done and skips the tutorial. */
+      S.tutorialDone = d.tutorialDone !== undefined ? !!d.tutorialDone : true;
+      S.tutorialStep = typeof d.tutorialStep === "number" ? d.tutorialStep : (S.tutorialDone ? 99 : 0);
+      S.tutorialRot = +d.tutorialRot || 0;
+      S.tutStart = +d.tutStart || 0;
+      S.tutorialOrbitStart = +d.tutorialOrbitStart || 0;
+      if (S.flags.backHint === undefined) S.flags.backHint = false;
+      if (S.flags.teachSecondPatch === undefined) S.flags.teachSecondPatch = false;
+      /* Seed the Bloom Journal from past harvests so long-time
+         keepers keep credit for plants they already grew. */
+      S.worlds.forEach(function(ws){
+        Object.keys(ws.harvests || {}).forEach(function(pid){
+          if ((ws.harvests[pid] || 0) > 0 && !S.journal[pid]) S.journal[pid] = { golden:0 };
+        });
+      });
       return true;
     } catch(e){ return false; }
   }
@@ -336,7 +536,10 @@ function load(){
     if (!d1 || !d1.patches || d1.patches.length !== 8) return false;
     S.petals = d1.blooms|0;
     S.worlds[0].patches = d1.patches;
-    S.worlds[0].patches.forEach(function(p){ p.locked = false; if (typeof p.dryTime !== "number") p.dryTime = 0; });
+    S.worlds[0].patches.forEach(function(p){
+      p.locked = false; if (typeof p.dryTime !== "number") p.dryTime = 0;
+      p.plant = null; p.weed = false; p.pest = false; p.fire = 0; p.fireTime = 0; p.fireTaps = 0; p.damaged = false; p.golden = false;
+    });
     S.worlds[0].totalRot = +d1.totalRot||0;
     S.worlds[0].day = d1.day|0 || 1;
     S.worlds[0].sum5 = (d1.flags && d1.flags.sum5) || 0;
@@ -347,11 +550,18 @@ function load(){
       });
     }
     S.started = !!S.flags.story;
+    S.tutorialDone = true; S.tutorialStep = 99; /* v1 saves are past the opening */
     save();
     return true;
   } catch(e){ return false; }
 }
 var resumed = load();
+/* A brand-new keeper starts the tutorial planet lined up half a
+   turn from the one patch (see TUT_START_ROT). */
+if (!resumed){
+  S.worlds[0].totalRot = TUT_START_ROT;
+  S.tutStart = TUT_START_ROT;
+}
 
 /* ---------------- Audio (synth, starts on first gesture) ---------------- */
 var AC = null;
@@ -397,6 +607,45 @@ var sfx = {
   win:    function(){ [523,659,784,1046,1318].forEach(function(f,i){ tone(f, i*0.12, 0.3, "triangle", 0.2); }); }
 };
 
+/* ============================================================
+   GENERATIVE MUSIC — a slow music-box pad with gentle chimes.
+   Pentatonic notes wander a few steps at a time over a soft low
+   pad chord; very quiet on purpose (peak gain ~0.05). Runs only
+   while S.music is on and the audio context is running (it is
+   created on the first tap/drag, per browser rules). Toggled
+   independently of sound effects in Settings.
+   ============================================================ */
+var MUSIC_SCALE = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50]; /* C D E G A C */
+var MUSIC_PAD = [261.63, 329.63, 392.00]; /* soft C major pad */
+var musicState = { next:2.5, idx:2, padNext:6 };
+function musicNote(freq, dur, vol, type){
+  if (!S.music || !AC || AC.state !== "running") return;
+  var o = AC.createOscillator(), g = AC.createGain();
+  var t = AC.currentTime;
+  o.type = type || "triangle"; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.04);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(AC.destination);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+function stepMusic(dt){
+  if (!S.music || !AC || AC.state !== "running") return;
+  musicState.next -= dt; musicState.padNext -= dt;
+  if (musicState.padNext <= 0){
+    musicState.padNext = 14 + Math.random() * 6;
+    MUSIC_PAD.forEach(function(f){ musicNote(f, 7, 0.016, "sine"); });
+  }
+  if (musicState.next <= 0){
+    musicState.next = 2.6 + Math.random() * 2.2;
+    musicState.idx = Math.max(0, Math.min(MUSIC_SCALE.length - 1,
+      musicState.idx + (Math.floor(Math.random() * 5) - 2)));
+    musicNote(MUSIC_SCALE[musicState.idx], 2.2, 0.045, "triangle");
+    if (Math.random() < 0.3)
+      musicNote(MUSIC_SCALE[Math.min(MUSIC_SCALE.length - 1, musicState.idx + 2)], 1.8, 0.025, "sine");
+  }
+}
+
 /* ---------------- Modal / tour queue (ONE at a time) ---------------- */
 var cardWrap = document.getElementById("cardWrap");
 var cardEl = document.getElementById("card");
@@ -404,6 +653,13 @@ var spotEl = document.getElementById("spot");
 var queue = [], modalOpen = false, activeTour = null;
 
 function enqueue(item){ queue.push(item); pumpQueue(); }
+/* Teach a new thing exactly once, at first occurrence, through the
+   one-at-a-time queue — never front-loaded, never two at once. */
+function teachOnce(flag, item){
+  if (S.flags[flag]) return;
+  S.flags[flag] = true; save();
+  enqueue(item);
+}
 function pumpQueue(){
   if (modalOpen || !queue.length) return;
   showCard(queue.shift());
@@ -443,6 +699,17 @@ function showCard(item){
       sfx.tap();
       closeCard();
       switchWorld(dest);
+    });
+  }
+  /* Plant picker rows live in item.rows too — one tap plants. */
+  var plantBtns = cardEl.querySelectorAll("button[data-plant]");
+  for (var m = 0; m < plantBtns.length; m++){
+    plantBtns[m].addEventListener("click", function(){
+      var pid = this.getAttribute("data-plant");
+      var pi = +this.getAttribute("data-patch");
+      sfx.tap();
+      closeCard();
+      doPlant(pi, pid);
     });
   }
   if (item.onShow) item.onShow();
@@ -505,6 +772,24 @@ scene.add(sunGroup);
   scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color:0xdceaff, size:0.22 })));
 })();
 
+/* ambient fireflies — soft motes drifting slowly around the planet */
+var fireflies = null, fireflyMat = null;
+(function(){
+  var n = 42, pos = new Float32Array(n*3), v = new THREE.Vector3();
+  for (var i = 0; i < n; i++){
+    v.set(Math.random()*2-1, Math.random()*2-1, Math.random()*2-1).normalize()
+     .multiplyScalar(3.4 + Math.random()*3.2);
+    pos[i*3] = v.x; pos[i*3+1] = v.y; pos[i*3+2] = v.z;
+  }
+  var g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  fireflyMat = new THREE.PointsMaterial({ color:0xffe9a8, size:0.13, transparent:true, opacity:0.75, depthWrite:false });
+  fireflies = new THREE.Points(g, fireflyMat);
+  scene.add(fireflies);
+})();
+/* warm day/night light shift endpoints */
+var SUN_WARM = new THREE.Color(0xffc98a), SUN_COOL = new THREE.Color(0xfff3d0);
+
 /* planet + patches live in worldGroup, rebuilt per world */
 var pitchGroup = new THREE.Group(); scene.add(pitchGroup);
 var yawGroup = new THREE.Group(); pitchGroup.add(yawGroup);
@@ -512,7 +797,8 @@ var worldGroup = null;
 var patches = [], proxies = [], padGroup = null, padProxy = null, padRocket = null, padSiteRing = null;
 
 var SOIL_WET = new THREE.Color(0x54371f), SOIL_DRY = new THREE.Color(0xc79f66),
-    SOIL_EMPTY = new THREE.Color(0x9a7443), SOIL_LOCKED = new THREE.Color(0x6e6257);
+    SOIL_EMPTY = new THREE.Color(0x9a7443), SOIL_LOCKED = new THREE.Color(0x6e6257),
+    SOIL_DAMAGED = new THREE.Color(0x503a24);
 var GREEN = new THREE.Color(0x2f9e44), BROWN = new THREE.Color(0x8a6b35);
 
 function latLonNormal(lat, lon){
@@ -536,8 +822,8 @@ function buildPlant(fc){
     new THREE.MeshStandardMaterial({ color:new THREE.Color(fc.bud), roughness:0.6 }));
   bud.position.z = 0.68; g.add(bud);
   var flower = new THREE.Group();
-  var center = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 10),
-    new THREE.MeshStandardMaterial({ color:new THREE.Color(fc.center), emissive:new THREE.Color(fc.center), emissiveIntensity:fc.glow, roughness:0.5 }));
+  var centerMat = new THREE.MeshStandardMaterial({ color:new THREE.Color(fc.center), emissive:new THREE.Color(fc.center), emissiveIntensity:fc.glow, roughness:0.5 });
+  var center = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 10), centerMat);
   flower.add(center);
   var petalMat = new THREE.MeshStandardMaterial({ color:new THREE.Color(fc.petal), emissive:new THREE.Color(fc.petal), emissiveIntensity:fc.glow * 0.8, roughness:0.5 });
   for (var i = 0; i < fc.petals; i++){
@@ -549,9 +835,20 @@ function buildPlant(fc){
   }
   flower.position.z = 0.70;
   g.add(flower);
-  return { group:g, stemMat:stemMat, bud:bud, flower:flower, leaf1:leaf1, leaf2:leaf2, stemBase:new THREE.Color(fc.stem) };
+  return { group:g, stemMat:stemMat, bud:bud, flower:flower, leaf1:leaf1, leaf2:leaf2, stemBase:new THREE.Color(fc.stem),
+           petalMat:petalMat, centerMat:centerMat, spec:fc };
 }
 
+/* Swap a patch's plant visual when its plant type changes. */
+function rebuildPatchPlant(P, spec){
+  var parent = P.plant.group.parent;
+  if (parent) parent.remove(P.plant.group);
+  disposeGroup(P.plant.group);
+  var np = buildPlant(spec);
+  np.group.position.z = 0.02;
+  if (parent) parent.add(np.group);
+  P.plant = np; P.specId = spec.id;
+}
 function disposeGroup(gr){
   gr.traverse(function(o){
     if (o.geometry) o.geometry.dispose();
@@ -634,7 +931,8 @@ function buildWorld(wi){
     lockGroup.visible = false;
     grp.add(lockGroup);
 
-    var plant = buildPlant(def.flower);
+    var spec0 = plantSpecFor(wi, ws.patches[idx]);
+    var plant = buildPlant(spec0);
     plant.group.position.z = 0.02;
     grp.add(plant.group);
 
@@ -648,6 +946,59 @@ function buildWorld(wi){
     drop.position.z = 1.05;
     grp.add(drop);
 
+    /* hazard visuals: weed tuft, nibbling pest, flame, cracked soil */
+    var weedGroup = new THREE.Group();
+    var weedMat = new THREE.MeshStandardMaterial({ color:0x3fae4a, roughness:0.9 });
+    var weedMat2 = new THREE.MeshStandardMaterial({ color:0x2c7a35, roughness:0.9 });
+    [[-0.12, 0.05, 0.5], [0.1, -0.08, -0.4], [0.02, 0.14, 0.15]].forEach(function(off, bi){
+      var blade = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.28, 6), bi % 2 ? weedMat2 : weedMat);
+      blade.position.set(off[0], off[1], 0.13);
+      blade.rotation.x = Math.PI/2; blade.rotation.y = off[2];
+      weedGroup.add(blade);
+    });
+    weedGroup.visible = false;
+    grp.add(weedGroup);
+
+    var pestGroup = new THREE.Group();
+    var pestMat = new THREE.MeshStandardMaterial({ color:0x33231a, roughness:0.7 });
+    var pestBody = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), pestMat);
+    pestBody.scale.set(1.2, 0.9, 0.9);
+    var pestHead = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), pestMat);
+    pestHead.position.set(0.07, 0.01, 0.01);
+    pestGroup.add(pestBody); pestGroup.add(pestHead);
+    pestGroup.position.set(0.15, 0.08, 0.74);
+    pestGroup.visible = false;
+    grp.add(pestGroup);
+
+    var fireGroup = new THREE.Group();
+    var flameOuter = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.46, 10),
+      new THREE.MeshStandardMaterial({ color:0xff7a1e, emissive:0xff5a00, emissiveIntensity:1.1, roughness:0.6 }));
+    flameOuter.rotation.x = Math.PI/2; flameOuter.position.z = 0.23;
+    var flameInner = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.28, 10),
+      new THREE.MeshStandardMaterial({ color:0xffd93d, emissive:0xffc400, emissiveIntensity:1.4, roughness:0.6 }));
+    flameInner.rotation.x = Math.PI/2; flameInner.position.z = 0.16;
+    fireGroup.add(flameOuter); fireGroup.add(flameInner);
+    fireGroup.position.z = 0.35;
+    fireGroup.visible = false;
+    grp.add(fireGroup);
+
+    var dmgGroup = new THREE.Group();
+    var crackMat = new THREE.MeshBasicMaterial({ color:0x2e1f10 });
+    [[0, 0, 0.4], [0.05, -0.1, 1.8], [-0.08, 0.09, 2.6]].forEach(function(cr){
+      var crack = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.03, 0.006), crackMat);
+      crack.position.set(cr[0], cr[1], 0.016);
+      crack.rotation.z = cr[2];
+      dmgGroup.add(crack);
+    });
+    var pebMat = new THREE.MeshStandardMaterial({ color:0x7a7268, roughness:1 });
+    [[0.18, 0.12], [-0.2, -0.14]].forEach(function(pb){
+      var peb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), pebMat);
+      peb.position.set(pb[0], pb[1], 0.03);
+      dmgGroup.add(peb);
+    });
+    dmgGroup.visible = false;
+    grp.add(dmgGroup);
+
     var proxy = new THREE.Mesh(new THREE.SphereGeometry(0.52, 10, 8),
       new THREE.MeshBasicMaterial({ visible:false }));
     proxy.position.copy(n).multiplyScalar(R + 0.25);
@@ -656,8 +1007,10 @@ function buildWorld(wi){
 
     patches.push({ grp:grp, soil:soil, soilMat:soilMat, ring:ring, ringMat:ringMat, plant:plant,
                    drop:drop, proxy:proxy, normal:n, lastArc:-1,
+                   weedGroup:weedGroup, pestGroup:pestGroup, fireGroup:fireGroup, dmgGroup:dmgGroup,
+                   specId:spec0.id,
                    lockGroup:lockGroup, lockCanvas:lockCanvas, lockTex:lockTex,
-                   lockSprite:lockSprite, lockLabel:"", shakeUntil:0 });
+                   lockSprite:lockSprite, lockLabel:"" });
     proxies.push(proxy);
   });
 
@@ -702,6 +1055,13 @@ function buildWorld(wi){
   syncPadVisual();
   refreshHud(); refreshPadUI(); refreshWorldBtn();
   refreshLockVisuals();
+  /* v6 tutorial: the opening planet shows exactly ONE patch and no
+     pad site. Other patches exist in state but stay invisible (and
+     untappable — see the raycast filter) until the opening ends. */
+  if (!S.tutorialDone && wi === 0){
+    for (var ti = 1; ti < patches.length; ti++) patches[ti].grp.visible = false;
+    if (padGroup) padGroup.visible = false;
+  }
 }
 
 function drawLockLabel(P, cost, afford){
@@ -739,14 +1099,22 @@ fxResize();
 var parts = [];
 function burst(worldPos, colors, n, spread){
   var v = worldPos.clone().project(camera);
-  var x = (v.x*0.5 + 0.5) * window.innerWidth;
-  var y = (-v.y*0.5 + 0.5) * window.innerHeight;
+  burstAt((v.x*0.5 + 0.5) * window.innerWidth, (-v.y*0.5 + 0.5) * window.innerHeight, colors, n, spread);
+}
+function burstAt(x, y, colors, n, spread){
   for (var i = 0; i < (n||14); i++){
     var a = Math.random()*Math.PI*2, sp = 40 + Math.random()*(spread||130);
     parts.push({ x:x, y:y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - 60,
       life:0.7 + Math.random()*0.4, t:0, size:4 + Math.random()*5,
       color:colors[i % colors.length] });
   }
+}
+/* Floating reward text — rises gently and fades, never shakes. */
+var floaters = [];
+function floatText(worldPos, text, color){
+  var v = worldPos.clone().project(camera);
+  floaters.push({ x:(v.x*0.5 + 0.5) * window.innerWidth, y:(-v.y*0.5 + 0.5) * window.innerHeight,
+    text:text, color:color || "#7a4b00", t:0, life:1.6 });
 }
 function stepFx(dt){
   fctx.clearRect(0, 0, fx.width, fx.height);
@@ -757,6 +1125,18 @@ function stepFx(dt){
     fctx.globalAlpha = Math.max(k, 0);
     fctx.fillStyle = p.color;
     fctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+  });
+  floaters = floaters.filter(function(f){ return f.t < f.life; });
+  floaters.forEach(function(f){
+    f.t += dt; f.y -= 26 * dt;
+    var k = 1 - f.t / f.life;
+    fctx.globalAlpha = Math.max(Math.min(k * 1.6, 1), 0);
+    fctx.font = "800 22px 'Baloo 2', sans-serif";
+    fctx.textAlign = "center";
+    fctx.lineWidth = 4; fctx.strokeStyle = "#fff6d8";
+    fctx.strokeText(f.text, f.x, f.y);
+    fctx.fillStyle = f.color;
+    fctx.fillText(f.text, f.x, f.y);
   });
   fctx.globalAlpha = 1;
 }
@@ -807,13 +1187,164 @@ function aliveCount(wi){
   return ws.patches.reduce(function(n, p){ return n + (p.state !== "empty" ? 1 : 0); }, 0);
 }
 
-function doPlant(i){
+/* Reset a patch's plant (harvest / wilt death / burned down).
+   Keeps plant id, lock, weed and damage — those are soil things. */
+function clearPlant(p){
+  p.state = "empty"; p.water = 0; p.growth = 0; p.wilt = 0; p.dryTime = 0;
+  p.golden = false; p.pest = false; p.fire = 0; p.fireTime = 0; p.fireTaps = 0;
+}
+/* ============================================================
+   BLOOM JOURNAL — the long-term reward for cultivating
+   everywhere. S.journal maps plantId -> { golden:n } once the
+   plant has been grown (bloomed) at least once. First growth of
+   a new type gets a soft celebration: chime + sparkles + a card
+   pointing at the journal. Golden harvests are counted per plant.
+   ============================================================ */
+function hexCss(n){ return "#" + ("000000" + n.toString(16)).slice(-6); }
+function journalTotalGolden(){
+  return Object.keys(S.journal).reduce(function(n, k){ return n + (S.journal[k].golden || 0); }, 0);
+}
+function journalMarkGrown(wi, plantId, patchIdx){
+  if (S.journal[plantId]) return false;
+  S.journal[plantId] = { golden:0 };
+  save();
+  if (wi === S.cur){
+    sfx.chime();
+    if (patchIdx !== undefined && patchIdx !== null && patches[patchIdx])
+      burst(patchWorldPos(patchIdx), ["#ffd93d","#fff3a0","#ffb3c1","#a8e6cf"], 30, 180);
+    var PD = plantById(wi, plantId);
+    enqueue({ center:true, title:"A new bloom for the journal! 📖",
+      text:"You grew your first " + PD.name + "! It's been pressed into your Bloom Journal — open Settings → Bloom Journal to see your whole collection, on every world.",
+      buttons:[{ label:"Lovely!" }] });
+  }
+  return true;
+}
+function openJournal(){
+  var rows = "";
+  WORLDS.forEach(function(w, wi){
+    rows += '<div class="wrow" style="background:var(--gold)"><div><div class="wname">' + w.name + '</div>' +
+      '<div class="wsub">3 plants to grow here</div></div></div>';
+    PLANTS[w.id].forEach(function(pl){
+      var e = S.journal[pl.id];
+      var grown = !!e;
+      var note = grown
+        ? pl.quirk + " · Golden blooms: " + (e.golden || 0)
+        : "Not grown yet — " + (pl.unlock ? pl.unlock.text : "ready to plant here");
+      rows += '<div class="wrow' + (grown ? "" : " locked") + '"><div><div class="wname">' +
+        '<span class="jdot" style="background:' + hexCss(pl.petal) + '"></span>' + pl.name + (grown ? " ✿" : "") + '</div>' +
+        '<div class="wsub">' + note + '</div></div>' +
+        '<div class="pay" style="font-weight:800;color:#7a4b00">+' + pl.pay + ' ✿</div></div>';
+    });
+  });
+  var grownCount = Object.keys(S.journal).length;
+  enqueue({ center:true, title:"Bloom Journal 📖",
+    text:"Every plant in the little system. Grown: " + grownCount + " of 12 · Golden blooms collected: " + journalTotalGolden() + " ✨",
+    rows: rows,
+    buttons:[{ label:"Back to the garden" }] });
+}
+
+/* ============================================================
+   GENTLE DAILY GOALS — 3 small, kind goals per day on the
+   current world (keyed "world:day"). Completing one pays a few
+   petals with a soft chime and a quiet note in the hint bar.
+   Missing one costs nothing — there is no fail state. Progress
+   is shown in the day-summary card. Goals reset each new day.
+   ============================================================ */
+var GOAL_POOL = [
+  { kind:"water",   label:"Water plants",        target:3, reward:2 },
+  { kind:"water",   label:"Water plants",        target:5, reward:3 },
+  { kind:"harvest", label:"Harvest blooms",      target:2, reward:2 },
+  { kind:"harvest", label:"Harvest blooms",      target:3, reward:3 },
+  { kind:"plant",   label:"Plant seeds",         target:2, reward:2 },
+  { kind:"plant",   label:"Plant seeds",         target:3, reward:2 },
+  { kind:"visitor", label:"Say hello to a visitor", target:1, reward:3 },
+  { kind:"weed",    label:"Pull a weed",         target:1, reward:2, needsHazards:true },
+  { kind:"visit",   label:"Visit another world", target:1, reward:3, needsPad:true }
+];
+function goalsKey(){ return S.cur + ":" + curW().day; }
+function genGoals(){
+  var pool = GOAL_POOL.filter(function(g){
+    if (g.needsHazards && S.peaceful) return false;
+    if (g.needsPad && !anyPad()) return false;
+    return true;
+  });
+  var picked = [], guard = 0;
+  while (picked.length < 3 && pool.length && guard++ < 60){
+    var g = pool[Math.floor(Math.random() * pool.length)];
+    var dup = picked.some(function(p){ return p.kind === g.kind && p.target === g.target; });
+    var sameKind = picked.filter(function(p){ return p.kind === g.kind; }).length;
+    if (dup || sameKind >= 2) continue;
+    picked.push({ kind:g.kind, label:g.label, target:g.target, reward:g.reward, progress:0, done:false });
+  }
+  S.daily = { key:goalsKey(), goals:picked };
+  save();
+}
+function ensureGoals(){
+  if (!S.daily || S.daily.key !== goalsKey() || !S.daily.goals) genGoals();
+}
+var hintTimer = null;
+function currentHintText(){
+  if (!S.tutorialDone){
+    if (S.tutorialStep === 0) return "Turn the planet.";
+    if (S.tutorialStep === 2) return "Keep turning — bring the dirt around.";
+    if (S.tutorialStep === 4) return "Tap the patch to plant a seed.";
+    if (S.tutorialStep === 5) return "Now keep going — one full turn is one day.";
+  }
+  return DEFAULT_HINT;
+}
+function refreshTutorialHint(){
+  var hintEl = document.getElementById("hint");
+  if (hintEl) hintEl.textContent = currentHintText();
+}
+function hintNote(msg){
+  var hintEl = document.getElementById("hint");
+  if (!hintEl) return;
+  hintEl.textContent = msg;
+  if (hintTimer) clearTimeout(hintTimer);
+  hintTimer = setTimeout(function(){ hintEl.textContent = currentHintText(); }, 3000);
+}
+function bumpGoal(kind, n){
+  if (!S.started) return;
+  ensureGoals();
+  var changed = false;
+  S.daily.goals.forEach(function(g){
+    if (g.kind !== kind || g.done) return;
+    g.progress = Math.min(g.target, g.progress + (n || 1));
+    changed = true;
+    if (g.progress >= g.target){
+      g.done = true;
+      S.petals += g.reward;
+      sfx.chime();
+      refreshHud(); refreshPadUI(); refreshLockVisuals();
+      hintNote("A gentle goal done: " + g.label + " · +" + g.reward + " ✿ — nicely tended.");
+    }
+  });
+  if (changed) save();
+}
+function goalsHtml(){
+  ensureGoals();
+  var h = '<div class="goalsBox"><div class="gtitle">🌼 Today\'s gentle goals</div>';
+  S.daily.goals.forEach(function(g){
+    h += '<div class="grow2"><span>' + (g.done ? "✓ " : "· ") + g.label + '</span>' +
+      '<span class="' + (g.done ? "done" : "") + '">' + (g.done ? "+" + g.reward + " ✿" : g.progress + " / " + g.target) + '</span></div>';
+  });
+  h += '<div class="grow2"><span>No rush — undone goals cost nothing.</span><span></span></div></div>';
+  return h;
+}
+
+function doPlant(i, plantId){
   var p = curW().patches[i], T = curDef().tune;
+  var PD = plantId ? plantById(S.cur, plantId) : plantById(S.cur, curW().unlockedPlants[0]);
+  p.plant = PD.id;
   p.state = "growing"; p.water = T.startWater; p.growth = 0; p.wilt = 0; p.dryTime = 0;
+  p.golden = false; p.pest = false; p.fire = 0; p.fireTime = 0; p.fireTaps = 0;
   sfx.pop();
+  bumpGoal("plant");
   burst(patchWorldPos(i), ["#7ddb6a","#2f9e44","#c79f66"], 12, 110);
   save();
-  if (!S.flags.teachWater){
+  /* v6: during the guided opening, watering is NOT taught here —
+     it is introduced later, when the plant first gets thirsty. */
+  if (!S.flags.teachWater && S.tutorialDone){
     S.flags.teachWater = true;
     enqueue({ tour:{ patch:i }, title:"Keep it watered",
       text:"Tap your plant to water it. A full drink sets it right.",
@@ -824,17 +1355,39 @@ function doWater(i){
   var p = curW().patches[i];
   p.water = 100; p.wilt = 0; p.dryTime = 0;
   sfx.splash();
+  bumpGoal("water");
   burst(patchWorldPos(i), ["#3fa9f5","#8ecdf0","#bfe6ff"], 16, 120);
   save();
 }
 function doHarvest(i){
-  var p = curW().patches[i];
-  p.state = "empty"; p.water = 0; p.growth = 0; p.wilt = 0; p.dryTime = 0;
-  S.petals++;
+  var p = curW().patches[i], ws = curW();
+  var PD = plantSpecFor(S.cur, p);
+  var wasGolden = !!p.golden;
+  var pay = PD.pay + (wasGolden ? 2 : 0);
+  var at = patchWorldPos(i);
+  clearPlant(p);
+  ws.harvests[PD.id] = (ws.harvests[PD.id] || 0) + 1;
+  S.petals += pay;
+  journalMarkGrown(S.cur, PD.id, i);
+  if (wasGolden && S.journal[PD.id]){ S.journal[PD.id].golden = (S.journal[PD.id].golden || 0) + 1; }
   sfx.harvest();
-  burst(patchWorldPos(i), ["#ffd93d","#ff9f1c","#ffb3c1","#a8e6cf"], 26, 190);
+  /* Softer harvest: a burst of petals + sparkles and the reward
+     floats up gently. Golden blooms sparkle bigger. No shake. */
+  burst(at, ["#ffd93d","#ff9f1c","#ffb3c1","#a8e6cf"], wasGolden ? 44 : 26, wasGolden ? 240 : 190);
+  if (wasGolden) burst(at, ["#fff3a0","#ffffff","#ffd93d"], 22, 200);
+  floatText(at, "+" + pay + " ✿", wasGolden ? "#b8860b" : "#7a4b00");
+  bumpGoal("harvest");
   petalPill.classList.remove("jiggle"); void petalPill.offsetWidth; petalPill.classList.add("jiggle");
   refreshHud(); refreshPadUI(); refreshLockVisuals(); save();
+  checkUnlocks(S.cur);
+  /* v6: the wider garden is introduced only after the first
+     harvest — a second patch gets its own spotlight moment. */
+  if (S.tutorialDone && !S.flags.teachSecondPatch && S.cur === 0){
+    S.flags.teachSecondPatch = true; save();
+    enqueue({ tour:{ patch:1 }, title:"More soil!",
+      text:"That was your first harvest. This planet has more patches of dirt — plant in every patch you can tend, and harvests add up to Star Petals.",
+      buttons:[{ label:"Got it" }] });
+  }
   if (!curW().pad && S.petals >= PAD_COST - 5 && !S.flags.teachPad){
     S.flags.teachPad = true; save();
     enqueue({ tour:{ kind:"pad" }, title:"Almost there!",
@@ -844,7 +1397,7 @@ function doHarvest(i){
 }
 function doDie(i){
   var p = curW().patches[i];
-  p.state = "empty"; p.water = 0; p.growth = 0; p.wilt = 0; p.dryTime = 0;
+  clearPlant(p);
   sfx.thud();
   burst(patchWorldPos(i), ["#8a6b35","#5c4520","#9a7443"], 12, 90);
   save();
@@ -865,8 +1418,8 @@ function onLockedTap(i){
     burst(patchWorldPos(i), ["#fff6d8","#ffd93d","#a8e6cf"], 22, 160);
     refreshHud(); refreshPadUI(); refreshLockVisuals(); save();
   } else {
-    /* not affordable: shake the patch + jiggle the petal pill */
-    if (patches[i]) patches[i].shakeUntil = performance.now() + 350;
+    /* not affordable: no shake in a cozy game — just a pill jiggle
+       and a quiet note about what's missing */
     petalPill.classList.remove("jiggle"); void petalPill.offsetWidth; petalPill.classList.add("jiggle");
     sfx.thud();
     var hintEl = document.getElementById("hint");
@@ -875,13 +1428,218 @@ function onLockedTap(i){
     setTimeout(function(){ hintEl.textContent = old; }, 2600);
   }
 }
+/* ---- Hazard tap actions: each fixed in a tap or two, all gentle ---- */
+function doPullWeed(i){
+  var p = curW().patches[i];
+  p.weed = false;
+  sfx.pop();
+  bumpGoal("weed");
+  burst(patchWorldPos(i), ["#3fae4a","#2c7a35","#7ddb6a"], 14, 120);
+  save();
+}
+function doRepair(i){
+  var p = curW().patches[i];
+  p.damaged = false;
+  sfx.pop(); sfx.chime();
+  burst(patchWorldPos(i), ["#c79f66","#9a7443","#fff6d8"], 16, 120);
+  save();
+}
+function doShoo(i){
+  var p = curW().patches[i];
+  p.pest = false;
+  sfx.whoosh();
+  burst(patchWorldPos(i), ["#33231a","#6b4a2f","#a8e6cf"], 12, 140);
+  save();
+}
+function doDouse(i){
+  var p = curW().patches[i];
+  p.fireTaps = (p.fireTaps || 0) + 1;
+  sfx.splash();
+  burst(patchWorldPos(i), ["#3fa9f5","#8ecdf0","#ffffff"], 12, 110);
+  if (p.fireTaps >= 3){ p.fire = 0; p.fireTime = 0; p.fireTaps = 0; }
+  save();
+}
+function burnDown(i){
+  var p = curW().patches[i];
+  clearPlant(p);
+  sfx.thud();
+  burst(patchWorldPos(i), ["#5a5a5a","#8a8a8a","#ff7a1e"], 16, 110);
+  save();
+}
+/* Plant picker: only appears once a second plant is unlocked here. */
+function openPicker(i){
+  var def = curDef(), ws = curW();
+  var rows = "";
+  plantList(S.cur).forEach(function(pl){
+    if (ws.unlockedPlants.indexOf(pl.id) >= 0){
+      rows += '<button class="wrow prow" data-plant="' + pl.id + '" data-patch="' + i + '">' +
+        '<span><span class="wname">' + pl.name + '</span>' +
+        '<span class="wsub">' + pl.quirk + '</span></span>' +
+        '<span class="pay">+' + pl.pay + ' ✿</span></button>';
+    } else {
+      rows += '<div class="wrow locked"><div><div class="wname">' + pl.name + '</div>' +
+        '<div class="wsub">🔒 ' + pl.unlock.text + '</div></div></div>';
+    }
+  });
+  enqueue({ title:"Plant what?",
+    text:"Pick a seed for this soil on " + def.name + ".",
+    rows: rows,
+    buttons:[{ label:"Not now", alt:true }] });
+}
 function onPatchTap(i){
   if (!S.started || modalOpen) return;
+  /* v6 guided opening: only patch 0 exists for the player, and it
+     only accepts the plant tap at its step. Watering it during the
+     full-orbit step is allowed; everything else waits. */
+  if (!S.tutorialDone){
+    if (i !== 0) return;
+    if (S.tutorialStep === 4){
+      doPlant(i, curW().unlockedPlants[0]);
+      var at = patchWorldPos(i);
+      burst(at, ["#ffd93d","#fff3a0","#ffb3c1","#a8e6cf"], 26, 180);
+      var p0 = curW().patches[0];
+      p0.water = 100; /* the first seed starts with a full drink */
+      S.tutorialStep = 5;
+      S.tutorialOrbitStart = curW().totalRot;
+      save();
+      refreshTutorialHint();
+      return;
+    }
+    if (S.tutorialStep === 5 && curW().patches[0].state === "growing"){ doWater(i); return; }
+    return;
+  }
   var p = curW().patches[i];
-  if (p.locked) onLockedTap(i);
-  else if (p.state === "empty") doPlant(i);
-  else if (p.state === "bloomed") doHarvest(i);
-  else doWater(i);
+  if (p.locked){ onLockedTap(i); return; }
+  if (p.damaged){ doRepair(i); return; }
+  if (p.weed){ doPullWeed(i); return; }
+  if (p.fire){ doDouse(i); return; }
+  if (p.state === "empty"){
+    var un = curW().unlockedPlants;
+    if (un.length > 1) openPicker(i);
+    else doPlant(i, un[0]);
+    return;
+  }
+  if (p.state === "bloomed"){ doHarvest(i); return; }
+  if (p.pest){ doShoo(i); return; }
+  doWater(i);
+}
+
+/* ============================================================
+   HAZARD SPAWNING (current world, real time). Gentle by design:
+   infrequent rolls, hard caps per world, a patch holds at most
+   ONE of weed/pest/fire/damage, never on a locked patch, and
+   rolls only run inside simStep — which pauses while any card
+   or modal is open, so hazards never spawn under a modal.
+   ============================================================ */
+function patchHazard(p){ return !!(p.weed || p.pest || p.fire || p.damaged); }
+function countHaz(ws, key){
+  return ws.patches.reduce(function(n, p){ return n + (p[key] ? 1 : 0); }, 0);
+}
+function pickPatch(pred){
+  var ws = curW(), opts = [];
+  ws.patches.forEach(function(p, i){ if (pred(p)) opts.push(i); });
+  if (!opts.length) return -1;
+  return opts[Math.floor(Math.random() * opts.length)];
+}
+function spawnWeedAt(i){
+  if (S.peaceful) return -1;
+  var p = curW().patches[i];
+  if (!p || p.locked || p.state !== "empty" || patchHazard(p)) return -1;
+  p.weed = true; save();
+  teachOnce("teachWeed", { tour:{ patch:i }, title:"A weed!",
+    text:"A weed sprouted in the empty soil. Tap it to pull it out — then you can plant there again.",
+    buttons:[{ label:"Got it" }] });
+  return i;
+}
+function spawnWeed(){
+  if (countHaz(curW(), "weed") >= 2) return -1;
+  var i = pickPatch(function(p){ return !p.locked && p.state === "empty" && !patchHazard(p); });
+  return i < 0 ? -1 : spawnWeedAt(i);
+}
+function spawnPestAt(i){
+  if (S.peaceful) return -1;
+  var p = curW().patches[i];
+  if (!p || p.locked || p.state !== "growing" || patchHazard(p)) return -1;
+  p.pest = true; save();
+  teachOnce("teachPest", { tour:{ patch:i }, title:"A nibbling mite!",
+    text:"A pest is munching this plant's growth. Tap the plant to shoo it away!",
+    buttons:[{ label:"Shoo it!" }] });
+  return i;
+}
+function spawnPest(){
+  if (countHaz(curW(), "pest") >= 2) return -1;
+  var i = pickPatch(function(p){ return !p.locked && p.state === "growing" && !patchHazard(p); });
+  return i < 0 ? -1 : spawnPestAt(i);
+}
+function spawnFireAt(i){
+  if (S.peaceful) return -1;
+  var p = curW().patches[i];
+  if (!p || p.locked || (p.state !== "growing" && p.state !== "bloomed") || patchHazard(p)) return -1;
+  p.fire = 1; p.fireTime = 0; p.fireTaps = 0; save();
+  teachOnce("teachFire", { tour:{ patch:i }, title:"Fire! 🔥",
+    text:"This plant caught fire! Tap it 3 times to splash the flames out before it burns down.",
+    buttons:[{ label:"Splash it!" }] });
+  return i;
+}
+function spawnFire(){
+  if (countHaz(curW(), "fire") >= 1) return -1;
+  var i = pickPatch(function(p){ return !p.locked && (p.state === "growing" || p.state === "bloomed") && !patchHazard(p); });
+  return i < 0 ? -1 : spawnFireAt(i);
+}
+function spawnStrikeAt(i){
+  if (S.peaceful) return -1;
+  var p = curW().patches[i];
+  if (!p || p.locked || p.state !== "empty" || patchHazard(p)) return -1;
+  p.damaged = true; save();
+  sfx.thud();
+  burst(patchWorldPos(i), ["#7a7268","#503a24","#c79f66"], 14, 120);
+  teachOnce("teachStrike", { tour:{ patch:i }, title:"Asteroid strike! ☄",
+    text:"A little asteroid cracked this soil. Tap the cracked patch to patch it up — repairs are free.",
+    buttons:[{ label:"Got it" }] });
+  return i;
+}
+function strikePatch(){
+  if (countHaz(curW(), "damaged") >= 1) return -1;
+  var i = pickPatch(function(p){ return !p.locked && p.state === "empty" && !patchHazard(p); });
+  return i < 0 ? -1 : spawnStrikeAt(i);
+}
+var hzT = { weed:0, pest:0, fire:0, strike:0 };
+function hazardTimers(dt){
+  /* PEACEFUL: hazards are OFF entirely — nothing ever spawns. */
+  if (S.peaceful) return;
+  /* v6: no hazards during the guided opening, ever. */
+  if (!S.tutorialDone) return;
+  /* v5 gentler rates: check intervals doubled vs v4 (weed 60→120s,
+     pest 75→150s, fire 120→240s, strike 150→300s) = half the spawns. */
+  hzT.weed += dt; hzT.pest += dt; hzT.fire += dt; hzT.strike += dt;
+  if (hzT.weed >= 120){
+    hzT.weed = 0;
+    var ws = curW();
+    ws.patches.forEach(function(p, i){
+      if (countHaz(ws, "weed") >= 2) return;
+      if (!p.locked && p.state === "empty" && !patchHazard(p) && Math.random() < 0.20) spawnWeedAt(i);
+    });
+  }
+  if (hzT.pest >= 150){
+    hzT.pest = 0;
+    var ws2 = curW();
+    ws2.patches.forEach(function(p, i){
+      if (countHaz(ws2, "pest") >= 2) return;
+      if (!p.locked && p.state === "growing" && !patchHazard(p) && Math.random() < 0.12) spawnPestAt(i);
+    });
+  }
+  if (hzT.fire >= 240){
+    hzT.fire = 0;
+    var ws3 = curW();
+    ws3.patches.forEach(function(p, i){
+      if (countHaz(ws3, "fire") >= 1) return;
+      if (!p.locked && (p.state === "growing" || p.state === "bloomed") && !patchHazard(p) && Math.random() < 0.05) spawnFireAt(i);
+    });
+  }
+  if (hzT.strike >= 300){
+    hzT.strike = 0;
+    if (countHaz(curW(), "damaged") < 1 && Math.random() < 0.08) strikePatch();
+  }
 }
 
 /* ---------------- Rocket pads & travel ---------------- */
@@ -958,6 +1716,65 @@ worldBtn.addEventListener("click", function(){
   openTravel();
 });
 
+/* ============================================================
+   VISITORS — a friendly drifter per world. Spawn attempt every
+   90-150s (random), at most one at a time, drifts ~12s. Tap it
+   for +3 Star Petals. Never required, always a treat. Pauses
+   while a modal is open (stepVisitor is not advanced then).
+   ============================================================ */
+var VISITOR_PAY = 3;
+var visitorEl = document.getElementById("visitor");
+var visitor = { active:false, t:0, dur:12, y:0.3, dir:1, timer: 90 + Math.random()*60 };
+function spawnVisitor(){
+  if (visitor.active) return false;
+  visitor.active = true; visitor.t = 0; visitor.dur = 12;
+  visitor.y = 0.16 + Math.random() * 0.34;
+  visitor.dir = Math.random() < 0.5 ? 1 : -1;
+  visitorEl.textContent = curDef().visitor;
+  visitorEl.style.display = "block";
+  teachOnce("teachVisitor", { center:true, title:"A visitor! " + curDef().visitor,
+    text:"A friendly visitor is drifting by! Tap it before it floats away for +" + VISITOR_PAY + " Star Petals.",
+    buttons:[{ label:"Hello!" }] });
+  return true;
+}
+function endVisitor(){
+  visitor.active = false;
+  visitorEl.style.display = "none";
+}
+function stepVisitor(dt){
+  if (!S.started || modalOpen) return;
+  /* v6: no visitors during the guided opening — they are
+     introduced later, at first occurrence, like everything else. */
+  if (!S.tutorialDone) return;
+  if (!visitor.active){
+    visitor.timer -= dt;
+    if (visitor.timer <= 0){
+      visitor.timer = 90 + Math.random() * 60;
+      spawnVisitor();
+    }
+    return;
+  }
+  visitor.t += dt;
+  if (visitor.t >= visitor.dur){ endVisitor(); return; }
+  var w = window.innerWidth, h = window.innerHeight;
+  var k = visitor.t / visitor.dur;
+  var x = visitor.dir > 0 ? -60 + (w + 120) * k : w + 60 - (w + 120) * k;
+  var y = visitor.y * h + Math.sin(visitor.t * 2.2) * 14;
+  visitorEl.style.transform = "translate(" + (x - 29) + "px," + (y - 29) + "px)";
+}
+visitorEl.addEventListener("pointerdown", function(e){
+  if (!visitor.active || modalOpen) return;
+  e.preventDefault();
+  S.petals += VISITOR_PAY;
+  bumpGoal("visitor");
+  sfx.chime();
+  burstAt(e.clientX, e.clientY, ["#ffd93d","#fff3a0","#ffb3c1","#a8e6cf"], 22, 170);
+  petalPill.classList.remove("jiggle"); void petalPill.offsetWidth; petalPill.classList.add("jiggle");
+  refreshHud(); refreshPadUI(); refreshLockVisuals(); save();
+  endVisitor();
+  visitor.timer = 90 + Math.random() * 60;
+});
+
 /* ---------------- Away simulation (time passes everywhere) ---------------- */
 function patchBrightAt(def, idx, yawNow){
   var pd = def.patches[idx];
@@ -971,7 +1788,7 @@ function awaySim(wi, elapsedS){
   var def = WORLDS[wi], ws = S.worlds[wi], T = def.tune;
   var cap = Math.min(Math.max(elapsedS, 0), AWAY_CAP_S);
   var grown = 0, died = 0;
-  if (cap <= 0) return { grown:0, died:0, simulated:0 };
+  if (cap <= 0) return { grown:0, died:0, simulated:0, weeds:0, nibbled:0, burned:0, struck:0 };
   var speed = (Math.PI * 2) / def.daySecs;
   var steps = Math.ceil(cap / 0.5);
   for (var s = 0; s < steps; s++){
@@ -981,31 +1798,84 @@ function awaySim(wi, elapsedS){
     for (var i = 0; i < ws.patches.length; i++){
       var p = ws.patches[i];
       if (p.state !== "growing" || p.locked) continue;
+      var PD = plantSpecFor(wi, p);
       var bright = patchBrightAt(def, i, yawNow);
       if (p.water > 0){
-        p.water -= (bright ? T.dryBright : T.dryDark) * dt;
+        p.water -= (bright ? PD.dryB : PD.dryD) * dt;
         if (p.water < 0) p.water = 0;
       }
       if (p.water > T.thirstyAt){
         p.dryTime = 0;
-        p.growth += (bright ? T.growBright : T.growDark) * dt;
-        if (p.growth >= 100){ p.growth = 100; p.state = "bloomed"; grown++; }
+        p.growth += (bright ? PD.growB : PD.growD) * dt;
+        if (p.growth >= 100){ p.growth = 100; p.state = "bloomed"; p.golden = Math.random() < 0.05; grown++; journalMarkGrown(wi, PD.id, null); }
       } else {
         p.dryTime = (p.dryTime || 0) + dt;
         if (p.dryTime > DRY_GRACE_S && p.growth > 0)
           p.growth = Math.max(0, p.growth - REGRESS_PER_S * dt);
         if (p.water <= 0){
-          p.wilt += (bright ? T.wiltBright : T.wiltDark) * dt;
+          p.wilt += (bright ? PD.wiltB : PD.wiltD) * dt;
           if (p.wilt >= 100){
-            p.state = "empty"; p.water = 0; p.growth = 0; p.wilt = 0; p.dryTime = 0; died++;
+            /* PEACEFUL: away plants never wilt to death either. */
+            if (S.peaceful){ p.wilt = 99; }
+            else {
+              p.state = "empty"; p.water = 0; p.growth = 0; p.wilt = 0; p.dryTime = 0; p.golden = false; p.pest = false; p.fire = 0; died++;
+            }
           }
         }
       }
     }
   }
+  /* Away hazards — skipped entirely in PEACEFUL. Otherwise capped
+     hard so an absence never ruins a world: at most 2 weeds sprout,
+     pest loss capped at 30 growth per plant, at most 1 plant burned
+     down, at most 1 patch cracked. v5: chances halved vs v4
+     (weed .20→.10, pest .12→.06, fire .10→.05, strike .08→.04). */
+  var weeds = 0, nibbled = 0, burned = 0, struck = 0;
+  if (!S.peaceful){
+  var weedTotal = ws.patches.reduce(function(n, p){ return n + (p.weed ? 1 : 0); }, 0);
+  for (var wi2 = 0; wi2 < ws.patches.length && weeds < 2 && weedTotal < 2; wi2++){
+    var wp = ws.patches[wi2];
+    if (!wp.locked && wp.state === "empty" && !patchHazard(wp) && Math.random() < 0.10){
+      wp.weed = true; weeds++; weedTotal++;
+    }
+  }
+  var pestTotal = ws.patches.reduce(function(n, p){ return n + (p.pest ? 1 : 0); }, 0);
+  ws.patches.forEach(function(pp){
+    if (pp.state === "growing" && !patchHazard(pp) && pestTotal < 2 && Math.random() < 0.06){
+      pp.pest = true; pestTotal++;
+      pp.growth = Math.max(0, pp.growth - Math.min(30, pp.growth));
+      nibbled++;
+    }
+  });
+  var elig = ws.patches.filter(function(pp){ return (pp.state === "growing" || pp.state === "bloomed") && !patchHazard(pp); });
+  if (elig.length && Math.random() < 0.05){
+    var victim = elig[0];
+    elig.forEach(function(pp){ if (pp.growth > victim.growth) victim = pp; });
+    victim.state = "empty"; victim.water = 0; victim.growth = 0; victim.wilt = 0; victim.dryTime = 0;
+    victim.golden = false; victim.fire = 0; victim.fireTime = 0; victim.fireTaps = 0;
+    burned = 1;
+  }
+  if (!ws.patches.some(function(pp){ return pp.damaged; }) && Math.random() < 0.04){
+    var empt = ws.patches.filter(function(pp){ return !pp.locked && pp.state === "empty" && !patchHazard(pp); });
+    if (empt.length){ empt[0].damaged = true; struck = 1; }
+  }
+  }
   ws.day = 1 + Math.floor(ws.totalRot / (Math.PI * 2));
   ws.sum5 = ws.day; /* away days pass quietly — no stale summary pops */
-  return { grown:grown, died:died, simulated:cap };
+  return { grown:grown, died:died, simulated:cap, weeds:weeds, nibbled:nibbled, burned:burned, struck:struck };
+}
+function awayBits(r){
+  var bits = [];
+  if (r.grown > 0) bits.push(r.grown + (r.grown === 1 ? " bloom opened" : " blooms opened"));
+  if (r.died > 0) bits.push(r.died + (r.died === 1 ? " plant wilted away" : " plants wilted away"));
+  if (r.weeds > 0) bits.push(r.weeds + (r.weeds === 1 ? " weed sprouted" : " weeds sprouted"));
+  if (r.nibbled > 0) bits.push(r.nibbled === 1 ? "a pest nibbled a plant" : "pests nibbled " + r.nibbled + " plants");
+  if (r.burned > 0) bits.push("a fire burned a plant down");
+  if (r.struck > 0) bits.push("a strike cracked a patch");
+  return bits;
+}
+function awayHas(r){
+  return !!r && (r.grown > 0 || r.died > 0 || r.weeds > 0 || r.nibbled > 0 || r.burned > 0 || r.struck > 0);
 }
 function playFlight(destName){
   var fl = document.getElementById("flight");
@@ -1020,8 +1890,11 @@ function switchWorld(to){
   if (to === S.cur || to < 0 || to >= WORLDS.length) return;
   curW().lastSeen = Date.now();
   save();
+  endVisitor();
+  visitor.timer = 90 + Math.random() * 60;
   var from = S.cur;
   S.cur = to;
+  bumpGoal("visit");
   sfx.whoosh();
   playFlight(WORLDS[to].name);
   buildWorld(to);
@@ -1033,14 +1906,12 @@ function switchWorld(to){
   }
   ws.lastSeen = Date.now();
   save();
-  if (away && (away.grown > 0 || away.died > 0)){
-    var bits = [];
-    if (away.grown > 0) bits.push(away.grown + (away.grown === 1 ? " bloom opened" : " blooms opened"));
-    if (away.died > 0) bits.push(away.died + (away.died === 1 ? " plant wilted away" : " plants wilted away"));
+  if (awayHas(away)){
     enqueue({ center:true, title:"While you were away…",
-      text:"On " + curDef().name + ": " + bits.join(", ") + ". The garden keeps growing without you — for better or worse.",
+      text:"On " + curDef().name + ": " + awayBits(away).join(", ") + ". The garden keeps growing without you — for better or worse.",
       buttons:[{ label:"Keep gardening" }] });
   }
+  checkUnlocks(to);
   if (!S.flags.plantTaught[curDef().id]){
     S.flags.plantTaught[curDef().id] = true; save();
     enqueue({ center:true, title:"Welcome to " + curDef().name,
@@ -1049,13 +1920,98 @@ function switchWorld(to){
   }
 }
 
-/* ---------------- Input: drag to spin, tap to act ---------------- */
+/* ---------------- Input: drag to spin (FORWARD ONLY), tap to act ----------------
+   v6: the planet never spins by itself and never spins backwards.
+   Rotation is player-driven only, in one direction — forward in
+   time. One full forward orbit (2π of accumulated forward
+   rotation in a world's totalRot) is exactly one day: the day
+   counter is 1 + floor(totalRot / 2π), derived in simStep, so a
+   completed orbit advances it exactly once. A backwards drag
+   changes nothing; the first one earns a single gentle hint. */
 var yaw = 0, pitch = 0, dragging = false, downX = 0, downY = 0, downT = 0, lastX = 0, lastY = 0;
+var backAccum = 0;
 var ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
 var cvs = renderer.domElement;
+function patchFrontness(i){
+  if (!patches[i]) return 0;
+  var wp = patches[i].grp.getWorldPosition(new THREE.Vector3());
+  return wp.normalize().z; /* camera looks down -Z from +Z: z>0 faces the player */
+}
+function applyForwardRotation(dyaw){
+  if (!(dyaw > 0)) return;
+  yaw += dyaw;
+  curW().totalRot += dyaw;
+  onForwardRotate(dyaw);
+}
+function onBackwardTry(){
+  if (S.flags.backHint) return;
+  S.flags.backHint = true; save();
+  hintNote("Time only moves forward");
+}
+function onForwardRotate(dyaw){
+  if (S.tutorialDone || !S.started) return;
+  S.tutorialRot += dyaw;
+  var ws = curW();
+  if (S.tutorialStep === 0 && S.tutorialRot >= 0.3){
+    /* Step 1 confirmed — Step 2: the rule of time. */
+    S.tutorialStep = 1; save();
+    enqueue({ center:true, title:"Turning moves time",
+      text:"You can't go backwards — turning the planet is what moves time. One full turn is one whole day.",
+      buttons:[{ label:"Got it", action:function(){
+        S.tutorialStep = 2; save(); refreshTutorialHint();
+      } }] });
+  } else if (S.tutorialStep === 2 && S.tutorialRot >= 1.2 && patchFrontness(0) > 0.55){
+    /* Step 3: the one patch, spotlighted. The game waits here. */
+    S.tutorialStep = 3; save();
+    enqueue({ tour:{ patch:0 }, title:"Look — one patch of dirt.",
+      text:"There it is. One patch of dirt on the whole planet — and it is yours, keeper.",
+      buttons:[{ label:"Next", action:function(){
+        S.tutorialStep = 4; save(); refreshTutorialHint();
+      } }] });
+  } else if (S.tutorialStep === 5){
+    /* Step 5: the first seed grows WITH the orbit, so one full
+       turn always shows it clearly underway — sprout with leaves
+       (growth ~48 = the second size stage), never thirsty mid-way. */
+    var p = ws.patches[0];
+    var prog = (ws.totalRot - S.tutorialOrbitStart) / (Math.PI * 2);
+    if (p.state === "growing"){
+      p.growth = Math.max(p.growth, Math.min(48, prog * 52));
+      if (p.water < 60) p.water = 60;
+    }
+    if (prog >= 0.98 && patchFrontness(0) > 0.5){
+      S.tutorialStep = 6; save();
+      enqueue({ tour:{ patch:0 }, title:"Look — it started to grow.",
+        text:"One full turn, one whole day — and your seed is underway, little sprout and leaves and all. From here, the garden opens up slowly, one new thing at a time.",
+        buttons:[{ label:"Lovely!", action:function(){ completeTutorial(); } }] });
+    }
+  }
+}
+function completeTutorial(){
+  S.tutorialDone = true; S.tutorialStep = 99; save();
+  refreshTutorialUI();
+  buildWorld(S.cur);
+  refreshTutorialHint();
+}
+function refreshTutorialUI(){
+  document.body.classList.toggle("tut", !S.tutorialDone);
+}
+function beginTutorial(){
+  if (S.tutorialDone) return;
+  if (S.tutorialStep === 1){
+    S.tutorialStep = 0; /* its card was lost to a reload — refire on next turn */
+  } else if (S.tutorialStep === 3){
+    S.tutorialStep = 2;
+  } else if (S.tutorialStep === 6){
+    S.tutorialStep = 5;
+  }
+  refreshTutorialUI();
+  refreshTutorialHint();
+  save();
+}
 cvs.addEventListener("pointerdown", function(e){
   audio();
   dragging = true; downX = lastX = e.clientX; downY = lastY = e.clientY; downT = performance.now();
+  backAccum = 0;
   cvs.setPointerCapture(e.pointerId);
 });
 cvs.addEventListener("pointermove", function(e){
@@ -1063,10 +2019,17 @@ cvs.addEventListener("pointermove", function(e){
   var dx = e.clientX - lastX, dy = e.clientY - lastY;
   lastX = e.clientX; lastY = e.clientY;
   var dyaw = dx * 0.0075;
-  yaw += dyaw;
+  if (dyaw > 0){
+    applyForwardRotation(dyaw);
+  } else if (dyaw < 0){
+    /* Backwards does nothing — the planet simply does not turn
+       that way. A deliberate backwards drag earns the one-time
+       hint; jitter does not. */
+    backAccum += -dyaw;
+    if (backAccum > 0.05) onBackwardTry();
+  }
   pitch += dy * 0.004;
   pitch = Math.max(-0.55, Math.min(0.55, pitch));
-  curW().totalRot += Math.abs(dyaw);
 });
 cvs.addEventListener("pointerup", function(e){
   dragging = false;
@@ -1076,7 +2039,8 @@ cvs.addEventListener("pointerup", function(e){
     ptr.x = (e.clientX / window.innerWidth) * 2 - 1;
     ptr.y = -(e.clientY / window.innerHeight) * 2 + 1;
     ray.setFromCamera(ptr, camera);
-    var targets = proxies.slice();
+    /* v6: during the opening, patch 0 is the only tappable thing. */
+    var targets = S.tutorialDone ? proxies.slice() : [proxies[0]];
     if (padGroup && padGroup.visible) targets.push(padProxy);
     var hits = ray.intersectObjects(targets);
     if (hits.length){
@@ -1095,17 +2059,57 @@ cvs.addEventListener("pointercancel", function(){ dragging = false; });
 /* ---------------- Settings ---------------- */
 var settingsEl = document.getElementById("settings");
 var soundBtn = document.getElementById("soundBtn");
+var musicBtn = document.getElementById("musicBtn");
+var peacefulBtn = document.getElementById("peacefulBtn");
+var journalBtn = document.getElementById("journalBtn");
 var abandonBtn = document.getElementById("abandonBtn");
 function refreshSoundBtn(){ soundBtn.textContent = S.sound ? "🔊 Sound: ON" : "🔇 Sound: OFF"; }
-refreshSoundBtn();
+function refreshMusicBtn(){ musicBtn.textContent = S.music ? "🎵 Music: ON" : "🎵 Music: OFF"; }
+function refreshPeacefulBtn(){ peacefulBtn.textContent = S.peaceful ? "🌿 Peaceful: ON" : "🌿 Peaceful: OFF"; }
+refreshSoundBtn(); refreshMusicBtn(); refreshPeacefulBtn();
+/* Turning Peaceful ON puts every hazard out, everywhere, at once. */
+function setPeaceful(v){
+  S.peaceful = !!v;
+  if (S.peaceful){
+    S.worlds.forEach(function(ws){
+      ws.patches.forEach(function(p){
+        p.weed = false; p.pest = false; p.fire = 0; p.fireTime = 0; p.fireTaps = 0; p.damaged = false;
+      });
+    });
+  }
+  refreshPeacefulBtn(); save();
+}
 document.getElementById("gearBtn").addEventListener("click", function(){
   sfx.tap();
-  settingsEl.style.display = settingsEl.style.display === "block" ? "none" : "block";
+  var opening = settingsEl.style.display !== "block";
+  settingsEl.style.display = opening ? "block" : "none";
   abandonBtn.textContent = "Abandon Run";
+  /* Teach the Peaceful toggle once, the first time Settings is
+     opened after the cozy pass ships. */
+  if (opening && !S.flags.teachPeaceful){
+    S.flags.teachPeaceful = true; save();
+    enqueue({ center:true, title:"Peaceful Mode 🌿",
+      text:"Settings now has a Peaceful toggle. With Peaceful on, there are no pests, fires, asteroid strikes or weeds — and a thirsty plant simply waits for water instead of wilting away. Turn it off any time for the livelier garden.",
+      buttons:[{ label:"Lovely" }] });
+  }
 });
 soundBtn.addEventListener("click", function(){
   S.sound = !S.sound; refreshSoundBtn(); save();
   if (S.sound) sfx.tap();
+});
+musicBtn.addEventListener("click", function(){
+  S.music = !S.music; refreshMusicBtn(); save();
+  if (S.music){ audio(); sfx.tap(); }
+});
+peacefulBtn.addEventListener("click", function(){
+  setPeaceful(!S.peaceful);
+  sfx.tap();
+  hintNote(S.peaceful ? "Peaceful on — the garden rests easy. 🌿" : "Peaceful off — the garden gets a little livelier.");
+});
+journalBtn.addEventListener("click", function(){
+  sfx.tap();
+  settingsEl.style.display = "none";
+  openJournal();
 });
 var abandonArmed = false;
 abandonBtn.addEventListener("click", function(){
@@ -1119,12 +2123,22 @@ abandonBtn.addEventListener("click", function(){
   if (modalOpen) closeCard();
   try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(SAVE_KEY_V1); } catch(e){}
   S.petals = 0; S.cur = 0; S.worlds = blankWorlds();
+  S.journal = {}; S.daily = null;
+  S.peaceful = true; /* a fresh run is a new player: Peaceful ON */
+  refreshPeacefulBtn();
+  /* v6: a fresh run replays the guided opening from the top. */
+  S.tutorialDone = false; S.tutorialStep = 0; S.tutorialRot = 0; S.tutorialOrbitStart = 0;
+  S.worlds[0].totalRot = TUT_START_ROT; S.tutStart = TUT_START_ROT;
   S.flags = { story:false, tour:false, teachWater:false, teachHarvest:false, teachThirst:false,
-              teachLocked:false, teachDry:false,
+              teachLocked:false, teachDry:false, backHint:false, teachSecondPatch:false,
+              teachWeed:false, teachPest:false, teachFire:false, teachStrike:false,
+              teachVisitor:false, teachGolden:false, teachPeaceful:false, teachGoals:false,
               ch3:false, ch7:false, teachPad:false, plantTaught:{ home:true }, win:false, winShown:false };
   S.started = false;
+  endVisitor();
   settingsEl.style.display = "none";
   abandonBtn.textContent = "Abandon Run";
+  refreshTutorialUI();
   buildWorld(0);
   refreshHud(); save();
   startStory();
@@ -1138,9 +2152,12 @@ function startStory(){
   enqueue({ center:true, title:"Its Keeper",
     text:"You are its keeper now, little gardener. Keep it blooming, and the dark side is only a place for things to rest.",
     buttons:[{ label:"START ✿", action:function(){
-      S.started = true; S.flags.story = true; save();
+      S.started = true; S.flags.story = true; S.flags.tour = true; save();
       refreshPadUI();
-      startTour();
+      /* v6: the old 3-card tour is replaced by the scripted guided
+         opening — one step at a time, driven by the player's own
+         turning and tapping (see onForwardRotate / onPatchTap). */
+      beginTutorial();
     } }] });
 }
 function startTour(){
@@ -1163,9 +2180,15 @@ function welcomeBack(){
 }
 function daySummary(day){
   var ws = curW();
+  var firstGoals = !S.flags.teachGoals;
+  if (firstGoals){ S.flags.teachGoals = true; save(); }
   enqueue({ center:true, title:"Day " + day + " complete",
+    text: firstGoals
+      ? "Each day brings 3 gentle goals — small kindnesses like watering or harvesting. Finishing one pays a few petals. Leaving one undone costs nothing, ever."
+      : undefined,
     stats:'<div class="stat"><span>Star Petals</span><span>✿ ' + S.petals + '</span></div>' +
-          '<div class="stat"><span>Plants alive here</span><span>' + aliveCount() + " / " + curW().patches.filter(function(p){ return !p.locked; }).length + " soil piles</span></div>",
+          '<div class="stat"><span>Plants alive here</span><span>' + aliveCount() + ' / ' + curW().patches.filter(function(p){ return !p.locked; }).length + ' soil piles</span></div>' +
+          goalsHtml(),
     buttons:[{ label:"CONTINUE" }] });
 }
 
@@ -1175,25 +2198,48 @@ function simStep(dt){
   var ws = curW(), T = curDef().tune;
   for (var i = 0; i < ws.patches.length; i++){
     var p = ws.patches[i];
-    if (p.state !== "growing" || p.locked) continue;
+    if (p.locked) continue;
+    /* fire burns growth down at FIRE_BURN_PER_S (v5: 2/s, halved);
+       20s of flame, or growth hitting 0, destroys it */
+    if (p.fire){
+      p.fireTime = (p.fireTime || 0) + dt;
+      if (p.state === "growing" || p.state === "bloomed"){
+        p.growth -= FIRE_BURN_PER_S * dt;
+        if (p.state === "bloomed" && p.growth < 100) p.state = "growing";
+        if (p.growth <= 0){ burnDown(i); continue; }
+      }
+      if (p.fireTime >= 20){ burnDown(i); continue; }
+    }
+    if (p.state !== "growing") continue;
+    var PD = plantSpecFor(S.cur, p);
     var bright = isBright(i);
+    /* a pest nibbles growth away at PEST_EAT_PER_S (v5: 0.75/s, halved) */
+    if (p.pest && p.growth > 0) p.growth = Math.max(0, p.growth - PEST_EAT_PER_S * dt);
     if (p.water > 0){
-      p.water -= (bright ? T.dryBright : T.dryDark) * dt;
+      p.water -= (bright ? PD.dryB : PD.dryD) * dt;
       if (p.water < 0) p.water = 0;
     }
     if (p.water > T.thirstyAt){
       /* watered: growth flows (slowly — patience is the game) */
       p.dryTime = 0;
-      p.growth += (bright ? T.growBright : T.growDark) * dt;
+      p.growth += (bright ? PD.growB : PD.growD) * dt;
       if (p.growth >= 100){
         p.growth = 100; p.state = "bloomed";
+        /* golden blooms: 5% of blooms come up golden, +2 petals */
+        p.golden = Math.random() < 0.05;
+        journalMarkGrown(S.cur, PD.id, i);
         sfx.chime();
-        burst(patchWorldPos(i), ["#ffd93d","#fff3a0","#ffb3c1"], 20, 150);
-        if (!S.flags.teachHarvest){
+        burst(patchWorldPos(i), p.golden ? ["#ffd93d","#fff3a0","#ffffff"] : ["#ffd93d","#fff3a0","#ffb3c1"], 20, 150);
+        if (p.golden){
+          var gi = i;
+          teachOnce("teachGolden", { tour:{ patch:gi }, title:"A golden bloom! ✨",
+            text:"Rare! This bloom came up golden — harvesting it pays +2 bonus Star Petals.",
+            buttons:[{ label:"Shiny!" }] });
+        } else if (!S.flags.teachHarvest){
           S.flags.teachHarvest = true;
           var bi = i;
           enqueue({ tour:{ patch:bi }, title:"A bloom!",
-            text:"Tap the shining " + curDef().plantName + " to harvest it.",
+            text:"Tap the shining " + PD.name.toLowerCase() + " to harvest it.",
             buttons:[{ label:"Got it" }] });
         }
         save();
@@ -1212,22 +2258,32 @@ function simStep(dt){
         }
       }
       if (p.water <= 0){
-        p.wilt += (bright ? T.wiltBright : T.wiltDark) * dt;
-        if (p.wilt >= 100){ doDie(i); continue; }
+        p.wilt += (bright ? PD.wiltB : PD.wiltD) * dt;
+        if (p.wilt >= 100){
+          /* PEACEFUL: a plant can never wilt to death — it waits,
+             paused at the edge, until it is watered again. The
+             growth drain above still applies. */
+          if (S.peaceful){ p.wilt = 99; }
+          else { doDie(i); continue; }
+        }
       }
     }
     if (p.water < T.thirstyAt && !S.flags.teachThirst){
       S.flags.teachThirst = true;
+      S.flags.teachWater = true; /* watering is taught HERE, at first thirst — not at planting */
       var ti = i;
       enqueue({ tour:{ patch:ti }, title:"Thirsty!",
         text:"The blue droplet means it needs water — and a thirsty flower stops growing until you water it. Tap the plant to water it.",
         buttons:[{ label:"Got it" }] });
     }
   }
+  hazardTimers(dt);
   /* day rollover (per world) */
   var nd = 1 + Math.floor(ws.totalRot / (Math.PI * 2));
   if (nd !== ws.day){
     ws.day = nd; refreshHud(); save();
+    ensureGoals(); /* a new day brings a fresh set of gentle goals */
+    checkUnlocks(S.cur);
     if (S.cur === 0 && nd === 3 && !S.flags.ch3){
       S.flags.ch3 = true;
       enqueue({ center:true, title:"Day 3",
@@ -1254,14 +2310,25 @@ function stageVisual(P, p, T){
   vis.group.visible = true;
   var g = p.growth;
   var s = g < 25 ? 0.30 : g < 55 ? 0.58 : g < 100 ? 0.82 : 1.0;
-  if (p.state === "bloomed") s = 1.0 + Math.sin(performance.now()*0.005) * 0.05;
+  if (p.state === "bloomed") s = 1.0 + Math.sin(performance.now()*0.0018) * 0.03; /* slow, soft breathing bloom */
   vis.group.scale.set(s, s, s);
   vis.bud.visible = g >= 55 && p.state !== "bloomed";
   vis.flower.visible = p.state === "bloomed";
   var wk = p.wilt / 100;
   vis.group.rotation.x = wk * 0.55;
   vis.group.rotation.z = wk * 0.3;
+  /* a plant with a pest on it wiggles in warning */
+  vis.group.rotation.y = p.pest ? Math.sin(performance.now()*0.03 + P.grp.id) * 0.09 : 0;
   vis.stemMat.color.copy(vis.stemBase).lerp(BROWN, wk);
+  /* golden blooms glow gold all over */
+  var gold = p.state === "bloomed" && p.golden;
+  if (gold){
+    vis.petalMat.color.set(0xffd93d); vis.petalMat.emissive.set(0xffb700); vis.petalMat.emissiveIntensity = 1.5;
+    vis.centerMat.color.set(0xfff3a0); vis.centerMat.emissive.set(0xffd93d); vis.centerMat.emissiveIntensity = 1.6;
+  } else {
+    vis.petalMat.color.set(vis.spec.petal); vis.petalMat.emissive.set(vis.spec.petal); vis.petalMat.emissiveIntensity = vis.spec.glow * 0.8;
+    vis.centerMat.color.set(vis.spec.center); vis.centerMat.emissive.set(vis.spec.center); vis.centerMat.emissiveIntensity = vis.spec.glow;
+  }
   P.drop.visible = p.state === "growing" && p.water < T.thirstyAt;
   if (P.drop.visible) P.drop.position.z = 1.02 + Math.sin(performance.now()*0.006 + P.grp.id) * 0.07;
 }
@@ -1270,15 +2337,21 @@ function syncVisuals(t){
   var ws = curW(), T = curDef().tune;
   for (var i = 0; i < patches.length; i++){
     var P = patches[i], p = ws.patches[i];
+    var wantSpec = plantSpecFor(S.cur, p);
+    if (P.specId !== wantSpec.id) rebuildPatchPlant(P, wantSpec);
+    P.weedGroup.visible = !!p.weed && !p.locked;
+    P.pestGroup.visible = !!p.pest && !p.locked;
+    if (P.pestGroup.visible) P.pestGroup.position.x = 0.15 + Math.sin(t*0.02 + i*2.1) * 0.025;
+    P.fireGroup.visible = (p.fire || 0) > 0 && !p.locked;
+    if (P.fireGroup.visible){ var fs = 1 + Math.sin(t*0.03 + i*1.7) * 0.18; P.fireGroup.scale.set(fs, fs, fs); }
+    P.dmgGroup.visible = !!p.damaged && !p.locked;
     if (p.locked){
       P.soilMat.color.copy(SOIL_LOCKED);
       P.soil.scale.set(1, 1, 1);
       P.ring.visible = false;
-      var shaking = P.shakeUntil && t < P.shakeUntil;
-      P.lockGroup.position.x = shaking ? Math.sin(t * 0.09) * 0.035 : 0;
-      if (!shaking) P.lockGroup.position.x = 0;
+      P.lockGroup.position.x = 0;
     } else if (p.state === "empty"){
-      P.soilMat.color.copy(SOIL_EMPTY);
+      P.soilMat.color.copy(p.damaged ? SOIL_DAMAGED : SOIL_EMPTY);
       var pu = 1 + Math.sin(t*0.003 + i*1.3) * 0.05;
       P.soil.scale.set(pu, pu, 1);
     } else {
@@ -1327,21 +2400,47 @@ function placeSpot(){
 
 /* ---------------- Main loop ---------------- */
 var clock = new THREE.Clock();
-var saveTimer = 0;
+var saveTimer = 0, sparkT = 0, smokeT = 0;
 function loop(){
   requestAnimationFrame(loop);
   var dt = Math.min(clock.getDelta(), 0.05);
   var t = performance.now();
-  if (S.started && !dragging && !modalOpen){
-    var speed = (Math.PI * 2) / curDef().daySecs;
-    yaw += speed * dt;
-    curW().totalRot += speed * dt;
-  }
+  /* v6: NO auto-rotation. The planet turns only when the player
+     drags it forward — idle time changes nothing here. (Growth
+     and drying still simulate in real time via simStep; the day
+     counter moves only with forward rotation.) */
   yawGroup.rotation.y = yaw;
   pitchGroup.rotation.x = pitch;
   simStep(dt);
+  stepMusic(dt);
+  /* ambient calm: fireflies drift slowly; sunlight warms and
+     cools gently across each day — nothing flashes, nothing hurries */
+  if (fireflies){
+    fireflies.rotation.y += dt * 0.02;
+    fireflies.rotation.x = Math.sin(t * 0.00011) * 0.06;
+    fireflyMat.opacity = 0.6 + Math.sin(t * 0.0009) * 0.2;
+  }
+  var dayCyc = 0.5 + 0.5 * Math.sin(curW().totalRot);
+  sunLight.color.copy(SUN_WARM).lerp(SUN_COOL, dayCyc);
+  stepVisitor(dt);
   syncVisuals(t);
   placeSpot();
+  /* golden blooms sparkle; fires puff smoke */
+  sparkT += dt; smokeT += dt;
+  if (sparkT > 0.7){
+    sparkT = 0;
+    var wsS = curW();
+    for (var si = 0; si < wsS.patches.length; si++)
+      if (wsS.patches[si].state === "bloomed" && wsS.patches[si].golden)
+        burst(patchWorldPos(si), ["#ffd93d","#fff3a0"], 3, 55);
+  }
+  if (smokeT > 0.45){
+    smokeT = 0;
+    var wsF = curW();
+    for (var fi = 0; fi < wsF.patches.length; fi++)
+      if (wsF.patches[fi].fire)
+        burst(patchWorldPos(fi), ["#8a8a8a","#5a5a5a"], 2, 40);
+  }
   stepFx(dt);
   saveTimer += dt;
   if (saveTimer > 2.5){ saveTimer = 0; if (S.started) save(); }
@@ -1364,11 +2463,49 @@ window.__og = {
   DRY_GRACE_S:DRY_GRACE_S, REGRESS_PER_S:REGRESS_PER_S, UNLOCK_COSTS:UNLOCK_COSTS,
   unlockCost:function(wi){ return unlockCostFor(wi === undefined ? S.cur : wi); },
   tapPatch:function(i){ onPatchTap(i); },
-  patchInfo:function(i){ var p = curW().patches[i]; return { state:p.state, water:p.water, growth:p.growth, wilt:p.wilt, dryTime:p.dryTime, locked:!!p.locked }; },
+  patchInfo:function(i){ var p = curW().patches[i]; return { state:p.state, water:p.water, growth:p.growth, wilt:p.wilt, dryTime:p.dryTime, locked:!!p.locked,
+    plant:p.plant, golden:!!p.golden, weed:!!p.weed, pest:!!p.pest, fire:p.fire||0, fireTaps:p.fireTaps||0, damaged:!!p.damaged }; },
+  PLANTS:PLANTS,
+  plantInfo:function(i){ var p = curW().patches[i]; var PD = plantSpecFor(S.cur, p); return { id:PD.id, name:PD.name, pay:PD.pay,
+    growB:PD.growB, growD:PD.growD, dryB:PD.dryB, dryD:PD.dryD, wiltB:PD.wiltB, wiltD:PD.wiltD, petals:PD.petals,
+    petal:PD.petal, center:PD.center, unlocked: curW().unlockedPlants.indexOf(PD.id) >= 0 }; },
+  catalog:function(wi){ wi = wi === undefined ? S.cur : wi; var ws = S.worlds[wi];
+    return plantList(wi).map(function(pl){ return { id:pl.id, name:pl.name, pay:pl.pay,
+      unlocked: ws.unlockedPlants.indexOf(pl.id) >= 0, harvests: ws.harvests[pl.id] || 0,
+      unlock: pl.unlock ? pl.unlock.text : null }; }); },
+  unlockPlant:function(plantId, wi){ wi = wi === undefined ? S.cur : wi; var ws = S.worlds[wi];
+    if (ws.unlockedPlants.indexOf(plantId) < 0) ws.unlockedPlants.push(plantId); save(); return ws.unlockedPlants.slice(); },
+  setHarvests:function(plantId, n, wi){ wi = wi === undefined ? S.cur : wi; S.worlds[wi].harvests[plantId] = n; save(); checkUnlocks(wi); },
+  spawnWeed:function(){ return spawnWeed(); },
+  spawnPest:function(){ return spawnPest(); },
+  spawnFire:function(){ return spawnFire(); },
+  strikePatch:function(){ return strikePatch(); },
+  spawnVisitor:function(){ return spawnVisitor(); },
+  tapVisitor:function(){ if (!visitor.active) return false; S.petals += VISITOR_PAY; endVisitor();
+    visitor.timer = 90 + Math.random()*60; refreshHud(); refreshPadUI(); refreshLockVisuals(); save(); return true; },
+  visitorInfo:function(){ return { active:visitor.active, t:visitor.t, timer:visitor.timer, emoji:visitorEl.textContent }; },
+  forceGolden:function(i){ var p = curW().patches[i]; if (!p || p.locked) return false;
+    if (p.state === "empty"){ if (p.weed || p.damaged) return false; doPlant(i, curW().unlockedPlants[0]); }
+    p.state = "bloomed"; p.growth = 100; p.golden = true; save(); return true; },
+  openPicker:function(i){ openPicker(i); },
+  hazardInfo:function(i){ var p = curW().patches[i]; return { weed:!!p.weed, pest:!!p.pest, fire:p.fire||0,
+    fireTaps:p.fireTaps||0, fireTime:p.fireTime||0, damaged:!!p.damaged, golden:!!p.golden, plant:p.plant }; },
   setPatch:function(i, props){ var p = curW().patches[i]; for (var k in props) p[k] = props[k]; save(); },
-  skipIntro:function(){ queue.length = 0; if (modalOpen) closeCard(); S.started = true; S.flags.story = true; S.flags.tour = true; save(); },
+  skipIntro:function(){ queue.length = 0; if (modalOpen) closeCard(); S.started = true; S.flags.story = true; S.flags.tour = true;
+    S.tutorialDone = true; S.tutorialStep = 99; save(); refreshTutorialUI(); buildWorld(S.cur); refreshTutorialHint(); },
+  /* v6 opening hooks */
+  tutorialInfo:function(){ return { done:!!S.tutorialDone, step:S.tutorialStep, tutorialRot:S.tutorialRot,
+    totalRot:curW().totalRot, yaw:yaw, day:curW().day, backHint:!!S.flags.backHint,
+    visiblePatches: patches.filter(function(P){ return P.grp.visible; }).length,
+    patch0Front: patchFrontness(0) }; },
+  rotateForward:function(rad){ applyForwardRotation(rad); },
+  tryBackward:function(rad){ backAccum = 0; var dyaw = -(rad || 0.5); backAccum += -dyaw; if (backAccum > 0.05) onBackwardTry();
+    return { yaw:yaw, totalRot:curW().totalRot }; },
+  getYaw:function(){ return yaw; },
+  hintText:function(){ var h = document.getElementById("hint"); return h ? h.textContent : ""; },
+  hudVisible:function(){ return !document.body.classList.contains("tut"); },
   addPetals:function(n){ S.petals += n; refreshHud(); refreshPadUI(); save(); },
-  plantAll:function(){ var ws = curW(), T = curDef().tune; ws.patches.forEach(function(p){ if (p.state === "empty" && !p.locked){ p.state = "growing"; p.water = T.startWater; p.growth = 0; p.wilt = 0; p.dryTime = 0; } }); save(); },
+  plantAll:function(){ var ws = curW(), T = curDef().tune; ws.patches.forEach(function(p){ if (p.state === "empty" && !p.locked && !p.weed && !p.damaged){ p.state = "growing"; p.water = T.startWater; p.growth = 0; p.wilt = 0; p.dryTime = 0; p.plant = ws.unlockedPlants[0]; p.golden = false; p.pest = false; p.fire = 0; } }); save(); },
   growAll:function(){ curW().patches.forEach(function(p){ if (p.state === "growing"){ p.growth = 99; p.water = 100; } }); },
   harvestAll:function(){ var n = 0; curW().patches.forEach(function(p, i){ if (p.state === "bloomed"){ doHarvest(i); n++; } }); return n; },
   ff:function(sec){ var steps = Math.round(sec / 0.05); for (var k = 0; k < steps; k++) simStep(0.05); },
@@ -1379,28 +2516,48 @@ window.__og = {
   cardText:function(){ return cardEl.textContent; },
   modalOpen:function(){ return modalOpen; },
   queueLen:function(){ return queue.length; },
-  closeCard:function(){ closeCard(); }
+  closeCard:function(){ closeCard(); },
+  /* v5 cozy hooks */
+  peaceful:function(){ return !!S.peaceful; },
+  setPeaceful:function(v){ setPeaceful(v); return !!S.peaceful; },
+  music:function(){ return !!S.music; },
+  setMusic:function(v){ S.music = !!v; refreshMusicBtn(); save(); return !!S.music; },
+  journal:function(){ var out = {}; Object.keys(S.journal).forEach(function(k){ out[k] = { golden:S.journal[k].golden || 0 }; });
+    return { entries:out, grown:Object.keys(S.journal).length, totalGolden:journalTotalGolden() }; },
+  openJournal:function(){ openJournal(); },
+  goals:function(){ ensureGoals(); return JSON.parse(JSON.stringify(S.daily)); },
+  bumpGoal:function(kind, n){ bumpGoal(kind, n); },
+  hazardRates:function(){ return { fireBurn:FIRE_BURN_PER_S, pestEat:PEST_EAT_PER_S,
+    weedEvery:120, pestEvery:150, fireEvery:240, strikeEvery:300 }; },
+  floaters:function(){ return floaters.length; }
 };
 
 /* ---------------- Boot ---------------- */
 buildWorld(S.cur);
-if (resumed && S.flags.story){
+refreshTutorialUI();
+refreshTutorialHint();
+if (!S.tutorialDone && resumed && S.flags.story){
+  /* Mid-tutorial reload: resume the guided opening exactly where
+     it stopped — no welcome-back, no away-sim, no story replay. */
   S.started = true;
+  beginTutorial();
+  ensureGoals();
+} else if (resumed && S.flags.story){
+  S.started = true;
+  ensureGoals();
   /* simulate time away from the world we left, then welcome back */
   var ws0 = curW();
   if (ws0.lastSeen){
     var el = (Date.now() - ws0.lastSeen) / 1000;
     if (el > 5){
       var r0 = awaySim(S.cur, el);
-      if (r0.grown > 0 || r0.died > 0){
-        var b0 = [];
-        if (r0.grown > 0) b0.push(r0.grown + (r0.grown === 1 ? " bloom opened" : " blooms opened"));
-        if (r0.died > 0) b0.push(r0.died + (r0.died === 1 ? " plant wilted away" : " plants wilted away"));
+      if (awayHas(r0)){
         enqueue({ center:true, title:"While you were away…",
-          text:"On " + curDef().name + ": " + b0.join(", ") + ".",
+          text:"On " + curDef().name + ": " + awayBits(r0).join(", ") + ".",
           buttons:[{ label:"Keep gardening" }] });
       }
     }
+    checkUnlocks(S.cur);
   }
   ws0.lastSeen = Date.now();
   save();

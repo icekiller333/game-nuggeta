@@ -1,0 +1,1164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="color-scheme" content="light"/>
+<link rel="icon" href="data:,"/>
+<title>Daily Roguelike — Signal Salvage (2026-11-08)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+<style>
+:root{
+  --ink:#111111;
+  --paper:#FFF6D8;
+  --yellow:#FFD23F;
+  --pink:#FF8FAB;
+  --teal:#3ED6C5;
+  --blue:#6EC6FF;
+  --green:#37D67A;
+  --green-dark:#0B6B32;
+  --red:#FF4D4D;
+  --orange:#FF9F1C;
+  --white:#FFFFFF;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;font-family:Verdana,Geneva,system-ui,sans-serif;background:#070B18;color:var(--ink);overflow:hidden}
+#app{height:100dvh;max-width:480px;margin:0 auto;background:var(--paper);display:flex;flex-direction:column;overflow:hidden;position:relative;border-left:3px solid #000;border-right:3px solid #000}
+/* ---------- HUD ---------- */
+#hud{flex:0 0 auto;padding:8px 10px 6px;background:var(--yellow);border-bottom:3px solid #000}
+#hudRow{display:flex;align-items:flex-start;gap:8px}
+#scrapWrap{flex:1 1 auto;min-width:0}
+#scrapLabel{font-size:11px;font-weight:900;letter-spacing:.5px;display:flex;justify-content:space-between}
+#scrapLabel span:last-child{background:#000;color:#fff;padding:0 6px}
+#scrapBarOuter{height:16px;background:#fff;border:3px solid #000;margin-top:3px;overflow:hidden}
+#scrapFill{height:100%;width:0%;background:var(--green);transition:width .25s}
+#streakRow{display:flex;align-items:center;gap:6px;margin-top:5px}
+#streakLabel{font-size:11px;font-weight:900;letter-spacing:.5px}
+#streakOuter{flex:1 1 auto;height:10px;background:#fff;border:3px solid #000;overflow:hidden}
+#streakFill{height:100%;width:0%;background:var(--orange)}
+#streakNum{background:#000;color:#FFD23F;padding:0 6px;font-size:11px;font-weight:900;min-width:34px;text-align:center}
+#pips{display:flex;gap:4px;flex:0 0 auto;margin-top:2px}
+.pip{width:16px;height:16px;background:#fff;border:3px solid #000}
+.pip.done{background:var(--teal)}
+.pip.now{background:var(--pink)}
+.cornerBtn{flex:0 0 auto;font-family:inherit;font-weight:900;font-size:11px;background:#fff;color:#000;border:3px solid #000;box-shadow:3px 3px 0 #000;padding:5px 7px;cursor:pointer}
+.cornerBtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #000}
+#timerOuter{height:12px;background:#fff;border:3px solid #000;margin-top:7px;overflow:hidden}
+#timerFill{height:100%;width:100%;background:var(--blue)}
+#timerFill.low{background:var(--red)}
+#stageRow{display:flex;justify-content:space-between;margin-top:4px;font-size:11px;font-weight:900}
+#hotTag{background:var(--ink);color:var(--yellow);padding:1px 6px}
+/* ---------- Hint ---------- */
+#hint{flex:0 0 34px;display:flex;align-items:center;justify-content:center;text-align:center;padding:2px 10px;font-size:12px;font-weight:700;background:var(--teal);border-bottom:3px solid #000;overflow:hidden}
+/* ---------- 3D field ---------- */
+#fieldWrap{flex:1 1 auto;min-height:0;position:relative;padding:10px}
+#gl{position:relative;width:100%;height:100%;background:#050914 radial-gradient(1.5px 1.5px at 22% 30%,#ffffff 50%,transparent 51%),radial-gradient(1px 1px at 68% 18%,#cfe8ff 50%,transparent 51%),radial-gradient(1.2px 1.2px at 82% 58%,#ffffff 50%,transparent 51%),radial-gradient(1px 1px at 40% 74%,#ffe9a8 50%,transparent 51%),radial-gradient(1.4px 1.4px at 12% 82%,#ffffff 50%,transparent 51%),radial-gradient(1px 1px at 55% 44%,#ffffff 50%,transparent 51%);border:3px solid #000;box-shadow:6px 6px 0 #000;overflow:hidden;touch-action:none;cursor:crosshair}
+#glCanvas{position:absolute;inset:0}
+#glCanvas canvas{display:block}
+#labelLayer{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+.blabel{position:absolute;transform:translate(-50%,-140%);background:#000;color:#fff;font-size:10px;font-weight:900;padding:1px 6px;white-space:nowrap;border:2px solid #000}
+.blabel.hotv{background:var(--orange);color:#000}
+.blabel.fiz{background:#555555;color:#fff;transform:translate(-50%,-320%)}
+.blabel.cloudlbl{background:#7A0000;color:#fff;transform:translate(-50%,-50%)}
+#fieldTag{position:absolute;left:8px;top:8px;z-index:6;background:#000;color:#fff;font-size:10px;font-weight:900;padding:2px 7px;letter-spacing:.5px;pointer-events:none}
+#emitTag{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);z-index:6;background:var(--ink);color:#fff;font-size:9px;font-weight:900;padding:3px 8px;border:3px solid #000;white-space:nowrap;letter-spacing:.5px;pointer-events:none}
+#glFallback{position:absolute;inset:auto 10px 40px 10px;z-index:6;background:#FFF6D8;border:3px solid #000;color:#000;font-size:12px;font-weight:700;padding:8px 10px;display:none;text-align:center}
+.floatTxt{position:absolute;z-index:7;font-weight:900;font-size:15px;color:#062b16;background:var(--yellow);border:3px solid #000;padding:1px 7px;pointer-events:none;transform:translateX(-50%);animation:floatUp .95s ease-out forwards;white-space:nowrap}
+@keyframes floatUp{from{opacity:1;margin-top:0}to{opacity:0;margin-top:-48px}}
+.spot{outline:5px solid #E60023!important;outline-offset:3px;z-index:8!important}
+/* ---------- Bottom strip ---------- */
+#bottomStrip{flex:0 0 40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:var(--pink);border-top:3px solid #000;font-size:12px;font-weight:900;overflow:hidden}
+#calTag{background:#fff;border:3px solid #000;padding:2px 7px}
+/* ---------- Overlays ---------- */
+.overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:18px;z-index:20}
+.overlay.show{display:flex}
+.scrim{background:rgba(10,8,28,.78)}
+.card{background:#fff;border:4px solid #000;box-shadow:8px 8px 0 #000;padding:20px 18px;max-width:360px;width:100%;max-height:100%;overflow:hidden;text-align:center}
+.card .kicker{display:inline-block;background:var(--ink);color:var(--yellow);font-size:11px;font-weight:900;padding:3px 8px;letter-spacing:1px}
+.card h1{font-size:24px;margin:12px 0 8px;line-height:1.15}
+.card h2{font-size:20px;margin:10px 0 8px;line-height:1.2}
+.card p{font-size:15px;line-height:1.5;margin:8px 0;font-weight:600}
+.bigBtn{font-family:inherit;font-size:17px;font-weight:900;background:var(--green);color:#062b16;border:3px solid #000;box-shadow:5px 5px 0 #000;padding:12px 26px;cursor:pointer;margin-top:12px}
+.bigBtn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 #000}
+.ghostBtn{font-family:inherit;font-size:13px;font-weight:900;background:#fff;color:#000;border:3px solid #000;box-shadow:4px 4px 0 #000;padding:8px 14px;cursor:pointer;margin-top:10px}
+/* Next sector */
+.sectorRow{display:flex;justify-content:space-between;gap:8px;background:var(--paper);border:3px solid #000;padding:8px 10px;margin:7px 0;font-size:13px;font-weight:900;text-align:left}
+.sectorRow span:last-child{background:#000;color:#fff;padding:0 6px;white-space:nowrap}
+.calBtn{display:block;width:100%;font-family:inherit;text-align:left;background:var(--blue);color:#06283f;border:3px solid #000;box-shadow:5px 5px 0 #000;padding:10px 12px;margin-top:10px;cursor:pointer}
+.calBtn b{font-size:16px}
+.calBtn small{display:block;font-size:12px;font-weight:700;margin-top:2px}
+.calBtn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 #000}
+.calBtn.c2{background:var(--teal);color:#04352e}
+.calBtn.c3{background:var(--orange);color:#3d2400}
+/* Laws sheet */
+#lawsList{text-align:left;margin-top:10px}
+.lawItem{border:3px solid #000;background:var(--yellow);padding:9px 10px;margin-bottom:8px;font-size:13px;font-weight:800}
+.lawItem small{display:block;font-weight:600;margin-top:2px}
+.lawItem.future{background:#eee;color:#444;border-style:dashed}
+/* Teach spotlight */
+#teachCard{position:absolute;left:14px;right:14px;bottom:14px;top:auto;max-width:none;width:auto;text-align:left}
+#teachCard p{font-size:14px}
+/* End */
+#endCard .finalScore{font-size:40px;font-weight:900;background:var(--yellow);border:3px solid #000;display:inline-block;padding:4px 18px;margin:8px 0}
+.confetto{position:absolute;width:10px;height:14px;z-index:30;pointer-events:none}
+#debugBar{position:absolute;left:0;right:0;bottom:0;z-index:40;background:#000;color:#0f0;display:none;padding:6px;font-size:12px}
+#debugBar button{font-family:monospace;margin-right:6px}
+.shake{animation:shk .3s}
+@keyframes shk{0%,100%{transform:translate(0,0)}25%{transform:translate(-5px,2px)}50%{transform:translate(5px,-2px)}75%{transform:translate(-3px,-2px)}}
+@media (max-height:560px){
+  #hint{flex-basis:28px;font-size:11px}
+  #bottomStrip{flex-basis:34px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- HUD -->
+  <div id="hud">
+    <div id="hudRow">
+      <div id="scrapWrap">
+        <div id="scrapLabel"><span>SCRAP</span><span id="scrapNum">0 / 60</span></div>
+        <div id="scrapBarOuter"><div id="scrapFill"></div></div>
+        <div id="streakRow"><span id="streakLabel">STREAK</span><div id="streakOuter"><div id="streakFill"></div></div><span id="streakNum">×0</span></div>
+      </div>
+      <div id="pips" aria-label="Stages"></div>
+      <button class="cornerBtn" id="muteBtn" aria-label="Mute">🔊</button>
+      <button class="cornerBtn" id="lawsBtn">LAWS</button>
+    </div>
+    <div id="timerOuter"><div id="timerFill"></div></div>
+    <div id="stageRow"><span id="stageLabel">STAGE 1 / 5</span><span id="timeLabel">40s</span><span id="hotTag">HOT: —</span></div>
+  </div>
+
+  <div id="hint">Drag to aim the salvage laser — bounce it off a mirror onto a wreck and hold it there to lock it in.</div>
+
+  <!-- 3D salvage field -->
+  <div id="fieldWrap">
+    <div id="gl">
+      <div id="glCanvas"></div>
+      <div id="labelLayer"></div>
+      <div id="fieldTag">SALVAGE FIELD</div>
+      <div id="emitTag">SALVAGE LASER</div>
+      <div id="glFallback">The 3D field needs the three.js library, which could not load here. The salvage run still works — reopen with a connection to fly the field in 3D.</div>
+    </div>
+  </div>
+
+  <div id="bottomStrip"><span id="calLabel">CALIBRATION: NONE</span><span id="calTag">LOCK 1.2s</span></div>
+
+  <!-- Story -->
+  <div class="overlay scrim" id="storyOverlay">
+    <div class="card">
+      <span class="kicker" id="storyKick">SIGNAL SALVAGE</span>
+      <p id="storyText"></p>
+      <button class="bigBtn" id="storyBtn">NEXT</button>
+    </div>
+  </div>
+
+  <!-- Teach spotlight (one message at a time) -->
+  <div class="overlay" id="teachOverlay" style="background:rgba(10,8,28,.45)">
+    <div class="card" id="teachCard">
+      <span class="kicker" id="teachKick">GUIDE</span>
+      <p id="teachText"></p>
+      <button class="bigBtn" id="teachBtn">CONTINUE</button>
+    </div>
+  </div>
+
+  <!-- Next sector -->
+  <div class="overlay scrim" id="sectorOverlay">
+    <div class="card">
+      <span class="kicker">NEXT SECTOR</span>
+      <h2 id="sectorTitle">STAGE 2 CONDITIONS</h2>
+      <div class="sectorRow"><span>DRIFT SPEED</span><span id="secDrift">—</span></div>
+      <div class="sectorRow"><span>NOISE CLOUD</span><span id="secNoise">—</span></div>
+      <div class="sectorRow"><span>HOT WRECK ×2</span><span id="secHot">—</span></div>
+      <div class="sectorRow"><span>MIRRORS</span><span id="secMirrors">—</span></div>
+      <p style="font-size:13px">Pick ONE calibration:</p>
+      <button class="calBtn" data-cal="steady"><b>🎯 STEADY</b><small>Locks fill faster — 0.9s lock time.</small></button>
+      <button class="calBtn c2" data-cal="wide"><b>🟩 WIDE</b><small>Lock radius 50% wider — easier holds in depth.</small></button>
+      <button class="calBtn c3" data-cal="swift"><b>⚡ SWIFT</b><small>Aim slew 1.5× faster — swing and tilt quicker.</small></button>
+    </div>
+  </div>
+
+  <!-- Laws sheet -->
+  <div class="overlay scrim" id="lawsOverlay">
+    <div class="card">
+      <span class="kicker">LAWS OF THE RING</span>
+      <div id="lawsList"></div>
+      <button class="ghostBtn" id="lawsClose">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- End -->
+  <div class="overlay scrim" id="endOverlay">
+    <div class="card" id="endCard">
+      <span class="kicker">RUN OVER</span>
+      <h1 id="endTitle">RING SALVAGED</h1>
+      <div class="finalScore" id="endScore">0</div>
+      <p id="endText"></p>
+      <button class="bigBtn" id="retryBtn">RETRY</button>
+    </div>
+  </div>
+
+  <div id="debugBar">DEBUG
+    <button id="dbgEndStage">END STAGE</button>
+    <button id="dbgScrap">+30 SCRAP</button>
+    <button id="dbgWin">FORCE END</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id)};
+var DEBUG=/[?&]sg_debug\b/.test(location.search);
+var G3=(typeof THREE!=="undefined");
+
+/* ================= AUDIO ================= */
+var AC=null, muted=false;
+function audio(){ try{
+  if(!AC){ var Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx) return null; AC=new Ctx(); }
+  if(AC.state==="suspended") AC.resume();
+  return AC;
+}catch(e){ return null; } }
+function beep(freq,dur,type,vol,when){
+  if(muted) return; var ac=audio(); if(!ac) return;
+  try{
+    var t=ac.currentTime+(when||0);
+    var o=ac.createOscillator(), g=ac.createGain();
+    o.type=type||"square"; o.frequency.setValueAtTime(freq,t);
+    g.gain.setValueAtTime(vol||0.08,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+dur);
+  }catch(e){}
+}
+function sndLock(streak){
+  var base=560+Math.min(streak||1,6)*70;
+  beep(base,.09,"square",.09); beep(base*1.5,.14,"square",.09,.07);
+}
+function sndMimic(){ beep(160,.25,"sawtooth",.1); beep(110,.3,"sawtooth",.1,.1); }
+function sndStage(){ beep(523,.1,"square",.08); beep(784,.16,"square",.08,.09); }
+function sndWin(){ [523,659,784,1047].forEach(function(f,i){ beep(f,.22,"square",.09,i*.11); }); }
+function sndLose(){ [392,330,262,196].forEach(function(f,i){ beep(f,.25,"triangle",.1,i*.13); }); }
+
+/* ================= SMALL VECTOR MATH (pure, THREE-independent) ================= */
+function V(x,y,z){ return {x:x||0,y:y||0,z:z||0}; }
+function vAdd(a,b){ return V(a.x+b.x,a.y+b.y,a.z+b.z); }
+function vSub(a,b){ return V(a.x-b.x,a.y-b.y,a.z-b.z); }
+function vScale(a,s){ return V(a.x*s,a.y*s,a.z*s); }
+function vDot(a,b){ return a.x*b.x+a.y*b.y+a.z*b.z; }
+function vCross(a,b){ return V(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x); }
+function vLen(a){ return Math.sqrt(vDot(a,a)); }
+function vNorm(a){ var l=vLen(a)||1; return V(a.x/l,a.y/l,a.z/l); }
+function vReflect(d,n){ var k=2*vDot(d,n); return V(d.x-k*n.x, d.y-k*n.y, d.z-k*n.z); }
+
+/* ================= DATA ================= */
+var TYPES={
+  dish:{name:"SATELLITE DISH",short:"DISH",value:4,color:0xFF8FAB,css:"#FF8FAB"},
+  core:{name:"POWER CORE",short:"CORE",value:6,color:0xFFD23F,css:"#FFD23F"},
+  nav:{name:"NAV COMPUTER",short:"NAV",value:8,color:0x6EC6FF,css:"#6EC6FF"}
+};
+var TYPE_KEYS=["dish","core","nav"];
+var LAWS=[
+  {stage:2,name:"FASTER DRIFT",desc:"Wrecks drift 1.4× faster."},
+  {stage:3,name:"NOISE CLOUD",desc:"A red cloud the beam can't cross. Lock progress drains while your beam is stuck in it."},
+  {stage:4,name:"MIMIC WRECK",desc:"Flickers red. Locking it: 0 scrap, −5s, streak broken."},
+  {stage:5,name:"STORM DRIFT",desc:"All wreck speeds ×1.5 again. Every law stays."}
+];
+/* 3D field volume: x −6.5..6.5, y 1.2..5.2, z −15..−5.5. Camera behind the
+   emitter, looking down −z, so depth is real: far wrecks are smaller. */
+/* Mirror planes: thin bars, fixed per stage. CROSS normals are angled so a
+   beam from the emitter deflects across the field and keeps travelling deeper
+   (−z); SWAPPED normals keep the beam on its own side. Normals are normalised
+   when the layout is built. halfW 1.9, halfH 0.5. */
+var MIRROR_LAYOUTS={
+  1:{name:"WIDE",   list:[{c:[-3.4,3.0,-9.0],n:[ 0.94,-0.12, 0.32]},{c:[ 3.4,3.0,-9.0],n:[-0.94,-0.12, 0.32]}]},
+  2:{name:"NARROW", list:[{c:[-1.9,3.0,-9.0],n:[ 0.94,-0.12, 0.32]},{c:[ 1.9,3.0,-9.0],n:[-0.94,-0.12, 0.32]}]},
+  3:{name:"NARROW", list:[{c:[-1.9,3.0,-9.0],n:[ 0.94,-0.12, 0.32]},{c:[ 1.9,3.0,-9.0],n:[-0.94,-0.12, 0.32]}]},
+  4:{name:"SWAPPED",list:[{c:[-2.6,3.0,-9.0],n:[-0.85,-0.15, 0.50]},{c:[ 2.6,3.0,-9.0],n:[ 0.85,-0.15, 0.50]}]},
+  5:{name:"WIDE",   list:[{c:[-4.3,3.0,-9.5],n:[ 0.94,-0.12, 0.32]},{c:[ 4.3,3.0,-9.5],n:[-0.94,-0.12, 0.32]}]}
+};
+function layoutFor(stage){ return MIRROR_LAYOUTS[stage]||MIRROR_LAYOUTS[1]; }
+function buildMirrors(stage){
+  return layoutFor(stage).list.map(function(m){
+    var n=vNorm(V(m.n[0],m.n[1],m.n[2]));
+    var r=vNorm(vCross(V(0,1,0),n));
+    var u=vCross(n,r);
+    return {c:V(m.c[0],m.c[1],m.c[2]), n:n, r:r, u:u, halfW:1.9, halfH:0.5, mesh:null};
+  });
+}
+var CLOUD_SPOTS=[{x:-3.4,name:"LEFT"},{x:0,name:"CENTER"},{x:3.4,name:"RIGHT"}];
+var EMITTER=V(0,0.7,1.0);
+var VOL={x:6.5,yMin:1.2,yMax:5.2,zMin:-15,zMax:-5.5};
+/* Tuning (retuned for 3D aim, documented):
+   2D base drift was 0.055–0.105 of field width/s ≈ 0.77–1.47 u/s on a 14-unit
+   field. 3D base is ~30% slower: vx 0.54–1.03 u/s, vz 0.27–0.51 u/s.
+   Stage multipliers stack: S2 ×1.4 (vx 0.76–1.44), S5 ×1.5 more = ×2.1 total
+   (vx 1.13–2.16, vz 0.57–1.07). Lock radius 1.15 u (2D zone was ≈1.0 u),
+   WIDE ×1.5 = 1.73 u. Lock 1.2s / STEADY 0.9s. Goal stays 60 scrap. */
+
+/* ================= STATE ================= */
+var S=null;
+function freshState(){
+  return {
+    phase:"story", storyIdx:0,
+    stage:1, scrap:0, timeLeft:40,
+    yaw:0, pitch:14, targetYaw:0, targetPitch:14, keys:{}, dragging:false, lastPX:0, lastPY:0,
+    beacons:[], nextId:1, respawns:[],
+    cal:"none", lockTime:1.2, radiusMult:1, aimMult:1,
+    hot:pickHot(), noiseOn:false, cloud:null,
+    mirrors:buildMirrors(1), beam:null, beamFlash:0, sparkT:0,
+    streak:0, streakT:0,
+    sector:null,
+    taughtAim:false, taughtBounce:false, taughtLock:false, taughtStreak:false,
+    taughtDrift:false, taughtNoise:false, taughtMimic:false, taughtStorm:false,
+    teachQueue:[], shakeT:0, elapsed:0
+  };
+}
+function pickHot(){ return TYPE_KEYS[Math.floor(Math.random()*3)]; }
+function driftMult(){ var m=1; if(S.stage>=2)m*=1.4; if(S.stage>=5)m*=1.5; return m; }
+function lockRadius(){ return 1.15*S.radiusMult; }
+function aimDir(yawDeg,pitchDeg){
+  var y=yawDeg*Math.PI/180, p=pitchDeg*Math.PI/180;
+  return V(Math.sin(y)*Math.cos(p), Math.sin(p), -Math.cos(y)*Math.cos(p));
+}
+
+/* ================= BEAM TRACE (pure 3D math) ================= */
+/* Traces from origin along dir: mirror planes (true 3D reflection), the noise
+   cloud sphere, beacon spheres. Max 3 reflections. Returns segment points,
+   bounce count, hit beacon, whether the hit was direct (0 bounces). */
+function traceBeamRaw(origin,dir,mirrors,cloud,beacons,radius){
+  var O={x:origin.x,y:origin.y,z:origin.z}, D=vNorm({x:dir.x,y:dir.y,z:dir.z});
+  var pts=[{x:O.x,y:O.y,z:O.z}];
+  var bounces=0, hit=null, direct=false, noiseHit=false, endKind="edge";
+  for(var iter=0; iter<5; iter++){
+    var bestT=1e18, kind="edge", mHit=null, bHit=null, t, i;
+    // far wall of the volume
+    if(D.z<-1e-9){ t=(-20-O.z)/D.z; if(t>0&&t<bestT){ bestT=t; kind="edge"; } }
+    if(D.z>1e-9){ t=(3-O.z)/D.z; if(t>0&&t<bestT){ bestT=t; kind="edge"; } }
+    // noise cloud sphere
+    if(cloud){
+      var oc=vSub(O,cloud.c), bq=vDot(oc,D), cq=vDot(oc,oc)-cloud.r*cloud.r;
+      var disc=bq*bq-cq;
+      if(disc>0){ t=-bq-Math.sqrt(disc); if(t>0.05&&t<bestT){ bestT=t; kind="noise"; } }
+    }
+    // mirrors
+    for(i=0;i<mirrors.length;i++){
+      var m=mirrors[i];
+      var den=vDot(D,m.n);
+      if(Math.abs(den)<1e-7) continue;
+      t=vDot(vSub(m.c,O),m.n)/den;
+      if(t<0.05||t>=bestT) continue;
+      var P=vAdd(O,vScale(D,t));
+      var rel=vSub(P,m.c);
+      if(Math.abs(vDot(rel,m.r))<=m.halfW&&Math.abs(vDot(rel,m.u))<=m.halfH){ bestT=t; kind="mirror"; mHit=m; }
+    }
+    // beacons (ray-to-centre distance within lock radius)
+    for(i=0;i<beacons.length;i++){
+      var bc=beacons[i];
+      if(bc.leaving) continue;
+      var toC=vSub(bc.pos,O);
+      var tca=vDot(toC,D);
+      if(tca<0) continue;
+      var d2=vDot(toC,toC)-tca*tca;
+      if(d2<=radius*radius&&tca<bestT){ bestT=tca; kind="beacon"; bHit=bc; }
+    }
+    if(bestT>=1e17){ pts.push(vAdd(O,vScale(D,30))); endKind="edge"; break; }
+    var H=vAdd(O,vScale(D,bestT));
+    pts.push(H);
+    if(kind==="beacon"){ hit=bHit; direct=(bounces===0); endKind="beacon"; break; }
+    if(kind==="noise"){ noiseHit=true; endKind="noise"; break; }
+    if(kind==="mirror"){
+      bounces++;
+      if(bounces>3){ endKind="edge"; break; }
+      D=vNorm(vReflect(D,mHit.n));
+      O=vAdd(H,vScale(D,0.03));
+      continue;
+    }
+    endKind="edge"; break;
+  }
+  return {points:pts,bounces:bounces,hit:hit,direct:direct,noise:noiseHit,endKind:endKind};
+}
+function traceBeam(){
+  var blist=S.beacons.map(function(b){ return {pos:effPos(b),leaving:b.leaving,ref:b}; });
+  var raw=traceBeamRaw(EMITTER,aimDir(S.yaw,S.pitch),S.mirrors,S.noiseOn?S.cloud:null,blist,lockRadius());
+  if(raw.hit) raw.hit=raw.hit.ref;
+  return raw;
+}
+function effPos(b){
+  return V(b.pos.x, b.pos.y+Math.sin(S.elapsed*0.9+b.bobPh)*0.25, b.pos.z);
+}
+
+/* ================= BEACONS (data) ================= */
+var labelLayer=$("labelLayer"), glEl=$("gl");
+function spawnBeacon(isMimic){
+  var type=TYPE_KEYS[Math.floor(Math.random()*3)];
+  var b={
+    id:S.nextId++, type:type, mimic:!!isMimic,
+    pos:V(-5+Math.random()*10, 1.8+Math.random()*2.8, -13.5+Math.random()*7),
+    vx:(Math.random()<0.5?-1:1)*(0.54+Math.random()*0.49),
+    vy:(Math.random()<0.5?-1:1)*(0.10+Math.random()*0.14),
+    vz:(Math.random()<0.5?-1:1)*(0.27+Math.random()*0.24),
+    bobPh:Math.random()*6.28,
+    prog:0, leaving:false, dead:false, flick:Math.random()*1.3, fizzleT:0,
+    group:null, ringFg:null, ringProg:-1, label:null, fizLabel:null, mats:[]
+  };
+  var el=document.createElement("div");
+  el.className="blabel"+(type===S.hot&&!isMimic?" hotv":"");
+  el.textContent=isMimic?"?":"+"+(type===S.hot?TYPES[type].value*2:TYPES[type].value);
+  labelLayer.appendChild(el); b.label=el;
+  var fz=document.createElement("div");
+  fz.className="blabel fiz"; fz.textContent="BOUNCE IT!"; fz.style.display="none";
+  labelLayer.appendChild(fz); b.fizLabel=fz;
+  S.beacons.push(b);
+  if(G3) buildBeaconMesh(b);
+  return b;
+}
+function removeBeacon(b){
+  b.dead=true;
+  if(b.label&&b.label.parentNode)b.label.parentNode.removeChild(b.label);
+  if(b.fizLabel&&b.fizLabel.parentNode)b.fizLabel.parentNode.removeChild(b.fizLabel);
+  if(b.group&&b.group.parent) b.group.parent.remove(b.group);
+  S.beacons=S.beacons.filter(function(x){return x!==b});
+}
+function clearBeacons(){ S.beacons.slice().forEach(removeBeacon); S.respawns=[]; }
+function seedBeacons(){
+  clearBeacons();
+  var spots=[[-4.2,2.4,-8.5],[0.4,3.9,-11.5],[4.2,2.7,-13.5]];
+  for(var i=0;i<3;i++){ var b=spawnBeacon(false); b.pos=V(spots[i][0],spots[i][1],spots[i][2]); }
+  if(S.stage>=4) spawnBeacon(true);
+}
+function spawnFloat(txt,xFrac,yFrac,bg){
+  var d=document.createElement("div");
+  d.className="floatTxt"; d.textContent=txt;
+  d.style.left=(xFrac*100)+"%"; d.style.top=(yFrac*100)+"%";
+  if(bg)d.style.background=bg;
+  glEl.appendChild(d);
+  setTimeout(function(){ if(d.parentNode)d.parentNode.removeChild(d); },980);
+}
+function spawnFloatAt(worldPos,txt,bg){
+  var p=project(worldPos);
+  if(p) spawnFloat(txt,p.x,p.y,bg);
+}
+
+/* ================= THREE.JS SCENE ================= */
+var renderer=null, scene=null, camera=null, beamMeshes=[], sparkPts=null, sparkData=null;
+var debris=[], cloudMesh=null, cloudLabel=null, turret=null, starPts=null, mirrorMeshesAll=[];
+var _v3a=null,_v3b=null,_q=null,_qi=null;
+function nebulaTexture(inner,outer){
+  var cv=document.createElement("canvas"); cv.width=cv.height=256;
+  var g=cv.getContext("2d");
+  var gr=g.createRadialGradient(128,128,8,128,128,128);
+  gr.addColorStop(0,inner); gr.addColorStop(1,outer);
+  g.fillStyle=gr; g.fillRect(0,0,256,256);
+  return new THREE.CanvasTexture(cv);
+}
+function initGL(){
+  if(!G3){ $("glFallback").style.display="block"; return; }
+  try{
+    renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+    $("glCanvas").appendChild(renderer.domElement);
+    scene=new THREE.Scene();
+    scene.fog=new THREE.FogExp2(0x050914,0.016);
+    camera=new THREE.PerspectiveCamera(62,1,0.1,120);
+    camera.position.set(0,2.3,4.4);
+    camera.lookAt(0,2.5,-10);
+    _v3a=new THREE.Vector3(); _v3b=new THREE.Vector3(); _q=new THREE.Quaternion(); _qi=new THREE.Quaternion();
+    scene.add(new THREE.AmbientLight(0x8899bb,0.85));
+    var key=new THREE.DirectionalLight(0xffffff,1.15); key.position.set(4,8,3); scene.add(key);
+    var rim=new THREE.DirectionalLight(0x6EC6FF,0.5); rim.position.set(-6,2,-6); scene.add(rim);
+    // starfield
+    var starGeo=new THREE.BufferGeometry();
+    var sp=new Float32Array(900*3);
+    for(var i=0;i<900;i++){
+      var th=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1), rr=55+Math.random()*40;
+      sp[i*3]=rr*Math.sin(ph)*Math.cos(th); sp[i*3+1]=Math.abs(rr*Math.cos(ph))*0.7-6; sp[i*3+2]=-Math.abs(rr*Math.sin(ph)*Math.sin(th))-8;
+    }
+    starGeo.setAttribute("position",new THREE.BufferAttribute(sp,3));
+    starPts=new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xffffff,size:0.55,sizeAttenuation:true,fog:false}));
+    scene.add(starPts);
+    // nebula tint sprites
+    [["rgba(70,40,140,0.50)","rgba(70,40,140,0)",-16,7,-34,46],["rgba(20,110,120,0.42)","rgba(20,110,120,0)",15,3,-38,52],["rgba(150,70,30,0.30)","rgba(150,70,30,0)",2,10,-42,40]].forEach(function(nb){
+      var sm=new THREE.SpriteMaterial({map:nebulaTexture(nb[0],nb[1]),transparent:true,depthWrite:false,fog:false});
+      var spr=new THREE.Sprite(sm); spr.position.set(nb[2],nb[3],nb[4]); spr.scale.set(nb[5],nb[5]*0.62,1);
+      scene.add(spr);
+    });
+    // drifting wreck debris: tumbling hull plates and girders
+    var plateMat=new THREE.MeshStandardMaterial({color:0x5A6478,roughness:0.85,metalness:0.35});
+    var girderMat=new THREE.MeshStandardMaterial({color:0x707A66,roughness:0.8,metalness:0.3});
+    var rustMat=new THREE.MeshStandardMaterial({color:0x8A5A3A,roughness:0.9,metalness:0.2});
+    for(var d=0;d<14;d++){
+      var geo=(d%3===0)?new THREE.BoxGeometry(1.5,0.08,0.9):(d%3===1?new THREE.BoxGeometry(1.8,0.16,0.16):new THREE.BoxGeometry(0.7,0.5,0.06));
+      var dm=new THREE.Mesh(geo,[plateMat,girderMat,rustMat][d%3]);
+      dm.position.set(-11+Math.random()*22,-1+Math.random()*9,-20+Math.random()*13);
+      dm.rotation.set(Math.random()*3,Math.random()*3,Math.random()*3);
+      dm.userData.rs={x:(Math.random()-0.5)*0.5,y:(Math.random()-0.5)*0.5,z:(Math.random()-0.5)*0.5};
+      dm.userData.vx=(Math.random()-0.5)*0.14;
+      debris.push(dm); scene.add(dm);
+    }
+    // emitter turret (the salvage laser)
+    turret=new THREE.Group();
+    var base=new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.55,0.3,8),new THREE.MeshStandardMaterial({color:0x111111,roughness:0.6}));
+    base.position.y=-0.28; turret.add(base);
+    var barrel=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.13,0.85,8),new THREE.MeshStandardMaterial({color:0xFF4D4D,roughness:0.45,metalness:0.4}));
+    barrel.rotation.x=Math.PI/2; barrel.position.z=-0.3; turret.add(barrel);
+    var tip=new THREE.Mesh(new THREE.SphereGeometry(0.13,10,10),new THREE.MeshStandardMaterial({color:0xFFD23F,emissive:0x997700}));
+    tip.position.z=-0.75; turret.add(tip);
+    turret.position.set(EMITTER.x,EMITTER.y,EMITTER.z);
+    scene.add(turret);
+    // beam segments (outer glow + white core cylinders, pooled)
+    for(var s2=0;s2<4;s2++){
+      var grp=new THREE.Group();
+      var outer=new THREE.Mesh(new THREE.CylinderGeometry(0.085,0.085,1,8,1,true),new THREE.MeshBasicMaterial({color:0xFF3355,transparent:true,opacity:0.32,depthWrite:false}));
+      var core=new THREE.Mesh(new THREE.CylinderGeometry(0.032,0.032,1,8,1,true),new THREE.MeshBasicMaterial({color:0xFFFFFF,depthWrite:false}));
+      grp.add(outer); grp.add(core); grp.visible=false;
+      scene.add(grp); beamMeshes.push(grp);
+    }
+    // spark particles (bounce glints + lock bursts)
+    var sGeo=new THREE.BufferGeometry();
+    var sPos=new Float32Array(300*3);
+    sGeo.setAttribute("position",new THREE.BufferAttribute(sPos,3));
+    sparkPts=new THREE.Points(sGeo,new THREE.PointsMaterial({color:0xFFD23F,size:0.17,transparent:true,opacity:0.95,depthWrite:false}));
+    sparkPts.frustumCulled=false;
+    sparkData={pos:sPos,vel:[],life:new Float32Array(300),head:0};
+    for(var s3=0;s3<300;s3++){ sparkData.vel.push({x:0,y:0,z:0}); sPos[s3*3+1]=-999; }
+    scene.add(sparkPts);
+    // noise cloud
+    cloudMesh=new THREE.Group();
+    var cm=new THREE.Mesh(new THREE.SphereGeometry(2.3,18,14),new THREE.MeshBasicMaterial({color:0xFF2222,transparent:true,opacity:0.20,depthWrite:false}));
+    var cw=new THREE.Mesh(new THREE.SphereGeometry(2.34,10,8),new THREE.MeshBasicMaterial({color:0xFF5555,wireframe:true,transparent:true,opacity:0.30,depthWrite:false}));
+    cloudMesh.add(cm); cloudMesh.add(cw); cloudMesh.visible=false;
+    scene.add(cloudMesh);
+    cloudLabel=document.createElement("div");
+    cloudLabel.className="blabel cloudlbl"; cloudLabel.textContent="NOISE CLOUD"; cloudLabel.style.display="none";
+    labelLayer.appendChild(cloudLabel);
+    buildMirrorMeshes();
+    S.beacons.forEach(buildBeaconMesh);
+    resizeGL();
+  }catch(e){
+    renderer=null; scene=null;
+    $("glFallback").style.display="block";
+  }
+}
+function resizeGL(){
+  if(!renderer) return;
+  var r=glEl.getBoundingClientRect();
+  var w=Math.max(50,r.width), h=Math.max(50,r.height);
+  renderer.setSize(w,h);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener("resize",resizeGL);
+function project(p){
+  if(!G3||!camera) return null;
+  var r=glEl.getBoundingClientRect();
+  _v3a.set(p.x,p.y,p.z).project(camera);
+  if(_v3a.z>1) return null;
+  return {x:(_v3a.x*0.5+0.5), y:(-_v3a.y*0.5+0.5), px:(_v3a.x*0.5+0.5)*r.width, py:(-_v3a.y*0.5+0.5)*r.height};
+}
+function mat(color,emissive,ei){
+  return new THREE.MeshStandardMaterial({color:color,roughness:0.5,metalness:0.3,emissive:emissive||0x000000,emissiveIntensity:ei||0});
+}
+function buildBeaconMesh(b){
+  if(!G3||!scene) return;
+  var g=new THREE.Group();
+  var hot=(b.type===S.hot&&!b.mimic);
+  if(b.type==="dish"){
+    var dish=new THREE.Mesh(new THREE.SphereGeometry(0.62,14,10,0,Math.PI*2,0,Math.PI*0.45),mat(0xFF8FAB,hot?0x662222:0x000000,0.7));
+    dish.rotation.x=Math.PI*0.78; g.add(dish);
+    var mast=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.7,6),mat(0x222222));
+    mast.rotation.z=0.7; mast.rotation.x=0.5; mast.position.set(0.18,-0.1,0.18); g.add(mast);
+    var dot=new THREE.Mesh(new THREE.SphereGeometry(0.11,8,8),mat(0xFFD23F,0x997700,0.8));
+    dot.position.set(0.36,0.14,0.36); g.add(dot); b.mats.push(dish.material);
+    var legs=new THREE.Mesh(new THREE.BoxGeometry(0.7,0.1,0.7),mat(0x333333));
+    legs.position.y=-0.5; g.add(legs);
+  }else if(b.type==="core"){
+    var core=new THREE.Mesh(new THREE.OctahedronGeometry(0.58),mat(0xFFD23F,0xCC8800,hot?1.1:0.65));
+    g.add(core); b.spinMesh=core; b.mats.push(core.material);
+    var cage=new THREE.Mesh(new THREE.TorusGeometry(0.72,0.05,8,20),mat(0x222222));
+    g.add(cage); b.mats.push(cage.material);
+    var cage2=new THREE.Mesh(new THREE.TorusGeometry(0.72,0.05,8,20),mat(0x222222));
+    cage2.rotation.x=Math.PI/2; g.add(cage2);
+  }else{
+    var box=new THREE.Mesh(new THREE.BoxGeometry(1.05,0.78,0.24),mat(0x6EC6FF,hot?0x113355:0x000000,0.7));
+    g.add(box); b.mats.push(box.material);
+    var scr=new THREE.Mesh(new THREE.PlaneGeometry(0.86,0.56),new THREE.MeshBasicMaterial({color:0x0B3B5B}));
+    scr.position.z=0.13; g.add(scr);
+    var line=new THREE.Mesh(new THREE.PlaneGeometry(0.7,0.07),new THREE.MeshBasicMaterial({color:0x37D67A}));
+    line.position.set(-0.04,0.05,0.14); line.rotation.z=0.4; g.add(line);
+    var foot=new THREE.Mesh(new THREE.BoxGeometry(0.8,0.12,0.3),mat(0xFF8FAB));
+    foot.position.y=-0.5; g.add(foot); b.mats.push(foot.material);
+  }
+  // lock ring: background ring + progress arc (arc geometry rebuilt as prog changes)
+  var ringBg=new THREE.Mesh(new THREE.RingGeometry(0.88,1.0,40),new THREE.MeshBasicMaterial({color:0xFFFFFF,transparent:true,opacity:0.4,side:THREE.DoubleSide,depthWrite:false}));
+  g.add(ringBg); b.ringBg=ringBg;
+  var ringFg=new THREE.Mesh(new THREE.RingGeometry(0.88,1.0,40,1,Math.PI/2,0.01),new THREE.MeshBasicMaterial({color:0x37D67A,side:THREE.DoubleSide,depthWrite:false}));
+  g.add(ringFg); b.ringFg=ringFg;
+  g.position.copy(effPos(b));
+  scene.add(g);
+  b.group=g;
+}
+function buildMirrorMeshes(){
+  if(!G3||!scene) return;
+  mirrorMeshesAll.forEach(function(g){ if(g.parent) g.parent.remove(g); });
+  mirrorMeshesAll=[];
+  S.mirrors.forEach(function(m){
+    var grp=new THREE.Group();
+    var face=new THREE.Mesh(new THREE.PlaneGeometry(m.halfW*2,m.halfH*2),new THREE.MeshStandardMaterial({color:0xDFF3FF,roughness:0.12,metalness:0.9,side:THREE.DoubleSide,emissive:0x223344,emissiveIntensity:0.5}));
+    grp.add(face);
+    var frame=new THREE.Mesh(new THREE.BoxGeometry(m.halfW*2+0.16,m.halfH*2+0.16,0.07),new THREE.MeshStandardMaterial({color:0x111111,roughness:0.6}));
+    frame.position.z=-0.05; grp.add(frame);
+    var jewel=new THREE.Mesh(new THREE.SphereGeometry(0.09,8,8),new THREE.MeshBasicMaterial({color:0xFFD23F}));
+    jewel.position.z=0.04; grp.add(jewel);
+    var mtx=new THREE.Matrix4().makeBasis(
+      new THREE.Vector3(m.r.x,m.r.y,m.r.z),
+      new THREE.Vector3(m.u.x,m.u.y,m.u.z),
+      new THREE.Vector3(m.n.x,m.n.y,m.n.z));
+    grp.quaternion.setFromRotationMatrix(mtx);
+    grp.position.set(m.c.x,m.c.y,m.c.z);
+    scene.add(grp);
+    m.mesh=grp;
+    mirrorMeshesAll.push(grp);
+  });
+  if(cloudMesh&&S.cloud){ cloudMesh.position.set(S.cloud.c.x,S.cloud.c.y,S.cloud.c.z); }
+}
+function burst3(p,color,n,speed){
+  if(!sparkPts) return;
+  sparkPts.material.color.set(color);
+  for(var i=0;i<(n||14);i++){
+    var idx=sparkData.head; sparkData.head=(sparkData.head+1)%300;
+    sparkData.pos[idx*3]=p.x; sparkData.pos[idx*3+1]=p.y; sparkData.pos[idx*3+2]=p.z;
+    var a=Math.random()*Math.PI*2, b2=Math.random()*Math.PI-Math.PI/2, sp=(speed||2.2)*(0.4+Math.random()*0.8);
+    sparkData.vel[idx]={x:Math.cos(a)*Math.cos(b2)*sp,y:Math.sin(b2)*sp,z:Math.sin(a)*Math.cos(b2)*sp};
+    sparkData.life[idx]=0.55;
+  }
+}
+function updateSparks(dt){
+  if(!sparkPts) return;
+  var dirty=false;
+  for(var i=0;i<300;i++){
+    if(sparkData.life[i]<=0) continue;
+    sparkData.life[i]-=dt; dirty=true;
+    if(sparkData.life[i]<=0){ sparkData.pos[i*3+1]=-999; continue; }
+    sparkData.pos[i*3]+=sparkData.vel[i].x*dt;
+    sparkData.pos[i*3+1]+=sparkData.vel[i].y*dt;
+    sparkData.pos[i*3+2]+=sparkData.vel[i].z*dt;
+  }
+  if(dirty) sparkPts.geometry.attributes.position.needsUpdate=true;
+}
+function setBeamSegment(grp,a,b){
+  var len=Math.sqrt((b.x-a.x)*(b.x-a.x)+(b.y-a.y)*(b.y-a.y)+(b.z-a.z)*(b.z-a.z));
+  if(len<0.01){ grp.visible=false; return; }
+  grp.visible=true;
+  grp.position.set((a.x+b.x)/2,(a.y+b.y)/2,(a.z+b.z)/2);
+  _v3a.set(b.x-a.x,b.y-a.y,b.z-a.z).normalize();
+  _q.setFromUnitVectors(_v3b.set(0,1,0),_v3a);
+  grp.quaternion.copy(_q);
+  grp.scale.set(1,len,1);
+}
+function renderGL(dt){
+  if(!renderer||!scene) return;
+  // beacons
+  S.beacons.forEach(function(b){
+    if(!b.group) return;
+    var p=effPos(b);
+    b.group.position.set(p.x,p.y,p.z);
+    if(!b.leaving){
+      b.group.rotation.y+=dt*0.5;
+      if(b.spinMesh) b.spinMesh.rotation.y-=dt*1.4;
+    }else{
+      b.group.position.y+=dt*3.2; b.group.rotation.z+=dt*2.2;
+      b.group.traverse(function(o){ if(o.material&&o.material.transparent!==true){ o.material.transparent=true; } if(o.material) o.material.opacity=Math.max(0,(o.material.opacity===undefined?1:o.material.opacity)-dt*2.2); });
+    }
+    if(b.ringBg||b.ringFg){
+      _qi.copy(b.group.quaternion).invert().multiply(camera.quaternion);
+      if(b.ringBg) b.ringBg.quaternion.copy(_qi);
+    }
+    if(b.ringFg){
+      b.ringFg.quaternion.copy(_qi);
+      if(Math.abs(b.prog-b.ringProg)>0.015||(b.prog===0&&b.ringProg!==0)){
+        b.ringProg=b.prog;
+        b.ringFg.geometry.dispose();
+        b.ringFg.geometry=new THREE.RingGeometry(0.88,1.0,40,1,Math.PI/2,Math.max(0.01,b.prog*Math.PI*2));
+      }
+      b.ringFg.material.color.set(b.mimic?0xFF4D4D:0x37D67A);
+    }
+    // mimic flicker: red emissive pulse
+    if(b.mimic){
+      var on=(b.flick%1.3)<0.42;
+      b.mats.forEach(function(mt){ if(mt&&mt.emissive){ mt.emissive.setHex(on?0xFF0000:0x000000); mt.emissiveIntensity=on?0.85:0; } });
+    }
+    // DOM labels
+    var pr=project(p);
+    if(pr&&b.label){
+      b.label.style.display="block";
+      b.label.style.left=pr.px+"px"; b.label.style.top=pr.py+"px";
+      b.fizLabel.style.display=b.fizzleT>0?"block":"none";
+      if(b.fizzleT>0){ b.fizLabel.style.left=pr.px+"px"; b.fizLabel.style.top=pr.py+"px"; }
+    }else if(b.label){ b.label.style.display="none"; b.fizLabel.style.display="none"; }
+  });
+  // mirrors are static; cloud
+  if(cloudMesh){
+    cloudMesh.visible=S.noiseOn;
+    if(S.noiseOn&&S.cloud){
+      cloudMesh.rotation.y+=dt*0.25; cloudMesh.rotation.x+=dt*0.1;
+      var cp=project(S.cloud.c);
+      if(cp&&cloudLabel){ cloudLabel.style.display="block"; cloudLabel.style.left=cp.px+"px"; cloudLabel.style.top=(cp.py+58)+"px"; }
+      else if(cloudLabel) cloudLabel.style.display="none";
+    }else if(cloudLabel) cloudLabel.style.display="none";
+  }
+  // turret aim
+  if(turret){
+    turret.rotation.order="YXZ";
+    turret.rotation.y=-S.yaw*Math.PI/180;
+    turret.rotation.x=S.pitch*Math.PI/180;
+  }
+  // beam
+  var pts=S.beam?S.beam.points:[];
+  for(var i=0;i<beamMeshes.length;i++){
+    if(S.beam&&i<pts.length-1&&(S.phase==="play"||S.phase==="teach"||S.phase==="tour")){
+      setBeamSegment(beamMeshes[i],pts[i],pts[i+1]);
+      var flash=S.beamFlash>0;
+      beamMeshes[i].children[0].material.opacity=flash?0.6:0.32;
+    }else beamMeshes[i].visible=false;
+  }
+  if(S.beam&&S.beam.endKind==="beacon"&&pts.length>1){
+    // impact glint
+    if(S.sparkT<=0){ burst3(pts[pts.length-1],S.beam.direct?0x999999:0xFFFFFF,2,0.7); }
+  }
+  // debris drift + tumble
+  debris.forEach(function(d){
+    d.rotation.x+=d.userData.rs.x*dt; d.rotation.y+=d.userData.rs.y*dt; d.rotation.z+=d.userData.rs.z*dt;
+    d.position.x+=d.userData.vx*dt;
+    if(d.position.x>13)d.position.x=-13; if(d.position.x<-13)d.position.x=13;
+  });
+  if(starPts) starPts.rotation.z+=dt*0.004;
+  updateSparks(dt);
+  renderer.render(scene,camera);
+}
+
+/* ================= OVERLAY MGMT ================= */
+var overlays=["storyOverlay","teachOverlay","sectorOverlay","lawsOverlay","endOverlay"];
+function showOnly(id){
+  overlays.forEach(function(o){ $(o).classList.toggle("show",o===id); });
+  if(!id) overlays.forEach(function(o){ $(o).classList.remove("show"); });
+}
+
+/* ================= FLOW ================= */
+var STORY=[
+  "The relay ring went dead ten years ago. You're the last salvage operator with a working tuner — and the wrecks out there are still broadcasting.",
+  "Every beacon you lock is scrap you can sell. Lock 60 scrap before the ring goes silent for good."
+];
+var HOWTO="Drag to aim the salvage laser — bounce it off a mirror onto a wreck and hold it there to lock it in.";
+function showStory(){
+  S.phase="story"; showOnly("storyOverlay");
+  $("storyText").textContent=STORY[S.storyIdx];
+  $("storyBtn").textContent=S.storyIdx===0?"NEXT":"START";
+  $("storyKick").textContent=S.storyIdx===0?"SIGNAL SALVAGE · 1 / 2":"SIGNAL SALVAGE · 2 / 2";
+}
+$("storyBtn").addEventListener("click",function(){
+  audio(); beep(520,.07,"square",.07);
+  if(S.storyIdx===0){ S.storyIdx=1; showStory(); }
+  else { startStage(1); S.taughtAim=true; fireTeach("aim"); }
+});
+
+function clearSpots(){
+  [glEl,$("hud")].forEach(function(e){e.classList.remove("spot")});
+}
+function showTeach(kind,text,spotHud){
+  S.phase="teach"; showOnly("teachOverlay"); clearSpots();
+  var kicks={aim:"GUIDE · AIM",bounce:"GUIDE · BOUNCE",lock:"GUIDE · LOCK",streak:"GUIDE · STREAK",
+    drift:"NEW LAW · STAGE 2",noise:"NEW LAW · STAGE 3",mimic:"NEW LAW · STAGE 4",storm:"NEW LAW · STAGE 5"};
+  $("teachKick").textContent=kicks[kind]||"GUIDE";
+  $("teachText").textContent=text;
+  if(kind==="aim") glEl.classList.add("spot");
+  if(spotHud) $("hud").classList.add("spot");
+}
+var TEACH_TEXT={
+  aim:"Drag left and right to swing the beam. Drag up and down to tilt it — aim in depth, not just left and right.",
+  bounce:"A direct hit won't lock. Bounce the beam off a mirror first.",
+  lock:"Hold the beam on the wreck — the ring fills, then the scrap is yours.",
+  streak:"Fast locks chain into a streak — each one pays +1 scrap.",
+  drift:"FASTER DRIFT: wrecks drift 1.4× faster from here on. Laws stack — and never leave.",
+  noise:"A red NOISE CLOUD now hangs in the field. Your beam can't pass through it, and lock progress drains while the beam is stuck in it. Bounce around it.",
+  mimic:"One wreck is a MIMIC — watch for its red flicker. Locking it banks 0 scrap, eats 5 seconds, and breaks your streak. Let it drift.",
+  storm:"STORM DRIFT: every wreck drifts 1.5× faster again, on top of all the other laws."
+};
+function queueTeach(kind){
+  if(S.teachQueue.indexOf(kind)<0) S.teachQueue.push(kind);
+}
+function fireTeach(kind){
+  showTeach(kind,TEACH_TEXT[kind],kind==="streak");
+}
+$("teachBtn").addEventListener("click",function(){
+  beep(520,.07,"square",.07);
+  clearSpots(); showOnly(null); S.phase="play";
+});
+/* Stage-start law teaches, in order, one at a time. */
+function stageTeach(){
+  if(S.stage===2&&!S.taughtDrift){ S.taughtDrift=true; fireTeach("drift"); return true; }
+  if(S.stage===3&&!S.taughtNoise){ S.taughtNoise=true; fireTeach("noise"); return true; }
+  if(S.stage===4&&!S.taughtMimic){ S.taughtMimic=true; fireTeach("mimic"); return true; }
+  if(S.stage===5&&!S.taughtStorm){ S.taughtStorm=true; fireTeach("storm"); return true; }
+  return false;
+}
+
+function startStage(n){
+  S.stage=n; S.timeLeft=40;
+  S.streak=0; S.streakT=0; S.teachQueue=[];
+  S.yaw=0; S.pitch=14; S.targetYaw=0; S.targetPitch=14;
+  S.mirrors=buildMirrors(n);
+  if(G3&&scene) buildMirrorMeshes();
+  S.noiseOn=n>=3;
+  if(S.noiseOn){
+    var spot=(S.sector&&S.sector.stage===n&&S.sector.cloudSpot!=null)?S.sector.cloudSpot:CLOUD_SPOTS[Math.floor(Math.random()*3)];
+    S.cloud={c:V(spot.x,3.1,-10.5),r:2.3,name:spot.name};
+    if(cloudMesh) cloudMesh.position.set(S.cloud.c.x,S.cloud.c.y,S.cloud.c.z);
+  }else S.cloud=null;
+  seedBeacons();
+  $("hint").textContent = n===1 ? HOWTO : "Hot wreck pays double. Laws stack — tap LAWS.";
+  updateHUD();
+}
+
+function endStage(){
+  sndStage();
+  if(S.stage>=5){ endGame(); return; }
+  S.phase="sector";
+  var next=S.stage+1;
+  var ni=Math.floor(Math.random()*3);
+  var m=1; if(next>=2)m*=1.4; if(next>=5)m*=1.5;
+  S.sector={ stage:next, hot:pickHot(),
+    cloudSpot: next>=3?CLOUD_SPOTS[ni]:null,
+    driftLabel:"×"+m.toFixed(1)+(next>=5?" STORM":(next>=2?" FAST":"")),
+    mirrorName: layoutFor(next).name };
+  $("sectorTitle").textContent="STAGE "+next+" CONDITIONS";
+  $("secDrift").textContent=S.sector.driftLabel;
+  $("secNoise").textContent=S.sector.cloudSpot?S.sector.cloudSpot.name:"NONE";
+  $("secHot").textContent=TYPES[S.sector.hot].name;
+  $("secMirrors").textContent=S.sector.mirrorName;
+  showOnly("sectorOverlay");
+}
+document.querySelectorAll(".calBtn").forEach(function(btn){
+  btn.addEventListener("click",function(){
+    var cal=btn.getAttribute("data-cal");
+    S.cal=cal;
+    S.lockTime=cal==="steady"?0.9:1.2;
+    S.radiusMult=cal==="wide"?1.5:1.0;
+    S.aimMult=cal==="swift"?1.5:1.0;
+    S.hot=S.sector.hot;
+    var st=S.sector.stage;
+    showOnly(null);
+    startStage(st);
+    S.sector=null;
+    if(!stageTeach()) S.phase="play";
+    beep(700,.09,"square",.08);
+  });
+});
+
+function endGame(){
+  S.phase="end"; clearSpots();
+  var win=S.scrap>=60;
+  $("endTitle").textContent=win?"RING SALVAGED":"THE RING GOES SILENT";
+  $("endScore").textContent=S.scrap+" SCRAP";
+  $("endText").textContent=win?"You banked "+S.scrap+" scrap. The ring hums back to life — every wreck sold, every signal heard.":"You banked "+S.scrap+" of 60 scrap. The last signals fade into static.";
+  showOnly("endOverlay");
+  if(win){ sndWin(); confetti(); } else sndLose();
+}
+$("retryBtn").addEventListener("click",function(){
+  clearBeacons();
+  S=freshState(); showStory(); updateHUD();
+  if(G3&&scene){ buildMirrorMeshes(); }
+  $("calLabel").textContent="CALIBRATION: NONE"; $("calTag").textContent="LOCK 1.2s";
+  $("hint").textContent=HOWTO;
+  if(cloudLabel)cloudLabel.style.display="none";
+  if(cloudMesh)cloudMesh.visible=false;
+});
+
+/* ================= LAWS SHEET ================= */
+var lawsReturn=null;
+$("lawsBtn").addEventListener("click",function(){
+  if(S.phase==="lawsPaused")return;
+  lawsReturn={phase:S.phase,overlay:null};
+  overlays.forEach(function(o){ if($(o).classList.contains("show")) lawsReturn.overlay=o; });
+  S.phase="lawsPaused";
+  var list=$("lawsList"); list.innerHTML="";
+  var active=LAWS.filter(function(l){return S.stage>=l.stage});
+  var upcoming=LAWS.filter(function(l){return S.stage<l.stage});
+  if(!active.length){
+    var d=document.createElement("div"); d.className="lawItem";
+    d.innerHTML="NO LAWS YET<small>New laws stack on from Stage 2 — and never leave.</small>";
+    list.appendChild(d);
+  }
+  active.slice().reverse().forEach(function(l){
+    var d=document.createElement("div"); d.className="lawItem";
+    d.innerHTML="STAGE "+l.stage+" · "+l.name+"<small>"+l.desc+"</small>";
+    list.appendChild(d);
+  });
+  upcoming.forEach(function(l){
+    var d=document.createElement("div"); d.className="lawItem future";
+    d.innerHTML="STAGE "+l.stage+" · ???<small>Not yet in force.</small>";
+    list.appendChild(d);
+  });
+  showOnly("lawsOverlay");
+});
+$("lawsClose").addEventListener("click",function(){
+  if(lawsReturn){
+    S.phase=lawsReturn.phase;
+    showOnly(lawsReturn.overlay);
+    lawsReturn=null;
+  }else{
+    showOnly(null);
+    if(S.phase==="lawsPaused")S.phase="play";
+  }
+});
+
+/* ================= INPUT ================= */
+$("muteBtn").addEventListener("click",function(){
+  muted=!muted; $("muteBtn").textContent=muted?"🔇":"🔊"; if(!muted) beep(660,.07,"square",.07);
+});
+glEl.addEventListener("pointerdown",function(e){
+  audio();
+  if(S.phase!=="play")return;
+  S.dragging=true; S.lastPX=e.clientX; S.lastPY=e.clientY;
+  try{ glEl.setPointerCapture(e.pointerId); }catch(err){}
+});
+glEl.addEventListener("pointermove",function(e){
+  if(!S.dragging||S.phase!=="play")return;
+  var dx=e.clientX-S.lastPX, dy=e.clientY-S.lastPY;
+  S.lastPX=e.clientX; S.lastPY=e.clientY;
+  S.targetYaw=Math.min(55,Math.max(-55,S.targetYaw+dx*0.22));
+  S.targetPitch=Math.min(38,Math.max(-8,S.targetPitch-dy*0.20));
+});
+["pointerup","pointercancel"].forEach(function(ev){
+  glEl.addEventListener(ev,function(){ S.dragging=false; });
+});
+window.addEventListener("keydown",function(e){
+  if(e.key==="ArrowLeft"||e.key==="ArrowRight"||e.key==="ArrowUp"||e.key==="ArrowDown"){
+    S.keys[e.key]=true; audio(); if(S.phase==="play")e.preventDefault();
+  }
+});
+window.addEventListener("keyup",function(e){ S.keys[e.key]=false; });
+
+/* ================= CONFETTI ================= */
+function confetti(){
+  var app=$("app");
+  for(var i=0;i<50;i++){
+    var d=document.createElement("div"); d.className="confetto";
+    d.style.left=(Math.random()*100)+"%"; d.style.top="-20px";
+    d.style.background=["#FFD23F","#FF8FAB","#3ED6C5","#6EC6FF","#37D67A"][i%5];
+    app.appendChild(d);
+    animateConfetto(d);
+  }
+}
+function animateConfetto(d){
+  var y=-20, vy=120+Math.random()*140, ph=Math.random()*6, t=0;
+  var iv=setInterval(function(){
+    t+=0.03; y+=vy*0.03;
+    d.style.top=y+"px"; d.style.transform="translateX("+(Math.sin(t*5+ph)*14)+"px) rotate("+(t*260)+"deg)";
+    if(y>window.innerHeight+30){ clearInterval(iv); d.remove(); }
+  },30);
+}
+
+/* ================= HUD ================= */
+function buildPips(){
+  var p=$("pips"); p.innerHTML="";
+  for(var i=0;i<5;i++){ var d=document.createElement("div"); d.className="pip"; p.appendChild(d); }
+}
+function updateHUD(){
+  $("scrapNum").textContent=S.scrap+" / 60";
+  $("scrapFill").style.width=Math.min(100,(S.scrap/60)*100)+"%";
+  $("stageLabel").textContent="STAGE "+S.stage+" / 5";
+  $("timeLabel").textContent=Math.max(0,Math.ceil(S.timeLeft))+"s";
+  $("timerFill").style.width=Math.max(0,(S.timeLeft/40)*100)+"%";
+  $("timerFill").className=S.timeLeft<=10?"low":"";
+  $("timerFill").id="timerFill";
+  $("hotTag").textContent="HOT: "+TYPES[S.hot].short+" ×2";
+  var pips=$("pips").children;
+  for(var i=0;i<5;i++){
+    pips[i].className="pip"+(i+1<S.stage?" done":(i+1===S.stage?" now":""));
+  }
+  $("streakNum").textContent="×"+S.streak;
+  $("streakFill").style.width=S.streak>0?Math.max(0,(S.streakT/4)*100)+"%":"0%";
+  var calNames={none:"NONE",steady:"STEADY",wide:"WIDE",swift:"SWIFT"};
+  $("calLabel").textContent="CALIBRATION: "+(calNames[S.cal]||"NONE");
+  $("calTag").textContent=S.cal==="wide"?("RADIUS "+lockRadius().toFixed(1)):("LOCK "+S.lockTime.toFixed(1)+"s");
+}
+function updateTimerOnly(){
+  $("timerFill").style.width=Math.max(0,(S.timeLeft/40)*100)+"%";
+  $("timerFill").style.background=S.timeLeft<=10?"#FF4D4D":"#6EC6FF";
+  $("timeLabel").textContent=Math.max(0,Math.ceil(S.timeLeft))+"s";
+}
+
+/* ================= PLAY UPDATE (one frame of game logic) ================= */
+function playUpdate(dt){
+  S.timeLeft-=dt;
+  if(S.timeLeft<=0){ S.timeLeft=0; updateHUD(); endStage(); return; }
+  // streak decay
+  if(S.streakT>0){
+    S.streakT-=dt;
+    if(S.streakT<=0){ S.streakT=0; S.streak=0; }
+    $("streakNum").textContent="×"+S.streak;
+    $("streakFill").style.width=S.streak>0?Math.max(0,(S.streakT/4)*100)+"%":"0%";
+  }
+  // keyboard aim (LEFT/RIGHT swing, UP/DOWN tilt)
+  var kbd=95*S.aimMult;
+  if(S.keys["ArrowLeft"]) S.targetYaw=Math.max(-55,S.targetYaw-kbd*dt);
+  if(S.keys["ArrowRight"]) S.targetYaw=Math.min(55,S.targetYaw+kbd*dt);
+  if(S.keys["ArrowUp"]) S.targetPitch=Math.min(38,S.targetPitch+kbd*0.7*dt);
+  if(S.keys["ArrowDown"]) S.targetPitch=Math.max(-8,S.targetPitch-kbd*0.7*dt);
+  // slew aim toward target (SWIFT = 1.5× slew)
+  var slew=260*S.aimMult*dt;
+  var dyaw=S.targetYaw-S.yaw, dpitch=S.targetPitch-S.pitch;
+  S.yaw+=Math.abs(dyaw)<=slew?dyaw:slew*(dyaw>0?1:-1);
+  S.pitch+=Math.abs(dpitch)<=slew?dpitch:slew*(dpitch>0?1:-1);
+  // respawns
+  for(var i=S.respawns.length-1;i>=0;i--){
+    S.respawns[i].t-=dt;
+    if(S.respawns[i].t<=0){ var rp=S.respawns.splice(i,1)[0]; spawnBeacon(rp.mimic); }
+  }
+  // full-3D drift: left/right, toward/away, slow vertical bob (in effPos)
+  var mult=driftMult();
+  S.beacons.forEach(function(b){
+    if(b.leaving)return;
+    b.pos.x+=b.vx*mult*dt;
+    b.pos.y+=b.vy*mult*dt;
+    b.pos.z+=b.vz*mult*dt;
+    if(b.pos.x<-VOL.x){b.pos.x=-VOL.x;b.vx=Math.abs(b.vx);}
+    if(b.pos.x>VOL.x){b.pos.x=VOL.x;b.vx=-Math.abs(b.vx);}
+    if(b.pos.y<VOL.yMin){b.pos.y=VOL.yMin;b.vy=Math.abs(b.vy);}
+    if(b.pos.y>VOL.yMax){b.pos.y=VOL.yMax;b.vy=-Math.abs(b.vy);}
+    if(b.pos.z<VOL.zMin){b.pos.z=VOL.zMin;b.vz=Math.abs(b.vz);}
+    if(b.pos.z>VOL.zMax){b.pos.z=VOL.zMax;b.vz=-Math.abs(b.vz);}
+    b.flick+=dt;
+    if(b.fizzleT>0)b.fizzleT-=dt;
+  });
+  // trace the beam in 3D and resolve locking — synchronously
+  S.beam=traceBeam();
+  var beam=S.beam;
+  var target=(beam.hit&&beam.bounces>=1)?beam.hit:null;
+  // BOUNCE teach: first bounce off a mirror, or first direct-hit fizzle
+  if(!S.taughtBounce&&(beam.bounces>=1||(beam.direct&&beam.hit))){
+    S.taughtBounce=true; queueTeach("bounce");
+  }
+  // LOCK teach: first time a bounced beam touches a wreck
+  if(target&&!S.taughtLock){ S.taughtLock=true; queueTeach("lock"); }
+  if(beam.direct&&beam.hit){
+    beam.hit.fizzleT=0.3;
+    if(S.sparkT<=0){ burst3(effPos(beam.hit),0x999999,3,0.8); S.sparkT=0.15; }
+  }
+  if(beam.bounces>=1&&S.sparkT<=0&&beam.points.length>2){
+    burst3(beam.points[1],0xFFD23F,3,0.9); S.sparkT=0.14;
+  }
+  S.beacons.forEach(function(b){
+    if(b.leaving)return;
+    if(b===target){
+      b.prog+=dt/S.lockTime;
+      if(b.prog>=1){
+        // BANK — synchronous in the update
+        if(b.mimic){
+          S.timeLeft=Math.max(0,S.timeLeft-5);
+          S.streak=0; S.streakT=0;
+          $("streakNum").textContent="×0"; $("streakFill").style.width="0%";
+          sndMimic(); S.shakeT=0.3;
+          burst3(effPos(b),0xFF4D4D,22,2.6);
+          spawnFloatAt(effPos(b),"MIMIC! −5s","#FF4D4D");
+        }else{
+          if(S.streakT>0) S.streak+=1; else S.streak=1;
+          S.streakT=4;
+          var bonus=Math.min(5,S.streak-1);
+          var gain=TYPES[b.type].value*(b.type===S.hot?2:1);
+          S.scrap+=gain+bonus;
+          sndLock(S.streak);
+          S.beamFlash=0.18; S.shakeT=Math.max(S.shakeT,0.12);
+          burst3(effPos(b),TYPES[b.type].color,20,2.8);
+          spawnFloatAt(effPos(b),"+"+(gain+bonus),null);
+          if(bonus>0) spawnFloatAt(effPos(b),"STREAK +"+bonus,"#FF9F1C");
+          if(S.streak===2&&!S.taughtStreak){ S.taughtStreak=true; queueTeach("streak"); }
+          updateHUD();
+        }
+        b.leaving=true;
+        (function(bb){ setTimeout(function(){ removeBeacon(bb); },480); })(b);
+        S.respawns.push({t:2.0,mimic:b.mimic});
+        updateHUD();
+        if(S.timeLeft<=0){ S.timeLeft=0; endStage(); }
+      }
+    }else{
+      var drain=beam.noise?dt*1.4:dt*0.5;
+      b.prog=Math.max(0,b.prog-drain);
+    }
+  });
+  // one spotlight at a time, in order, after banking resolves
+  if(S.phase==="play"&&S.teachQueue.length){ fireTeach(S.teachQueue.shift()); }
+}
+
+/* ================= MAIN LOOP ================= */
+var lastT=0;
+function tick(ts){
+  requestAnimationFrame(tick);
+  if(!lastT) lastT=ts;
+  var dt=Math.min(0.05,(ts-lastT)/1000); lastT=ts;
+  if(!S) return;
+  if(S.sparkT>0)S.sparkT-=dt;
+  if(S.beamFlash>0)S.beamFlash-=dt;
+  S.elapsed+=dt;
+  if(S.phase==="play") playUpdate(dt);
+  if(S.phase==="play"||S.phase==="teach"||S.phase==="lawsPaused"||S.phase==="story"||S.phase==="sector"){
+    if(S.phase!=="play") S.beam=traceBeam();
+    renderGL(dt);
+    if(S.phase==="play") updateTimerOnly();
+  }
+  if(S&&S.shakeT>0){
+    S.shakeT-=dt;
+    glEl.classList.add("shake");
+    if(S.shakeT<=0)glEl.classList.remove("shake");
+  }
+}
+
+/* ================= DEBUG ================= */
+if(DEBUG){
+  $("debugBar").style.display="block";
+  window.__sg={
+    get S(){return S},
+    endStage:function(){endStage()},
+    startStage:startStage,
+    setAim:function(yaw,pitch){ S.targetYaw=Math.min(55,Math.max(-55,yaw)); S.targetPitch=Math.min(38,Math.max(-8,pitch)); S.yaw=S.targetYaw; S.pitch=S.targetPitch; },
+    step:function(dt){ if(S.phase==="play") playUpdate(dt); else if(S.phase!=="play"){ S.beam=traceBeam(); } },
+    traceRaw:traceBeamRaw, V:V, buildMirrors:buildMirrors,
+    placeBeacon:function(x,y,z,type,mimic){
+      var b=spawnBeacon(!!mimic);
+      if(type)b.type=type;
+      b.pos=V(x,y,z); b.vx=0; b.vy=0; b.vz=0;
+      return b.id;
+    },
+    clearBeacons:clearBeacons,
+    clickStory:function(){ $("storyBtn").click(); },
+    clickTeach:function(){ $("teachBtn").click(); },
+    beamInfo:function(){
+      if(!S.beam) return null;
+      return { yaw:S.yaw, pitch:S.pitch, targetYaw:S.targetYaw, targetPitch:S.targetPitch,
+        bounces:S.beam.bounces,
+        hitId:S.beam.hit?S.beam.hit.id:null, hitType:S.beam.hit?S.beam.hit.type:null,
+        direct:S.beam.direct, noise:S.beam.noise, endKind:S.beam.endKind,
+        points:S.beam.points.map(function(p){return [p.x,p.y,p.z];}),
+        streak:S.streak, streakT:S.streakT,
+        lockTime:S.lockTime, lockRadius:lockRadius(), scrap:S.scrap, phase:S.phase, stage:S.stage,
+        teachQueue:S.teachQueue.slice(),
+        beacons:S.beacons.map(function(b){ var p=effPos(b); return {id:b.id,type:b.type,x:p.x,y:p.y,z:p.z,depth:-p.z,prog:b.prog,mimic:b.mimic}; }) };
+    },
+    forceLockInfo:function(){ return S.beacons.map(function(b){return {id:b.id,type:b.type,x:b.pos.x,y:b.pos.y,z:b.pos.z,prog:b.prog,mimic:b.mimic};}); }
+  };
+  $("dbgEndStage").addEventListener("click",function(){ if(S.phase==="play"){S.timeLeft=0.01;} });
+  $("dbgScrap").addEventListener("click",function(){ S.scrap+=30; updateHUD(); });
+  $("dbgWin").addEventListener("click",function(){ S.stage=5; endStage(); });
+}
+
+/* ================= INIT ================= */
+S=freshState();
+buildPips();
+initGL();
+setTimeout(resizeGL,60);
+updateHUD();
+showStory();
+requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

@@ -94,6 +94,23 @@
   #coach p{margin:0; font-weight:800; font-size:14.5px; line-height:1.3; flex:1;}
   #coach button{flex:0 0 auto; background:#141414; color:#FFD23F; border:2.5px solid #141414;
     font-weight:900; font-size:13px; padding:8px 12px; letter-spacing:.5px;}
+  #coach.dispatch{background:#141414; color:#FFD23F;}
+  #coach.dispatch p{color:#FFD23F;}
+  #alarm-lights{position:absolute; inset:6px; z-index:15; display:none; pointer-events:none;}
+  #alarm-lights.on{display:block;}
+  #alarm-lights span{position:absolute; width:16px; height:16px; border-radius:50%; background:#FF2222; border:2.5px solid var(--ink); animation:alarmFlash .45s steps(2,start) infinite;}
+  #alarm-lights span:nth-child(1){top:0; left:6%;} #alarm-lights span:nth-child(2){top:0; left:48%;}
+  #alarm-lights span:nth-child(3){top:0; right:6%;} #alarm-lights span:nth-child(4){top:46%; left:0;}
+  #alarm-lights span:nth-child(5){top:46%; right:0;} #alarm-lights span:nth-child(6){bottom:0; left:6%;}
+  #alarm-lights span:nth-child(7){bottom:0; left:48%;} #alarm-lights span:nth-child(8){bottom:0; right:6%;}
+  #alarm-lights span:nth-child(even){animation-delay:.22s;}
+  @keyframes alarmFlash{0%{opacity:1; background:#FF2222;} 50%{opacity:.25; background:#FF8A8A;} 100%{opacity:1; background:#FF2222;}}
+  @media (prefers-reduced-motion: reduce){ #alarm-lights span{animation:none; opacity:1;} }
+  #organism-alert{position:absolute; top:52px; left:50%; transform:translateX(-50%); z-index:25; display:none;
+    background:#FF2222; color:#141414; border:3px solid var(--ink); box-shadow:4px 4px 0 var(--shadow);
+    padding:8px 16px; font-family:'Archivo Black',sans-serif; font-size:17px; letter-spacing:1.5px; text-align:center; white-space:nowrap;}
+  #organism-alert.show{display:block; animation:alarmFlash .45s steps(2,start) infinite;}
+  @media (prefers-reduced-motion: reduce){ #organism-alert.show{animation:none;} }
   .spot-stage{box-shadow:inset 0 0 0 5px var(--yellow), inset 0 0 0 8px var(--ink);}
   /* ---------- DECK ---------- */
   #deck{flex:0 0 auto; background:var(--panel); border-top:3px solid var(--ink); padding:12px 14px 14px;}
@@ -212,6 +229,8 @@
     <div id="item-chip">ITEM 1/8</div>
     <div id="variant-chip"></div>
     <div id="toast" role="status"></div>
+    <div id="alarm-lights" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div id="organism-alert" role="alert">ORGANISM DETECTED</div>
     <div id="reveal"></div>
     <div id="stamp-mark">PASS</div>
     <div id="coach"><p id="coach-text"></p><button id="coach-ok">GOT IT</button></div>
@@ -229,12 +248,11 @@
 <!-- STORY / START -->
 <div class="overlay show" id="story-overlay">
   <div class="card">
-    <span class="tag" id="story-tag">DAY ONE · ORBITAL PORT 7</span>
-    <h1 id="story-title">First shift.</h1>
-    <p id="story-body">The agency called at dawn. Orbital Port 7 needs a customs inspector, the last one quit mid-shift, and your name was the only one on the list. Your stamp, your booth, your conveyor.</p>
-    <p class="small" id="howto" style="display:none;">Drag to spin each item, tap the bugs you find, and stamp PASS when it&rsquo;s clean.</p>
-    <div class="dots" id="story-dots"><i class="on"></i><i></i></div>
-    <button class="big-btn" id="story-next">NEXT</button>
+    <span class="tag" id="story-tag">ORBITAL PORT 7 · URGENT</span>
+    <h1 id="story-title">Called in.</h1>
+    <p id="story-body">You&rsquo;re called in. The last inspector went missing. You&rsquo;re needed &mdash; urgently.</p>
+    <div class="dots" id="story-dots"><i class="on"></i></div>
+    <button class="big-btn" id="story-next">START</button>
   </div>
 </div>
 
@@ -418,10 +436,8 @@ function quotaFor(day){ return 7 + day; }
 
 /* ================= STORY ================= */
 var STORY = [
-  { tag:"DAY ONE · ORBITAL PORT 7", title:"First shift.",
-    body:"The agency called at dawn. Orbital Port 7 needs a customs inspector, the last one quit mid-shift, and your name was the only one on the list. Your stamp, your booth, your conveyor." },
-  { tag:"THE PROBLEM", title:"Something's getting in.",
-    body:"Little alien bugs are riding the cargo in from the outer colonies — in seams, under flaps, where nobody looks. The portmaster is blunt: you are the last line between those bugs and the city. Nothing gets past your stamp." }
+  { tag:"ORBITAL PORT 7 · URGENT", title:"Called in.",
+    body:"You're called in. The last inspector went missing. You're needed — urgently." }
 ];
 var CHAPTERS = [
   "Shift log, night one: the portmaster left a note on your booth. \u201CGood eyes. Don't get comfortable.\u201D Somewhere past the cargo doors, something small is learning how you work.",
@@ -478,7 +494,27 @@ var stage=$("stage"), wrap=$("canvas-wrap"), revealEl=$("reveal"), stampEl=$("st
 
 /* ================= THREE SETUP ================= */
 var scene, camera, renderer, holder, spin;
-var yaw=0.6, pitch=-0.25, velY=0, velX=0;
+var velY=0, velX=0;
+/* Continuous trackball spin: orientation lives in spin's quaternion and every
+   drag applies an incremental world-axis rotation. No Euler angles and no
+   pitch clamp, so the item can tumble end over end forever in any direction
+   instead of locking when a clamped angle hits its stop. */
+var _spinQx=null, _spinQy=null, _axisX=null, _axisY=null;
+function applySpin(dxRad, dyRad){
+  if(!dxRad && !dyRad) return;
+  if(!_spinQx){
+    _spinQx = new THREE.Quaternion(); _spinQy = new THREE.Quaternion();
+    _axisX = new THREE.Vector3(1,0,0); _axisY = new THREE.Vector3(0,1,0);
+  }
+  _spinQy.setFromAxisAngle(_axisY, dxRad);
+  _spinQx.setFromAxisAngle(_axisX, dyRad);
+  spin.quaternion.premultiply(_spinQy);
+  spin.quaternion.premultiply(_spinQx);
+}
+function setSpin(yaw, pitch){
+  spin.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, "YXZ"));
+  velY=0; velX=0;
+}
 var rollIn={active:false, t:0};
 var revealSpin={active:false, targets:[], idx:0, t:0, from:null};
 
@@ -757,7 +793,7 @@ var bugSeq = 0;
 function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
 function spawnObject(force){
   while(spin.children.length) spin.remove(spin.children[0]);
-  revealSpin.active=false; guideSpin.active=false;
+  revealSpin.active=false; guideSpin.active=false; guideSpin.onDone=null; showAlarm(false);
   var forceCount=null, forceType=null, forceModel=null;
   if(typeof force === "number") forceCount = force;
   else if(force && typeof force === "object"){ forceCount = force.count; forceType = force.type||null; forceModel = force.model||null; }
@@ -796,8 +832,7 @@ function spawnObject(force){
     bugs.push(bug);
   }
   S.current = { typeName:built.name, tier:tier, ringMat:variant.ringMat, sparkles:variant.sparkles, total:count, found:0, bugs:bugs };
-  yaw = 0.6; pitch = -0.25; velY=0; velX=0;
-  spin.rotation.set(pitch, yaw, 0);
+  setSpin(0.6, -0.25);
   holder.position.x = -4.6; rollIn.active = true; rollIn.t = 0;
   S.busy = true;
   sndWhirr();
@@ -880,44 +915,66 @@ var tipQueue = [];
 function showCoach(text, mode){
   coachText.textContent = text; coachMode = mode;
   coachEl.classList.add("show");
+  // The tutorial never shows a Continue/GOT IT button: it advances by doing.
   coachEl.classList.toggle("no-ok", mode==="tour");
+  coachEl.classList.toggle("dispatch", text===TOUR_DISPATCH);
   if(mode==="tour" && S.tourStep===0) stage.classList.add("spot-stage"); else stage.classList.remove("spot-stage");
-  if(mode==="tour" && S.tourStep===2) passBtn.classList.add("spot"); else passBtn.classList.remove("spot");
+  if(mode==="tour" && S.tourStep===3) passBtn.classList.add("spot"); else passBtn.classList.remove("spot");
 }
-function hideCoach(){ coachEl.classList.remove("show"); coachEl.classList.remove("no-ok"); coachMode=null; stage.classList.remove("spot-stage"); passBtn.classList.remove("spot"); }
-/* Guided first inspection: each step is taught at first use and completed by DOING it. */
-var TOUR = [
-  "Drag to spin the item. Check every side — bugs hide around the back.",
-  "There's one! Tap the bug to pop it off.",
-  "That's all of them. Slam PASS to send it through."
-];
-var guideSpin = { active:false, target:null, t:0 };
+function hideCoach(){ coachEl.classList.remove("show"); coachEl.classList.remove("no-ok"); coachEl.classList.remove("dispatch"); coachMode=null; stage.classList.remove("spot-stage"); passBtn.classList.remove("spot"); }
+/* Guided first inspection: drag -> reveal beat -> tap -> stamp.
+   Each step is completed by DOING it; there is no Continue button. */
+var TOUR_DRAG = "Drag to spin it. Check every side.";
+var TOUR_DISPATCH = "Dispatch: those little pests are in everything now. Find them. Stamp what you must.";
+var TOUR_STAMP = "That's all of them. Slam PASS to send it through.";
+var guideSpin = { active:false, target:null, t:0, onDone:null };
+var revealBeatTimer = null;
 function clearGuideRing(){
   if(S.current) S.current.bugs.forEach(function(b){ if(b.guideRing){ b.group.remove(b.guideRing); b.guideRing=null; } });
 }
-function startTour(){ S.tourStep = 0; showCoach(TOUR[0], "tour"); }
-function enterGuideStep1(){
+function showAlarm(on){
+  $("alarm-lights").classList.toggle("on", !!on);
+  $("organism-alert").classList.toggle("show", !!on);
+}
+function startTour(){ S.tourStep = 0; showCoach(TOUR_DRAG, "tour"); }
+/* The reveal beat: flashing red lights + ORGANISM DETECTED, then the game
+   itself turns the briefcase to the bug. Only once the bug is on screen
+   does the dispatch message appear — the first mention of pests. */
+function startRevealBeat(){
   S.tourStep = 1;
-  var alive = aliveBugs();
-  if(alive.length){
+  hideCoach();
+  showAlarm(true);
+  revealBeatTimer = setTimeout(function(){
+    revealBeatTimer = null;
+    $("organism-alert").classList.remove("show");
+    var alive = aliveBugs();
+    if(!alive.length){ showAlarm(false); S.tourStep=2; showCoach(TOUR_DISPATCH, "tour"); return; }
     var b = alive[0];
     var ring = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.04, 8, 24),
       new THREE.MeshBasicMaterial({ color:0xffd23f }));
     ring.position.y = 0.05; b.group.add(ring); b.guideRing = ring;
     guideSpin.target = b.normal.clone(); guideSpin.t = 0; guideSpin.active = true;
-  }
-  showCoach(TOUR[1], "tour");
+    guideSpin.onDone = function(){
+      showAlarm(false);
+      S.tourStep = 2;
+      showCoach(TOUR_DISPATCH, "tour");
+    };
+  }, 1400);
 }
 function advanceTour(){
-  if(S.tourStep===0){ enterGuideStep1(); }
-  else if(S.tourStep===1){ clearGuideRing(); guideSpin.active=false; S.tourStep=2; showCoach(TOUR[2], "tour"); }
+  if(S.tourStep===0){ startRevealBeat(); }
+  else if(S.tourStep===2){ clearGuideRing(); guideSpin.active=false; guideSpin.onDone=null; S.tourStep=3; showCoach(TOUR_STAMP, "tour"); }
   else { endTour(); }
 }
-function endTour(){ S.tourStep=-1; S.tourSeen=true; guideSpin.active=false; clearGuideRing(); hideCoach(); save(); processTips(); }
+function endTour(){
+  S.tourStep=-1; S.tourSeen=true; guideSpin.active=false; guideSpin.onDone=null;
+  if(revealBeatTimer){ clearTimeout(revealBeatTimer); revealBeatTimer=null; }
+  showAlarm(false); clearGuideRing(); hideCoach(); save(); processTips();
+}
 $("coach-ok").addEventListener("click", function(){
   audio();
-  if(coachMode==="tour") advanceTour();
-  else { hideCoach(); processTips(); }
+  if(coachMode==="tour") return; // tutorial advances only by doing, never by a button
+  hideCoach(); processTips();
 });
 function maybeTip(){
   if(!S.current || !S.tourSeen) return;
@@ -946,11 +1003,13 @@ function bindPointer(){
   });
   el.addEventListener("pointermove", function(e){
     if(!dragging) return;
+    if(S.tourStep===1){ lastX=e.clientX; lastY=e.clientY; return; } // game has control during the reveal beat
     var dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
     dragDist += Math.abs(dx)+Math.abs(dy);
-    yaw += dx*0.011; pitch += dy*0.011;
-    pitch = Math.max(-1.65, Math.min(1.65, pitch));
-    velY = dx*0.011; velX = dy*0.011;
+    applySpin(dx*0.011, dy*0.011);
+    // Smoothed fling velocity: follows the drag instead of jumping per event.
+    velY = velY*0.35 + dx*0.011*0.65;
+    velX = velX*0.35 + dy*0.011*0.65;
     if(S.tourStep===0 && dragDist>110) advanceTour();
   });
   el.addEventListener("pointerup", function(e){
@@ -962,7 +1021,7 @@ function bindPointer(){
 }
 var raycaster = null, pointerV = null;
 function tryTap(e){
-  if(!S.playing || S.busy || rollIn.active) return;
+  if(!S.playing || S.busy || rollIn.active || S.tourStep===1) return;
   if(!raycaster){ raycaster = new THREE.Raycaster(); pointerV = new THREE.Vector2(); }
   var rect = canvasEl().getBoundingClientRect();
   pointerV.x = ((e.clientX-rect.left)/rect.width)*2-1;
@@ -981,7 +1040,7 @@ function collectBug(bug, cx, cy){
   if(cx==null){ var sp = bugScreenPos(bug); cx=sp.x; cy=sp.y; }
   burst(cx, cy);
   updateHUD(); save();
-  if(S.tourStep===1) advanceTour();
+  if(S.tourStep===2) advanceTour();
 }
 function bugScreenPos(bug){
   var rect = canvasEl().getBoundingClientRect();
@@ -1039,7 +1098,7 @@ function doStamp(){
 function afterStamp(){
   stampEl.classList.remove("slam"); stampEl.style.opacity=0;
   hideReveal(); revealSpin.active=false;
-  spin.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, "YXZ"));
+  // Orientation stays wherever the reveal left it; the next spawn resets it.
   S.objectIndex++;
   save();
   if(S.strikes>=3){ fired(); return; }
@@ -1119,8 +1178,8 @@ function renderStory(){
   $("story-body").textContent = c.body;
   var dots = $("story-dots").children;
   for(var i=0;i<dots.length;i++) dots[i].className = i===storyIdx ? "on" : "";
-  $("howto").style.display = storyIdx===STORY.length-1 ? "block" : "none";
-  $("story-next").textContent = storyIdx===STORY.length-1 ? "START" : "NEXT";
+  $("story-dots").style.display = STORY.length>1 ? "flex" : "none";
+  $("story-next").textContent = "START";
 }
 $("story-next").addEventListener("click", function(){
   audio();
@@ -1224,10 +1283,13 @@ function animate(){
   requestAnimationFrame(animate);
   var now = performance.now(); var dt = Math.min(0.05, (now-lastT)/1000); lastT = now;
   var t = now/1000;
-  if(!dragging && !revealSpin.active){
-    yaw += velY; pitch += velX; pitch = Math.max(-1.65, Math.min(1.65, pitch));
-    velY *= 0.94; velX *= 0.94;
-    if(Math.abs(velY)<0.0001) velY=0; if(Math.abs(velX)<0.0001) velX=0;
+  if(!dragging && !revealSpin.active && !guideSpin.active){
+    // Fling inertia: keep tumbling on release, easing to a stop.
+    if(velY || velX){
+      applySpin(velY, velX);
+      velY *= 0.94; velX *= 0.94;
+      if(Math.abs(velY)<0.0001) velY=0; if(Math.abs(velX)<0.0001) velX=0;
+    }
   }
   if(guideSpin.active && guideSpin.target && !dragging){
     guideSpin.t += dt;
@@ -1235,11 +1297,7 @@ function animate(){
     var gExtra = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -0.15);
     gTarget.multiply(gExtra);
     spin.quaternion.slerp(gTarget, Math.min(1, dt*5));
-    if(guideSpin.t > 1.6){
-      guideSpin.active = false;
-      var ge = new THREE.Euler().setFromQuaternion(spin.quaternion, "YXZ");
-      pitch = ge.x; yaw = ge.y;
-    }
+    if(guideSpin.t > 1.6){ guideSpin.active = false; var gd = guideSpin.onDone; guideSpin.onDone = null; if(gd) gd(); }
   } else if(revealSpin.active && revealSpin.targets.length){
     revealSpin.t += dt;
     var per = 0.75;
@@ -1249,13 +1307,7 @@ function animate(){
     var extra = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), -0.15);
     targetQ.multiply(extra);
     spin.quaternion.slerp(targetQ, Math.min(1, dt*7));
-    if(revealSpin.t > per*revealSpin.targets.length + 0.3){
-      revealSpin.active=false;
-      var e = new THREE.Euler().setFromQuaternion(spin.quaternion, "YXZ");
-      pitch = e.x; yaw = e.y;
-    }
-  } else {
-    spin.rotation.set(pitch, yaw, 0);
+    if(revealSpin.t > per*revealSpin.targets.length + 0.3) revealSpin.active=false;
   }
   if(rollIn.active){
     rollIn.t += dt/0.65;
@@ -1313,7 +1365,7 @@ Object.defineProperties(window.__abi, {
 });
 window.__abi.forceTier = function(t){ forcedTier = t || null; };
 window.__abi.openCollection = function(){ openSheet(); showSec("sec-collection"); };
-window.__abi.rotateTo = function(y, p){ yaw=y; pitch=Math.max(-1.65,Math.min(1.65,p)); velY=0; velX=0; try{ spin.rotation.set(pitch,yaw,0); }catch(e){} };
+window.__abi.rotateTo = function(y, p){ try{ setSpin(y, p); }catch(e){} };
 window.__abi.bugs = function(){
   return aliveBugs().map(function(b){
     var sp = bugScreenPos(b);

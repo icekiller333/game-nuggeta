@@ -1,0 +1,1368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<link rel="icon" href="data:," />
+<title>Daily Roguelike — The Last Stamp (2026-11-07)</title>
+<style>
+  :root{
+    --cream:#FFF6E5; --ink:#111111; --paper:#FFFDF6;
+    --pink:#FF6FB5; --teal:#2EC4B6; --yellow:#FFD23F; --purple:#7B61FF; --red:#E63946;
+    --bd:3px solid #111;
+    --sh:5px 5px 0 #111;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{
+    margin:0; background:var(--cream); color:var(--ink);
+    font-family:ui-rounded,"Arial Black","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+    overflow:hidden;
+  }
+  button{ font-family:inherit; cursor:pointer; color:var(--ink); }
+
+  #app{ height:100dvh; display:flex; flex-direction:column; max-width:520px; margin:0 auto; position:relative; overflow:hidden; }
+  #app.shake{ animation:shake .32s linear; }
+  @keyframes shake{
+    0%,100%{transform:translate(0,0)} 20%{transform:translate(-8px,2px)}
+    40%{transform:translate(8px,-2px)} 60%{transform:translate(-6px,-2px)} 80%{transform:translate(6px,2px)}
+  }
+
+  /* ---------- top bar ---------- */
+  #topbar{
+    display:flex; align-items:center; gap:8px; padding:8px 10px 2px;
+    flex:0 0 auto;
+  }
+  #floorChip{
+    background:var(--yellow); border:var(--bd); box-shadow:3px 3px 0 #111;
+    font-weight:900; font-size:14px; padding:4px 9px; letter-spacing:.5px; white-space:nowrap;
+  }
+  #wrathWrap{ flex:1 1 auto; min-width:0; }
+  #wrathLabel{ font-size:11px; font-weight:900; letter-spacing:1px; margin-bottom:2px; }
+  #wrathBar{ display:flex; gap:2px; }
+  .wseg{ flex:1 1 0; height:13px; border:2px solid #111; background:#fff; }
+  .wseg.on{ background:var(--red); }
+  #wrathBar.hot{ animation:pulse .5s infinite alternate; }
+  @keyframes pulse{ from{ transform:scale(1);} to{ transform:scale(1.03);} }
+  #soundBtn{
+    flex:0 0 auto; width:38px; height:38px; background:#fff; border:var(--bd);
+    box-shadow:3px 3px 0 #111; display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  #soundBtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 #111; }
+  #soundBtn svg{ width:22px; height:22px; }
+  #soundBtn .muteLine{ display:none; }
+  #soundBtn.muted .muteLine{ display:block; }
+  #soundBtn.muted .waves{ display:none; }
+
+  /* ---------- economy bar ---------- */
+  #econ{
+    display:flex; align-items:center; gap:8px; padding:5px 10px 2px; flex:0 0 auto;
+  }
+  #coinChip{
+    display:flex; align-items:center; gap:5px; background:#fff; border:var(--bd);
+    box-shadow:3px 3px 0 #111; font-weight:900; font-size:13px; padding:3px 7px; white-space:nowrap;
+  }
+  .coinDot{ width:13px; height:13px; border-radius:50%; background:var(--yellow); border:2px solid #111; flex:0 0 auto; }
+  #fundWrap{ flex:1 1 auto; min-width:0; }
+  #fundWrap.spot{ outline:4px solid var(--purple); outline-offset:3px; }
+  #fundLabel{ font-size:12px; font-weight:900; letter-spacing:1px; margin-bottom:2px; }
+  #fundBar{ height:15px; border:3px solid #111; background:#fff; overflow:hidden; }
+  #fundFill{ height:100%; width:0%; background:var(--purple); }
+  #rentChip{
+    background:#fff; border:var(--bd); box-shadow:3px 3px 0 #111;
+    font-weight:900; font-size:12px; padding:4px 8px; letter-spacing:.5px; white-space:nowrap;
+  }
+
+  /* ---------- active shop-effect chips (fixed height: layout never shifts) ---------- */
+  #fxChips{
+    display:flex; gap:6px; align-items:center; padding:3px 10px 1px;
+    height:27px; flex:0 0 auto; overflow:hidden;
+  }
+  .fxChip{
+    border:2px solid #111; box-shadow:2px 2px 0 #111; font-weight:900;
+    font-size:11.5px; letter-spacing:.5px; padding:2px 8px; white-space:nowrap;
+  }
+  .fxChip.slow{ background:#D8F5F0; }
+  .fxChip.golden{ background:var(--yellow); }
+  .fxChip.mercy{ background:#FFE3F1; }
+
+  /* ---------- one-time fund spotlight tip ---------- */
+  #fundTip{
+    position:absolute; left:50%; top:118px; transform:translateX(-50%);
+    width:min(92vw,380px); z-index:15; display:none;
+    background:#111; color:var(--cream); border:var(--bd); box-shadow:var(--sh);
+    font-weight:900; font-size:16px; line-height:1.3; padding:10px 14px; text-align:center;
+  }
+  #fundTip.show{ display:block; }
+
+  /* ---------- pips ---------- */
+  #pips{ display:flex; gap:2px; padding:4px 10px 2px; flex:0 0 auto; }
+  .pip{ flex:1 1 0; height:9px; border:2px solid #111; background:#fff; }
+  .pip.ok{ background:var(--teal); }
+  .pip.bad{ background:var(--red); }
+  .pip.miss{ background:var(--yellow); }
+  .pip.now{ outline:2px solid var(--purple); outline-offset:1px; }
+
+  /* ---------- desk / card ---------- */
+  #desk{
+    flex:1 1 auto; min-height:0; display:flex; align-items:center; justify-content:center;
+    padding:8px 12px; position:relative;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 34px, rgba(17,17,17,.06) 34px 36px);
+  }
+  #cardWrap{ position:relative; width:min(92vw,360px); touch-action:none; }
+  #card{
+    background:var(--paper); border:var(--bd); box-shadow:var(--sh);
+    padding:10px 12px 12px; position:relative; overflow:hidden;
+    animation:slideIn .22s ease-out;
+  }
+  @keyframes slideIn{ from{ transform:translateX(46px) rotate(1.2deg); opacity:.4;} to{ transform:none; opacity:1;} }
+  #patience{ height:14px; border:var(--bd); background:#fff; margin-bottom:8px; overflow:hidden; }
+  #patienceFill{ height:100%; width:100%; background:var(--teal); }
+  #patienceFill.low{ background:var(--red); }
+  #cardSvg{ display:block; width:100%; height:auto; }
+  #stampOverlay{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center; pointer-events:none; z-index:4;
+  }
+  #stampOverlay.show{ display:flex; }
+  #stampMark{
+    font-weight:900; font-size:34px; letter-spacing:2px; padding:6px 14px;
+    border:5px solid currentColor; transform:rotate(-11deg); background:rgba(255,253,246,.82);
+    animation:slam .18s ease-in;
+  }
+  @keyframes slam{ 0%{ transform:rotate(-11deg) scale(2.6); opacity:0;} 60%{ opacity:1;} 100%{ transform:rotate(-11deg) scale(1);} }
+  #stampMark.good{ color:#0B6B5E; }
+  #stampMark.bad{ color:#B3001B; }
+  #stampMark.miss{ color:#6d5200; }
+  /* live swipe preview ghost */
+  #ghostMark{
+    position:absolute; top:38%; left:50%; transform:translate(-50%,-50%) rotate(-11deg);
+    font-weight:900; font-size:30px; letter-spacing:2px; padding:4px 12px;
+    border:5px solid currentColor; background:rgba(255,253,246,.75);
+    display:none; pointer-events:none; z-index:3; white-space:nowrap;
+  }
+  #ghostMark.good{ color:#0B6B5E; }
+  #ghostMark.bad{ color:#B3001B; }
+  /* per-stamp correctness feedback line, on the card */
+  #feedback{
+    position:absolute; left:8px; right:8px; bottom:8px; z-index:6; display:none;
+    font-weight:900; font-size:14.5px; line-height:1.25; padding:8px 10px;
+    border:var(--bd); box-shadow:3px 3px 0 #111; text-align:center;
+  }
+  #feedback.show{ display:block; }
+  #feedback.good{ background:#0B6B5E; color:#fff; }
+  #feedback.bad{ background:#B3001B; color:#fff; }
+  #feedback.miss{ background:#6d5200; color:#fff; }
+  .particle{ position:absolute; width:10px; height:10px; border:2px solid #111; pointer-events:none; z-index:5; }
+
+  /* swipe teaching hints */
+  #swipeHints{ position:absolute; inset:0; pointer-events:none; display:none; z-index:8; }
+  #swipeHints.show{ display:block; }
+  #swipeBox{
+    position:absolute; left:50%; bottom:10px; transform:translateX(-50%);
+    background:#fff; border:var(--bd); box-shadow:var(--sh);
+    font-weight:900; font-size:16px; padding:9px 14px; white-space:nowrap; text-align:center;
+  }
+  .deskArrow{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:44px; height:44px; background:var(--yellow); border:var(--bd); box-shadow:3px 3px 0 #111;
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; font-weight:900; line-height:1;
+    animation:bob 0.9s infinite alternate ease-in-out;
+  }
+  #arrowL{ left:6px; } #arrowR{ right:6px; }
+  @keyframes bob{ from{ margin-top:0;} to{ margin-top:-6px;} }
+
+  /* ---------- controls (swipe is the stamp; only MEMOS remains) ---------- */
+  #controls{
+    flex:0 0 auto; display:flex; gap:10px; padding:8px 12px calc(10px + env(safe-area-inset-bottom));
+    align-items:stretch;
+  }
+  #btnMemos{
+    flex:1 1 auto; background:var(--yellow); border:var(--bd); box-shadow:var(--sh);
+    font-weight:900; font-size:16px; letter-spacing:.5px; padding:12px 4px; min-height:50px;
+  }
+  #btnMemos:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 #111; }
+
+  /* ---------- overlays (one at a time) ---------- */
+  #overlay{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    background:var(--cream); z-index:20; padding:18px;
+  }
+  #overlay.show{ display:flex; }
+  .panel{
+    background:#fff; border:var(--bd); box-shadow:8px 8px 0 #111; padding:22px 20px;
+    max-width:400px; width:100%; text-align:center; max-height:92dvh; overflow-y:auto;
+  }
+  .panel h1{ margin:0 0 10px; font-size:30px; letter-spacing:1px; line-height:1.1; }
+  .panel h2{ margin:0 0 10px; font-size:23px; letter-spacing:.5px; line-height:1.2; }
+  .panel p{ margin:0 0 14px; font-size:17px; font-weight:700; line-height:1.35; }
+  .panel .bigBtn{
+    background:var(--purple); color:#111; border:var(--bd); box-shadow:var(--sh);
+    font-weight:900; font-size:19px; letter-spacing:1px; padding:13px 26px; width:100%;
+  }
+  .panel .bigBtn:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 #111; }
+  .panel .tealBtn{ background:var(--teal); color:var(--ink); }
+  .panel .redTone{ color:#B3001B; }
+  .spotDemo{ display:flex; justify-content:center; margin:4px 0 14px; }
+  .spotDemo svg{ width:110px; height:110px; }
+  .statsRow{ display:flex; gap:10px; margin:0 0 16px; }
+  .statBox{ flex:1; border:var(--bd); padding:8px 4px; background:var(--cream); }
+  .statBox .num{ font-size:24px; font-weight:900; }
+  .statBox .lbl{ font-size:11px; font-weight:900; letter-spacing:1px; }
+  .settleRow{
+    display:flex; justify-content:space-between; align-items:center;
+    border:var(--bd); background:var(--cream); padding:8px 12px; margin:0 0 8px;
+    font-weight:900; font-size:16px;
+  }
+  .settleRow .amt{ font-size:20px; }
+  .fundBarBig{ height:16px; border:var(--bd); background:#fff; overflow:hidden; margin:0 0 6px; }
+  .fundBarBig > div{ height:100%; background:var(--purple); }
+  .fundBigLabel{ font-weight:900; font-size:14px; letter-spacing:1px; margin:0 0 14px; }
+  .eosHead{ font-size:13px; font-weight:900; letter-spacing:1.5px; text-align:left; margin:16px 0 8px; }
+  .wrathStatus{
+    border:var(--bd); background:var(--cream); padding:8px 12px; margin:0 0 14px;
+    font-weight:900; font-size:15px; text-align:left;
+  }
+  /* ---------- day-end shop ---------- */
+  .shopItem{
+    display:flex; align-items:center; gap:10px; border:var(--bd); box-shadow:4px 4px 0 #111;
+    background:#fff; padding:9px 11px; margin:0 0 9px; text-align:left;
+  }
+  .shopItem .sInfo{ flex:1 1 auto; min-width:0; }
+  .shopItem .sName{ font-size:16px; font-weight:900; letter-spacing:.5px; }
+  .shopItem .sDesc{ font-size:13.5px; font-weight:700; line-height:1.25; }
+  .shopItem .sCost{ font-size:15px; font-weight:900; white-space:nowrap; }
+  .shopBuy{
+    flex:0 0 auto; border:var(--bd); box-shadow:3px 3px 0 #111; background:var(--teal);
+    font-weight:900; font-size:14px; letter-spacing:.5px; padding:9px 12px; min-width:86px;
+  }
+  .shopBuy:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 #111; }
+  .shopBuy.owned{ background:var(--purple); color:#fff; }
+  .shopItem.cant{ background:#EDEDE6; }
+  .shopItem.cant .sName, .shopItem.cant .sDesc{ color:#3d3d3d; }
+  .shopBuy.cant{ background:#C9C9C2; color:#3d3d3d; box-shadow:none; }
+  /* ---------- memo interstitial pay line ---------- */
+  .memoPay{
+    border:var(--bd); background:var(--yellow); box-shadow:4px 4px 0 #111;
+    font-weight:900; font-size:16px; line-height:1.3; padding:9px 12px; margin:0 0 12px;
+  }
+  .memoToggleRow{ display:flex; justify-content:center; margin:0 0 14px; }
+
+  /* ---------- memos sheet ---------- */
+  #memosSheet{
+    position:absolute; inset:0; display:none; z-index:30;
+    background:rgba(17,17,17,.45); align-items:flex-end; justify-content:center;
+  }
+  #memosSheet.show{ display:flex; }
+  #memosPanel{
+    background:var(--cream); border-top:var(--bd); width:100%; max-width:520px;
+    max-height:84dvh; display:flex; flex-direction:column; padding:14px 14px calc(14px + env(safe-area-inset-bottom));
+  }
+  #memosPanel h2{ margin:0 0 10px; font-size:20px; letter-spacing:1px; }
+  #toggleTip{
+    display:none; border:var(--bd); box-shadow:4px 4px 0 #111; background:#111; color:var(--cream);
+    font-weight:900; font-size:16px; line-height:1.3; padding:10px 12px; margin-bottom:10px;
+  }
+  #toggleTip.show{ display:block; }
+  #memosList{ overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:2px; }
+  .memoCard{ border:var(--bd); box-shadow:4px 4px 0 #111; padding:10px 12px; background:#fff; }
+  .memoCard .mtag{ font-size:11px; font-weight:900; letter-spacing:1px; }
+  .memoCard .mrow{ display:flex; align-items:center; gap:10px; margin-top:2px; }
+  .memoCard .mtext{ font-size:17px; font-weight:900; line-height:1.25; flex:1 1 auto; }
+  .memoCard.m5{ background:#FFF3C4; } .memoCard.m4{ background:#FFE3F1; }
+  .memoCard.m3{ background:#D8F5F0; } .memoCard.m2{ background:#E7E1FF; }
+  .memoCard.m1{ background:#fff; } .memoCard.m6{ background:#FFD9DE; }
+  .ruleToggle{
+    flex:0 0 auto; border:var(--bd); box-shadow:3px 3px 0 #111; font-weight:900;
+    font-size:14px; padding:8px 10px; min-width:86px; letter-spacing:.5px;
+  }
+  .ruleToggle:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 #111; }
+  .ruleToggle.on{ background:var(--teal); }
+  .ruleToggle.off{ background:#fff; color:#3d3d3d; }
+  #btnCloseMemos{
+    margin-top:12px; background:var(--ink); color:var(--cream); border:var(--bd);
+    box-shadow:4px 4px 0 rgba(17,17,17,.35); font-weight:900; font-size:17px; padding:12px; letter-spacing:1px;
+  }
+  #btnAbandon{
+    margin-top:8px; background:#fff; color:#B3001B; border:3px solid #B3001B;
+    font-weight:900; font-size:13px; padding:8px; letter-spacing:1px;
+  }
+
+  #flash{ position:absolute; inset:0; pointer-events:none; z-index:40; opacity:0; }
+  #flash.go{ animation:flashA .3s ease-out; }
+  #flash.bad{ background:rgba(230,57,70,.4); }
+  #flash.good{ background:rgba(46,196,182,.32); }
+  @keyframes flashA{ 0%{opacity:1;} 100%{opacity:0;} }
+  .confetti{ position:absolute; top:-16px; width:11px; height:15px; border:2px solid #111; z-index:50; pointer-events:none; }
+
+  @media (max-height:640px){
+    #desk{ padding:4px 12px; }
+    #cardWrap{ width:min(92vw,330px); }
+    .panel h1{ font-size:26px; }
+    #btnMemos{ min-height:44px; padding:8px 4px; }
+    #swipeBox{ font-size:14px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    #card{ animation:none; } #stampMark{ animation:none; } #app.shake{ animation:none; }
+    .deskArrow{ animation:none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- PLAY SCREEN -->
+  <div id="topbar">
+    <div id="floorChip">DAY 1 · FLOOR 1/6</div>
+    <div id="wrathWrap">
+      <div id="wrathLabel">SUPERVISOR WRATH</div>
+      <div id="wrathBar"></div>
+    </div>
+    <button id="soundBtn" aria-label="Toggle sound">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="square">
+        <path d="M3 9v6h4l5 4V5L7 9H3z" fill="#111"/>
+        <path class="waves" d="M15 9c1.2 1 1.2 5 0 6M18 7c2 1.8 2 8.2 0 10"/>
+        <path class="muteLine" d="M15 9l6 6M21 9l-6 6" stroke="#E63946"/>
+      </svg>
+    </button>
+  </div>
+  <div id="econ">
+    <div id="coinChip"><span class="coinDot"></span><span id="coinAmt">0</span></div>
+    <div id="fundWrap">
+      <div id="fundLabel">FREEDOM FUND 0/1450</div>
+      <div id="fundBar"><div id="fundFill"></div></div>
+    </div>
+    <div id="rentChip">RENT 200</div>
+  </div>
+  <div id="fxChips" aria-hidden="true"></div>
+  <div id="pips" aria-hidden="true"></div>
+  <div id="desk">
+    <div id="cardWrap">
+      <div id="card">
+        <div id="patience"><div id="patienceFill"></div></div>
+        <div id="cardBody"></div>
+      </div>
+      <div id="ghostMark">APPROVED</div>
+      <div id="stampOverlay"><div id="stampMark">APPROVED</div></div>
+      <div id="feedback"></div>
+    </div>
+    <div id="swipeHints">
+      <div class="deskArrow" id="arrowL">&#8592;</div>
+      <div class="deskArrow" id="arrowR">&#8594;</div>
+      <div id="swipeBox">Swipe right to approve, left to deny</div>
+    </div>
+  </div>
+  <div id="controls">
+    <button id="btnMemos">MEMOS · RULES</button>
+  </div>
+
+  <div id="fundTip">This is your freedom fund — fill it and your soul is free.</div>
+
+  <!-- SINGLE OVERLAY SLOT -->
+  <div id="overlay"></div>
+
+  <!-- MEMOS SHEET -->
+  <div id="memosSheet">
+    <div id="memosPanel">
+      <h2>OFFICE MEMOS</h2>
+      <div id="toggleTip">Rules ON pay more. Rules OFF are easier. Your call.</div>
+      <div id="memosList"></div>
+      <button id="btnCloseMemos">BACK TO DESK</button>
+      <button id="btnAbandon">ABANDON RUN</button>
+    </div>
+  </div>
+
+  <div id="flash"></div>
+</div>
+
+<script>
+"use strict";
+/* ================= THE LAST STAMP — pacing + economy visibility rework =================
+   - SWIPE_THRESHOLD = 80px horizontal drag to stamp (right = APPROVE, left = DENY).
+   - BASE_WAGE = 5 soul-coins per CORRECT stamp.
+   - RULE_PAY_BONUS = +2 coins per ACTIVE rule, per correct stamp
+     (1 rule active -> 7, all 5 rules active -> 15).
+   - A DAY = one shift: 6 floors x 8 permits = 48 permits. Wrath resets each day;
+     wrath >= 10 within a day ends the run (FILED AWAY).
+   - WRONG_WRATH = 1 (retuned from 2 when the day doubled from 24 to 48 permits,
+     so the per-day accuracy bar stays ~v4's: survive at >= ~81% daily accuracy).
+   - FREEDOM_TOTAL / MAINTENANCE: RETUNED after simulation (Monte Carlo over the
+     shipped trait rates, pay ladder [7,9,11,13,15,15] x8 = 560 max gross/day):
+     the brief's first schedule (rent 200,300,400,500,600,+25; freedom 600) FAILED
+     the sim both ways — a perfect player won on Day 2 (cum 620 >= 600) and an 85%
+     player was REPOSSESSED on Day 4 (earned 476 < rent 500). Final schedule:
+     rent = 200 + 25*(day-1), capped at 400 (200,225,250,275,300,325,350,375,400,400…)
+     and FREEDOM_TOTAL = 1450. Sim result (4000 runs each): perfect player wins on
+     Day 5 (always); 85%-correct player median win Day 7 saving everything, Day 8
+     with a few shop buys, Day 9 buying MERCY most days; rent surplus stays positive
+     at every day for an 85% player (min +76/day at the cap), so rent alone can
+     never make the run unwinnable.
+*/
+var SWIPE_THRESHOLD = 80;
+var BASE_WAGE = 5;
+var RULE_PAY_BONUS = 2;
+var WRONG_WRATH = 1;
+var FREEDOM_TOTAL = 1450;
+var FLOOR_TIMES = [12, 10, 8, 7, 6, 5];       // seconds per permit, floors 1..6
+var PER_FLOOR = 8, TOTAL = 48;
+var SAVE_KEY = "last-stamp-save-v2";
+/* Soul-rent due at the end of each day: +25/day from 200, capped at 400. */
+function MAINTENANCE(day){
+  return Math.min(200 + 25 * (Math.max(1, day) - 1), 400);
+}
+/* Day-end shop: exactly 3 one-day items, bought from the freedom fund.
+   Bought at day-end -> pending -> active for the whole next day only. */
+var SHOP = [
+  { key: "slow",   name: "SLOW CLOCK", cost: 40, desc: "+2s patience on every permit tomorrow.", chip: "SLOW CLOCK · +2s" },
+  { key: "golden", name: "GOLDEN DAY", cost: 50, desc: "+2 coins on every correct stamp tomorrow.", chip: "GOLDEN DAY · +2/stamp" },
+  { key: "mercy",  name: "MERCY",      cost: 35, desc: "First wrong stamp tomorrow costs 0 wrath.", chip: "MERCY · 1 free mistake" }
+];
+/* The 5 stacking rules, oldest first. Deciding-rule checks run NEWEST first.
+   A rule is "in force" on/after its floor and while its toggle is ON.
+   A rule's toggle appears in MEMOS once its memo has arrived (unlockedMax). */
+var RULES = [
+  { key: "cracked",    floor: 1, label: "cracked seal",              short: "CRACKED SEAL" },
+  { key: "red",        floor: 2, label: "red ink",                   short: "RED INK" },
+  { key: "odd",        floor: 3, label: "odd number",                short: "ODD NUMBER" },
+  { key: "prestamped", floor: 4, label: "already stamped",           short: "ALREADY STAMPED" },
+  { key: "express",    floor: 5, label: "EXPRESS — always approve",  short: "EXPRESS" }
+];
+var NAMES = ["M. VANE","T. OKAFOR","R. LINDQVIST","J. MARROW","P. ASHWORTH","S. DELACROIX",
+             "H. FENN","W. OKONKWO","B. TALLIS","E. RUEDA","C. HOLLOWAY","N. PETROV",
+             "A. QUILL","D. MERCER","F. ANAND","G. WHETSTONE","L. BARROW","K. ITO",
+             "O. FROST","V. HALE","I. MARCHETTI","U. BRANDT","Z. COVE","Y. LARK"];
+
+var S = {
+  screen: "story",      // story | howto | memo | play | dayend | win | lose
+  storyStep: 0,
+  day: 1, floor: 1, idx: 0,
+  processed: 0, correct: 0, totalCorrect: 0, totalProcessed: 0, wrath: 0,
+  coinsToday: 0, fund: 0,
+  permits: [], results: [],
+  locked: false, memosOpen: false, muted: false,
+  memoFloor: 1,
+  toggles: [true, true, true, true, true],
+  unlockedMax: 1,               // highest floor whose memo has arrived
+  hasSwiped: false,
+  seenToggleTip: false, seenDayEndTip: false, seenFundTip: false, seenShopTip: false,
+  fx: { slow: false, golden: false, mercy: false, mercyUsed: false },       // active today
+  pendingFx: { slow: false, golden: false, mercy: false },                  // bought, starts tomorrow
+  lastFeedback: "", lastPay: 0, lastDecide: null,
+  settle: null                  // last settlement numbers, for hooks/tests
+};
+
+function ruleInForce(i){ return S.floor >= RULES[i].floor && !!S.toggles[i]; }
+function activeRuleCount(){
+  var n = 0;
+  for (var i = 0; i < RULES.length; i++) if (ruleInForce(i)) n++;
+  return n;
+}
+function payPerCorrect(){ return BASE_WAGE + RULE_PAY_BONUS * activeRuleCount() + (S.fx.golden ? 2 : 0); }
+function floorSecs(){ return FLOOR_TIMES[S.floor - 1] + (S.fx.slow ? 2 : 0); }
+
+/* ---------- save-as-you-go (localStorage, with migration) ---------- */
+function save(){
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      v: 4, day: S.day, floor: S.floor, idx: S.idx,
+      processed: S.processed, correct: S.correct,
+      totalCorrect: S.totalCorrect, totalProcessed: S.totalProcessed,
+      wrath: S.wrath, coinsToday: S.coinsToday, fund: S.fund,
+      permits: S.permits, results: S.results,
+      toggles: S.toggles, unlockedMax: S.unlockedMax,
+      hasSwiped: S.hasSwiped, seenToggleTip: S.seenToggleTip, seenDayEndTip: S.seenDayEndTip,
+      seenFundTip: S.seenFundTip, seenShopTip: S.seenShopTip,
+      fx: S.fx, pendingFx: S.pendingFx
+    }));
+  }catch(e){}
+}
+function loadSave(){
+  var raw = null;
+  try{ raw = localStorage.getItem(SAVE_KEY); }catch(e){}
+  if (!raw) return false;
+  var o = null;
+  try{ o = JSON.parse(raw); }catch(e){ return false; }
+  if (!o || typeof o !== "object") return false;
+  /* Migration: an old save without economy fields starts cleanly at Day 1, fund 0. */
+  if (typeof o.fund !== "number" || typeof o.day !== "number" || typeof o.coinsToday !== "number") return false;
+  /* Version gate: a save made before this pacing/economy rework (v4 and
+     earlier) starts FRESH — Day 1, freedom fund 0, no shop items owned or
+     active. This version's saves carry v:4 plus the shop fields (fx /
+     pendingFx); a save missing either marker predates the rework, so none
+     of its day, fund, totals or floor progress are copied into the new run
+     (the stale save is dropped, and boot falls through to a fresh run). */
+  if (o.v !== 4 || !o.fx || typeof o.fx !== "object" || !o.pendingFx || typeof o.pendingFx !== "object"){
+    clearSave();
+    return false;
+  }
+  S.day = Math.max(1, o.day); S.fund = Math.max(0, o.fund); S.coinsToday = Math.max(0, o.coinsToday);
+  S.floor = Math.max(1, Math.min(6, o.floor || 1));
+  S.idx = Math.max(0, Math.min(PER_FLOOR - 1, o.idx || 0));
+  S.processed = Math.max(0, o.processed || 0); S.correct = Math.max(0, o.correct || 0);
+  S.totalCorrect = Math.max(0, o.totalCorrect || 0); S.totalProcessed = Math.max(0, o.totalProcessed || 0);
+  S.wrath = Math.max(0, Math.min(9, o.wrath || 0));
+  if (Array.isArray(o.permits)) S.permits = o.permits;
+  if (Array.isArray(o.results)) S.results = o.results;
+  if (Array.isArray(o.toggles) && o.toggles.length === 5) S.toggles = o.toggles.map(function(x){ return !!x; });
+  S.unlockedMax = Math.max(1, Math.min(6, o.unlockedMax || 1));
+  S.hasSwiped = !!o.hasSwiped; S.seenToggleTip = !!o.seenToggleTip; S.seenDayEndTip = !!o.seenDayEndTip;
+  /* Shop fields: presence is guaranteed by the version gate above (a save
+     without them predates this version and was already reset); the defaults
+     here are purely defensive. */
+  S.seenFundTip = !!o.seenFundTip; S.seenShopTip = !!o.seenShopTip;
+  if (o.fx && typeof o.fx === "object") S.fx = { slow: !!o.fx.slow, golden: !!o.fx.golden, mercy: !!o.fx.mercy, mercyUsed: !!o.fx.mercyUsed };
+  if (o.pendingFx && typeof o.pendingFx === "object") S.pendingFx = { slow: !!o.pendingFx.slow, golden: !!o.pendingFx.golden, mercy: !!o.pendingFx.mercy };
+  /* A floor saved under the old 4-permit format can't be resumed card-for-card:
+     restart that floor cleanly (day, fund and totals are kept). */
+  if (!Array.isArray(S.permits) || S.permits.length !== PER_FLOOR){
+    S.permits = []; S.idx = 0;
+    S.processed = (S.floor - 1) * PER_FLOOR;
+    S.results = S.results.slice(0, S.processed);
+    while (S.results.length < S.processed) S.results.push("ok");
+  }
+  return (S.day > 1 || S.processed > 0 || S.fund > 0 || S.floor > 1);
+}
+function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+
+/* ---------- audio (all guarded) ---------- */
+var AC = null;
+function beep(freq, dur, type, vol, when){
+  if (S.muted) return;
+  try{
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === "suspended") AC.resume();
+    var t = AC.currentTime + (when || 0);
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || "square"; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(vol || 0.06, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  }catch(e){}
+}
+function sndGood(){ beep(620, .09, "square", .07); beep(930, .12, "square", .07, .07); }
+function sndBad(){ beep(150, .25, "sawtooth", .09); beep(110, .3, "sawtooth", .08, .05); }
+function sndThud(){ beep(85, .14, "sine", .16); }
+function sndMiss(){ beep(440, .12, "square", .06); beep(300, .18, "square", .06, .1); }
+function sndWin(){ [523,659,784,1046].forEach(function(f,i){ beep(f, .16, "square", .07, i*.11); }); }
+
+/* ---------- permit generation ---------- */
+function rnd(a, b){ return a + Math.random() * (b - a); }
+function makeNumber(odd){
+  var n = 100 + Math.floor(Math.random() * 900);
+  if ((n % 2 === 1) !== odd) n += (n === 999 ? -1 : 1);
+  return n;
+}
+function genPermit(floor){
+  var p = {
+    cracked: Math.random() < 0.12,
+    red: floor >= 2 && Math.random() < 0.12,
+    odd: false, num: 0,
+    prestamped: floor >= 4 && Math.random() < 0.12,
+    express: floor >= 5 && Math.random() < 0.10,
+    name: NAMES[Math.floor(Math.random() * NAMES.length)]
+  };
+  p.odd = floor >= 3 && Math.random() < 0.20;
+  p.num = makeNumber(p.odd);
+  return p;
+}
+/* The deciding rule: EXPRESS precedence first, then violated DENY rules NEWEST first.
+   Rules toggled OFF (or not yet in force this floor) are ignored entirely. */
+function decide(p){
+  if (p.express && ruleInForce(4)) return { ans: "APPROVE", rule: "express",    label: RULES[4].label };
+  if (p.prestamped && ruleInForce(3)) return { ans: "DENY", rule: "prestamped", label: RULES[3].label };
+  if (p.odd && ruleInForce(2))        return { ans: "DENY", rule: "odd",        label: RULES[2].label };
+  if (p.red && ruleInForce(1))        return { ans: "DENY", rule: "red",        label: RULES[1].label };
+  if (p.cracked && ruleInForce(0))    return { ans: "DENY", rule: "cracked",    label: RULES[0].label };
+  return { ans: "APPROVE", rule: null, label: "clean permit" };
+}
+function correctFor(p){ return decide(p).ans; }
+function genFloor(floor){
+  var savedFloor = S.floor; S.floor = floor;   // ruleInForce is floor-relative
+  var list = [], i;
+  for (i = 0; i < PER_FLOOR; i++) list.push(genPermit(floor));
+  // Guarantee the floor teaches: at least one permit exercising the strongest ACTIVE deny rule.
+  var slot = Math.floor(Math.random() * PER_FLOOR);
+  var denyIdx = -1;
+  for (i = RULES.length - 2; i >= 0; i--){ if (ruleInForce(i)) { denyIdx = i; break; } }
+  var hasDeny = list.some(function(x){ return decide(x).ans === "DENY"; });
+  if (!hasDeny && denyIdx >= 0){
+    var p = list[slot]; p.express = false;
+    if (denyIdx === 0) p.cracked = true;
+    else if (denyIdx === 1) p.red = true;
+    else if (denyIdx === 2){ p.odd = true; p.num = makeNumber(true); }
+    else if (denyIdx === 3) p.prestamped = true;
+  }
+  if (floor === 5 && ruleInForce(4) && !list.some(function(x){ return x.express; })){
+    list[slot].express = true;
+  }
+  S.floor = savedFloor;
+  return list;
+}
+
+/* ---------- permit card art (inline SVG, unchanged) ---------- */
+function permitSVG(p){
+  var ink = p.red ? "#C1121F" : "#1B1B3A";
+  var inkSoft = p.red ? "#E0492F" : "#3D3D5C";
+  var sealFill = "#7B61FF", sealRing = "#4B32C3";
+  var express = p.express
+    ? '<g transform="rotate(-14 60 26)"><rect x="-8" y="12" width="136" height="28" fill="#FFD23F" stroke="#111" stroke-width="3"/>'
+      + '<text x="60" y="32" text-anchor="middle" font-size="16" font-weight="900" fill="#111" letter-spacing="2">★ EXPRESS ★</text></g>'
+    : "";
+  var stampBoxInner = p.prestamped
+    ? '<g transform="rotate(-9 262 160)"><rect x="224" y="143" width="78" height="34" fill="none" stroke="#2EC4B6" stroke-width="3.5"/>'
+      + '<text x="263" y="166" text-anchor="middle" font-size="16" font-weight="900" fill="#0E7A6D" letter-spacing="2">FILED</text></g>'
+    : '<text x="263" y="166" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5c5546">STAMP HERE</text>';
+  return ''
+  + '<svg id="cardSvg" viewBox="0 0 320 218" role="img" aria-label="Soul permit">'
+  + express
+  + '<text x="14" y="24" font-size="12" font-weight="900" letter-spacing="1.5" fill="#111">DEPT. OF DEPARTURES</text>'
+  + '<text x="14" y="46" font-size="21" font-weight="900" letter-spacing="1" fill="#111">SOUL PERMIT</text>'
+  + '<line x1="12" y1="56" x2="308" y2="56" stroke="#111" stroke-width="3"/>'
+  + '<text x="14" y="76" font-size="10.5" font-weight="700" fill="#5c5546">APPLICANT</text>'
+  + '<text x="14" y="96" font-size="18" font-weight="900" fill="' + ink + '">' + p.name + '</text>'
+  + '<path d="M14 112 q26 -7 52 0 t52 0 t52 0" fill="none" stroke="' + inkSoft + '" stroke-width="2.4"/>'
+  + '<path d="M14 126 q30 -6 60 0 t60 0 t40 0" fill="none" stroke="' + inkSoft + '" stroke-width="2.4" opacity=".65"/>'
+  + '<text x="14" y="158" font-size="10.5" font-weight="700" fill="#5c5546">PERMIT NO.</text>'
+  + '<text x="14" y="192" font-size="40" font-weight="900" letter-spacing="3" fill="' + ink + '">' + p.num + '</text>'
+  + '<g><circle cx="252" cy="86" r="30" fill="' + sealFill + '" stroke="' + sealRing + '" stroke-width="4"/>'
+  + '<circle cx="252" cy="86" r="21" fill="none" stroke="#FFF6E5" stroke-width="2" stroke-dasharray="4 4"/>'
+  + '<path d="M252 70 l4.7 9.6 10.6 1.5 -7.7 7.5 1.8 10.5 -9.4 -4.9 -9.4 4.9 1.8 -10.5 -7.7 -7.5 10.6 -1.5z" fill="#FFF6E5"/>'
+  + (p.cracked
+      ? '<path d="M252 58 L244 78 L256 90 L246 106 L253 116" fill="none" stroke="#FFF6E5" stroke-width="4.5" stroke-linejoin="round"/>'
+        + '<path d="M252 58 L244 78 L256 90 L246 106 L253 116" fill="none" stroke="#2A1A6E" stroke-width="1.8" stroke-linejoin="round"/>'
+      : "")
+  + '</g>'
+  + '<text x="252" y="126" text-anchor="middle" font-size="9.5" font-weight="700" fill="#5c5546">WAX SEAL</text>'
+  + '<rect x="216" y="134" width="94" height="48" fill="#fff" stroke="#111" stroke-width="3"/>'
+  + stampBoxInner
+  + '<text x="14" y="210" font-size="9.5" font-weight="700" fill="#5c5546">FORM 66-B · NIGHT DESK</text>'
+  + '</svg>';
+}
+
+/* ---------- DOM refs ---------- */
+var $ = function(id){ return document.getElementById(id); };
+var elOverlay = $("overlay"), elCardBody = $("cardBody"), elCard = $("card"),
+    elWrap = $("cardWrap"), elFill = $("patienceFill"), elStamp = $("stampOverlay"),
+    elMark = $("stampMark"), elGhost = $("ghostMark"), elFeedback = $("feedback"),
+    elFlash = $("flash"), elApp = $("app"), elHints = $("swipeHints");
+
+/* ---------- timer ---------- */
+var timerId = null, deadline = 0, remainingMs = 0;
+function stopTimer(){ if (timerId){ clearInterval(timerId); timerId = null; } }
+function startTimer(){
+  stopTimer();
+  var secs = floorSecs();
+  remainingMs = secs * 1000;
+  deadline = performance.now() + remainingMs;
+  elFill.style.width = "100%";
+  elFill.className = "";
+  timerId = setInterval(tick, 50);
+}
+function tick(){
+  if (S.screen !== "play" || S.locked || S.memosOpen){ return; }
+  var left = deadline - performance.now();
+  var total = floorSecs() * 1000;
+  var pct = Math.max(0, (left / total) * 100);
+  elFill.style.width = pct + "%";
+  elFill.className = pct <= 30 ? "low" : "";
+  if (left <= 0){
+    stopTimer();
+    onExpire();
+  }
+}
+function pauseTimer(){
+  if (timerId){ remainingMs = Math.max(0, deadline - performance.now()); stopTimer(); }
+}
+function resumeTimer(){
+  if (S.screen === "play" && !S.locked && !S.memosOpen){
+    deadline = performance.now() + remainingMs;
+    timerId = setInterval(tick, 50);
+  }
+}
+
+/* ---------- rendering ---------- */
+function renderHUD(){
+  $("floorChip").textContent = "DAY " + S.day + " · FLOOR " + S.floor + "/6";
+  $("coinAmt").textContent = S.coinsToday;
+  $("fundLabel").textContent = "FREEDOM FUND " + S.fund + "/" + FREEDOM_TOTAL;
+  $("fundFill").style.width = Math.min(100, (S.fund / FREEDOM_TOTAL) * 100) + "%";
+  $("rentChip").textContent = "RENT " + MAINTENANCE(S.day);
+  var bar = $("wrathBar"); bar.innerHTML = "";
+  for (var i = 0; i < 10; i++){
+    var d = document.createElement("div");
+    d.className = "wseg" + (i < S.wrath ? " on" : "");
+    bar.appendChild(d);
+  }
+  bar.className = S.wrath >= 7 ? "hot" : "";
+  bar.id = "wrathBar";
+  var pips = $("pips"); pips.innerHTML = "";
+  for (var j = 0; j < TOTAL; j++){
+    var q = document.createElement("div");
+    q.className = "pip";
+    if (j < S.results.length) q.className += " " + S.results[j];
+    else if (j === S.processed && S.screen === "play") q.className += " now";
+    pips.appendChild(q);
+  }
+  /* active shop effects for today (MERCY chip disappears once spent) */
+  var fxEl = $("fxChips"); fxEl.innerHTML = "";
+  for (var s = 0; s < SHOP.length; s++){
+    var item = SHOP[s];
+    if (!S.fx[item.key]) continue;
+    if (item.key === "mercy" && S.fx.mercyUsed) continue;
+    var chip = document.createElement("div");
+    chip.className = "fxChip " + item.key;
+    chip.textContent = item.chip;
+    fxEl.appendChild(chip);
+  }
+  updateHints();
+}
+/* One-time spotlight: the fund bar, at first use (first play screen). */
+function maybeShowFundTip(){
+  if (S.seenFundTip || S.screen !== "play") return;
+  $("fundTip").className = "show";
+  $("fundWrap").classList.add("spot");
+}
+function dismissFundTip(){
+  if (S.seenFundTip) return;
+  S.seenFundTip = true; save();
+  $("fundTip").className = "";
+  $("fundWrap").classList.remove("spot");
+}
+function updateHints(){
+  var show = S.screen === "play" && !S.hasSwiped;
+  elHints.className = show ? "show" : "";
+}
+function renderPermit(){
+  var p = S.permits[S.idx];
+  elCardBody.innerHTML = permitSVG(p);
+  maybeShowFundTip();
+  elStamp.className = "";
+  elGhost.style.display = "none";
+  elFeedback.className = ""; elFeedback.textContent = "";
+  elWrap.style.transition = "none"; elWrap.style.transform = "";
+  elCard.style.animation = "none"; void elCard.offsetWidth; elCard.style.animation = "";
+  renderHUD();
+}
+function flash(kind){
+  elFlash.className = "";
+  void elFlash.offsetWidth;
+  elFlash.className = kind + " go";
+}
+function burst(){
+  var colors = ["#FF6FB5","#2EC4B6","#FFD23F","#7B61FF"];
+  for (var i = 0; i < 12; i++){
+    var s = document.createElement("div");
+    s.className = "particle";
+    s.style.background = colors[i % 4];
+    s.style.left = "50%"; s.style.top = "45%";
+    elWrap.appendChild(s);
+    var ang = (Math.PI * 2 * i) / 12 + rnd(-.2, .2), dist = rnd(60, 130);
+    try{
+      s.animate([
+        { transform: "translate(-50%,-50%) rotate(0deg)", opacity: 1 },
+        { transform: "translate(" + (Math.cos(ang) * dist - 5) + "px," + (Math.sin(ang) * dist - 5) + "px) rotate(" + rnd(120, 340) + "deg)", opacity: 0 }
+      ], { duration: rnd(380, 560), easing: "cubic-bezier(.1,.8,.3,1)" });
+    }catch(e){}
+    (function(node){ setTimeout(function(){ node.remove(); }, 620); })(s);
+  }
+}
+function confetti(){
+  var colors = ["#FF6FB5","#2EC4B6","#FFD23F","#7B61FF","#E63946"];
+  for (var i = 0; i < 64; i++){
+    var s = document.createElement("div");
+    s.className = "confetti";
+    s.style.background = colors[i % 5];
+    s.style.left = rnd(0, 98) + "%";
+    elApp.appendChild(s);
+    try{
+      s.animate([
+        { transform: "translateY(0) rotate(0deg)", opacity: 1 },
+        { transform: "translateY(105dvh) rotate(" + rnd(300, 720) + "deg)", opacity: .9 }
+      ], { duration: rnd(1400, 2600), delay: rnd(0, 500), easing: "cubic-bezier(.2,.6,.4,1)", fill: "forwards" });
+    }catch(e){}
+    (function(node){ setTimeout(function(){ node.remove(); }, 3400); })(s);
+  }
+}
+function showStamp(text, cls){
+  elMark.textContent = text;
+  elMark.className = cls;
+  elStamp.className = "show";
+}
+function showFeedback(text, cls){
+  S.lastFeedback = text;
+  elFeedback.textContent = text;
+  elFeedback.className = cls + " show";
+}
+
+/* ---------- overlays: exactly one at a time ---------- */
+function showOverlay(html){
+  elOverlay.innerHTML = html;
+  elOverlay.className = "show";
+}
+function hideOverlay(){ elOverlay.className = ""; elOverlay.innerHTML = ""; }
+
+var MEMO_TEXT = {
+  1: { tag: "RULE 1 · FLOOR 1", text: "CRACKED SEAL? DENY IT.", cls: "m1" },
+  2: { tag: "MEMO 2 · FLOOR 2", text: "RED INK? DENY IT.", cls: "m2" },
+  3: { tag: "MEMO 3 · FLOOR 3", text: "ODD NUMBER? DENY IT.", cls: "m3" },
+  4: { tag: "MEMO 4 · FLOOR 4", text: "ALREADY STAMPED? DENY IT.", cls: "m4" },
+  5: { tag: "MEMO 5 · FLOOR 5", text: "EXPRESS (GOLD) = ALWAYS APPROVE.", cls: "m5" },
+  6: { tag: "FINAL FLOOR · FLOOR 6", text: "ALL RULES. FASTEST TIMER.", cls: "m6" }
+};
+function memoDemo(floor){
+  if (floor === 1) return '<svg viewBox="0 0 110 110"><circle cx="55" cy="55" r="42" fill="#7B61FF" stroke="#4B32C3" stroke-width="5"/><circle cx="55" cy="55" r="29" fill="none" stroke="#FFF6E5" stroke-width="2.5" stroke-dasharray="5 5"/><path d="M55 24 l6 13 14 2 -10 10 2.4 14 -12.4 -6.5 -12.4 6.5 2.4 -14 -10 -10 14 -2z" fill="#FFF6E5"/><path d="M55 16 L46 40 L58 56 L47 76 L56 96" fill="none" stroke="#FFF6E5" stroke-width="6" stroke-linejoin="round"/><path d="M55 16 L46 40 L58 56 L47 76 L56 96" fill="none" stroke="#2A1A6E" stroke-width="2.4" stroke-linejoin="round"/></svg>';
+  if (floor === 2) return '<svg viewBox="0 0 110 110"><rect x="8" y="8" width="94" height="94" fill="#FFFDF6" stroke="#111" stroke-width="3"/><path d="M20 38 q20 -10 35 0 t35 0" fill="none" stroke="#C1121F" stroke-width="5"/><path d="M20 58 q20 -10 35 0 t35 0" fill="none" stroke="#C1121F" stroke-width="5" opacity=".7"/><path d="M20 78 q20 -10 35 0 t35 0" fill="none" stroke="#C1121F" stroke-width="5" opacity=".45"/></svg>';
+  if (floor === 3) return '<svg viewBox="0 0 110 110"><rect x="8" y="8" width="94" height="94" fill="#FFFDF6" stroke="#111" stroke-width="3"/><text x="55" y="72" text-anchor="middle" font-size="42" font-weight="900" fill="#111">317</text></svg>';
+  if (floor === 4) return '<svg viewBox="0 0 110 110"><rect x="10" y="24" width="90" height="62" fill="#fff" stroke="#111" stroke-width="3"/><g transform="rotate(-9 55 55)"><rect x="20" y="38" width="70" height="34" fill="none" stroke="#2EC4B6" stroke-width="4"/><text x="55" y="62" text-anchor="middle" font-size="16" font-weight="900" fill="#0E7A6D" letter-spacing="2">FILED</text></g></svg>';
+  if (floor === 5) return '<svg viewBox="0 0 110 110"><g transform="rotate(-12 55 55)"><rect x="-2" y="38" width="114" height="34" fill="#FFD23F" stroke="#111" stroke-width="3"/><text x="55" y="61" text-anchor="middle" font-size="15" font-weight="900" fill="#111" letter-spacing="1">★ EXPRESS ★</text></g></svg>';
+  return '<svg viewBox="0 0 110 110"><circle cx="55" cy="55" r="44" fill="#E63946" stroke="#111" stroke-width="3"/><text x="55" y="70" text-anchor="middle" font-size="34" font-weight="900" fill="#FFF6E5">6</text></svg>';
+}
+
+function showStory(){
+  S.screen = "story";
+  var card = S.storyStep === 0
+    ? { h: "THE LAST STAMP", p: "You died on a Tuesday. Now you stamp soul permits in purgatory, and every correct stamp earns soul-coins.", btn: "NEXT" }
+    : { h: "THE DEAL", p: "Each night, purgatory takes its rent from what you earned. Whatever is left fills your freedom fund — fill it to " + FREEDOM_TOTAL + " and your soul is free.", btn: "NEXT" };
+  showOverlay('<div class="panel"><h1>' + card.h + '</h1><p>' + card.p + '</p>'
+    + '<button class="bigBtn" id="ovBtn">' + card.btn + '</button></div>');
+  $("ovBtn").addEventListener("click", advanceOverlay);
+  updateHints();
+}
+function showHowto(){
+  S.screen = "howto";
+  showOverlay('<div class="panel"><h2>YOUR DESK AWAITS</h2>'
+    + '<p>Swipe a permit right to APPROVE it, left to DENY it — correct stamps earn soul-coins.</p>'
+    + '<button class="bigBtn tealBtn" id="ovBtn">START SHIFT</button></div>');
+  $("ovBtn").addEventListener("click", advanceOverlay);
+  updateHints();
+}
+function showMemo(floor){
+  S.screen = "memo"; S.memoFloor = floor;
+  stopTimer();   // the game waits here: no auto-advance, patience fully paused
+  if (floor > S.unlockedMax){ S.unlockedMax = floor; save(); }
+  var m = MEMO_TEXT[floor];
+  var ruleHtml = "";
+  if (floor <= 5){
+    var ri = floor - 1, on = !!S.toggles[ri];
+    ruleHtml = '<div class="memoPay">+' + RULE_PAY_BONUS + ' coins per correct stamp while this rule is ON</div>'
+      + '<div class="memoToggleRow"><button class="ruleToggle ' + (on ? "on" : "off") + '" id="memoToggle" aria-label="Toggle rule ' + RULES[ri].short + '">'
+      + (on ? "ON · +2" : "OFF · +0") + '</button></div>';
+  }
+  showOverlay('<div class="panel"><h2>' + m.tag + '</h2>'
+    + '<div class="spotDemo">' + memoDemo(floor) + '</div>'
+    + '<p style="font-size:20px;">' + m.text + '</p>'
+    + ruleHtml
+    + '<button class="bigBtn" id="ovBtn">CONTINUE</button></div>');
+  $("ovBtn").addEventListener("click", advanceOverlay);
+  var mt = $("memoToggle");
+  if (mt){
+    mt.addEventListener("click", function(){
+      toggleRule(ri);
+      var nowOn = !!S.toggles[ri];
+      this.className = "ruleToggle " + (nowOn ? "on" : "off");
+      this.textContent = nowOn ? "ON · +2" : "OFF · +0";
+    });
+  }
+  updateHints();
+}
+function endStats(){
+  return '<div class="statsRow">'
+    + '<div class="statBox"><div class="num">' + S.totalCorrect + '</div><div class="lbl">CORRECT</div></div>'
+    + '<div class="statBox"><div class="num">' + S.day + '</div><div class="lbl">DAYS</div></div>'
+    + '<div class="statBox"><div class="num">' + S.fund + '/' + FREEDOM_TOTAL + '</div><div class="lbl">FUND</div></div></div>';
+}
+/* Shared rule list (newest first, with toggles) — used by the MEMOS sheet
+   and by the End of Shift screen, so both stay in sync. */
+function renderRuleListInto(list){
+  if (!list) return;
+  list.innerHTML = "";
+  var top = Math.min(S.unlockedMax, 6);
+  for (var f = top; f >= 1; f--){
+    var m = MEMO_TEXT[f];
+    var d = document.createElement("div");
+    d.className = "memoCard " + m.cls;
+    var toggleHtml = "";
+    if (f <= 5){
+      var ri = f - 1, on = !!S.toggles[ri];
+      toggleHtml = '<button class="ruleToggle ' + (on ? "on" : "off") + '" data-rule="' + ri + '" aria-label="Toggle rule ' + RULES[ri].short + '">'
+        + (on ? "ON · +2" : "OFF · +0") + '</button>';
+    }
+    d.innerHTML = '<div class="mtag">' + m.tag + '</div><div class="mrow"><div class="mtext">' + m.text + '</div>' + toggleHtml + '</div>';
+    list.appendChild(d);
+  }
+  var btns = list.querySelectorAll(".ruleToggle");
+  for (var k = 0; k < btns.length; k++){
+    btns[k].addEventListener("click", function(){
+      toggleRule(parseInt(this.getAttribute("data-rule"), 10));
+      renderRuleListInto($("memosList"));
+      renderRuleListInto($("eosRules"));
+    });
+  }
+}
+/* Day-end shop: buy with freedom-fund coins; the item applies to tomorrow only. */
+function buyItem(key){
+  if (S.screen !== "dayend") return false;
+  var item = null;
+  for (var i = 0; i < SHOP.length; i++) if (SHOP[i].key === key) item = SHOP[i];
+  if (!item || S.pendingFx[key] || S.fund < item.cost) return false;
+  S.fund -= item.cost;
+  S.pendingFx[key] = true;
+  beep(880, .09, "square", .07); beep(1174, .12, "square", .06, .07);
+  save();
+  renderHUD();
+  renderShop();
+  return true;
+}
+function renderShop(){
+  var box = $("eosShop");
+  if (!box) return;
+  box.innerHTML = "";
+  for (var i = 0; i < SHOP.length; i++){
+    var item = SHOP[i];
+    var owned = !!S.pendingFx[item.key];
+    var cant = !owned && S.fund < item.cost;
+    var row = document.createElement("div");
+    row.className = "shopItem" + (cant ? " cant" : "");
+    row.innerHTML = '<div class="sInfo"><div class="sName">' + item.name + '</div>'
+      + '<div class="sDesc">' + item.desc + '</div></div>'
+      + '<div class="sCost">' + item.cost + ' 🪙</div>';
+    var btn = document.createElement("button");
+    btn.className = "shopBuy" + (owned ? " owned" : (cant ? " cant" : ""));
+    btn.textContent = owned ? "OWNED" : "BUY";
+    btn.disabled = owned || cant;
+    btn.setAttribute("data-shop", item.key);
+    (function(k){ btn.addEventListener("click", function(){ buyItem(k); }); })(item.key);
+    row.appendChild(btn);
+    box.appendChild(row);
+  }
+  var fl = $("eosFundLabel"), fb = $("eosFundFill");
+  if (fl) fl.textContent = "FREEDOM FUND " + S.fund + "/" + FREEDOM_TOTAL;
+  if (fb) fb.style.width = Math.min(100, (S.fund / FREEDOM_TOTAL) * 100) + "%";
+}
+function showDayEnd(){
+  S.screen = "dayend"; stopTimer();   // days never auto-advance; no timer runs here
+  var st = S.settle;
+  var pct = Math.min(100, (S.fund / FREEDOM_TOTAL) * 100);
+  var teach = "";
+  if (!S.seenDayEndTip){
+    S.seenDayEndTip = true; save();
+    teach = '<p>Correct stamps earn soul-coins. Rent comes out first — whatever is left fills your freedom fund. Reach ' + FREEDOM_TOTAL + ' and your soul is free.</p>';
+  }
+  var shopTeach = "";
+  if (!S.seenShopTip){
+    S.seenShopTip = true; save();
+    shopTeach = '<p style="text-align:left;">Shop items last one day, tomorrow only — every coin spent is a coin not in your freedom fund.</p>';
+  }
+  showOverlay('<div class="panel"><h2>END OF SHIFT — DAY ' + st.day + '</h2>'
+    + teach
+    + '<div class="eosHead">SETTLEMENT</div>'
+    + '<div class="settleRow"><span>EARNED TODAY</span><span class="amt">' + st.earned + '</span></div>'
+    + '<div class="settleRow"><span>RENT DUE</span><span class="amt">−' + st.due + '</span></div>'
+    + '<div class="settleRow"><span>SURPLUS TO FUND</span><span class="amt">+' + st.surplus + '</span></div>'
+    + '<div class="fundBarBig"><div id="eosFundFill" style="width:' + pct + '%"></div></div>'
+    + '<div class="fundBigLabel" id="eosFundLabel">FREEDOM FUND ' + S.fund + '/' + FREEDOM_TOTAL + '</div>'
+    + '<div class="settleRow"><span>TOMORROW\'S RENT</span><span class="amt">' + MAINTENANCE(st.day + 1) + '</span></div>'
+    + '<div class="eosHead">SHOP — FOR TOMORROW</div>'
+    + shopTeach
+    + '<div id="eosShop"></div>'
+    + '<div class="eosHead">RULES — NEWEST FIRST</div>'
+    + '<div id="eosRules"></div>'
+    + '<div class="eosHead">SUPERVISOR WRATH</div>'
+    + '<div class="wrathStatus">WRATH ' + S.wrath + '/10 — resets at dawn.</div>'
+    + '<button class="bigBtn tealBtn" id="ovBtn">START DAY ' + (st.day + 1) + '</button></div>');
+  renderShop();
+  renderRuleListInto($("eosRules"));
+  $("ovBtn").addEventListener("click", function(){
+    beep(520, .06, "square", .05);
+    startDay(st.day + 1);
+  });
+  updateHints();
+}
+function showWin(){
+  S.screen = "win"; stopTimer();
+  showOverlay('<div class="panel"><h1>SOUL FREE</h1>'
+    + '<p>The fund is full. The Supervisor stamps your own permit: APPROVED. You walk into the dawn.</p>'
+    + endStats()
+    + '<button class="bigBtn tealBtn" id="ovBtn">RETRY</button></div>');
+  $("ovBtn").addEventListener("click", resetGame);
+  sndWin(); confetti();
+  updateHints();
+}
+function showLose(kind){
+  S.screen = "lose"; stopTimer();
+  var title, body;
+  if (kind === "rent"){
+    title = "SOUL REPOSSESSED";
+    body = 'Day ' + S.settle.day + ' paid ' + S.settle.earned + ' of ' + S.settle.due + ' rent. Purgatory collects the rest — you.';
+  } else {
+    title = "FILED AWAY";
+    body = 'The Supervisor\'s wrath is full. You are paperwork now.';
+  }
+  showOverlay('<div class="panel"><h1 class="redTone">' + title + '</h1>'
+    + '<p>' + body + '</p>'
+    + endStats()
+    + '<button class="bigBtn" id="ovBtn">RETRY</button></div>');
+  $("ovBtn").addEventListener("click", resetGame);
+  sndBad();
+  updateHints();
+}
+
+/* ---------- day settlement ---------- */
+function settleDay(){
+  stopTimer();
+  var due = MAINTENANCE(S.day), earned = S.coinsToday;
+  S.settle = { day: S.day, earned: earned, due: due, surplus: Math.max(0, earned - due) };
+  if (earned < due){ save(); showLose("rent"); return; }
+  S.fund += S.settle.surplus;
+  save();
+  if (S.fund >= FREEDOM_TOTAL){ showWin(); return; }
+  showDayEnd();
+}
+function startDay(day){
+  hideOverlay();
+  S.day = day; S.wrath = 0; S.coinsToday = 0;
+  S.processed = 0; S.correct = 0; S.results = [];
+  S.floor = 1; S.idx = 0; S.permits = [];
+  /* yesterday's shop purchases become today's effects, for one day only */
+  S.fx = { slow: !!S.pendingFx.slow, golden: !!S.pendingFx.golden, mercy: !!S.pendingFx.mercy, mercyUsed: false };
+  S.pendingFx = { slow: false, golden: false, mercy: false };
+  save();
+  renderHUD();
+  showMemo(1);
+}
+
+/* ---------- flow ---------- */
+function advanceOverlay(){
+  beep(520, .06, "square", .05);
+  if (S.screen === "story"){
+    if (S.storyStep === 0){ S.storyStep = 1; showStory(); }
+    else showHowto();
+  } else if (S.screen === "howto"){
+    showMemo(1);
+  } else if (S.screen === "memo"){
+    hideOverlay();
+    beginFloor(S.memoFloor);
+  }
+}
+function beginFloor(floor){
+  S.screen = "play"; S.floor = floor; S.idx = 0;
+  S.permits = genFloor(floor);
+  S.locked = false;
+  save();
+  renderPermit();
+  startTimer();
+}
+function advanceAfter(){
+  if (S.wrath >= 10){ showLose("wrath"); return; }
+  if (S.processed >= TOTAL){ settleDay(); return; }
+  if (S.idx >= PER_FLOOR){
+    showMemo(S.floor + 1);
+    return;
+  }
+  renderPermit();
+  S.locked = false;
+  startTimer();
+}
+function resolveStamp(choice){
+  if (S.screen !== "play" || S.locked || S.memosOpen) return;
+  stopTimer();   // the patience timer stops the moment a permit is stamped
+  dismissFundTip();
+  var p = S.permits[S.idx];
+  var d = decide(p);
+  S.lastDecide = d;
+  var isRight = (choice === d.ans);
+  // --- outcome resolves synchronously, right here ---
+  S.processed += 1; S.totalProcessed += 1; S.idx += 1;
+  var pay = 0, mercySaved = false;
+  if (isRight){
+    S.correct += 1; S.totalCorrect += 1;
+    pay = payPerCorrect();
+    S.coinsToday += pay;
+    S.results.push("ok");
+  } else if (S.fx.mercy && !S.fx.mercyUsed){
+    S.fx.mercyUsed = true; mercySaved = true;   // MERCY: first wrong stamp costs 0 wrath
+    S.results.push("bad");
+  } else {
+    S.wrath += WRONG_WRATH;
+    S.results.push("bad");
+  }
+  S.lastPay = pay;
+  S.locked = true;
+  save();
+  // --- feedback: names the deciding rule, every time ---
+  if (isRight){
+    showFeedback("✓ CORRECT — " + choice + ": " + d.label + " · +" + pay, "good");
+    showStamp(choice === "APPROVE" ? "APPROVED" : "DENIED", "good");
+    flash("good"); burst(); sndThud(); sndGood();
+  } else {
+    showFeedback("✗ WRONG — should be " + d.ans + ": " + d.label + (mercySaved ? " · MERCY — no wrath" : ""), "bad");
+    showStamp("WRONG", "bad");
+    flash("bad"); sndThud(); sndBad();
+    elApp.classList.remove("shake"); void elApp.offsetWidth; elApp.classList.add("shake");
+  }
+  renderHUD();
+  setTimeout(advanceAfter, 900);   // feedback beat ~900ms; outcome already banked
+}
+function onExpire(){
+  if (S.screen !== "play" || S.locked || S.memosOpen) return;
+  dismissFundTip();
+  var p = S.permits[S.idx];
+  var d = decide(p);
+  S.lastDecide = d;
+  // --- outcome resolves synchronously, right here ---
+  S.processed += 1; S.totalProcessed += 1; S.idx += 1;
+  S.wrath += 1;
+  S.lastPay = 0;
+  S.results.push("miss");
+  S.locked = true;
+  save();
+  showFeedback("✗ TOO SLOW — should be " + d.ans + ": " + d.label, "miss");
+  showStamp("TOO SLOW", "miss");
+  flash("bad"); sndMiss();
+  renderHUD();
+  setTimeout(advanceAfter, 900);
+}
+function resetGame(){
+  stopTimer();
+  clearSave();
+  S.screen = "story"; S.storyStep = 0;
+  S.day = 1; S.floor = 1; S.idx = 0; S.processed = 0; S.correct = 0;
+  S.totalCorrect = 0; S.totalProcessed = 0; S.wrath = 0;
+  S.coinsToday = 0; S.fund = 0;
+  S.permits = []; S.results = []; S.locked = false; S.memosOpen = false;
+  S.toggles = [true, true, true, true, true];
+  S.unlockedMax = 1; S.hasSwiped = false;
+  S.seenToggleTip = false; S.seenDayEndTip = false; S.seenFundTip = false; S.seenShopTip = false;
+  S.fx = { slow: false, golden: false, mercy: false, mercyUsed: false };
+  S.pendingFx = { slow: false, golden: false, mercy: false };
+  $("fundTip").className = ""; $("fundWrap").classList.remove("spot");
+  S.lastFeedback = ""; S.lastPay = 0; S.settle = null;
+  closeMemosForce();
+  abandonArm = false; $("btnAbandon").textContent = "ABANDON RUN";
+  renderHUD();
+  showStory();
+}
+
+/* ---------- rule toggles ---------- */
+function toggleRule(i){
+  if (typeof i !== "number" || i < 0 || i >= RULES.length) return;
+  if (RULES[i].floor > S.unlockedMax) return;   // toggle exists only after its memo arrived
+  S.toggles[i] = !S.toggles[i];
+  beep(S.toggles[i] ? 700 : 420, .06, "square", .05);
+  save();
+  if (S.memosOpen) renderMemos();
+  renderHUD();
+}
+
+/* ---------- memos sheet ---------- */
+function renderMemos(){
+  var tip = $("toggleTip");
+  if (!S.seenToggleTip && S.unlockedMax >= 1){
+    tip.className = "show";
+    S.seenToggleTip = true; save();   // one-time spotlight
+  } else {
+    tip.className = "";
+  }
+  renderRuleListInto($("memosList"));
+}
+function openMemos(){
+  if (S.screen !== "play" || S.locked) return;
+  S.memosOpen = true;
+  pauseTimer();
+  renderMemos();
+  $("memosSheet").className = "show";
+  beep(520, .05, "square", .04);
+}
+function closeMemos(){
+  if (!S.memosOpen) return;
+  S.memosOpen = false;
+  $("memosSheet").className = "";
+  resumeTimer();
+}
+function closeMemosForce(){ S.memosOpen = false; $("memosSheet").className = ""; }
+
+/* ---------- swipe: drag the card, right = APPROVE, left = DENY ---------- */
+var drag = { on: false, id: null, x0: 0, dx: 0 };
+function dragReset(animate){
+  elWrap.style.transition = animate ? "transform .25s ease-out" : "none";
+  elWrap.style.transform = "";
+  elGhost.style.display = "none";
+}
+elWrap.addEventListener("pointerdown", function(e){
+  if (S.screen !== "play" || S.locked || S.memosOpen) return;
+  drag.on = true; drag.id = e.pointerId; drag.x0 = e.clientX; drag.dx = 0;
+  try{ elWrap.setPointerCapture(e.pointerId); }catch(err){}
+  elWrap.style.transition = "none";
+});
+elWrap.addEventListener("pointermove", function(e){
+  if (!drag.on || e.pointerId !== drag.id) return;
+  drag.dx = e.clientX - drag.x0;
+  var tilt = Math.max(-14, Math.min(14, drag.dx * 0.06));
+  elWrap.style.transform = "translateX(" + drag.dx + "px) rotate(" + tilt + "deg)";
+  if (Math.abs(drag.dx) >= 20){
+    var right = drag.dx > 0;
+    elGhost.textContent = right ? "APPROVE" : "DENY";
+    elGhost.className = right ? "good" : "bad";
+    elGhost.style.display = "block";
+    elGhost.style.opacity = Math.min(1, (Math.abs(drag.dx) - 20) / (SWIPE_THRESHOLD - 20) + 0.25);
+  } else {
+    elGhost.style.display = "none";
+  }
+});
+function dragEnd(e){
+  if (!drag.on || (e.pointerId !== undefined && e.pointerId !== drag.id)) return;
+  drag.on = false;
+  var dx = drag.dx; drag.dx = 0;
+  if (Math.abs(dx) >= SWIPE_THRESHOLD){
+    // successful swipe: card leaves, stamp resolves
+    if (!S.hasSwiped){ S.hasSwiped = true; save(); }
+    dragReset(false);
+    updateHints();
+    resolveStamp(dx > 0 ? "APPROVE" : "DENY");
+  } else {
+    dragReset(true);   // springs back short of the threshold
+  }
+}
+elWrap.addEventListener("pointerup", dragEnd);
+elWrap.addEventListener("pointercancel", dragEnd);
+
+/* ---------- input ---------- */
+$("btnMemos").addEventListener("click", function(){ S.memosOpen ? closeMemos() : openMemos(); });
+$("btnCloseMemos").addEventListener("click", closeMemos);
+$("memosSheet").addEventListener("click", function(e){ if (e.target === this) closeMemos(); });
+var abandonArm = false;
+$("btnAbandon").addEventListener("click", function(){
+  if (!abandonArm){
+    abandonArm = true;
+    this.textContent = "TAP AGAIN TO CONFIRM ABANDON";
+    return;
+  }
+  abandonArm = false;
+  this.textContent = "ABANDON RUN";
+  resetGame();
+});
+$("fundTip").addEventListener("click", dismissFundTip);
+$("soundBtn").addEventListener("click", function(){
+  S.muted = !S.muted;
+  this.className = S.muted ? "muted" : "";
+  if (!S.muted) beep(700, .07, "square", .06);
+});
+document.addEventListener("keydown", function(e){
+  if (e.key === "Enter"){
+    if (S.screen === "story" || S.screen === "howto" || S.screen === "memo") advanceOverlay();
+    else if (S.screen === "win" || S.screen === "lose") resetGame();
+    else if (S.memosOpen) closeMemos();
+  }
+  /* keyboard fallback: D = approve (right), A = deny (left) */
+  else if (e.key === "d" || e.key === "D"){ resolveStamp("APPROVE"); }
+  else if (e.key === "a" || e.key === "A"){ resolveStamp("DENY"); }
+  else if (e.key === "m" || e.key === "M"){ S.memosOpen ? closeMemos() : openMemos(); }
+  else if (e.key === "Escape"){ closeMemos(); }
+});
+
+/* ---------- test hooks (window.__ls) ---------- */
+window.__ls = {
+  S: S, state: S,
+  SWIPE_THRESHOLD: SWIPE_THRESHOLD, BASE_WAGE: BASE_WAGE,
+  RULE_PAY_BONUS: RULE_PAY_BONUS, FREEDOM_TOTAL: FREEDOM_TOTAL,
+  WRONG_WRATH: WRONG_WRATH, PER_FLOOR: PER_FLOOR, TOTAL: TOTAL,
+  MAINTENANCE: MAINTENANCE, RULES: RULES, SHOP: SHOP,
+  floorSecs: function(){ return floorSecs(); },
+  pay: function(){ return payPerCorrect(); },
+  fx: function(){ return { slow: S.fx.slow, golden: S.fx.golden, mercy: S.fx.mercy, mercyUsed: S.fx.mercyUsed }; },
+  pendingFx: function(){ return { slow: S.pendingFx.slow, golden: S.pendingFx.golden, mercy: S.pendingFx.mercy }; },
+  buy: function(key){ return buyItem(key); },
+  startNextDay: function(){ if (S.screen === "dayend" && S.settle) startDay(S.settle.day + 1); },
+  activeRules: function(){ return activeRuleCount(); },
+  permit: function(){
+    var p = S.permits[S.idx];
+    if (!p) return null;
+    return { cracked: p.cracked, red: p.red, odd: p.odd, num: p.num, prestamped: p.prestamped, express: p.express, name: p.name };
+  },
+  decide: function(){
+    var p = S.permits[S.idx];
+    return p ? decide(p) : null;
+  },
+  correctAnswer: function(){
+    var p = S.permits[S.idx];
+    return p ? decide(p).ans : null;
+  },
+  lastFeedback: function(){ return S.lastFeedback; },
+  swipe: function(dir){
+    if (!S.hasSwiped){ S.hasSwiped = true; save(); }
+    updateHints();
+    resolveStamp(dir === "right" || dir === "APPROVE" ? "APPROVE" : "DENY");
+  },
+  toggleRule: function(i){ toggleRule(i); },
+  setCoins: function(n){ S.coinsToday = Math.max(0, n | 0); save(); renderHUD(); },
+  setFund: function(n){ S.fund = Math.max(0, n | 0); save(); renderHUD(); },
+  setWrath: function(n){ S.wrath = Math.max(0, n | 0); save(); renderHUD(); },
+  dayEnd: function(){ stopTimer(); settleDay(); },
+  settle: function(){ return S.settle; },
+  startDay: function(d){ startDay(d || (S.day + 1)); },
+  reset: function(){ resetGame(); },
+  /* set up a specific mid-day board state for tests */
+  debugSet: function(o){
+    o = o || {};
+    stopTimer(); hideOverlay(); closeMemosForce();
+    if (typeof o.day === "number") S.day = Math.max(1, o.day);
+    if (typeof o.floor === "number") S.floor = Math.max(1, Math.min(6, o.floor));
+    if (typeof o.idx === "number") S.idx = Math.max(0, Math.min(PER_FLOOR - 1, o.idx));
+    if (typeof o.wrath === "number") S.wrath = o.wrath;
+    if (typeof o.coins === "number") S.coinsToday = o.coins;
+    if (typeof o.fund === "number") S.fund = o.fund;
+    if (typeof o.correct === "number") S.correct = o.correct;
+    if (typeof o.processed === "number") S.processed = o.processed;
+    if (Array.isArray(o.toggles)) S.toggles = o.toggles.map(function(x){ return !!x; });
+    if (o.fx && typeof o.fx === "object") S.fx = { slow: !!o.fx.slow, golden: !!o.fx.golden, mercy: !!o.fx.mercy, mercyUsed: !!o.fx.mercyUsed };
+    if (o.pendingFx && typeof o.pendingFx === "object") S.pendingFx = { slow: !!o.pendingFx.slow, golden: !!o.pendingFx.golden, mercy: !!o.pendingFx.mercy };
+    if (typeof o.seenFundTip === "boolean") S.seenFundTip = o.seenFundTip;
+    if (typeof o.seenShopTip === "boolean") S.seenShopTip = o.seenShopTip;
+    if (o.permit){
+      if (!S.permits.length) S.permits = genFloor(S.floor);
+      var base = genPermit(S.floor);
+      for (var k in o.permit) base[k] = o.permit[k];
+      base.num = o.permit.num != null ? o.permit.num : makeNumber(!!base.odd);
+      S.permits[S.idx] = base;
+    } else if (!S.permits.length || typeof o.floor === "number") {
+      S.permits = genFloor(S.floor);
+    }
+    while (S.results.length < S.processed) S.results.push("ok");
+    S.results.length = S.processed;
+    if (S.floor > S.unlockedMax) S.unlockedMax = S.floor;
+    S.screen = "play"; S.locked = false; S.memosOpen = false;
+    save();
+    renderPermit();
+    startTimer();
+  },
+  debugWin: function(){
+    stopTimer(); hideOverlay(); closeMemosForce();
+    showWin(); renderHUD();
+  },
+  debugLose: function(){
+    stopTimer(); hideOverlay(); closeMemosForce();
+    if (S.wrath < 10) S.wrath = 10;
+    showLose("wrath"); renderHUD();
+  }
+};
+
+/* ---------- boot ---------- */
+var resumed = loadSave();
+renderHUD();
+if (resumed){
+  /* resume mid-run exactly where the save left off */
+  S.screen = "play"; S.locked = false;
+  hideOverlay();
+  if (!S.permits.length || S.idx >= S.permits.length){
+    S.permits = genFloor(S.floor); S.idx = 0;
+  }
+  renderPermit();
+  startTimer();
+} else {
+  showStory();
+}
+</script>
+</body>
+</html>
