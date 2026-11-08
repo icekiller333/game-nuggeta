@@ -90,6 +90,11 @@
 
   .hero-0 { background: linear-gradient(140deg, #ff5d8f 0%, #7b2fff 55%, #2b0a4d 100%); }
   .hero-1 { background: linear-gradient(140deg, #ffb26b 0%, #c0392b 55%, #3d0f0a 100%); }
+  .hero-2 { background: linear-gradient(140deg, #2fbf8f 0%, #2f6fbf 55%, #0a2540 100%); }
+  .hero-3 { background: linear-gradient(140deg, #ffd166 0%, #b388ff 50%, #3d2a6b 100%); }
+  .hero-4 { background: linear-gradient(140deg, #8dd9ff 0%, #7b61ff 55%, #1b1440 100%); }
+  .hero-5 { background: linear-gradient(140deg, #b8f1a8 0%, #2fbf8f 55%, #0c3d2e 100%); }
+  .hero-6 { background: linear-gradient(140deg, #ff9fb2 0%, #ff5d8f 55%, #4d0a2e 100%); }
 
   /* ---------- rows ---------- */
   main { max-width: 1100px; margin: 0 auto; }
@@ -108,7 +113,24 @@
     padding: 10px 16px 18px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    cursor: grab;
+    /* edge fades: hint there is more to scroll */
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent);
   }
+  .rail.at-start {
+    -webkit-mask-image: linear-gradient(90deg, #000, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(90deg, #000, #000 calc(100% - 28px), transparent);
+  }
+  .rail.at-end {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000);
+    mask-image: linear-gradient(90deg, transparent, #000 28px, #000);
+  }
+  .rail.at-start.at-end {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .rail.dragging { cursor: grabbing; scroll-snap-type: none; }
   .rail::-webkit-scrollbar { display: none; }
 
   /* ---------- poster cards ---------- */
@@ -119,16 +141,33 @@
     text-decoration: none; color: #151515;
     border: 3px solid #000; border-radius: 0;
     box-shadow: 5px 5px 0 #000;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
     position: relative; overflow: hidden;
+    /* staggered entrance: delay set per card via --d in JS */
+    animation: rise 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    animation-delay: var(--d, 0s);
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
   a.card:hover, a.card:focus-visible {
-    transform: translateY(-6px) scale(1.04);
-    box-shadow: 8px 12px 0 #000, 0 0 26px rgba(255, 230, 109, 0.55);
+    /* springy lift + pointer-follow tilt (--rx/--ry set by JS, 0deg by default) */
+    transform: perspective(700px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-8px) scale(1.05);
+    box-shadow: 8px 14px 0 #000, 0 0 28px rgba(255, 230, 109, 0.55);
     filter: saturate(1.15);
-    outline: none;
   }
-  a.card:active { transform: translate(2px, 2px) scale(0.99); box-shadow: 3px 3px 0 #000; }
+  a.card:focus-visible { outline: 3px solid #ffe66d; outline-offset: 2px; }
+  a.card:active { transform: translate(2px, 2px) scale(0.96); box-shadow: 3px 3px 0 #000; }
+  /* shine sweep across the poster on hover / focus */
+  a.card::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.45) 50%, transparent 60%);
+    transform: translateX(-120%);
+    transition: transform 0.6s ease;
+  }
+  a.card:hover::after, a.card:focus-visible::after { transform: translateX(120%); }
   .card .emblem {
     font-size: 58px; line-height: 1; text-align: center;
     filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.3));
@@ -155,6 +194,19 @@
     opacity: 0; transition: opacity 0.15s ease;
   }
   a.card:hover .play-hint, a.card:focus-visible .play-hint { opacity: 1; }
+  /* NEW badge: gentle breathing float */
+  .new-badge {
+    position: absolute; top: 10px; left: 10px; z-index: 2;
+    font-size: 10px; font-weight: 900; letter-spacing: 1px;
+    color: #fff; background: #ff2e63; border: 2px solid #000;
+    padding: 2px 6px; transform: rotate(-6deg);
+    box-shadow: 2px 2px 0 #000;
+    animation: breathe 1.8s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: rotate(-6deg) scale(1); }
+    50% { transform: rotate(-6deg) scale(1.08); }
+  }
 
   /* distinct poster per game */
   .p-paper    { background: linear-gradient(165deg, #ffe66d, #ffb26b); }
@@ -193,7 +245,7 @@
     section.row h2 { font-size: 19px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; }
+    * { transition: none !important; animation: none !important; }
     html { scroll-behavior: auto; }
   }
 </style>
@@ -205,17 +257,22 @@
   <div class="tagline">tiny games, big weird energy</div>
 </header>
 
-<section class="hero hero-0" id="hero" aria-label="Featured game">
-  <div class="big-emoji" id="heroEmoji" aria-hidden="true">👺</div>
+<section class="hero hero-2" id="hero" aria-label="Featured game">
+  <div class="big-emoji" id="heroEmoji" aria-hidden="true">🛰️</div>
   <div class="hero-inner" id="heroInner">
-    <span class="kicker" id="heroKicker">★ Featured — the flagship</span>
-    <h1 id="heroTitle">Kill a Billion Goblins</h1>
-    <p class="pitch" id="heroPitch">The king set an impossible task: slay one billion goblins to marry the princess. So get slaying.</p>
-    <div class="meta" id="heroMeta"><span>Idle / automation</span><span>1,000,000,000 goblins</span><span>One wedding</span></div>
-    <a class="play-btn" id="heroPlay" href="kill-a-billion-goblins-to-marry-my-daughter/index.html">▶ Play now</a>
+    <span class="kicker" id="heroKicker">★ New — fresh from the workshop</span>
+    <h1 id="heroTitle">Signal Salvage</h1>
+    <p class="pitch" id="heroPitch">Bounce the salvage laser off mirrors in 3D space. Lock 60 scrap before the ring goes silent.</p>
+    <div class="meta" id="heroMeta"><span>3D laser aiming</span><span>Bounce to lock</span><span>60 scrap</span></div>
+    <a class="play-btn" id="heroPlay" href="daily-roguelike-signal-salvage-2026-11-08/index.html">▶ Play now</a>
     <div class="hero-dots" role="tablist" aria-label="Featured games">
-      <button class="on" data-i="0" aria-label="Kill a Billion Goblins"></button>
-      <button data-i="1" aria-label="The Minotaur's Maze"></button>
+      <button class="on" data-i="0" aria-label="Signal Salvage"></button>
+      <button data-i="1" aria-label="The Last Stamp"></button>
+      <button data-i="2" aria-label="Orbit Gardener"></button>
+      <button data-i="3" aria-label="Alien Bug Inspector"></button>
+      <button data-i="4" aria-label="Shrink Ray"></button>
+      <button data-i="5" aria-label="The Minotaur's Maze"></button>
+      <button data-i="6" aria-label="Kill a Billion Goblins"></button>
     </div>
   </div>
 </section>
@@ -223,42 +280,45 @@
 <main>
   <section class="row">
     <h2><span class="n">▸</span> In Development</h2>
-    <p class="row-sub">Fresh from the workshop — swipe through and tap one to play.</p>
+    <p class="row-sub">Newest first — fresh from the workshop, swipe through and tap one to play.</p>
+    <!-- ORDER: newest first. When a new game is pushed, add its card at the FRONT of this row. -->
     <div class="rail">
-      <a class="card p-paper" href="paper-route/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">📰</span><h3>Paper Route</h3><p class="blurb">Toss papers, dodge dogs, own the morning route.</p><span class="tag">In development</span></a>
-      <a class="card p-peel dark" href="peel-the-moon/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🌙</span><h3>Peel the Moon</h3><p class="blurb">Peel back the night, one glowing layer at a time.</p><span class="tag">In development</span></a>
-      <a class="card p-yesno" href="yes-no-town-rpg/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🏘️</span><h3>Yes/No Town RPG</h3><p class="blurb">A town where every answer is yes or no. Choose wrong and the bell rings.</p><span class="tag">In development</span></a>
-      <a class="card p-gladiator" href="gladiator-timing-combat-turn-based/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">⚔️</span><h3>Gladiator Timing Combat</h3><p class="blurb">Turn-based arena duels won on perfect timing.</p><span class="tag">Turn-based</span></a>
-      <a class="card p-mud" href="mud-golem/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🪨</span><h3>Mud Golem</h3><p class="blurb">Dig mud, stack golems, pillage the town.</p><span class="tag">In development</span></a>
-      <a class="card p-goat" href="scape-goat/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🐐</span><h3>Scape Goat</h3><p class="blurb">One goat, a hail of arrows, and very good timing.</p><span class="tag">In development</span></a>
-      <a class="card p-find" href="find-the-mad-goblin/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🔍</span><h3>Find the Mad Goblin</h3><p class="blurb">One mad goblin hides in the pass. Beat the odds, find him.</p><span class="tag">In development</span></a>
+      <a class="card p-orbit" href="orbit-gardener/index.html"><span class="new-badge">NEW</span><span class="play-hint">PLAY ▶</span><span class="emblem">🪐</span><h3>Orbit Gardener</h3><p class="blurb">Grow starflowers on a tiny planet, then rocket to the moon.</p><span class="tag">In development</span></a>
+      <a class="card p-bug" href="alien-bug-inspector/index.html"><span class="new-badge">NEW</span><span class="play-hint">PLAY ▶</span><span class="emblem">🐛</span><h3>Alien Bug Inspector</h3><p class="blurb">Customs for the weird: find the alien bugs, stamp PASS.</p><span class="tag">In development</span></a>
+      <a class="card p-shrink" href="shrink-ray/index.html"><span class="new-badge">NEW</span><span class="play-hint">PLAY ▶</span><span class="emblem">🔬</span><h3>Shrink Ray</h3><p class="blurb">Hold near, never touch — shrink critters into the jar.</p><span class="tag">In development</span></a>
+      <a class="card p-minotaur" href="the-minotaur-s-maze/index.html"><span class="new-badge">NEW</span><span class="play-hint">PLAY ▶</span><span class="emblem">🐂</span><h3>The Minotaur's Maze</h3><p class="blurb">You are the minotaur. Build the maze. Hunt the intruders.</p><span class="tag">In development</span></a>
       <a class="card p-archive dark" href="daily-roguelike-the-dark-archive-2026-10-29/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🏮</span><h3>The Dark Archive</h3><p class="blurb">Sweep the lantern. Find six clues before the oil runs out.</p><span class="tag">In development</span></a>
-      <a class="card p-minotaur" href="the-minotaur-s-maze/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🐂</span><h3>The Minotaur's Maze</h3><p class="blurb">You are the minotaur. Build the maze. Hunt the intruders.</p><span class="tag">In development</span></a>
-      <a class="card p-orbit" href="orbit-gardener/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🪐</span><h3>Orbit Gardener</h3><p class="blurb">Grow starflowers on a tiny planet, then rocket to the moon.</p><span class="tag">In development</span></a>
-      <a class="card p-bug" href="alien-bug-inspector/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🐛</span><h3>Alien Bug Inspector</h3><p class="blurb">Customs for the weird: find the alien bugs, stamp PASS.</p><span class="tag">In development</span></a>
-      <a class="card p-shrink" href="shrink-ray/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🔬</span><h3>Shrink Ray</h3><p class="blurb">Hold near, never touch — shrink critters into the jar.</p><span class="tag">In development</span></a>
+      <a class="card p-find" href="find-the-mad-goblin/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🔍</span><h3>Find the Mad Goblin</h3><p class="blurb">One mad goblin hides in the pass. Beat the odds, find him.</p><span class="tag">In development</span></a>
+      <a class="card p-goat" href="scape-goat/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🐐</span><h3>Scape Goat</h3><p class="blurb">One goat, a hail of arrows, and very good timing.</p><span class="tag">In development</span></a>
+      <a class="card p-mud" href="mud-golem/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🪨</span><h3>Mud Golem</h3><p class="blurb">Dig mud, stack golems, pillage the town.</p><span class="tag">In development</span></a>
+      <a class="card p-gladiator" href="gladiator-timing-combat-turn-based/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">⚔️</span><h3>Gladiator Timing Combat</h3><p class="blurb">Turn-based arena duels won on perfect timing.</p><span class="tag">Turn-based</span></a>
+      <a class="card p-yesno" href="yes-no-town-rpg/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🏘️</span><h3>Yes/No Town RPG</h3><p class="blurb">A town where every answer is yes or no. Choose wrong and the bell rings.</p><span class="tag">In development</span></a>
+      <a class="card p-peel dark" href="peel-the-moon/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🌙</span><h3>Peel the Moon</h3><p class="blurb">Peel back the night, one glowing layer at a time.</p><span class="tag">In development</span></a>
+      <a class="card p-paper" href="paper-route/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">📰</span><h3>Paper Route</h3><p class="blurb">Toss papers, dodge dogs, own the morning route.</p><span class="tag">In development</span></a>
     </div>
   </section>
 
   <section class="row">
     <h2><span class="n">▸</span> Daily Roguelikes</h2>
-    <p class="row-sub">One new bite-sized roguelike a day.</p>
+    <p class="row-sub">Newest first — one new bite-sized roguelike a day.</p>
+    <!-- ORDER: newest first. When a new daily roguelike is pushed, add its card at the FRONT of this row. -->
     <div class="rail">
-      <a class="card p-mirror" href="daily-roguelike-mirrorlight-2026-10-27/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🪞</span><h3>Mirrorlight</h3><p class="blurb">Aim the dawn beam. Light seven floors before dark wins.</p><span class="tag">Daily roguelike</span></a>
+      <a class="card p-signal" href="daily-roguelike-signal-salvage-2026-11-08/index.html"><span class="new-badge">NEW</span><span class="play-hint">PLAY ▶</span><span class="emblem">🛰️</span><h3>Signal Salvage</h3><p class="blurb">Bounce the salvage laser off mirrors. Lock 60 scrap.</p><span class="tag">Daily roguelike</span></a>
+      <a class="card p-stamp" href="daily-roguelike-the-last-stamp-2026-11-07/index.html"><span class="new-badge">NEW</span><span class="play-hint">PLAY ▶</span><span class="emblem">📮</span><h3>The Last Stamp</h3><p class="blurb">Stamp the dead's permits. Pay the rent. Free your soul.</p><span class="tag">Daily roguelike</span></a>
       <a class="card p-post" href="daily-roguelike-the-last-post-2026-10-28/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">✉️</span><h3>The Last Post</h3><p class="blurb">Sort thirty letters across five villages before the post is late.</p><span class="tag">Daily roguelike</span></a>
-      <a class="card p-stamp" href="daily-roguelike-the-last-stamp-2026-11-07/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">📮</span><h3>The Last Stamp</h3><p class="blurb">Stamp the dead's permits. Pay the rent. Free your soul.</p><span class="tag">Daily roguelike</span></a>
-      <a class="card p-signal" href="daily-roguelike-signal-salvage-2026-11-08/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🛰️</span><h3>Signal Salvage</h3><p class="blurb">Bounce the salvage laser off mirrors. Lock 60 scrap.</p><span class="tag">Daily roguelike</span></a>
+      <a class="card p-mirror" href="daily-roguelike-mirrorlight-2026-10-27/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🪞</span><h3>Mirrorlight</h3><p class="blurb">Aim the dawn beam. Light seven floors before dark wins.</p><span class="tag">Daily roguelike</span></a>
     </div>
   </section>
 
   <section class="row">
     <h2><span class="n">▸</span> Graduated Demos</h2>
-    <p class="row-sub">These ones made it out of the workshop.</p>
+    <p class="row-sub">Newest first — these ones made it out of the workshop.</p>
+    <!-- ORDER: newest first. When a game graduates, add its card at the FRONT of this row. -->
     <div class="rail">
+      <a class="card p-goblins dark" href="kill-a-billion-goblins-to-marry-my-daughter/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">👺</span><h3>Kill a Billion Goblins</h3><p class="blurb">Slay a billion goblins. Marry the princess.</p><span class="tag">Graduated demo</span></a>
+      <a class="card p-mtd" href="monster-tap-defense/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">👾</span><h3>Monster Tap Defense</h3><p class="blurb">Tap the horde before it reaches your house.</p><span class="tag">Graduated demo</span></a>
       <a class="card p-brick" href="brick-by-brick/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🧱</span><h3>Brick by Brick</h3><p class="blurb">Bake bricks, build the wall, mind the hand.</p><span class="tag">Graduated demo</span></a>
       <a class="card p-cow" href="spot-the-cow/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">🐄</span><h3>Spot the Cow</h3><p class="blurb">One cow in the crowd. Spot it.</p><span class="tag">Graduated demo</span></a>
-      <a class="card p-mtd" href="monster-tap-defense/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">👾</span><h3>Monster Tap Defense</h3><p class="blurb">Tap the horde before it reaches your house.</p><span class="tag">Graduated demo</span></a>
-      <a class="card p-goblins dark" href="kill-a-billion-goblins-to-marry-my-daughter/index.html"><span class="play-hint">PLAY ▶</span><span class="emblem">👺</span><h3>Kill a Billion Goblins</h3><p class="blurb">Slay a billion goblins. Marry the princess.</p><span class="tag">Graduated demo</span></a>
     </div>
   </section>
 </main>
@@ -267,13 +327,45 @@
 
 <script>
 (function () {
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var finePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  /* ---------- hero: newest first ---------- */
   var featured = [
     {
-      cls: 'hero-0', emoji: '👺', kicker: '★ Featured — the flagship',
-      title: "Kill a Billion Goblins",
-      pitch: 'The king set an impossible task: slay one billion goblins to marry the princess. So get slaying.',
-      meta: ['Idle / automation', '1,000,000,000 goblins', 'One wedding'],
-      href: 'kill-a-billion-goblins-to-marry-my-daughter/index.html'
+      cls: 'hero-2', emoji: '🛰️', kicker: '★ New — fresh from the workshop',
+      title: 'Signal Salvage',
+      pitch: 'Bounce the salvage laser off mirrors in 3D space. Lock 60 scrap before the ring goes silent.',
+      meta: ['3D laser aiming', 'Bounce to lock', '60 scrap'],
+      href: 'daily-roguelike-signal-salvage-2026-11-08/index.html'
+    },
+    {
+      cls: 'hero-3', emoji: '📮', kicker: '★ New — fresh from the workshop',
+      title: 'The Last Stamp',
+      pitch: 'Stamp the dead\u2019s permits. Pay the rent. Free your soul.',
+      meta: ['Swipe to stamp', 'Soul economy', 'End of shift shop'],
+      href: 'daily-roguelike-the-last-stamp-2026-11-07/index.html'
+    },
+    {
+      cls: 'hero-4', emoji: '🪐', kicker: '★ New — fresh from the workshop',
+      title: 'Orbit Gardener',
+      pitch: 'Grow starflowers on a tiny planet, then rocket to the moon. Cozy, slow, and yours.',
+      meta: ['4 worlds', 'Rocket pads', 'Peaceful mode'],
+      href: 'orbit-gardener/index.html'
+    },
+    {
+      cls: 'hero-5', emoji: '🐛', kicker: '★ New — fresh from the workshop',
+      title: 'Alien Bug Inspector',
+      pitch: 'Customs for the weird: find the alien bugs, stamp PASS, and don\u2019t get fired.',
+      meta: ['6 objects to inspect', 'Rarity variants', 'Collection'],
+      href: 'alien-bug-inspector/index.html'
+    },
+    {
+      cls: 'hero-6', emoji: '🔬', kicker: '★ New — fresh from the workshop',
+      title: 'Shrink Ray',
+      pitch: 'Hold near, never touch — shrink critters into the jar before they bounce away.',
+      meta: ['Shrink field', 'Don\u2019t touch it', '3 bounces'],
+      href: 'shrink-ray/index.html'
     },
     {
       cls: 'hero-1', emoji: '🐂', kicker: '★ Featured — first-person maze combat',
@@ -281,6 +373,13 @@
       pitch: 'You are the new minotaur. Build the maze, parry the intruders, and never let them escape.',
       meta: ['3D maze-builder', 'Parry / block / deflect', 'Escape meter'],
       href: 'the-minotaur-s-maze/index.html'
+    },
+    {
+      cls: 'hero-0', emoji: '👺', kicker: '★ Featured — the flagship',
+      title: 'Kill a Billion Goblins',
+      pitch: 'The king set an impossible task: slay one billion goblins to marry the princess. So get slaying.',
+      meta: ['Idle / automation', '1,000,000,000 goblins', 'One wedding'],
+      href: 'kill-a-billion-goblins-to-marry-my-daughter/index.html'
     }
   ];
   var hero = document.getElementById('hero');
@@ -311,14 +410,124 @@
   }
   function next() { show((i + 1) % featured.length); }
   function arm() {
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (reduced) return;
     clearInterval(timer);
     timer = setInterval(next, 7000);
   }
+  function pause() { clearInterval(timer); }
   dots.forEach(function (d) {
     d.addEventListener('click', function () { show(parseInt(d.getAttribute('data-i'), 10)); arm(); });
   });
+  /* pause the rotation while the user is interacting with the hero */
+  hero.addEventListener('mouseenter', pause);
+  hero.addEventListener('mouseleave', arm);
+  hero.addEventListener('focusin', pause);
+  hero.addEventListener('focusout', arm);
+  hero.addEventListener('pointerdown', pause);
+  hero.addEventListener('pointerup', arm);
   arm();
+
+  /* ---------- staggered entrance: one --d per card, in rail order ---------- */
+  document.querySelectorAll('.rail').forEach(function (rail) {
+    Array.prototype.forEach.call(rail.querySelectorAll('a.card'), function (card, idx) {
+      card.style.setProperty('--d', Math.min(idx * 45, 540) + 'ms');
+    });
+  });
+
+  /* ---------- pointer-follow 3D tilt on cards (fine pointers only) ---------- */
+  if (finePointer && !reduced) {
+    document.querySelectorAll('a.card').forEach(function (card) {
+      card.addEventListener('pointermove', function (e) {
+        var r = card.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width - 0.5;
+        var py = (e.clientY - r.top) / r.height - 0.5;
+        card.style.setProperty('--ry', (px * 10).toFixed(2) + 'deg');
+        card.style.setProperty('--rx', (-py * 8).toFixed(2) + 'deg');
+      });
+      card.addEventListener('pointerleave', function () {
+        card.style.setProperty('--rx', '0deg');
+        card.style.setProperty('--ry', '0deg');
+      });
+    });
+  }
+
+  /* ---------- rails: drag-to-scroll with momentum + edge fades + arrows ---------- */
+  document.querySelectorAll('.rail').forEach(function (rail) {
+    /* edge fades: hide the fade on the side with nothing left to scroll to */
+    function edges() {
+      var max = rail.scrollWidth - rail.clientWidth;
+      rail.classList.toggle('at-start', rail.scrollLeft <= 4);
+      rail.classList.toggle('at-end', rail.scrollLeft >= max - 4);
+    }
+    rail.addEventListener('scroll', edges, { passive: true });
+    window.addEventListener('resize', edges);
+    edges();
+
+    /* keyboard arrows move focus card to card */
+    rail.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      var card = e.target.closest ? e.target.closest('a.card') : null;
+      if (!card) return;
+      var cards = Array.prototype.slice.call(rail.querySelectorAll('a.card'));
+      var next = cards[cards.indexOf(card) + (e.key === 'ArrowRight' ? 1 : -1)];
+      if (next) {
+        e.preventDefault();
+        next.focus();
+        next.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', inline: 'nearest', block: 'nearest' });
+      }
+    });
+
+    /* mouse drag-to-scroll (touch keeps native swipe); snap off while dragging */
+    var dragging = false, moved = 0, startX = 0, startScroll = 0, lastX = 0, vel = 0, raf = null, suppressClick = false;
+    function stopMomentum() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+    function snapNearest() {
+      var cards = Array.prototype.slice.call(rail.querySelectorAll('a.card'));
+      var best = null, bestD = Infinity;
+      cards.forEach(function (c) {
+        var d = Math.abs(c.offsetLeft - rail.scrollLeft);
+        if (d < bestD) { bestD = d; best = c; }
+      });
+      if (best) best.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', inline: 'start', block: 'nearest' });
+    }
+    rail.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      dragging = true; moved = 0; startX = e.clientX; lastX = e.clientX;
+      startScroll = rail.scrollLeft; vel = 0;
+      stopMomentum();
+      rail.classList.add('dragging');
+      rail.setPointerCapture(e.pointerId);
+    });
+    rail.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      var dx = e.clientX - startX;
+      moved = Math.max(moved, Math.abs(dx));
+      vel = e.clientX - lastX;
+      lastX = e.clientX;
+      rail.scrollLeft = startScroll - dx;
+    });
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      rail.classList.remove('dragging');
+      if (moved > 6) {
+        suppressClick = true;
+        setTimeout(function () { suppressClick = false; }, 50);
+      }
+      if (reduced || Math.abs(vel) < 0.5) { snapNearest(); return; }
+      /* momentum: decay the fling, then snap cleanly */
+      (function glide() {
+        rail.scrollLeft -= vel;
+        vel *= 0.95;
+        if (Math.abs(vel) > 0.5) { raf = requestAnimationFrame(glide); }
+        else { raf = null; snapNearest(); }
+      })();
+    }
+    rail.addEventListener('pointerup', endDrag);
+    rail.addEventListener('pointercancel', endDrag);
+    rail.addEventListener('click', function (e) {
+      if (suppressClick) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
+  });
 })();
 </script>
 </body>
