@@ -128,6 +128,18 @@ kbd{font-family:'Lilita One',system-ui,sans-serif;font-size:14px;background:#fff
 .stat.hero .v{font-size:44px}
 .panelHead{font-size:clamp(40px,8vw,60px);-webkit-text-stroke:6px var(--ink);paint-order:stroke fill;color:var(--butter);text-shadow:0 5px 0 var(--ink);line-height:1;margin:4px 0 8px}
 .panelHead.sad{color:var(--rose)}
+.shopHead{font-size:34px;-webkit-text-stroke:5px var(--ink);paint-order:stroke fill;color:var(--leaf);text-shadow:0 4px 0 var(--ink);margin:14px 0 2px;line-height:1}
+.shopCorn{font-family:'Lilita One',system-ui,sans-serif;font-size:24px;color:var(--panel-text);margin:4px 0 2px}
+.shop{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 6px;text-align:left}
+.upg{font-family:'Nunito',system-ui,sans-serif;display:flex;align-items:center;gap:10px;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:16px;padding:8px 10px;box-shadow:0 4px 0 var(--ink);cursor:pointer;text-align:left;transition:transform .08s}
+.upg:not(:disabled):hover{transform:translateY(-2px)}
+.upg:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+.upgIcon{font-size:24px}
+.upgTxt{flex:1;display:flex;flex-direction:column;font-size:13px;line-height:1.2}
+.upgTxt b{font-size:15px}
+.upgTxt small{font-weight:800;color:#5b4a66}
+.upgCost{font-family:'Lilita One',system-ui,sans-serif;font-size:20px;white-space:nowrap}
+@media (max-width:620px){.shop{grid-template-columns:1fr}}
 @media (max-width:620px){
   .tips{grid-template-columns:1fr}
   #radarWrap{width:120px;height:120px}
@@ -828,6 +840,7 @@ const cGreen=new THREE.Color(0x86d46f),cDry=new THREE.Color(0xe2c977),cDead=new 
 function setI(I,i,m){I.m.setMatrixAt(i,m);I.o.setMatrixAt(i,m);}
 const backOut=t=>{const s=1.9,u=t-1;return 1+(s+1)*u*u*u+s*u*u;};
 const _cv=new V3();
+const cRazor=new THREE.Color(0xd9466b);
 function updateCorn(t,dt){
   let colorDirty=false;
   for(let i=0;i<NC;i++){
@@ -856,9 +869,9 @@ function updateCorn(t,dt){
     if(c.flash>0){c.flash=Math.max(0,c.flash-dt*4);c.dirty=true;}
     if(c.dirty){
       c.dirty=false; colorDirty=true;
-      if(c.alive){_c.copy(cGreen).lerp(cDry,1-f);if(c.flash>0)_c.lerp(cFlash,c.flash*0.6);} else _c.copy(cDead);
+      if(c.alive){_c.copy(cGreen).lerp(cDry,1-f);if(c.flash>0)_c.lerp(cFlash,c.flash*0.6);if(c.razor)_c.lerp(cRazor,0.55);} else _c.copy(cDead);
       STALK.m.setColorAt(i,_c);
-      if(c.alive){_c.copy(cLeaf).lerp(cDry,1-f);if(c.flash>0)_c.lerp(cFlash,c.flash*0.6);} else _c.copy(cDead);
+      if(c.alive){_c.copy(cLeaf).lerp(cDry,1-f);if(c.flash>0)_c.lerp(cFlash,c.flash*0.6);if(c.razor)_c.lerp(cRazor,0.55);} else _c.copy(cDead);
       for(let j=0;j<3;j++) LEAF.m.setColorAt(i*3+j,_c);
     }
   }
@@ -952,6 +965,7 @@ function clearFloaters(){for(const f of floaters)f.el.remove();floaters.length=0
 /* =================== GAME STATE =================== */
 const WAVE_LEN=180;
 const S={mode:'loading',tut:null,pendingReplant:0,menuSeen:false,back:null,wave:1,waveTime:WAVE_LEN,score:0,kills:0,waveKills:0,spawnT:4,chopT:12,cornDmg:0,alertT:0,best:Store.get('shroomSiegeBest',0),finalWarned:false,hintCd:0,time:0,cornStart:NC};
+S.kernels=0; S.up=freshUp();
 const player={pos:new V3(0,0,FD+7),vel:new V3(),yaw:0,pitch:-0.05,hp:100,mag:12,reserve:36,onGround:true,fireCd:0,punchCd:0,reloadT:0,hurtT:0,bob:0,shake:0,firing:false,lastShootMsg:0,stamina:100,hasGun:true,infAmmo:false,jumps:0,ammoGot:0,stamNag:0};
 const MAG=12, MAX_RES=120;
 function vol(p){return clamp(1-p.distanceTo(player.pos)/42,0,1);}
@@ -1040,7 +1054,7 @@ class Shroom{
     this.bar.scale.setScalar(Math.max(0.8,s)); this.bar.visible=false;
     scene.add(g); scene.add(this.bar);
     this.state='spawn'; this.st=0; this.kb=new THREE.Vector2(); this.flash=0; this.atkCd=1; this.atkT=0; this.spitT=0;
-    this.aggro=T.aggro; this.eatMul=1;
+    this.aggro=T.aggro+lureBonus(); this.eatMul=1;
     this.aggroT=0; this.retarget=0; this.target=null; this.walk=rand(0,TAU); this.seed=rand(0,100); this.eating=false; this.nibbleT=0; this.dead=false;
     SFX.rumble(vol(g.position));
   }
@@ -1061,6 +1075,7 @@ class Shroom{
     floater('+'+this.T.pts,new V3(p.x,1.9*s,p.z),'pts');
     const chance=this.type==='brute'?0.55:0.1;
     if(Math.random()<chance) spawnPickup('chop',p.x,1,p.z,rand(-1,1),5,rand(-1,1));
+    const cc=cornDropChance(); if(cc>0&&Math.random()<cc) spawnPickup('corn',p.x,1,p.z,rand(-1,1),4,rand(-1,1));
     this.remove();
   }
   poof(){
@@ -1109,6 +1124,10 @@ class Shroom{
         if(d>0.3){mvx=dx/d;mvz=dz/d;fx=dx;fz=dz;}
         else{
           mode='eat'; this.eating=true; fx=c.x-p.x; fz=c.z-p.z;
+          if(!this.wasEating&&c.razor&&c.alive){
+            this.hp-=RAZOR_DMG; this.flash=1; floater('🔪 -'+RAZOR_DMG,new V3(p.x,1.8*s,p.z),'warn');
+            if(this.hp<=0){this.die(); return;}
+          }
           eatCorn(c,T.eat*(1+(S.wave-1)*0.06)*dt*this.eatMul);
           this.nibbleT-=dt;
           if(this.nibbleT<=0){this.nibbleT=rand(0.25,0.5);emit(c.x,1.3*c.h,c.z,Math.random()<0.6?0xffe27a:0x9ee07f,2,{speed:3,max:0.09});const v=vol(p);if(v>0.3)SFX.nibble(v);}
@@ -1302,10 +1321,16 @@ const chopTpl=(()=>{const g=new THREE.Group();
   [-1,1].forEach(s=>{const k=P(ell(0.075,0.075,0.075,8,6),0xfffaf0,0.02);k.position.set(0.8,0,s*0.06);g.add(k);});
   g.rotation.x=0.45;g.scale.setScalar(1.1);
   const w=new THREE.Group();w.add(g);return w;})();
+const cornTpl=(()=>{const g=new THREE.Group();
+  const ear=P(cyl(0.11,0.11,0.42,14),0xffd84d,0.02);g.add(ear);
+  for(let i=0;i<4;i++){const k=P(cyl(0.035,0.035,0.44,6),0xffe98a,0.02);const a=i*Math.PI/2;k.position.set(Math.cos(a)*0.07,0,Math.sin(a)*0.07);g.add(k);}
+  const husk=P(ell(0.1,0.2,0.1,12,8),0x9fe08a,0.02);husk.position.y=-0.3;g.add(husk);
+  g.scale.setScalar(1.2);
+  const w=new THREE.Group();w.add(g);return w;})();
 function spawnPickup(kind,x,y,z,vx=0,vy=0,vz=0){
   if(pickups.length>60) return;
-  const m=(kind==='ammo'?ammoTpl:chopTpl).clone(); m.position.set(x,y,z); scene.add(m);
-  const pk={kind,m,pos:new V3(x,y,z),vel:new V3(vx,vy,vz),t:0,life:kind==='ammo'?30:50,phase:rand(0,TAU),settled:false};
+  const m=(kind==='ammo'?ammoTpl:kind==='corn'?cornTpl:chopTpl).clone(); m.position.set(x,y,z); scene.add(m);
+  const pk={kind,m,pos:new V3(x,y,z),vel:new V3(vx,vy,vz),t:0,life:kind==='chop'?50:30,phase:rand(0,TAU),settled:false};
   pickups.push(pk); return pk;
 }
 function updatePickups(dt,t){
@@ -1318,13 +1343,14 @@ function updatePickups(dt,t){
       collide(k.pos,0.3);
     }
     const dx=player.pos.x-k.pos.x, dz=player.pos.z-k.pos.z, d=Math.hypot(dx,dz);
-    const wantIt=k.kind==='ammo'?player.reserve<MAX_RES:(player.hp<100||player.stamina<100);
+    const wantIt=k.kind==='ammo'?player.reserve<MAX_RES:k.kind==='corn'?true:(player.hp<maxHp()||player.stamina<maxStam());
     if(wantIt&&k.t>0.35&&S.mode==='play'){
-      if(k.kind==='ammo'&&d<3.8){k.pos.x+=dx/d*dt*9;k.pos.z+=dz/d*dt*9;}
+      if((k.kind==='ammo'||k.kind==='corn')&&d<3.8){k.pos.x+=dx/d*dt*9;k.pos.z+=dz/d*dt*9;}
       if(d<1.3){
-        if(k.kind==='ammo'){player.reserve=Math.min(MAX_RES,player.reserve+4);player.ammoGot+=4;SFX.pickup();floater('+4',new V3(k.pos.x,1.4,k.pos.z),'ammo');}
+        if(k.kind==='corn'){S.kernels++;SFX.pickup();floater('+1 🌽',new V3(k.pos.x,1.4,k.pos.z),'pts');}
+        else if(k.kind==='ammo'){const na=ammoPer();player.reserve=Math.min(MAX_RES,player.reserve+na);player.ammoGot+=na;SFX.pickup();floater('+'+na,new V3(k.pos.x,1.4,k.pos.z),'ammo');}
         else{
-          const dh=Math.min(30,100-player.hp), ds=Math.min(60,100-player.stamina), wasOut=player.stamina<=0;
+          const dh=Math.max(0,Math.min(healPerChop(),maxHp()-player.hp)), ds=Math.max(0,Math.min(stamPerChop(),maxStam()-player.stamina)), wasOut=player.stamina<=0;
           player.hp+=dh; player.stamina+=ds; SFX.chomp(); k.eaten=true;
           if(dh>=1) floater('+'+Math.round(dh)+' health',new V3(k.pos.x,1.4,k.pos.z),'hp');
           if(ds>=1) floater('+'+Math.round(ds)+' stamina',new V3(k.pos.x,2.0,k.pos.z),'stam');
@@ -1463,7 +1489,7 @@ function shoot(){
   _hit.copy(_o).addScaledVector(_d,best);
   vm.muzzle.getWorldPosition(_mz); tracer(_mz,_hit);
   if(hitE){
-    const dmg=head?45:25;
+    const dmg=(head?45:25)*gunMul();
     hitE.hurt(dmg,_d.x,_d.z,head,false);
     emit(_hit.x,_hit.y,_hit.z,head?hitE.T.cap:0xfff1d6,head?7:5,{speed:5,max:0.1});
     hitmark(head); SFX.hit(head);
@@ -1478,7 +1504,7 @@ function shoot(){
   }
 }
 function startReload(){
-  if(player.reloadT>0||player.mag>=MAG||player.reserve<=0||player.infAmmo||!player.hasGun) return;
+  if(player.reloadT>0||player.mag>=magSize()||player.reserve<=0||player.infAmmo||!player.hasGun) return;
   player.reloadT=1.1; SFX.reload();
 }
 function punch(){
@@ -1495,7 +1521,7 @@ function punch(){
   for(const e of enemies){
     if(e.dead) continue; const p=e.g.position, s=e.T.scale, dx=p.x-player.pos.x, dz=p.z-player.pos.z, d=Math.hypot(dx,dz)||0.01;
     if(d<2.0+0.45*s&&(dx*fx+dz*fz)/d>0.4){
-      e.hurt(20,fx,fz,false,true); hit=true;
+      e.hurt(20*punchMul(),fx,fz,false,true); hit=true;
       emit(p.x,1.0*s,p.z,0xffffff,6,{speed:5}); ring(p.x,1.0*s,p.z,0xffe48a,1.2,0.2); hitmark(false);
     }
   }
@@ -1588,15 +1614,15 @@ let lastHud={};
 function setText(el,key,val){if(lastHud[key]!==val){lastHud[key]=val;el.textContent=val;}}
 function updateHUD(dt){
   setText(H.score,'s',S.score.toLocaleString());
-  setText(H.kills,'k',S.kills+(S.kills===1?' shroom popped':' shrooms popped'));
+  setText(H.kills,'k',S.kills+(S.kills===1?' shroom popped':' shrooms popped')+' · 🌽 '+S.kernels);
   setText(H.wave,'w',S.tut?'Final exam':'Wave '+S.wave);
   const tt=Math.max(0,Math.ceil(S.waveTime)); setText(H.timer,'t',Math.floor(tt/60)+':'+String(tt%60).padStart(2,'0'));
   H.timer.classList.toggle('hurry',S.waveTime<(S.tut?10:30));
   const pct=Math.round(cropHealth()*100);
   setText(H.cornPct,'c',pct+'%'); if(lastHud.cw!==pct){lastHud.cw=pct;H.cornFill.style.width=pct+'%';}
-  const hp=Math.ceil(player.hp); setText(H.hpNum,'h',String(hp)); if(lastHud.hw!==hp){lastHud.hw=hp;H.hpFill.style.width=hp+'%';}
+  const hp=Math.ceil(player.hp); setText(H.hpNum,'h',String(hp)); if(lastHud.hw!==hp){lastHud.hw=hp;H.hpFill.style.width=Math.min(100,hp/maxHp()*100)+'%';}
   H.hpBox.classList.toggle('low',hp<=30);
-  const st=Math.ceil(player.stamina); setText(H.stamNum,'sn',String(st)); if(lastHud.sw!==st){lastHud.sw=st;H.stamFill.style.width=st+'%';}
+  const st=Math.ceil(player.stamina); setText(H.stamNum,'sn',String(st)); if(lastHud.sw!==st){lastHud.sw=st;H.stamFill.style.width=Math.min(100,st/maxStam()*100)+'%';}
   H.stamRow.classList.toggle('empty',st<=0); setText(H.stamLbl,'sl',st<=0?'⚡ Pooped! Eat a pork chop':'⚡ Stamina');
   if(player.infAmmo){setText(H.mag,'m','∞');setText(H.reserve,'r','');}
   else{setText(H.mag,'m',String(player.mag));setText(H.reserve,'r',' / '+player.reserve);}
@@ -1641,7 +1667,7 @@ function drawRadar(t){
   for(const k of corn){
     if(!k.active) continue;
     const [x,y]=tf(k.x,k.z); c.beginPath(); c.arc(x,y,k.alive?2.2:1.4,0,TAU);
-    c.fillStyle=k.alive?(k.hp>60?'#ffd84d':(k.hp>25?'#e9b75a':'#d98a6a')):'#bba38c'; c.fill();
+    c.fillStyle=k.alive?(k.razor?'#ff5c8a':k.hp>60?'#ffd84d':(k.hp>25?'#e9b75a':'#d98a6a')):'#bba38c'; c.fill();
     if(k.alive&&k.shake>0.5){c.beginPath();c.arc(x,y,5+Math.sin(t*12)*1.5,0,TAU);c.strokeStyle='#ff5c8a';c.lineWidth=1.6;c.stroke();}
   }
   const dot=(x,z,r,fill)=>{const [px,py]=tf(x,z);c.beginPath();c.arc(px,py,r,0,TAU);c.fillStyle=fill;c.fill();c.strokeStyle='#1d1424';c.lineWidth=1.6;c.stroke();};
@@ -1761,16 +1787,73 @@ function spawnTick(dt){
   }
   S.chopT-=dt;
   if(S.chopT<=0){
-    S.chopT=rand(14,22);
-    if(pickups.filter(k=>k.kind==='chop').length<3){const [x,z]=randomOutsidePoint(12,42);spawnPickup('chop',x,6,z,0,0,0);}
+    S.chopT=rand(14,22)*(1-0.05*S.up.chop);
+    if(pickups.filter(k=>k.kind==='chop').length<chopCap()){const [x,z]=randomOutsidePoint(12,42);spawnPickup('chop',x,6,z,0,0,0);}
   }
+}
+/* =================== FARM ECONOMY =================== */
+const UPG_DEF={
+  hpMax:   {name:'Max health',           icon:'❤️', max:10, base:40, step:20, now:l=>`${100+25*l} max HP`,        next:l=>`${100+25*(l+1)} max HP`},
+  hpHeal:  {name:'Health per pork chop', icon:'🍖', max:10, base:30, step:25, now:l=>`+${30+10*l} HP per chop`,  next:l=>`+${30+10*(l+1)} HP per chop`},
+  stamMax: {name:'Max stamina',          icon:'⚡', max:10, base:40, step:20, now:l=>`${100+25*l} max stamina`,  next:l=>`${100+25*(l+1)} max stamina`},
+  stamHeal:{name:'Stamina per pork chop',icon:'🍖', max:10, base:30, step:25, now:l=>`+${60+15*l} per chop`,     next:l=>`+${60+15*(l+1)} per chop`},
+  chop:    {name:'Pork chop spawns',     icon:'🍖', max:3,  base:50, step:30, now:l=>`up to ${3+l} on the field`, next:l=>`up to ${4+l} on the field`},
+  drop:    {name:'Corn from shrooms',    icon:'🌽', max:21, now:l=>l?`${Math.round((0.04+0.01*l)*100)}% per shroom`:'Locked', next:l=>`${Math.round((0.04+0.01*(l+1))*100)}% per shroom`},
+  mag:       {name:'Magazine size',     icon:'🔫', max:6,  base:50, step:30, now:l=>`${12+4*l} rounds`, next:l=>`${12+4*(l+1)} rounds`},
+  gunDmg:    {name:'Blaster damage',     icon:'💥', max:6,  base:60, step:35, now:l=>`+${Math.round(l*15)}% damage`, next:l=>`+${Math.round((l+1)*15)}% damage`},
+  punchDmg:  {name:'Punch damage',       icon:'👊', max:5,  base:40, step:25, now:l=>`+${l*20}% damage`, next:l=>`+${(l+1)*20}% damage`},
+  turkeyAmmo:{name:'Bullets per turkey', icon:'🦃', max:6,  base:50, step:30, now:l=>`${(4+l)*4} bullets per punch`, next:l=>`${(5+l)*4} bullets per punch`},
+  razor:     {name:'Razor stalks',       icon:'🔪', max:5,  base:70, step:35, now:l=>l?`${5*l}% chance per wave`:'None yet', next:l=>`${5*(l+1)}% chance per wave`},
+  lure:      {name:'Shroom lure',        icon:'🧲', max:5,  base:60, step:30, now:l=>l?`+${2*l} lure radius`:'Base radius', next:l=>`+${2*(l+1)} lure radius`}
+};
+function freshUp(){return {hpMax:0,hpHeal:0,stamMax:0,stamHeal:0,chop:0,drop:0,mag:0,gunDmg:0,punchDmg:0,turkeyAmmo:0,razor:0,lure:0};}
+function loadUp(raw){const u=freshUp(); if(raw&&typeof raw==='object') for(const k in u) u[k]=clamp(raw[k]|0,0,UPG_DEF[k].max); return u;}
+const maxHp=()=>100+25*S.up.hpMax;
+const healPerChop=()=>30+10*S.up.hpHeal;
+const maxStam=()=>100+25*S.up.stamMax;
+const stamPerChop=()=>60+15*S.up.stamHeal;
+const chopCap=()=>3+S.up.chop;
+const cornDropChance=()=>S.up.drop>0?0.04+0.01*S.up.drop:0;
+const magSize=()=>12+4*S.up.mag;
+const gunMul=()=>1+0.15*S.up.gunDmg;
+const punchMul=()=>1+0.2*S.up.punchDmg;
+const ammoPer=()=>4+S.up.turkeyAmmo;
+const razorChance=()=>0.05*S.up.razor;
+const lureBonus=()=>2*S.up.lure;
+const RAZOR_DMG=25;
+function upgCost(k){const l=S.up[k];
+  if(k==='drop') return l===0?60:15+4*(l-1);
+  return UPG_DEF[k].base+UPG_DEF[k].step*l;}
+function upgRow(k){
+  const d=UPG_DEF[k], l=S.up[k], maxed=l>=d.max, c=upgCost(k), can=!maxed&&S.kernels>=c;
+  return `<button class="upg" data-act="buy:${k}"${can?'':' disabled'}>
+    <span class="upgIcon">${d.icon}</span>
+    <span class="upgTxt"><b>${d.name}</b><small>${d.now(l)}${maxed?'':' → '+d.next(l)}</small></span>
+    <span class="upgCost">${maxed?'MAX':'🌽 '+c}</span></button>`;}
+function shopHTML(){return Object.keys(UPG_DEF).map(upgRow).join('');}
+function renderShop(){
+  const box=document.getElementById('shop'); if(!box) return;
+  const act=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.act:null;
+  box.innerHTML=shopHTML();
+  const kc=document.getElementById('shopCorn'); if(kc) kc.textContent=S.kernels.toLocaleString();
+  if(act){const b=box.querySelector(`[data-act="${act}"]`); if(b) b.focus({preventScroll:true});}
+}
+function buyUpgrade(k){
+  const d=UPG_DEF[k]; if(!d||S.mode!=='summary') return;
+  if(S.up[k]>=d.max) return;
+  const c=upgCost(k);
+  if(S.kernels<c){SFX.empty(); return;}
+  S.kernels-=c; S.up[k]++; saveGame(); lastHud={}; SFX.pickup(); renderShop();
 }
 function snapshot(){
   return {v:1,wave:S.wave,score:S.score,kills:S.kills,hp:Math.max(1,Math.round(player.hp)),stamina:Math.round(player.stamina),
-    mag:player.mag,reserve:player.reserve,corn:corn.map(c=>c.alive?Math.round(c.hp):0)};
+    mag:player.mag,reserve:player.reserve,corn:corn.map(c=>c.alive?Math.round(c.hp):0),kernels:S.kernels,up:S.up,razor:corn.map(c=>c.razor?1:0)};
 }
 function saveGame(){Store.set(SAVE_KEY,snapshot());}
 function startWave(sub){
+  for(const c of corn){ if(c.active&&c.alive&&!c.razor&&Math.random()<razorChance()){c.razor=true;c.dirty=true;} }
+  const nr=corn.filter(c=>c.active&&c.alive&&c.razor).length;
+  if(nr) setTimeout(()=>{if(S.mode==='play'&&!S.tut)showHint(`🔪 ${nr} razor stalk${nr===1?'':'s'} in the field. Shrooms that bite them take damage.`,4);},3600);
   S.waveTime=WAVE_LEN; S.spawnT=3.5; S.waveKills=0; S.chopT=10; S.finalWarned=false; S.cornStart=aliveCorn();
   saveGame();
   banner('Wave '+S.wave,sub||(S.wave===1?'Defend the corn!':'Here they come again!')); SFX.wave();
@@ -1782,25 +1865,35 @@ function endWave(){
   if(document.pointerLockElement) document.exitPointerLock();
   for(const e of enemies) e.poof(); enemies.length=0;
   for(const s of spores) scene.remove(s.m); spores.length=0;
-  const alive=aliveCorn(), total=activeN(), pct=Math.round(cropHealth()*100), bonus=alive*10*S.wave, cleared=S.wave, waveKills=S.waveKills;
-  S.score+=bonus; saveBest(); SFX.wave();
-  // between-wave refresh happens now, so the save is ready for the next wave
+  const alive=aliveCorn(), total=activeN(), pct=Math.round(cropHealth()*100), cleared=S.wave, waveKills=S.waveKills;
+  const kernels=Math.floor(alive*cleared/2);
+  S.kernels+=kernels; saveBest(); SFX.wave();
   let replanted=0;
   for(const c of corn){ if(c.alive) c.hp=100; else if(Math.random()<0.3){c.alive=true;c.hp=70;c.grow=0;c.popped=false;c.sfx=0;replanted++;} c.dirty=true; }
-  player.hp=Math.min(100,player.hp+40); player.stamina=Math.min(100,player.stamina+50); player.reserve=Math.min(MAX_RES,player.reserve+12);
-  S.wave++; S.pendingReplant=replanted; saveGame();
-  showOverlay(`<div class="panel">
-    <div class="panelHead display">Wave ${cleared} survived!</div>
-    <p>${alive===total?'Not a single stalk lost. The scarecrow is speechless (he always is).':(alive>total*0.6?'Most of the crop made it. The barn cats are proud of you.':'That was close. The field is looking thin.')}</p>
+  player.hp=Math.min(maxHp(),player.hp+40); player.stamina=Math.min(maxStam(),player.stamina+50); player.reserve=Math.min(MAX_RES,player.reserve+12);
+  S.wave++; S.pendingReplant=replanted;
+  S.summary={cleared,alive,total,pct,waveKills,kernels,replanted,
+    msg: alive===total?'Not a single stalk lost. The scarecrow is speechless (he always is).':(alive>total*0.6?'Most of the crop made it. The barn cats are proud of you.':'That was close. The field is looking thin.')};
+  saveGame();
+  showOverlay(summaryHTML());
+}
+function summaryHTML(){
+  const s=S.summary;
+  return `<div class="panel">
+    <div class="panelHead display">Wave ${s.cleared} survived!</div>
+    <p>${s.msg}</p>
     <div class="stats">
-      <div class="stat hero"><div class="v">+${bonus.toLocaleString()}</div><div class="k">Harvest bonus (${alive} stalks × 10 × wave ${cleared})</div></div>
-      <div class="stat"><div class="v">${alive}/${total}</div><div class="k">Stalks standing</div></div>
-      <div class="stat"><div class="v">${pct}%</div><div class="k">Crop health</div></div>
-      <div class="stat"><div class="v">${waveKills}</div><div class="k">Shrooms popped this wave</div></div>
+      <div class="stat hero"><div class="v">+${s.kernels.toLocaleString()} 🌽</div><div class="k">Harvest kernels (${s.alive} stalks × wave ${s.cleared} ÷ 2)</div></div>
+      <div class="stat"><div class="v">${s.alive}/${s.total}</div><div class="k">Stalks standing</div></div>
+      <div class="stat"><div class="v">${s.pct}%</div><div class="k">Crop health</div></div>
+      <div class="stat"><div class="v">${s.waveKills}</div><div class="k">Shrooms popped this wave</div></div>
       <div class="stat"><div class="v">${S.score.toLocaleString()}</div><div class="k">Total score</div></div>
     </div>
-    <p>${replanted?`The farmhands replanted ${replanted} stalk${replanted===1?'':'s'}, and you`:'You'} got a snack (+40 health, +50 stamina) and 12 spare bullets. Progress saved.</p>
-    <div class="menuCol"><button class="btn" data-act="next">Start wave ${S.wave}</button><button class="btn alt" data-act="quit">Save and quit</button></div></div>`);
+    <p>${s.replanted?`The farmhands replanted ${s.replanted} stalk${s.replanted===1?'':'s'}, and you`:'You'} got a snack (+40 health, +50 stamina) and 12 spare bullets. Progress saved.</p>
+    <div class="shopHead display">Farm shop</div>
+    <div class="shopCorn display">🌽 <span id="shopCorn">${S.kernels.toLocaleString()}</span> kernels</div>
+    <div class="shop" id="shop">${shopHTML()}</div>
+    <div class="menuCol"><button class="btn" data-act="next">Start wave ${S.wave}</button><button class="btn alt" data-act="quit">Save and quit</button></div></div>`;
 }
 function saveBest(){if(S.score>S.best){S.best=S.score;Store.set('shroomSiegeBest',S.best);}}
 function gameOver(reason){
@@ -1827,9 +1920,9 @@ function clearActors(){
 }
 function resetWorld(){
   clearActors();
-  Object.assign(player,{hp:100,stamina:100,mag:MAG,reserve:36,hasGun:true,infAmmo:false,yaw:0,pitch:-0.05,onGround:true,fireCd:0,punchCd:0,reloadT:0,hurtT:0,shake:0,firing:false,jumps:0,ammoGot:0,stamNag:0});
+  Object.assign(player,{hp:100,stamina:100,mag:magSize(),reserve:36,hasGun:true,infAmmo:false,yaw:0,pitch:-0.05,onGround:true,fireCd:0,punchCd:0,reloadT:0,hurtT:0,shake:0,firing:false,jumps:0,ammoGot:0,stamNag:0});
   player.pos.set(0,0,FD+7); player.vel.set(0,0,0);
-  S.score=0; S.kills=0; S.wave=1; S.alertT=0; S.cornDmg=0; S.hintCd=6; S.pendingReplant=0;
+  S.score=0; S.kills=0; S.wave=1; S.kernels=0; S.up=freshUp(); S.alertT=0; S.cornDmg=0; S.hintCd=6; S.pendingReplant=0;
   clearFloaters(); lastHud={}; vm.equipT=0;
   camera.fov=74; camera.updateProjectionMatrix();
   hideBeacon(); gunPick.visible=false;
@@ -1838,7 +1931,7 @@ function resetWorld(){
 }
 function rippleCorn(sfx){for(const c of corn){const d=Math.hypot(c.x,c.z);c.grow=-0.35-d*0.06;c.popped=false;c.sfx=sfx&&Math.random()<0.12?1:0;}}
 function worldFull(sfx=true){
-  for(const c of corn){c.active=true;c.alive=true;c.hp=100;c.dirty=true;c.regrowT=0;c.shake=0;}
+  for(const c of corn){c.active=true;c.alive=true;c.hp=100;c.dirty=true;c.regrowT=0;c.shake=0;c.razor=false;}
   rippleCorn(sfx);
   for(const tk of turkeys){tk.range=null;tk.setActive(true);tk.place();}
 }
@@ -1850,10 +1943,11 @@ function newGame(){
 function continueGame(){
   const sv=Store.get(SAVE_KEY,null); if(!sv||!sv.wave) return false;
   resetWorld(); worldFull();
-  S.wave=(sv.wave|0)||1; S.score=sv.score|0; S.kills=sv.kills|0;
-  player.hp=clamp(+sv.hp||100,1,100); player.stamina=clamp(sv.stamina==null?100:+sv.stamina,0,100);
-  player.mag=clamp(sv.mag|0,0,MAG); player.reserve=clamp(sv.reserve|0,0,MAX_RES);
+  S.wave=(sv.wave|0)||1; S.score=sv.score|0; S.kills=sv.kills|0; S.kernels=sv.kernels|0; S.up=loadUp(sv.up);
+  player.hp=clamp(+sv.hp||100,1,maxHp()); player.stamina=clamp(sv.stamina==null?100:+sv.stamina,0,maxStam());
+  player.mag=clamp(sv.mag|0,0,magSize()); player.reserve=clamp(sv.reserve|0,0,MAX_RES);
   if(Array.isArray(sv.corn)&&sv.corn.length===NC) corn.forEach((c,i)=>{const h=+sv.corn[i]||0;c.alive=h>0;c.hp=h>0?Math.min(100,h):0;c.dirty=true;});
+  if(Array.isArray(sv.razor)&&sv.razor.length===NC) corn.forEach((c,i)=>{c.razor=!!sv.razor[i];c.dirty=true;});
   startWave('Welcome back!');
   return true;
 }
@@ -1952,7 +2046,7 @@ const STEPS=[
       ['grunt','sprout','grunt','sprout','grunt'].forEach((ty,i)=>Tut.later(0.9+i*0.35,()=>{const a=a0+(i-2)*0.3;T.horde.push(spawnShroom(ty,Math.cos(a)*22,PATCH_Z+Math.sin(a)*22));}));},
     check(T){T.hk=T.horde.filter(e=>e.dead).length;return T.hk/5;}},
   {ch:5,say:'Nice shooting! Oh. Um. About that infinite ammo…',auto:4.2,
-    enter(T){player.infAmmo=false;player.mag=MAG;player.reserve=24;T.dr=0.9;T.drT=0;T.tromb=0;},
+    enter(T){player.infAmmo=false;player.mag=magSize();player.reserve=24;T.dr=0.9;T.drT=0;T.tromb=0;},
     tick(T,dt){
       T.dr-=dt; if(T.dr>0) return;
       T.drT-=dt;
@@ -2122,8 +2216,8 @@ function screenHelp(back){
     </div>
     <h3>Keep these three topped up</h3>
     <div class="meters">
-      <div class="meter" style="background:var(--pink)"><h4>❤️ Health</h4><p>Mushrooms punch and spitters lob spores. Run out and it’s game over. A pork chop heals 30.</p></div>
-      <div class="meter" style="background:var(--mint)"><h4>⚡ Stamina</h4><p>Sprinting burns it, and it doesn’t come back on its own. A pork chop restores 60.</p></div>
+      <div class="meter" style="background:var(--pink)"><h4>❤️ Health</h4><p>Mushrooms punch and spitters lob spores. Run out and it’s game over. A pork chop heals 30, and the farm shop can raise that.</p></div>
+      <div class="meter" style="background:var(--mint)"><h4>⚡ Stamina</h4><p>Sprinting burns it, and it doesn’t come back on its own. A pork chop restores 60, and the farm shop can raise that.</p></div>
       <div class="meter" style="background:var(--butter)"><h4>🍿 Ammo</h4><p>Punch a turkey and bullets fly out. Walk over them to scoop them up.</p></div>
     </div>
     <h3>Mushroom field guide</h3>
@@ -2134,7 +2228,7 @@ function screenHelp(back){
       ${foe('Spitter',175,'#9eead6','#d9c2ff','Keeps its distance and lobs spores. Keep moving.')}
     </div>
     <h3>Waves and saving</h3>
-    <p>Survive a wave to bank a harvest bonus: 10 points for every standing stalk, times the wave number. Between waves the farmhands replant a few lost stalks and toss you a snack.</p>
+    <p>Survive a wave to harvest kernels: half of your standing stalks times the wave number. Spend kernels in the farm shop between waves. Between waves the farmhands replant a few lost stalks and toss you a snack.</p>
     <p>On the radar, corn is yellow, pork chops are pink and turkeys are orange. A red ring means a stalk is being eaten right now.</p>
     <p>The game saves at the start of every wave. Choose Continue on the main menu to pick up where you left off.</p>
     <div class="btnRow"><button class="btn" data-act="back" data-back>Back</button></div>
@@ -2195,6 +2289,7 @@ function startNew(){Store.del(SAVE_KEY);if(Store.get(TUT_KEY,false)) newGame(); 
 overlay.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]'); if(!b) return;
   const a=b.dataset.act; SFX.init(); SFX.tick();
+  if(a.startsWith('buy:')){buyUpgrade(a.slice(4));return;}
   switch(a){
     case 'continue': if(continueGame()) requestPlay(); else screenMenu(); break;
     case 'new': if(Store.get(SAVE_KEY,null)) screenConfirmNew(); else startNew(); break;
@@ -2254,7 +2349,7 @@ function updatePlayer(dt){
   }
   if(player.onGround&&hs>0.5) player.bob+=dt*hs*1.6;
   player.fireCd-=dt; player.punchCd-=dt; player.hurtT=Math.max(0,player.hurtT-dt); player.shake=Math.max(0,player.shake-dt*2.2);
-  if(player.reloadT>0){player.reloadT-=dt;if(player.reloadT<=0){const n=Math.min(MAG-player.mag,player.reserve);player.mag+=n;player.reserve-=n;}}
+  if(player.reloadT>0){player.reloadT-=dt;if(player.reloadT<=0){const n=Math.min(magSize()-player.mag,player.reserve);player.mag+=n;player.reserve-=n;}}
   if(player.firing){if(player.hasGun) shoot(); else punch();}
   // camera
   const bobY=player.onGround&&hs>0.5?Math.abs(Math.sin(player.bob))*0.07:0;
