@@ -286,6 +286,7 @@
 .p-neon      { --bg: #FF9DE2; --ac: #00E5FF; }
 .p-shroom    { --bg: #B8F5D0; --ac: #FF3DA5; }
 .p-parry     { --bg: #E8D9FF; --ac: #D6303A; }
+.p-arena     { --bg: #FF6B4A; --ac: #3BE8FF; }
   .p-goblins   { --bg: #3A1C7A; --ac: #B6FF00; }
   .p-mtd       { --bg: #A8E4FF; --ac: #FF8A00; }
   .p-brick     { --bg: #FFBE8F; --ac: #00E5FF; }
@@ -401,7 +402,7 @@
     </svg>
     <span class="wm"><b>Weird Demon</b><b>Game Nuggets</b></span>
   </a>
-  <span class="chip-count"><b id="total">22</b> games</span>
+  <span class="chip-count"><b id="total">23</b> games</span>
 </header>
 
 <div class="mq" aria-hidden="true">
@@ -411,7 +412,7 @@
   </div>
 </div>
 
-<section class="hero swap" id="hero" aria-roledescription="carousel" aria-label="Featured games" style="--hbg:#E8D9FF;--hac:#D6303A">
+<section class="hero swap" id="hero" aria-roledescription="carousel" aria-label="Featured games" style="--hbg:#FF6B4A;--hac:#3BE8FF">
   <div class="hero-bg" aria-hidden="true">
     <svg class="d1" viewBox="0 0 100 90"><polygon points="50,6 96,84 4,84"/></svg>
     <svg class="d2" viewBox="0 0 60 60"><polygon points="22,2 38,2 38,22 58,22 58,38 38,38 38,58 22,58 22,38 2,38 2,22 22,22"/></svg>
@@ -420,32 +421,33 @@
   <div class="hero-in">
     <div class="hero-top">
       <span class="kick" id="heroKicker">New from the workshop</span>
-      <div class="stk" aria-hidden="true"><span class="rays"></span><span class="tile"><span id="heroEmoji">🃏</span></span></div>
+      <div class="stk" aria-hidden="true"><span class="rays"></span><span class="tile"><span id="heroEmoji">🧠</span></span></div>
     </div>
-    <h1 id="heroTitle">Parry Card King</h1>
-    <p class="pitch" id="heroPitch">Parry the Shogunate’s strikes from eight directions. Break their guard, spend it on weapons.</p>
-    <div class="chips" id="heroMeta"><span>Card parry</span><span>8 directions</span><span>The Moon-Eater</span></div>
+    <h1 id="heroTitle">Arena Recall</h1>
+    <p class="pitch" id="heroPitch">Watch the foe’s strike pattern, then repeat it to land your blows.</p>
+    <div class="chips" id="heroMeta"><span>Memory duel</span><span>4 directions</span><span>5 foes</span></div>
     <div class="ctl">
-      <a class="play-btn" id="heroPlay" href="parry-card-king/index.html"><i class="tri" aria-hidden="true"></i>Play now</a>
+      <a class="play-btn" id="heroPlay" href="arena-recall/index.html"><i class="tri" aria-hidden="true"></i>Play now</a>
       <button class="sq" id="prev" type="button" aria-label="Previous featured game"><svg viewBox="0 0 24 24"><path d="M16 3 5 12l11 9z"/></svg></button>
       <button class="sq" id="next" type="button" aria-label="Next featured game"><svg viewBox="0 0 24 24"><path d="M8 3l11 9-11 9z"/></svg></button>
     </div>
     <div class="segs" role="group" aria-label="Featured games">
-      <button class="seg on" data-i="0" type="button" aria-label="Parry Card King" aria-current="true"><i></i></button>
-      <button class="seg" data-i="1" type="button" aria-label="Shroom Siege"><i></i></button>
-      <button class="seg" data-i="2" type="button" aria-label="The Moon Ferry"><i></i></button>
-      <button class="seg" data-i="3" type="button" aria-label="The Wishing Field"><i></i></button>
-      <button class="seg" data-i="4" type="button" aria-label="The Kite Queen’s Mail"><i></i></button>
-      <button class="seg" data-i="5" type="button" aria-label="Ember of the Wishing Tree"><i></i></button>
-      <button class="seg" data-i="6" type="button" aria-label="The House Cut"><i></i></button>
-      <button class="seg" data-i="7" type="button" aria-label="Neon Gate"><i></i></button>
-      <button class="seg" data-i="8" type="button" aria-label="Signal Salvage"><i></i></button>
-      <button class="seg" data-i="9" type="button" aria-label="The Last Stamp"><i></i></button>
-      <button class="seg" data-i="10" type="button" aria-label="Orbit Gardener"><i></i></button>
-      <button class="seg" data-i="11" type="button" aria-label="Alien Bug Inspector"><i></i></button>
-      <button class="seg" data-i="12" type="button" aria-label="Shrink Ray"><i></i></button>
-      <button class="seg" data-i="13" type="button" aria-label="The Minotaur’s Maze"><i></i></button>
-      <button class="seg" data-i="14" type="button" aria-label="Kill a Billion Goblins"><i></i></button>
+      <button class="seg on" data-i="0" type="button" aria-label="Arena Recall" aria-current="true"><i></i></button>
+      <button class="seg" data-i="1" type="button" aria-label="Parry Card King"><i></i></button>
+      <button class="seg" data-i="2" type="button" aria-label="Shroom Siege"><i></i></button>
+      <button class="seg" data-i="3" type="button" aria-label="The Moon Ferry"><i></i></button>
+      <button class="seg" data-i="4" type="button" aria-label="The Wishing Field"><i></i></button>
+      <button class="seg" data-i="5" type="button" aria-label="The Kite Queen’s Mail"><i></i></button>
+      <button class="seg" data-i="6" type="button" aria-label="Ember of the Wishing Tree"><i></i></button>
+      <button class="seg" data-i="7" type="button" aria-label="The House Cut"><i></i></button>
+      <button class="seg" data-i="8" type="button" aria-label="Neon Gate"><i></i></button>
+      <button class="seg" data-i="9" type="button" aria-label="Signal Salvage"><i></i></button>
+      <button class="seg" data-i="10" type="button" aria-label="The Last Stamp"><i></i></button>
+      <button class="seg" data-i="11" type="button" aria-label="Orbit Gardener"><i></i></button>
+      <button class="seg" data-i="12" type="button" aria-label="Alien Bug Inspector"><i></i></button>
+      <button class="seg" data-i="13" type="button" aria-label="Shrink Ray"><i></i></button>
+      <button class="seg" data-i="14" type="button" aria-label="The Minotaur’s Maze"><i></i></button>
+      <button class="seg" data-i="15" type="button" aria-label="Kill a Billion Goblins"><i></i></button>
       <button class="pz" id="pz" type="button" aria-label="Pause or resume auto-advance"><svg class="ic-pause" viewBox="0 0 14 14"><path d="M1 0h4v14H1zM9 0h4v14H9z"/></svg><svg class="ic-play" viewBox="0 0 14 14"><path d="M2 0l11 7-11 7z"/></svg></button>
     </div>
   </div>
@@ -473,9 +475,10 @@
   </section>
 
   <section class="sec wrap" id="daily" aria-labelledby="daily-h">
-    <div class="sec-head"><h2 id="daily-h">Daily Roguelikes</h2><span class="count" aria-hidden="true">11</span><p>One new bite-sized roguelike a day. Newest first.</p></div>
+    <div class="sec-head"><h2 id="daily-h">Daily Roguelikes</h2><span class="count" aria-hidden="true">12</span><p>One new bite-sized roguelike a day. Newest first.</p></div>
     <!-- ORDER: newest first. When a new daily roguelike is pushed, add its card at the FRONT of this row. -->
     <div class="grid">
+      <a class="card p-arena" href="arena-recall/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🧠</span></span><span class="cbody"><h3>Arena Recall</h3><p class="blurb">Watch the foe’s strikes, repeat the pattern, land the blows.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-parry" href="parry-card-king/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🃏</span></span><span class="cbody"><h3>Parry Card King</h3><p class="blurb">Parry strikes from eight directions. Break the guard, spend it on weapons.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-shroom" href="shroom-siege/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🍄</span></span><span class="cbody"><h3>Shroom Siege</h3><p class="blurb">Pop the mushroom mob before it eats your corn. Grab the blaster.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-moon" href="daily-roguelike-the-moon-ferry-2026-11-13/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🌙</span></span><span class="cbody"><h3>The Moon Ferry</h3><p class="blurb">Drag the moon, raise the tide. Clear the reefs, haul the wrecks.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
@@ -577,6 +580,9 @@
 
   /* ---------- hero ---------- */
   var featured = [
+    { bg: '#FF6B4A', ac: '#3BE8FF', emoji: '🧠', kicker: 'New from the workshop', title: 'Arena Recall',
+      pitch: 'Watch the foe’s strike pattern, then repeat it to land your blows.',
+      meta: ['Memory duel', '4 directions', '5 foes'], href: 'arena-recall/index.html' },
     { bg: '#E8D9FF', ac: '#D6303A', emoji: '🃏', kicker: 'New from the workshop', title: 'Parry Card King',
       pitch: 'Parry the Shogunate’s strikes from eight directions. Break their guard, spend it on weapons.',
       meta: ['Card parry', '8 directions', 'The Moon-Eater'], href: 'parry-card-king/index.html' },
