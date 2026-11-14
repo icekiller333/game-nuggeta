@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parry Card King</title>
+<style>
+:root{color-scheme:dark;--ink:#e9e2d0}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none}
+html,body{height:100%;margin:0;background:#07060a;color:var(--ink);font-family:Georgia,'Hiragino Mincho ProN','Yu Mincho',serif;overflow:hidden;touch-action:none}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+#ui{position:fixed;inset:0;display:flex;flex-direction:column;pointer-events:none;padding:env(safe-area-inset-top,0px) 12px env(safe-area-inset-bottom,0px);max-width:640px;margin:0 auto}
+#top{padding-top:10px}
+#enn{font-size:15px;letter-spacing:.14em}
+.bar{height:9px;background:#1a1420;border:1px solid #3a2f44;border-radius:5px;overflow:hidden;margin:4px 0}
+.bar i{display:block;height:100%;width:100%;background:#d6303a;transition:width .15s}
+#phpb{background:#5bc98a}
+#tb{background:#fff;transition:none}
+#omen{display:flex;gap:6px;align-items:center;font-size:12px;opacity:.9;margin-top:4px}
+.chip{width:30px;height:30px;border:2px solid var(--c);color:var(--c);display:grid;place-items:center;font-size:18px;border-radius:50%;background:#0b080e}
+.chip:first-of-type{box-shadow:0 0 12px var(--c);transform:scale(1.12)}
+#mid{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:6px;text-align:center}
+#tk{font-size:56px;line-height:1;text-shadow:0 0 22px currentColor}
+#tn{font-size:13px;letter-spacing:.2em;text-shadow:0 2px 4px #000;min-height:16px}
+#mid .bar{width:70%;height:6px}
+#bot{padding-bottom:8px}
+#pstat{display:flex;gap:10px;align-items:center;font-size:12px;letter-spacing:.08em}
+#pstat .bar{flex:1;margin:0}
+#stk{color:#f0c24b;min-width:80px;text-align:right}
+#cw{position:relative;height:250px;margin-top:8px;pointer-events:auto;touch-action:none}
+.card{--c:#999;position:absolute;left:50%;top:0;margin-left:-88px;width:176px;height:246px;border-radius:14px;border:2px solid var(--c);background:linear-gradient(160deg,#1a1320,#0a070d);box-shadow:0 0 26px color-mix(in srgb,var(--c) 45%,transparent),inset 0 0 30px #000a;display:flex;flex-direction:column;align-items:center;padding:10px 8px;text-align:center}
+.card .tag{font-size:10px;letter-spacing:.3em;opacity:.6}
+.card .k{font-size:88px;line-height:1;color:var(--c);text-shadow:0 0 18px var(--c);margin-top:8px}
+.card .nm{letter-spacing:.22em;font-size:15px;margin-top:4px}
+.card .ds{font-size:12px;opacity:.78;margin-top:auto;line-height:1.3}
+.pk{opacity:.55;filter:brightness(.6)}
+#p2{transform:translate(-26px,-6px) rotate(-7deg) scale(.94)}
+#p1{transform:translate(22px,-8px) rotate(6deg) scale(.96)}
+#card{touch-action:none;cursor:grab;transition:transform .15s}
+.pop{animation:pop .16s ease-out}
+@keyframes pop{from{transform:scale(.86) translateY(16px);opacity:.3}to{transform:none;opacity:1}}
+.fly{transition:transform .26s ease-in,opacity .26s;pointer-events:none}
+#btns{display:flex;gap:10px;margin-top:8px;pointer-events:auto}
+button{font:inherit;color:var(--ink);background:#150f1a;border:1px solid #5a4a66;border-radius:8px;padding:12px;letter-spacing:.14em;cursor:pointer;touch-action:manipulation}
+button:active{background:#2a1c33}
+#btns button{flex:1}
+#ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;background:radial-gradient(circle,#0b0710d8,#050408f2);z-index:5}
+#ov h1{font-size:clamp(34px,9vw,64px);letter-spacing:.12em;margin:0;color:#e9e2d0;text-shadow:0 0 30px #d6303a}
+#ov h2{margin:0;font-weight:normal;letter-spacing:.14em}
+#ov p{max-width:440px;line-height:1.55;margin:0;font-size:15px;opacity:0;animation:fi .9s forwards}
+#ov p.s{opacity:.75;font-size:13px}
+.big{font-size:90px;color:#d6303a;text-shadow:0 0 30px #d6303a;line-height:1}
+@keyframes fi{to{opacity:.9}}
+.row{display:flex;gap:10px;justify-content:center}
+.rc{position:relative;left:auto;top:auto;margin:0;width:min(29vw,150px);height:min(46vw,214px);cursor:pointer;padding:8px 4px}
+.rc .k{font-size:min(14vw,58px)}
+.rc .ds{font-size:10px}
+.rc:active{transform:scale(.96)}
+.cc{position:relative;left:auto;top:auto;margin:0;width:74px;height:100px;padding:4px;cursor:pointer}.cc .k{font-size:34px;margin-top:2px}.cc .nm{font-size:9px;letter-spacing:.05em}
+#fl{position:fixed;inset:0;opacity:0;pointer-events:none;z-index:3}
+.bn{position:fixed;left:50%;top:44%;font-weight:bold;letter-spacing:.12em;text-shadow:0 0 18px currentColor,0 2px 0 #000;white-space:nowrap;pointer-events:none;z-index:4}
+#hl{position:fixed;display:none;border:2px solid #f0c24b;border-radius:14px;box-shadow:0 0 0 100vmax rgba(4,2,8,.64),0 0 24px #f0c24b;pointer-events:none;z-index:6;animation:hlp 1.1s infinite}
+@keyframes hlp{50%{border-color:#fff}}
+#tp{position:fixed;display:none;left:50%;transform:translateX(-50%);width:min(92vw,420px);background:#120c18f2;border:1px solid #f0c24b;border-radius:12px;padding:14px 16px;font-size:15px;line-height:1.45;text-align:center;box-shadow:0 0 30px #000;z-index:7;pointer-events:none}
+#tp button{display:block;width:100%;margin-top:10px;pointer-events:auto}
+#tps{display:block;pointer-events:auto;margin-top:8px;opacity:.55;font-size:11px;text-decoration:underline;cursor:pointer}
+#card.go{box-shadow:0 0 40px var(--c),0 0 90px var(--c)}#card.go::after,#card.sk::after{position:absolute;left:0;right:0;top:44%;text-align:center;font-size:24px;font-weight:bold;letter-spacing:.2em;text-shadow:0 0 14px currentColor}#card.go::after{content:'PLAY';color:#f0c24b}#card.sk::after{content:'SKIP';color:#99a}
+#ov.tl{background:radial-gradient(circle at 50% 30%,#0000 0,#050408d0 78%)}
+#ov h1{line-height:1.05;animation:flick 5s infinite}@keyframes flick{0%,100%{text-shadow:0 0 30px #d6303a}45%{text-shadow:0 0 52px #ff4a55}50%{text-shadow:0 0 18px #d6303a}}
+.fan{position:relative;height:140px;width:100%}.tc{left:50%;top:0;margin-left:-44px;width:88px;height:124px;padding:6px 4px;transform:translate(var(--x),var(--y)) rotate(var(--r));animation:fl 3.2s ease-in-out infinite}.tc .k{font-size:44px;margin-top:10px}.tc .nm{font-size:10px}@keyframes fl{50%{translate:0 -9px}}
+button.pri{font-size:18px;padding:14px 30px;border-color:#f0c24b;box-shadow:0 0 24px #f0c24b66;animation:pul 2s infinite}@keyframes pul{50%{box-shadow:0 0 44px #f0c24bcc}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}#ov p{opacity:.9}}
+button.gold{border-color:#f0c24b;color:#f0c24b}
+#mute{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;z-index:8;padding:6px 10px;font-size:16px;opacity:.7}
+#ov{overflow-y:auto;justify-content:safe center}
+</style></head><body>
+<canvas id="c"></canvas><div id="fl"></div><div id="fx"></div>
+<div id="ui">
+ <div id="top"><span id="enn"></span><div class="bar"><i id="enhp"></i></div><div id="omen"></div></div>
+ <div id="mid"><div id="tk"></div><div id="tn"></div><div class="bar"><i id="tb"></i></div></div>
+ <div id="bot">
+  <div id="pstat"><span>侍</span><div class="bar"><i id="phpb"></i></div><span id="phpt"></span><span id="dk"></span><span id="stk"></span></div>
+  <div id="cw"><div class="card pk" id="p2"></div><div class="card pk" id="p1"></div><div class="card" id="card"></div></div>
+  <div id="btns"><button id="bl">◀ SKIP</button><button id="br">PLAY ▶</button></div>
+ </div>
+</div>
+<button id="mute" onclick="toggleMute()">🔊</button><div id="hl"></div><div id="tp"><div id="tpt"></div><button id="tpb" onclick="tpb()">CONTINUE</button><small id="tps" onclick="tutDone()">skip tutorial</small></div><div id="ov"></div>
+<script>
+const $=s=>document.querySelector(s),R=(a,b)=>a+Math.random()*(b-a);
+const cv=$('#c'),ctx=cv.getContext('2d');let W,H;
+function rs(){const d=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0)}
+addEventListener('resize',rs);rs();
+
+/* ---------- data ---------- */
+const AT={L:{k:'←',n:'LEFT',c:'#d6303a'},R:{k:'→',n:'RIGHT',c:'#3aa0d8'},U:{k:'↑',n:'UP',c:'#5bc98a'},D:{k:'↓',n:'DOWN',c:'#a35be0'},LU:{k:'↖',n:'UP-LEFT',c:'#ff8a3d'},LD:{k:'↙',n:'DOWN-LEFT',c:'#e0509a'},RU:{k:'↗',n:'UP-RIGHT',c:'#3ad8c8'},RD:{k:'↘',n:'DOWN-RIGHT',c:'#d8d03a'}};
+const CARDS={
+guard:{n:'Ukeru',k:'受',kind:'counter',ct:'SLASH',d:'Counters SLASH',col:'#d6303a'},
+side:{n:'Sakeru',k:'避',kind:'counter',ct:'THRUST',d:'Counters THRUST',col:'#3aa0d8'},
+break:{n:'Kudaku',k:'砕',kind:'counter',ct:'GRAB',d:'Counters GRAB',col:'#a35be0'},
+kagami:{n:'Kagami',k:'鏡',kind:'counter',ct:'ANY',d:'Counters anything. Shorter window',col:'#cfd8e6'},
+cut:{n:'Kiri',k:'斬',kind:'atk',dmg:3,hits:1,d:'3 dmg. Each strike in a window chains +1',col:'#f0c24b'},
+flurry:{n:'Ranbu',k:'乱',kind:'atk',dmg:1,hits:4,d:'4 rapid hits',col:'#f0c24b'},
+iai:{n:'Iai',k:'居',kind:'atk',dmg:9,hits:1,d:'9 dmg. Collapses the window',col:'#ff8a3d'},
+mend:{n:'Iyasu',k:'癒',kind:'util',d:'Heal 5',col:'#5bc98a'},
+ink:{n:'Sumi',k:'墨',kind:'util',d:'+2s to the parry window',col:'#5bc98a'},
+dread:{n:'Kyō',k:'怖',kind:'curse',d:'Cursed. Play: lose 2 HP, destroy it',col:'#c0267a'}};
+CARDS.pl={n:'Parry Left',k:'左',kind:'counter',ct:'L',d:'Parries attacks from the LEFT',col:'#d6303a'};CARDS.pr={n:'Parry Right',k:'右',kind:'counter',ct:'R',d:'Parries attacks from the RIGHT',col:'#3aa0d8'};CARDS.kasane={n:'Kasane',k:'重',kind:'atk',dmg:2,hits:1,d:'2 dmg. DOUBLE if played after another strike',col:'#f0c24b'};CARDS.cut.d='3 dmg. +1 per strike before it';
+const KL={counter:'COUNTER',atk:'WEAPON',util:'SPIRIT',curse:'CURSE'};
+const MON=[
+{n:'The Drowned Retainer',sub:'He still bows to a court of water.',hp:22,pat:['SLASH','SLASH','THRUST'],tele:2.5,dmg:4,win:3.2,t:0},
+{n:'The Hundred-Eye Monk',sub:'Every eye is a prayer that was never answered.',hp:30,pat:['THRUST','GRAB','SLASH','THRUST'],tele:2.1,dmg:5,win:3,t:1},
+{n:'The Pale Shogun',sub:'He drank the moon. It is still drinking him.',hp:48,pat:['SLASH','THRUST','GRAB','GRAB','SLASH','THRUST'],tele:1.7,dmg:6,win:2.8,t:2}];
+const POOL=['cut','kasane','flurry','iai','pl','pr','kagami','mend','ink'];
+
+/* ---------- audio ---------- */
+let AC;function au(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}
+function tone(f,d,ty='sine',v=.15,f2){const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.type=ty;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(AC.destination);o.start();o.stop(t+d)}
+const NB={};function noise(d,v=.2,fr=1200){const n=AC.sampleRate*d|0,k=d+'';let b=NB[k];if(!b){b=NB[k]=AC.createBuffer(1,n,AC.sampleRate);const a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=(Math.random()*2-1)*(1-i/n)}const s=AC.createBufferSource();s.buffer=b;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=fr;const g=AC.createGain();g.gain.value=v;s.connect(f).connect(g).connect(AC.destination);s.start()}
+const SFX={flick:()=>noise(.06,.15,4000),warn:()=>tone(110,.4,'sawtooth',.12,70),
+parry:()=>{const k=1+Math.min(G?G.streak:0,8)*.07;tone(1800*k,.3,'triangle',.2,900*k);tone(2700*k,.15,'square',.07);noise(.12,.3,6000)},
+hit:()=>{noise(.15,.4,2500);tone(160,.15,'square',.14,50)},hurt:()=>{tone(90,.35,'sawtooth',.3,40);noise(.25,.4,500)},
+chime:()=>{tone(2200,.25,'sine',.1,3000);tone(3300,.2,'sine',.06)},tick:()=>tone(900,.05,'square',.06),whiff:()=>tone(220,.1,'triangle',.08,150),heal:()=>tone(520,.3,'sine',.12,880),die:()=>{tone(200,1,'sawtooth',.2,30);noise(.8,.4,800)}};
+function sfx(n){if(muted)return;try{au();SFX[n]()}catch(e){}}
+
+/* ---------- state ---------- */
+const K={SWIPE:70,SPARKLE:.4,HP:30,HEAL:3,RUN:21,MAX_REFUSALS:5,PARTS:500,FLAT_START:6,FLAT_END:3,BOSS:{hp:90,tele:1.1,dmg:11,win:1.5}};
+let screen='title',G,F,freeze=0,shk=0,T=0,tut=null,ts=1,zoom=0;const rings=[],RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
+const parts=[],slashes=[],floats=[],ash=Array.from({length:40},()=>({x:Math.random(),y:Math.random(),s:R(.02,.06)}));
+const MX=()=>W/2,MY=()=>H*.38,MS=()=>Math.min(W/420,H/900);
+function spawn(x,y,n,col,sp=300,life=.6,g=600,sz=3){n=Math.min(n,K.PARTS-parts.length);for(let i=0;i<n;i++){const a=R(0,6.283),s=R(.2,1)*sp;parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-sp*.2,l:life*R(.6,1),L:life,col,g,sz})}}
+function flash(c,o=.4){const f=$('#fl');f.style.background=c;f.animate([{opacity:o},{opacity:0}],{duration:300})}
+function banner(t,c='#fff',sz=44){const b=document.createElement('div');b.className='bn';b.textContent=t;b.style.color=c;b.style.fontSize=sz+'px';$('#fx').appendChild(b);b.animate([{transform:'translate(-50%,-50%) scale(1.7)',opacity:0},{transform:'translate(-50%,-50%) scale(1)',opacity:1,offset:.2},{transform:'translate(-50%,-80%) scale(1)',opacity:0}],{duration:900,easing:'ease-out'}).onfinish=()=>b.remove()}
+
+/* ---------- game flow ---------- */
+function newRun(){G={hp:K.HP,max:K.HP,deck:['pl','cut'],disc:[],dirs:['L'],ref:0,bp:true,cnt:{fist:0,mace:0},mi:0,streak:0,best:0}}
+function ov(h){const o=$('#ov');o.className='';o.innerHTML=h;o.style.display='flex'}
+const hideOv=()=>$('#ov').style.display='none';
+function titleOld(){screen='title';F=null;ov(`<div class="big">侍</div><h1>PARRY CARD KING</h1><p class="s" style="animation-delay:.3s">The moon did not set.</p>
+<p class="s" style="animation-delay:.6s">Enemies strike from 8 directions. Play the matching block, then spend the broken guard on weapons.<br><br><b>Swipe left</b> to cycle · <b>swipe right/up</b> to play<br>(or ← / → keys, or the buttons)</p><button onclick="go()">DRAW YOUR BLADE</button><button onclick="start(1)">HOW TO PLAY</button>`)}
+function start(g){au();tut=null;hideTut();newRun();G.guide=!!g;if(seen.lore){chapter();return}mark('lore');ov(`<h2>序</h2><p style="animation-delay:.2s">The moon fell upon Kōyō and did not set. Under it the dead rose to serve a Hollow Shogunate that rules by the turning of cards.</p>
+<p style="animation-delay:1.2s">You were the Card King's last retainer. His deck is every duel he ever won — each card a kata, a memory of a blade. When the moon drank him, the deck remained. It chose you.</p>
+<p style="animation-delay:2.2s">Read the omens. Turn the cards. Answer every blow — and when a guard breaks, cut.</p><button onclick="chapter()">ENTER THE SUNKEN COURT</button>`)}
+function chapter(){const m=makeMon(G.mi);ov(`<div class="big">${G.mi>=K.RUN?'王':G.mi+1}</div><h2>${m.n}</h2><p style="animation-delay:.3s">${m.sub}</p><p class="s" style="animation-delay:.6s">${G.mi>=K.RUN?'The boss awaits':'Fight '+(G.mi+1)+' of '+K.RUN} · ${tot()} cards · flatfooted ${m.win.toFixed(1)}s · HP ${G.hp}/${G.max}<br>Enemy attack directions: ${G.dirs.map(d=>d===G.nd?'<b style="color:#f0c24b">'+AT[d].k+' NEW</b>':AT[d].k).join(' ')}${gaps()}</p><button onclick="startFight()">FACE IT</button>`)}
+function startFight(){au();const m=tut?TM:makeMon(G.mi);if(!tut)fullShuffle();F={m,hp:m.hp,max:m.hp,pi:0,phase:'idle',t:1.6,dur:1,atk:null,combo:0,flash:0,dying:false,dyp:0,winMax:1};screen='fight';hideOv();$('#enn').textContent=m.n;renderCard();renderOmen();if(m.boss&&!seen.boss){mark('boss');pop=1;showPop('<small style="opacity:.6">BOSS</small><br>The Moon-Eater is flatfooted for only <b>1.5s</b> after a parry, its attacks come faster and hit harder, and attacking it while it is <b>not</b> flatfooted gets you <b>countered</b>.','#top',1)}G.nd=null;if(G.guide&&G.mi===0&&!tut){tut={i:0,hold:true,tap:true,c:0};tutShow()}}
+function startTele(){const m=F.m;F.sp=0;F.atk=m.pat[F.pi%m.pat.length];F.dur=F.t=m.tele*(m.t===2&&F.hp<F.max/2?.8:1);F.phase='tele';sfx('warn');renderOmen()}
+function enemyHit(){const m=F.m;G.streak=0;G.hp-=m.dmg;shk=24;freeze=.14;zoom=.09;vib(90);hud('#bot');sfx('hurt');flash('#d6303a',.6);
+ slashes.push({x:W/2,y:H*.5,a:.7,l:.3,L:.3,col:AT[F.atk].c,len:Math.max(W,H)*.7});
+ floats.push({x:W/2,y:H*.55,t:'-'+m.dmg,col:'#ff5a5a',l:.9,sz:48});
+ G.deck.splice(1+(Math.random()*2|0),0,'dread');banner('CURSED  怖','#c0267a',30);
+ if(tut)G.hp=Math.max(G.hp,10);F.pi++;F.phase='idle';F.t=.9;renderCard();renderOmen();if(G.hp<=0)die()}
+function parry(c){const p=F.t/F.dur;G.streak++;G.best=Math.max(G.best,G.streak);
+ F.winMax=F.t=Math.max(.8,F.m.win+(c.ct==='ANY'?-1.2:0));F.phase='stagger';F.combo=0;F.pi++;
+ freeze=.16;shk=12;ts=.35;zoom=.07;rings.push({x:MX(),y:MY(),r:Math.min(W,H)*.7,l:.55,L:.55,col:'#ffe27a'},{x:MX(),y:MY(),r:Math.min(W,H)*.45,l:.4,L:.4,col:'#fff'});floats.push({x:W/2,y:H*.3,t:'受',col:'#fff',l:.7,sz:140});vib(35);$('#stk').animate([{transform:'scale(1.8)'},{transform:'none'}],{duration:300});sfx('parry');flash('#f0c24b',.45);spawn(MX(),MY(),44,'#ffe27a',560,.7,500,3);
+ banner((p>.55?'PERFECT PARRY':'PARRY!')+(G.streak>1?'  x'+G.streak:''),'#f0c24b');renderOmen();tutEv('parry')}
+function hit(d,big,f){if(F!==f||F.dying)return;F.hp=Math.max(0,F.hp-d);F.flash=.1;zoom=Math.max(zoom,big?.05:.02);if(big)ts=.4;vib(big?40:12);hud('#top');shk=Math.max(shk,big?16:7);freeze=Math.max(freeze,big?.1:.03);
+ const x=MX()+R(-40,40),y=MY()+R(-60,40);slashes.push({x,y,a:R(-1.2,1.2),l:.25,L:.25,col:big?'#ff8a3d':'#fff',len:230});
+ spawn(x,y,big?28:12,'#d6303a',380,.5,700,3);floats.push({x,y:y-20,t:'-'+d,col:big?'#ff8a3d':'#f0c24b',l:.8,sz:big?46:30});sfx('hit');if(F.hp<=0)killMon()}
+function killMon(){if(tut)tutDone();F.dying=true;F.phase='dead';shk=30;freeze=.25;ts=.25;zoom=.1;vib([60,40,120]);sfx('die');flash('#fff',.7);spawn(MX(),MY(),120,'#d6303a',700,1.2,300,4);
+ banner(G.mi===K.RUN?'THE MOON BREAKS':'SLAIN','#f0c24b',50);setTimeout(afterFight,1700)}
+function die(){if(F.phase==='dead')return;F.phase='dead';F.dying=false;sfx('die');setTimeout(()=>{screen='dead';ov(`<div class="big">死</div><h2>YOU FELL</h2><p style="animation-delay:.3s">The moon keeps your card. Your face joins the deck.</p><p class="s">Fell in fight ${G.mi+1} · best streak ${G.best}</p><button onclick="start()">RISE AGAIN</button>`)},900)}
+function win(){screen='win';ov(`<div class="big" style="color:#f0c24b">王</div><h2>${trueKing()?'TRUE PARRY KING':'CARD KING'}</h2>${trueKing()?'<p class="s" style="opacity:.9">You never learned to block. You learned when to strike.</p>':''}<p style="animation-delay:.3s">The Moon-Eater's mask splits. Beneath it: no face — only the moon, and in the moon, your own reflection, bowing.</p><p style="animation-delay:1.3s">The moon sets. The deck goes quiet. Somewhere in the dark, a card still turns.</p><p class="s">Deck: ${tot()} cards · Best streak: ${G.best}</p><button onclick="start()">BEGIN AGAIN</button>`)}
+function reward(){screen='reward';const ids=pickRew();
+ ov(`<h2>The dead leave a kata</h2><p class="s" style="opacity:.8">A new kata for your deck, earned every 3 fights (${tot()} cards, ${dreads()} cursed)</p><div class="row">${ids.map(i=>`<div class="card rc" style="--c:${CARDS[i].col}" onclick="pick('${i}')">${inner(i)}</div>`).join('')}</div><button onclick="pick(null)">CLEANSE — destroy all Kyō</button>`)}
+function nextFight(){if(Q.length)return Q.shift()();G.hp=Math.min(G.max,G.hp+K.HEAL);G.mi++;sfx('heal');chapter()}
+function pick(id){if(id){G.disc.push(id);G.added=(G.added||0)+1;if(G.added%2===0&&tot()>5)return removeScreen(nextFight)}else{G.deck=G.deck.filter(x=>x!=='dread');G.disc=G.disc.filter(x=>x!=='dread')}nextFight()}
+
+/* ---------- player actions ---------- */
+const canAct=()=>screen==='fight'&&F&&!F.dying&&F.phase!=='dead'&&!(tut&&tut.tap)&&!pop;
+function cycle(tf){if(!canAct())return;au();G.disc.push(G.deck.shift());chk();sfx('flick');fly(-1,tf);renderCard();tutEv('cycle')}
+function play(tf){if(!canAct())return;au();const id=G.deck.shift(),c=CARDS[id];fly(1,tf);spawn(W/2,H*.72,12,c.col,280,.45,500,3);let keep=true;const pa=F.la;F.la=c.kind==='atk';F.ax=id==='axe'?(F.ax||0)+1:0;const dm=c.kind==='atk'?wdmg(id,pa):0;if(id==='fist')G.cnt.fist++;if(id==='mace')G.cnt.mace++;
+ if(c.kind==='counter'){
+  if(F.phase==='tele'&&(c.ct==='ANY'||c.ct===F.atk))parry(c);
+  else{sfx('whiff');banner(F.phase==='tele'?'WRONG KATA':'NO THREAT','#888',24);if(F.phase==='tele'&&!tut)F.t-=.3}}
+ else if(c.kind==='atk'){
+  if(F.phase==='tele'&&F.t<=K.SPARKLE&&F.dur<10){F.la=false;sparkle(c)}else if(F.phase==='stagger'){const f=F,b=F.combo+Math.min(3,G.streak>>1);
+   if(c.hits>1)for(let i=0;i<c.hits;i++)setTimeout(()=>hit(c.dmg+(b>>1),false,f),i*85);else{hit(dm,dm>=9,f);if(id==='kasane'&&pa)banner('DOUBLED  x2','#9ad0f0',28);if(id==='axe'&&F.ax>1)banner('AXE x'+F.ax,'#ff8a3d',28)}
+   F.combo++;tutEv('strike');if(F.combo>1)banner('CHAIN x'+F.combo,'#ffe27a',28);if(id==='iai')F.t=Math.min(F.t,.5)}
+  else{sfx('whiff');banner('DEFLECTED','#888',24);spawn(MX(),MY(),8,'#889',200,.3,0,2);if(F.m.boss&&!tut){const d=Math.ceil(F.m.dmg*.75);G.hp-=d;shk=14;sfx('hurt');flash('#d6303a',.5);floats.push({x:W/2,y:H*.55,t:'-'+d,col:'#ff5a5a',l:.9,sz:40});banner('COUNTERED','#d6303a',34);if(G.hp<=0)die()}}}
+ else if(id==='mend'){G.hp=Math.min(G.max,G.hp+5);sfx('heal');floats.push({x:W/2,y:H*.6,t:'+5',col:'#5bc98a',l:.9,sz:40})}
+ else if(id==='ink'){if(F.phase==='stagger'){F.t+=2;F.winMax=Math.max(F.winMax,F.t);banner('INK SEALS THE GAP','#5bc98a',24);sfx('heal')}else{sfx('whiff');banner('NO WINDOW','#888',24)}}
+ else if(id==='dread'){keep=false;G.hp-=2;shk=10;sfx('hurt');flash('#c0267a',.4);banner('EXORCISED  -2','#c0267a',28);if(G.hp<=0)die()}
+ if(keep)G.disc.push(id);chk();renderCard();renderOmen()}
+
+/* ---------- ui ---------- */
+const inner=id=>{const c=CARDS[id];return`<div class="tag">${KL[c.kind]}</div><div class="k">${c.k}</div><div class="nm">${c.n}</div><div class="ds">${dsc(id)}</div>`};
+function setCard(el,id){el.innerHTML=inner(id);el.style.setProperty('--c',CARDS[id].col)}
+function renderCard(){if(!G||!G.deck[0])return;setCard($('#card'),G.deck[0]);[1,2].forEach(i=>{const e=$('#p'+i);e.style.display=G.deck[i]?'':'none';if(G.deck[i])setCard(e,G.deck[i])});const c=$('#card');c.classList.remove('pop','go','sk');void c.offsetWidth;c.classList.add('pop');if(!tut)tipCheck()}
+function renderOmen(){if(!F)return;const m=F.m;$('#omen').innerHTML='<span>OMEN</span>'+[0,1,2,3].map(i=>{const a=AT[m.pat[(F.pi+i)%m.pat.length]];return`<div class="chip" style="--c:${a.c}">${a.k}</div>`}).join('')}
+function fly(dir,tf){const c=$('#card'),k=c.cloneNode(true);k.removeAttribute('id');k.classList.remove('pop');k.classList.add('fly');if(tf)k.style.transform=tf;c.parentNode.appendChild(k);
+ requestAnimationFrame(()=>{k.style.transform=`translate(${dir*400}px,${dir>0?-60:30}px) rotate(${dir*30}deg)`;k.style.opacity=0});setTimeout(()=>k.remove(),300)}
+let last={};function setT(id,k,v){if(last[id+k]!==v){last[id+k]=v;if(k==='t')$(id).textContent=v;else $(id).style[k]=v}}
+function ui(){if(!F||!G)return;setT('#enn','t',F.m.n+' · '+F.hp+'/'+F.max);setT('#enhp','width',F.hp/F.max*100+'%');setT('#phpb','width',Math.max(0,G.hp)/G.max*100+'%');setT('#phpt','t',Math.max(0,G.hp)+'/'+G.max);setT('#stk','t',G.streak>1?'STREAK x'+G.streak:'');setT('#dk','t','⌘'+G.deck.length+' ↺'+G.disc.length);
+ let k='',n='',col='#888',pct=0;
+ if(F.phase==='tele'){const a=AT[F.atk];k=a.k;n=a.n+' INCOMING  ·  -'+F.m.dmg+' HP';col=a.c;pct=F.t/F.dur}
+ else if(F.phase==='stagger'){k='隙';n='FLATFOOTED — ATTACK';col='#f0c24b';pct=F.t/F.winMax}
+ else if(F.phase==='idle'){n='cycle toward your counter'}
+ setT('#tk','t',k);setT('#tk','color',col);setT('#tn','t',n);$('#tb').style.width=Math.max(0,pct)*100+'%';$('#tb').style.background=col}
+
+/* ---------- input ---------- */
+const cw=$('#cw'),card=$('#card');let ds=null;
+cw.addEventListener('pointerdown',e=>{if(screen!=='fight')return;au();ds={x:e.clientX,y:e.clientY};cw.setPointerCapture(e.pointerId);card.style.transition='none'});
+cw.addEventListener('pointermove',e=>{if(!ds)return;const dx=e.clientX-ds.x,dy=e.clientY-ds.y;card.style.transform=`translate(${dx}px,${Math.min(0,dy)*.6}px) rotate(${dx/14}deg)`;const s=swp(dx,dy);card.classList.toggle('go',s>0);card.classList.toggle('sk',s<0)});
+cw.addEventListener('pointerup',e=>{if(!ds)return;const dx=e.clientX-ds.x,dy=e.clientY-ds.y,tf=card.style.transform;ds=null;card.style.transition='';card.style.transform='';
+ const s=swp(dx,dy);if(s>0)play(tf);else if(s<0)cycle(tf)});
+cw.addEventListener('pointercancel',()=>{ds=null;card.style.transition='';card.style.transform=''});
+$('#bl').onclick=()=>cycle();$('#br').onclick=()=>play();
+addEventListener('keydown',e=>{if(e.repeat)return;const k=e.key.toLowerCase();if(k==='arrowleft'||k==='a')cycle();else if(k==='arrowright'||k==='d'||k==='arrowup'||k==='w'||k===' '){e.preventDefault();play()}});
+
+/* ---------- drawing ---------- */
+function eye(x,y,r,c='#ff3a3a'){ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill()}
+function m0(){ctx.fillStyle='#0c171c';ctx.beginPath();ctx.moveTo(-95,175);ctx.quadraticCurveTo(-120,10,-45,-55);ctx.lineTo(45,-55);ctx.quadraticCurveTo(120,10,95,175);ctx.fill();
+ ctx.strokeStyle='#3b6e78';ctx.lineWidth=4;for(let i=0;i<6;i++){const x=-75+i*30;ctx.beginPath();ctx.moveTo(x,130);ctx.lineTo(x,160+(T*70+i*37)%50);ctx.stroke()}
+ ctx.fillStyle='#16262c';ctx.beginPath();ctx.moveTo(-120,-45);ctx.lineTo(0,-135);ctx.lineTo(120,-45);ctx.fill();
+ ctx.fillStyle='#a9bfbb';ctx.beginPath();ctx.ellipse(0,-42,27,31,0,0,7);ctx.fill();eye(-10,-46,5);eye(10,-46,5);ctx.fillStyle='#0c171c';ctx.fillRect(-12,-24,24,4);
+ ctx.strokeStyle='#dfe6ee';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(60,60);ctx.lineTo(150,-130);ctx.stroke()}
+function m1(){ctx.save();ctx.globalAlpha*=.6;ctx.strokeStyle='#f0c24b';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,-72,78,0,7);ctx.stroke();ctx.restore();
+ ctx.fillStyle='#1a120a';ctx.beginPath();ctx.moveTo(-115,180);ctx.lineTo(-60,-30);ctx.lineTo(60,-30);ctx.lineTo(115,180);ctx.fill();ctx.fillStyle='#8a6a3a';ctx.fillRect(-62,20,124,10);
+ ctx.fillStyle='#c9b79a';ctx.beginPath();ctx.ellipse(0,-72,42,50,0,0,7);ctx.fill();
+ [[-16,-80],[16,-80],[0,-60],[-28,-58],[28,-58],[-8,-104],[12,-100],[-34,-90],[34,-90],[0,-82]].forEach((e,i)=>{if(Math.sin(T*1.7+i*2)>.93)return;ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(e[0],e[1],7,4.5,0,0,7);ctx.fill();eye(e[0]+Math.sin(T+i)*2,e[1],2.6)});
+ ctx.fillStyle='#c9b79a';ctx.fillRect(-10,40,20,44)}
+function m2(){ctx.save();ctx.globalAlpha*=.35;ctx.fillStyle='#d7cfe6';ctx.beginPath();ctx.arc(0,-40,150,0,7);ctx.fill();ctx.restore();
+ ctx.strokeStyle='#6a3590';ctx.lineWidth=9;ctx.lineCap='round';for(let i=0;i<6;i++){const d=i<3?-1:1,k=i%3;ctx.beginPath();ctx.moveTo(d*50,40);for(let j=1;j<=8;j++)ctx.lineTo(d*(50+j*20+k*12),40-j*(10+k*8)+Math.sin(T*3+j+i)*14);ctx.stroke()}
+ ctx.fillStyle='#0d0912';ctx.beginPath();ctx.moveTo(-130,185);ctx.lineTo(-85,-10);ctx.lineTo(85,-10);ctx.lineTo(130,185);ctx.fill();ctx.fillStyle='#2a1a3a';ctx.fillRect(-100,10,200,14);
+ ctx.fillStyle='#e9e2d0';ctx.beginPath();ctx.ellipse(0,-58,40,48,0,0,7);ctx.fill();
+ ctx.fillStyle='#0d0912';ctx.beginPath();ctx.moveTo(-70,-88);ctx.quadraticCurveTo(0,-175,70,-88);ctx.lineTo(0,-100);ctx.fill();
+ ctx.strokeStyle='#cfc7d8';ctx.lineWidth=6;ctx.beginPath();ctx.arc(-74,-132,48,.3,2.2);ctx.stroke();ctx.beginPath();ctx.arc(74,-132,48,.94,2.84);ctx.stroke();
+ ctx.fillStyle='#d6303a';ctx.fillRect(-24,-68,16,4);ctx.fillRect(8,-68,16,4);ctx.strokeStyle='#d6303a';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,-44,16,.2,2.9);ctx.stroke()}
+function drawMon(){const s=MS(),p=F.phase==='tele'?1-F.t/F.dur:0;let ox=Math.sin(T*40)*p*3,oy=Math.sin(T*2)*5+p*16,sc=1+p*.14;
+ if(F.phase==='stagger'){ox=Math.sin(T*35)*4;oy-=8;sc=.95}
+ const al=F.dying?Math.max(0,1-F.dyp):1;ctx.save();ctx.translate(MX()+ox+(F.ox||0),MY()+oy+(F.oy||0));ctx.scale(s*sc,s*sc);ctx.globalAlpha=al;if(F.flash>0)ctx.filter='brightness(4)';
+ if(F.phase==='tele'){ctx.fillStyle=AT[F.atk].c;ctx.globalAlpha=al*(.08+p*.3);ctx.beginPath();ctx.arc(0,0,200+Math.sin(T*18)*6,0,7);ctx.fill();ctx.globalAlpha=al}
+ if(F.phase==='stagger'){ctx.strokeStyle='#f0c24b';ctx.globalAlpha=al*.5;ctx.lineWidth=6;ctx.beginPath();ctx.arc(0,0,190,0,7);ctx.stroke();ctx.globalAlpha=al}
+ ctx.shadowColor=F.phase==='tele'?AT[F.atk].c:F.phase==='stagger'?'#f0c24b':'#6a2a3a';ctx.shadowBlur=22+10*Math.sin(T*3);[m0,m1,m2][F.m.t]();ctx.restore()}
+function drawBG(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b0710');g.addColorStop(.6,'#1a0b14');g.addColorStop(1,'#050408');ctx.fillStyle=g;ctx.fillRect(-30,-30,W+60,H+60);
+ const T0=screen==='title',mx=T0?W*.5:W*.78,my=T0?H*.3:H*.13,mr=Math.min(W,H)*(T0?.2:.09)*(1+Math.sin(T*.8)*.015),mg=ctx.createRadialGradient(mx,my,mr*.5,mx,my,mr*3.5);mg.addColorStop(0,'#a8202e88');mg.addColorStop(1,'#a8202e00');ctx.fillStyle=mg;ctx.fillRect(0,0,W,H*.5);
+ ctx.fillStyle='#b82434';ctx.beginPath();ctx.arc(mx,my,mr,0,7);ctx.fill();ctx.fillStyle='#0b0710';ctx.beginPath();ctx.arc(mx+mr*.35,my-mr*.1,mr*.9,0,7);ctx.fill();
+ ctx.fillStyle='#09050b';ctx.beginPath();ctx.moveTo(0,H*.6);for(let x=0;x<=W+40;x+=40)ctx.lineTo(x,H*.52-Math.abs(Math.sin(x*.012+1))*H*.1);ctx.lineTo(W,H*.6);ctx.fill();
+ torii();ctx.fillStyle='#8a90a8';for(let i=0;i<4;i++){ctx.globalAlpha=.05;ctx.beginPath();ctx.ellipse((T*(8+i*4)+i*260)%(W+500)-250,H*(.5+i*.06),260,32,0,0,7);ctx.fill()}ctx.globalAlpha=1;
+ ctx.fillStyle='#c9b79a';ash.forEach(a=>{a.y=(a.y+a.s*.016)%1;a.x+=Math.sin(T+a.y*9)*.0005;ctx.globalAlpha=.35;ctx.fillRect(((a.x%1)+1)%1*W,a.y*H,2,2)});ctx.globalAlpha=1}
+let lt=performance.now();
+function loop(now){const rdt=Math.min(.05,(now-lt)/1e3);lt=now;ts=Math.min(1,ts+rdt*1.6);const dt=rdt*ts;T+=dt;
+ if(freeze>0)freeze=Math.max(0,freeze-dt);
+ if(screen==='fight'&&F){F.flash-=dt;if(F.dying)F.dyp+=dt*.7;else if(freeze<=0&&F.phase!=='dead'&&!(tut&&tut.hold)&&!pop){F.t-=dt;
+  if(F.phase==='idle'){if(F.t<=0)startTele()}else if(F.phase==='tele'){if(F.t<.9&&F.dur<10&&(F.tk=(F.tk||0)+1)%7===0)sfx('tick');if(F.t<=K.SPARKLE&&F.dur<10&&!F.sp){F.sp=1;sfx('chime')}if(F.t<=0)enemyHit()}
+  else if(F.phase==='stagger'&&F.t<=0){F.phase='idle';F.t=.8;banner('IT RECOVERS','#aaa',22)}}}
+ ctx.save();shk=Math.max(0,shk-dt*60);zoom=Math.max(0,zoom-dt*.5);if(shk>0&&!RM)ctx.translate(R(-1,1)*shk,R(-1,1)*shk);if(zoom){ctx.translate(W/2,H*.4);ctx.scale(1+zoom,1+zoom);ctx.translate(-W/2,-H*.4)}
+ drawBG();if(F&&screen!=='title'){const a=F.atk||'',t=F.phase==='tele';F.ox=(F.ox||0)+((t?a.includes('L')?-W*.2:a.includes('R')?W*.2:0:0)-(F.ox||0))*Math.min(1,dt*9);F.oy=(F.oy||0)+((t?a.includes('U')?-H*.1:a.includes('D')?H*.08:0:0)-(F.oy||0))*Math.min(1,dt*9);drawMon();if(F.phase==='tele'){speedLines();if(F.t<=K.SPARKLE&&F.dur<10)sparkles()}}
+ ctx.globalCompositeOperation='lighter';
+ for(let i=slashes.length-1;i>=0;i--){const s=slashes[i];s.l-=dt;if(s.l<=0){slashes.splice(i,1);continue}const k=s.l/s.L;ctx.strokeStyle=s.col;ctx.lineWidth=2+9*k;ctx.lineCap='round';ctx.shadowColor=s.col;ctx.shadowBlur=18;ctx.beginPath();ctx.moveTo(s.x-Math.cos(s.a)*s.len*(1-k*.3),s.y-Math.sin(s.a)*s.len*(1-k*.3));ctx.lineTo(s.x+Math.cos(s.a)*s.len*(1-k*.3),s.y+Math.sin(s.a)*s.len*(1-k*.3));ctx.stroke()}
+ ctx.shadowBlur=0;for(let i=rings.length-1;i>=0;i--){const r=rings[i];r.l-=dt;if(r.l<=0){rings.splice(i,1);continue}const k=1-r.l/r.L;ctx.globalAlpha=1-k;ctx.strokeStyle=r.col;ctx.lineWidth=2+8*(1-k);ctx.beginPath();ctx.arc(r.x,r.y,r.r*k,0,7);ctx.stroke()}
+ for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.l-=dt;if(p.l<=0){parts.splice(i,1);continue}p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;ctx.globalAlpha=p.l/p.L;ctx.fillStyle=p.col;ctx.fillRect(p.x,p.y,p.sz,p.sz)}
+ ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+ for(let i=floats.length-1;i>=0;i--){const f=floats[i];f.l-=dt;if(f.l<=0){floats.splice(i,1);continue}f.y-=50*dt;ctx.globalAlpha=Math.min(1,f.l*2);ctx.fillStyle=f.col;ctx.font=`bold ${f.sz}px Georgia`;ctx.textAlign='center';ctx.strokeStyle='#000';ctx.lineWidth=4;ctx.strokeText(f.t,f.x,f.y);ctx.fillText(f.t,f.x,f.y)}
+ ctx.globalAlpha=1;
+ if(F&&screen==='fight'){let vc=null,va=0;if(F.phase==='tele'){vc='214,48,58';va=.15+(1-F.t/F.dur)*.4}else if(F.phase==='stagger'){vc='240,194,75';va=.3}
+  if(vc){const g=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.25,W/2,H/2,Math.max(W,H)*.75);g.addColorStop(0,`rgba(${vc},0)`);g.addColorStop(1,`rgba(${vc},${va})`);ctx.fillStyle=g;ctx.fillRect(-30,-30,W+60,H+60)}}
+ lowHp();ctx.restore();ui();requestAnimationFrame(loop)}
+/* ---------- tutorial ---------- */
+const TM={n:'Training Wraith',sub:'',hp:60,pat:['L','L','L','R','L'],tele:2.6,dmg:3,win:3.4,t:0};
+const dk=(a,b=[])=>{G.deck=a;G.disc=b;renderCard()};
+function tutTele(i){F.pi=i;F.atk=F.m.pat[i];F.phase='tele';F.dur=F.t=10;sfx('warn');renderOmen()}
+const C=(c,t)=>`<b style="color:${c}">${t}</b>`;
+/*const TS=[
+{t:'Welcome, retainer. You fight with a <b>deck of kata cards</b>. Only the <b>top card</b> is live.',hl:'#cw',tap:1},
+{t:'<b>Swipe LEFT</b> to cycle the top card to the back of the deck. Do it twice.',hl:'#cw',w:'cycle',n:2},
+{t:'The deck is a <b>loop</b>. Every card you play or cycle goes to the back, so a bigger deck means a longer search.',hl:'#dk',tap:1},
+{s:()=>tutTele(0),t:`The Wraith winds up. Attacks are color-coded: ${C('#d6303a','red SLASH')}, ${C('#3aa0d8','blue THRUST')}, ${C('#a35be0','violet GRAB')}. <i>Time is frozen while you learn.</i>`,hl:'#mid',tap:1},
+{s:()=>dk(['break','cut','side','guard','cut','flurry','guard','side']),t:'Match the color. Cycle to the red <b>Ukeru 受</b> (it counters SLASH), then <b>swipe RIGHT or UP</b> to play it.',hl:'#cw',w:'parry'},
+{t:'<b>PARRY!</b> Its guard is broken. Strike with the gold <b>Kiri 斬</b> cards. Play two.',hl:'#cw',w:'strike',n:2},
+{t:'Strikes <b>chain</b> inside one window and hit harder. Parry early for a longer window; a parry streak adds bonus damage. Strike outside a window and it is <b>deflected</b>.',hl:'#mid',tap:1},
+{s:()=>tutTele(1),t:'<b>OMENS</b>: the row up top shows the next attacks. Cycle ahead so your counter is already on top when the blow lands.',hl:'#omen',tap:1},
+{s:()=>dk(['break','cut','guard','side','cut','flurry','guard','break']),t:'Blue THRUST! Find <b>Sakeru 避</b> and parry it.',hl:'#cw',w:'parry'},
+{t:'Guard broken. Strike once more.',hl:'#cw',w:'strike'},
+{s:()=>{F.phase='idle';F.t=.8;dk(['cut','dread','side','guard','break','cut','flurry','guard','side'])},t:'Take a hit and a cursed <b>Dread 怖</b> joins your deck. Playing it costs 2 HP and destroys it. Cycle past it, or purge it when it is safe.',hl:'#cw',tap:1},
+{t:'Real speed now. Parry <b>3 attacks</b> to graduate: <b id="tc">0</b>/3',w:'parry',n:3,live:1}];*/
+const TS=[
+{s:()=>{tutTele(0);dk(['pl'],['cut'])},t:'A Hollow Retainer attacks from the <b>LEFT</b>. Enemies strike from the left or right, and you answer with a matching parry. <i>No timer yet.</i>',hl:'#mid',tap:1},
+{t:'You hold one card: <b>Parry Left ←</b>. <b>Swipe it RIGHT or UP</b> to play it.',hl:'#cw',w:'parry'},
+{s:()=>dk(['cut'],['pl']),t:'<b>PARRY!</b> Parrying leaves the enemy <b>flatfooted</b>. A weapon joins your hand: <b>Sword 剑</b> (5 dmg). Weapons only land while it is flatfooted. Play it!',hl:'#cw',w:'strike'},
+{s:()=>{tutTele(1);dk(['cut','pl'])},t:'Another LEFT attack, but your top card is a strike. <b>Swipe LEFT</b> to skip it to the discard pile.',hl:'#cw',w:'cycle'},
+{t:'Now play <b>Parry Left</b>.',hl:'#cw',w:'parry'},
+{s:()=>{tutTele(2);dk(['cut'],['pl'])},t:'Your parry card is in the <b>discard pile</b> (↺ below). When the draw pile (⌘) runs out, the discard is <b>shuffled</b> back in.',hl:'#pstat',tap:1},
+{t:'Swipe <b>LEFT</b> to skip until the shuffle brings Parry Left back, then play it.',hl:'#cw',w:'parry'},
+{s:()=>{tutTele(3);dk(['pl','pr','cut'])},t:'Attacks can come from the <b>RIGHT</b> too. You need <b>Parry Right →</b>. Match the side!',hl:'#mid',tap:1},
+{t:'Skip to <b>Parry Right</b> and play it.',hl:'#cw',w:'parry'},
+{s:()=>{tutTele(4);dk(['pl','cut','kasane','cut'])},t:'A new weapon: <b>Dagger 短</b> deals 3, but <b>doubles</b> when played directly after another attack. Parry first.',hl:'#cw',w:'parry'},
+{t:'Play <b>Sword 剑</b>, then <b>Dagger 短</b> for double damage!',hl:'#cw',w:'strike',n:2}];
+function hideTut(){$('#tps').style.display='';$('#hl').style.display='none';$('#tp').style.display='none'}
+let pop=0;const seen={};try{Object.assign(seen,JSON.parse(localStorage.pckSeen||'{}'))}catch(e){}
+function mark(k){seen[k]=1;try{localStorage.pckSeen=JSON.stringify(seen)}catch(e){}}
+const tot=()=>G.deck.length+G.disc.length,dreads=()=>[...G.deck,...G.disc].filter(x=>x==='dread').length;
+function fullShuffle(){G.deck=[...G.deck,...G.disc].sort(()=>Math.random()-.5);G.disc=[]}
+function chk(){if(G.deck.length||!G.disc.length)return;G.deck=G.disc.sort(()=>Math.random()-.5);G.disc=[];if(tut)G.deck=[...G.deck.filter(x=>x[0]==='p'),...G.deck.filter(x=>x[0]!=='p')];sfx('flick');if(!tut||tut.i>=5)banner('RESHUFFLE  ↺','#aab',26)}
+const makeMon=i=>{const b=MON[i>=K.RUN?2:i%3],L=i/3|0;if(i>=K.RUN)return bossMon();return{...b,n:['','Risen ','Moon-Mad ','Hollow ','Drowned ','Starless ','Eldritch '][L]+(L?b.n.replace('The ',''):b.n),pat:b.pat.map((a,j)=>{const av=owned();return av[((a==='SLASH'?0:a==='THRUST'?1:2)+(i>2?j:0))%av.length]}),hp:Math.round(b.hp*(1+.25*L)),dmg:b.dmg+(L*.5|0),tele:Math.max(1.3,b.tele*(1-.05*L)),win:fw(i)}};
+const go=()=>{let d;try{d=localStorage.pckDone}catch(e){}start(!d)};
+const TIPS={pl:'<b>Parry Left 左</b>: play it when an attack comes from the LEFT.',pr:'<b>Parry Right 右</b>: play it when an attack comes from the RIGHT.',cut:'<b>Kiri 斬</b>: a strike. It only lands inside a parry window.',kasane:'<b>Kasane 重</b>: low damage, but doubled after another strike.',kagami:'<b>Kagami 鏡</b> parries from either side, but the window is shorter.',flurry:'<b>Ranbu 乱</b> lands 4 rapid hits.',iai:'<b>Iai 居</b>: 9 damage, but it collapses the parry window.',mend:'<b>Iyasu 癒</b> heals 5 and can be played any time.',ink:'<b>Sumi 墨</b> adds 2 seconds to a parry window.',dread:'<b>Dread 怖</b> is a curse from taking a hit. Playing it costs 2 HP and destroys it, or swipe it away.'};
+const NM={L:'Left',R:'Right',U:'Up',D:'Down',LU:'Up-Left',LD:'Down-Left',RU:'Up-Right',RD:'Down-Right'},PID={L:'pl',R:'pr',U:'pu',D:'pd',LU:'plu',LD:'pld',RU:'pru',RD:'prd'};
+for(const d in AT){CARDS[PID[d]]={n:'Parry '+NM[d],k:AT[d].k,kind:'counter',ct:d,d:'Parries attacks from the '+NM[d].toUpperCase(),col:AT[d].c};TIPS[PID[d]]='<b>Parry '+NM[d]+' '+AT[d].k+'</b>: play it when an attack comes from the '+NM[d].toUpperCase()+'. Eight directions exist; you own the blocks you have collected.'}
+Object.assign(CARDS,{cut:{n:'Sword',k:'剑',kind:'atk',dmg:5,d:'5 dmg',col:'#f0c24b'},kasane:{n:'Dagger',k:'短',kind:'atk',dmg:3,d:'3 dmg. DOUBLE if played directly after another attack',col:'#9ad0f0'},fist:{n:'Punch',k:'拳',kind:'atk',dmg:1,d:'',col:'#ffb38a'},axe:{n:'Axe',k:'斧',kind:'atk',dmg:2,d:'2 dmg x each axe played in a row (this one counts)',col:'#ff8a3d'},mace:{n:'Mace',k:'槌',kind:'atk',dmg:20,d:'',col:'#c9b79a'}});
+Object.assign(TIPS,{cut:'<b>Sword 剑</b>: 5 damage. Weapons only land while the enemy is flatfooted.',kasane:'<b>Dagger 短</b>: 3 damage, doubled when played directly after another attack.',fist:'<b>Punch 拳</b>: 1 damage, +1 for every punch you play this run.',axe:'<b>Axe 斧</b>: 2 damage times the number of axes in a row, this one included. Chain them!',mace:'<b>Mace 槌</b>: 20 damage, but -1 for every time you play it this run.'});
+POOL.length=0;POOL.push('cut','kasane','fist','axe','mace','kagami','mend','ink');
+const owned=()=>G.dirs;
+const dsc=id=>{const n=(G&&G.cnt)||{fist:0,mace:0};return id==='fist'?`1 dmg, +1 per punch this run (now ${1+n.fist})`:id==='mace'?`20 dmg, -1 per mace played this run (now ${Math.max(0,20-n.mace)})`:CARDS[id].d};
+function wdmg(id,pa){const n=G.cnt;return id==='fist'?1+n.fist:id==='mace'?Math.max(0,20-n.mace):id==='axe'?2*F.ax:id==='kasane'&&pa?6:CARDS[id].dmg}
+function pickRew(){const all=[...G.deck,...G.disc],s=a=>[...a].sort(()=>Math.random()-.5),f=null,r=s(POOL.filter(x=>x!==f));return s(f?[f,...r.slice(0,2)]:r.slice(0,3))}
+const fw=i=>K.FLAT_START-(K.FLAT_START-K.FLAT_END)*Math.min(1,i/(K.RUN-1));
+const bossMon=()=>{const av=owned(),p=[...av,...av].sort(()=>Math.random()-.5);return{n:'The Moon-Eater',sub:'It has no court left to swallow. It begins with you.',hp:K.BOSS.hp,pat:p,tele:K.BOSS.tele,dmg:K.BOSS.dmg,win:K.BOSS.win,t:2,boss:1}};
+function afterFight(){const n=G.mi+1;if(n>K.RUN)return win();Q=[];if(n%2===0){if(G.bp)Q.push(blockOffer);else addDir()}if(n%3===0)Q.push(reward);if(n%10===0)Q.push(shrine);nextFight()}
+let after=()=>{};
+function removeScreen(cb){after=cb;const all=[...G.deck,...G.disc].sort();ov(`<h2>Forget a kata</h2><p class="s" style="opacity:.85">Every 2 new cards you may remove one. A leaner deck finds its best cards sooner.</p><div class="row" style="flex-wrap:wrap;max-width:560px">${all.map(id=>`<div class="card cc" style="--c:${CARDS[id].col}" onclick="rm('${id}')"><div class="k">${CARDS[id].k}</div><div class="nm">${CARDS[id].n}</div></div>`).join('')}</div><button onclick="after()">KEEP MY DECK</button>`)}
+function rm(id){let i=G.deck.indexOf(id);if(i>=0)G.deck.splice(i,1);else{i=G.disc.indexOf(id);G.disc.splice(i,1)}sfx('whiff');after()}
+function shrine(){screen='shrine';ov(`<div class="big" style="color:#5bc98a">禁</div><h2>A QUIET SHRINE</h2><p class="s" style="opacity:.85">Ten fights behind you. Choose one blessing.</p><button onclick="shr(0)">HEAL TO FULL</button><button onclick="shr(1)">GAIN 1 RANDOM KATA</button><button onclick="shr(2)">FORGET 1 KATA</button>`)}
+function shr(k){if(k===0){G.hp=G.max;sfx('heal');nextFight()}else if(k===1){const id=POOL[Math.random()*POOL.length|0];G.disc.push(id);sfx('heal');ov(`<h2>The shrine gives</h2><div class="row"><div class="card rc" style="--c:${CARDS[id].col}">${inner(id)}</div></div><button onclick="nextFight()">CONTINUE</button>`)}else if(tot()>5)removeScreen(nextFight);else nextFight()}
+TS.length=7;TS.push({t:'<b>OMENS</b>: this row shows the next attacks, so cycle ahead and keep the right block on top. The <b>bar</b> under the monster is your reaction time.',hl:'#top',tap:1},{s:()=>{F.phase='idle';F.t=.8},t:'Now the clock runs for real: parry, then strike. <b>Defeat the Retainer!</b>',hl:'#mid',tap:1});
+let Q=[];
+function addDir(d){const l=Object.keys(AT).filter(x=>!G.dirs.includes(x));if(!d||G.dirs.includes(d))d=l[Math.random()*l.length|0];if(d){G.dirs.push(d);G.nd=d}}
+const hasAll=()=>Object.keys(AT).every(x=>[...G.deck,...G.disc].some(c=>CARDS[c].ct===x));
+function blockOffer(){const miss=Object.keys(AT).filter(d=>![...G.deck,...G.disc].some(c=>CARDS[c].ct===d));if(!miss.length){G.bp=false;return nextFight()}const s=miss.sort(()=>Math.random()-.5).slice(0,3);ov(`<h2>A new guard</h2><p class="s" style="opacity:.85">Choose a block. Enemies learn whatever direction you pick. Refuse (${G.ref}/5 so far) and they learn a random one.</p><div class="row">${s.map(d=>`<div class="card rc" style="--c:${AT[d].c}" onclick="pickB('${d}')">${inner(PID[d])}</div>`).join('')}</div><button onclick="pickB(null)">REFUSE</button>${truth()?'<button class="gold" onclick="goTrue()">王 DISCARD ALL PARRIES: THE TRUE PATH</button>':''}`)}
+function pickB(d){if(d){G.disc.push(PID[d]);G.added=(G.added||0)+1;addDir(d);sfx('heal')}else{G.ref++;addDir()}if(G.ref>=K.MAX_REFUSALS||hasAll())G.bp=false;if(d&&G.added%2===0&&tot()>5)return removeScreen(nextFight);nextFight()}
+const vib=p=>{if(!RM)try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
+const hud=s=>{if(!RM)$(s).animate([{transform:'translateX(-7px)'},{transform:'translateX(7px)'},{transform:'none'}],{duration:140})};
+function speedLines(){const p=1-F.t/F.dur,m=Math.min(W,H);ctx.save();ctx.strokeStyle=AT[F.atk].c;ctx.globalAlpha=.1+p*.3;ctx.lineWidth=2;for(let i=0;i<16;i++){const a=i/16*6.283+T*.3,r1=m*(.28+.04*Math.sin(T*9+i)),r2=r1+m*.35*p;ctx.beginPath();ctx.moveTo(MX()+Math.cos(a)*r1,MY()+Math.sin(a)*r1);ctx.lineTo(MX()+Math.cos(a)*r2,MY()+Math.sin(a)*r2);ctx.stroke()}ctx.restore()}
+function torii(){const x=W*.2,y=H*.56,w=Math.min(W,H)*.2,h=w*1.15;ctx.fillStyle='#0d0610';ctx.fillRect(x-w/2,y-h,w*.07,h);ctx.fillRect(x+w/2-w*.07,y-h,w*.07,h);ctx.fillRect(x-w*.62,y-h*1.02,w*1.24,h*.09);ctx.fillRect(x-w*.5,y-h*.8,w,h*.06)}
+$('#cw').addEventListener('pointerup',()=>card.classList.remove('go','sk'));
+function title(){screen='title';F=null;ov(`<div class="big">侍</div><h1>PARRY<br>CARD KING</h1><p class="s" style="animation-delay:.4s">The moon fell. The dead hold court. You hold the deck.</p><div class="fan">${['pl','cut','pr','kasane','mace'].map((id,i)=>`<div class="card tc" style="--c:${CARDS[id].col};--x:${(i-2)*56}px;--y:${Math.abs(i-2)*9}px;--r:${(i-2)*9}deg;animation-delay:${i*.3}s"><div class="k">${CARDS[id].k}</div><div class="nm">${CARDS[id].n}</div></div>`).join('')}</div><p class="s" style="animation-delay:1s">Read the omen. Parry the blow. Cut while it is flatfooted.<br>Swipe left to skip a card; right or up to play it.</p><button class="pri" onclick="go()">DRAW YOUR BLADE</button><button onclick="start(1)">HOW TO PLAY</button>`);$('#ov').className='tl'}
+const truth=()=>{try{return localStorage.pckTrue}catch(e){return 0}};
+const trueKing=()=>![...G.deck,...G.disc].some(x=>CARDS[x].kind==='counter');
+function goTrue(){const k=[...G.deck,...G.disc].filter(x=>CARDS[x].kind!=='counter');if(!k.length)return;G.deck=k;G.disc=[];G.bp=false;addDir();sfx('hurt');flash('#f0c24b',.5);nextFight()}
+function sparkle(c){parry(c);rings.push({x:MX(),y:MY(),r:Math.min(W,H)*.9,l:.7,L:.7,col:'#fff'});banner('SPARKLE PARRY','#fff',40);if(!seen.sparkle){mark('sparkle');try{localStorage.pckTrue=1}catch(e){}pop=1;showPop('<small style="opacity:.6">SECRET FOUND</small><br><b>Sparkle parry!</b> In the last 0.4s before a hit, playing <b>any weapon</b> parries just like the right block. Unlocked: when offered a block, you may <b>discard every parry</b> and walk the True Path, living on pure aggression.','#mid',1)}}
+function sparkles(){const s=MS();ctx.save();ctx.fillStyle='#fff';ctx.shadowColor='#ffe27a';ctx.shadowBlur=16;for(let i=0;i<7;i++){const a=T*3+i*2.4,r=(60+i*14)*s*(1+.2*Math.sin(T*20+i)),x=MX()+Math.cos(a)*r*1.3,y=MY()+Math.sin(a)*r,k=3+9*s*Math.abs(Math.sin(T*25+i*3));ctx.beginPath();ctx.moveTo(x,y-k*2);ctx.lineTo(x+k*.4,y-k*.4);ctx.lineTo(x+k*2,y);ctx.lineTo(x+k*.4,y+k*.4);ctx.lineTo(x,y+k*2);ctx.lineTo(x-k*.4,y+k*.4);ctx.lineTo(x-k*2,y);ctx.lineTo(x-k*.4,y-k*.4);ctx.closePath();ctx.fill()}ctx.restore();if(Math.random()<.4)spawn(MX()+R(-80,80),MY()+R(-80,60),2,'#ffe27a',160,.4,-120,2)}
+const swp=(dx,dy)=>dx<-K.SWIPE&&(dy>-K.SWIPE||-dx>-dy)?-1:(dx>K.SWIPE||dy<-K.SWIPE)?1:0;
+const gaps=()=>{const m=G.dirs.filter(d=>![...G.deck,...G.disc].some(x=>CARDS[x].ct===d||CARDS[x].ct==='ANY'));return m.length?'<br><span style="color:#ff6a6a">No block for: '+m.map(d=>AT[d].k).join(' ')+'</span>':''};
+function lowHp(){if(G&&screen==='fight'&&G.hp/G.max<.3&&!RM){const g=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.8);g.addColorStop(0,'rgba(214,48,58,0)');g.addColorStop(1,`rgba(214,48,58,${.18+.14*Math.sin(T*6)})`);ctx.fillStyle=g;ctx.fillRect(-30,-30,W+60,H+60)}}
+let muted=false;try{muted=localStorage.pckMute==='1'}catch(e){}
+function toggleMute(){muted=!muted;try{localStorage.pckMute=muted?'1':'0'}catch(e){}$('#mute').textContent=muted?'🔇':'🔊'}
+$('#mute').textContent=muted?'🔇':'🔊';
+function showPop(h,sel,tap){const tp=$('#tp'),hl=$('#hl');$('#tpt').innerHTML=h;$('#tpb').style.display=tap?'block':'none';$('#tps').style.display='none';tp.style.display='block';tp.style.pointerEvents=tap?'auto':'none';const r=$(sel).getBoundingClientRect();Object.assign(hl.style,{display:'block',left:r.left-6+'px',top:r.top-6+'px',width:r.width+12+'px',height:r.height+12+'px'});const up=r.top>H*.4;tp.style.top=up?'64px':'auto';tp.style.bottom=up?'auto':'18px'}
+function tpb(){if(pop){pop=0;hideTut()}else tutNext()}
+function tipCheck(){if(!G||screen!=='fight'||pop||G.guide)return;const id=G.deck[0];if(TIPS[id]&&!seen[id]){mark(id);pop=1;showPop('<small style="opacity:.6">NEW</small><br>'+TIPS[id],'#card',1)}}
+function tutStart(){au();newRun();tut={i:0,hold:true,tap:true,c:0};startFight();tutShow()}
+function tutShow(){const s=TS[tut.i];tut.c=0;tut.tap=!!s.tap;tut.hold=!s.live;if(s.s)s.s();
+ const tp=$('#tp'),hl=$('#hl');$('#tpt').innerHTML=s.t;$('#tpb').style.display=s.tap?'block':'none';tp.style.display='block';tp.style.pointerEvents=s.tap?'auto':'none';
+ if(s.hl){const r=$(s.hl).getBoundingClientRect();Object.assign(hl.style,{display:'block',left:r.left-6+'px',top:r.top-6+'px',width:r.width+12+'px',height:r.height+12+'px'});const up=r.top>H*.4;tp.style.top=up?'64px':'auto';tp.style.bottom=up?'auto':'18px'}
+ else{hl.style.display='none';tp.style.top='64px';tp.style.bottom='auto'}}
+function tutNext(){if(!tut)return;tut.i++;if(tut.i>=TS.length)tutDone();else tutShow()}
+function tutEv(e){if(!tut||tut.tap)return;const s=TS[tut.i];if(!s||s.w!==e)return;tut.c++;if(s.live)$('#tc').textContent=Math.min(s.n,tut.c);const i=tut.i;if(tut.c>=(s.n||1))setTimeout(()=>{if(tut&&tut.i===i)tutNext()},e==='parry'?700:350)}
+function tutDone(){hideTut();tut=null;['pl','cut'].forEach(mark);try{localStorage.pckDone=1}catch(e){}if(G)G.guide=false;if(F&&F.phase==='tele'&&F.dur===10){F.phase='idle';F.t=.6}}
+function tutDoneOld(){hideTut();tut=null;['pl','pr','cut','kasane'].forEach(mark);try{localStorage.pckDone=1}catch(e){}F=null;screen='tutdone';ov(`<div class="big" style="color:#f0c24b">免</div><h2>TRAINING COMPLETE</h2><p style="animation-delay:.3s">Read the omen. Match the color. Break the guard. Cut.</p><button onclick="start()">ENTER THE SUNKEN COURT</button><button onclick="title()" style="opacity:.7">BACK</button>`)}
+title();requestAnimationFrame(loop);
+</script></body></html>
