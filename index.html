@@ -284,6 +284,7 @@
 .p-ember     { --bg: #FFD9A0; --ac: #FF3DA5; }
 .p-cut       { --bg: #FFD24D; --ac: #8A4DFF; }
 .p-neon      { --bg: #FF9DE2; --ac: #00E5FF; }
+.p-shroom    { --bg: #B8F5D0; --ac: #FF3DA5; }
   .p-goblins   { --bg: #3A1C7A; --ac: #B6FF00; }
   .p-mtd       { --bg: #A8E4FF; --ac: #FF8A00; }
   .p-brick     { --bg: #FFBE8F; --ac: #00E5FF; }
@@ -399,7 +400,7 @@
     </svg>
     <span class="wm"><b>Weird Demon</b><b>Game Nuggets</b></span>
   </a>
-  <span class="chip-count"><b id="total">20</b> games</span>
+  <span class="chip-count"><b id="total">21</b> games</span>
 </header>
 
 <div class="mq" aria-hidden="true">
@@ -418,30 +419,31 @@
   <div class="hero-in">
     <div class="hero-top">
       <span class="kick" id="heroKicker">New from the workshop</span>
-      <div class="stk" aria-hidden="true"><span class="rays"></span><span class="tile"><span id="heroEmoji">🌙</span></span></div>
+      <div class="stk" aria-hidden="true"><span class="rays"></span><span class="tile"><span id="heroEmoji">🍄</span></span></div>
     </div>
-    <h1 id="heroTitle">The Moon Ferry</h1>
-    <p class="pitch" id="heroPitch">Drag the moon, raise the tide. Clear the reefs, haul the wrecks.</p>
-    <div class="chips" id="heroMeta"><span>Tide control</span><span>6 reaches</span><span>40 glow</span></div>
+    <h1 id="heroTitle">Shroom Siege</h1>
+    <p class="pitch" id="heroPitch">Pop the mushroom mob before it eats your corn. Grab the blaster.</p>
+    <div class="chips" id="heroMeta"><span>Wave defense</span><span>Pop-corn Blaster</span><span>126 stalks</span></div>
     <div class="ctl">
-      <a class="play-btn" id="heroPlay" href="daily-roguelike-the-moon-ferry-2026-11-13/index.html"><i class="tri" aria-hidden="true"></i>Play now</a>
+      <a class="play-btn" id="heroPlay" href="shroom-siege/index.html"><i class="tri" aria-hidden="true"></i>Play now</a>
       <button class="sq" id="prev" type="button" aria-label="Previous featured game"><svg viewBox="0 0 24 24"><path d="M16 3 5 12l11 9z"/></svg></button>
       <button class="sq" id="next" type="button" aria-label="Next featured game"><svg viewBox="0 0 24 24"><path d="M8 3l11 9-11 9z"/></svg></button>
     </div>
     <div class="segs" role="group" aria-label="Featured games">
-      <button class="seg on" data-i="0" type="button" aria-label="The Moon Ferry" aria-current="true"><i></i></button>
-      <button class="seg" data-i="1" type="button" aria-label="The Wishing Field"><i></i></button>
-      <button class="seg" data-i="2" type="button" aria-label="The Kite Queen’s Mail"><i></i></button>
-      <button class="seg" data-i="3" type="button" aria-label="Ember of the Wishing Tree"><i></i></button>
-      <button class="seg" data-i="4" type="button" aria-label="The House Cut"><i></i></button>
-      <button class="seg" data-i="5" type="button" aria-label="Neon Gate"><i></i></button>
-      <button class="seg" data-i="6" type="button" aria-label="Signal Salvage"><i></i></button>
-      <button class="seg" data-i="7" type="button" aria-label="The Last Stamp"><i></i></button>
-      <button class="seg" data-i="8" type="button" aria-label="Orbit Gardener"><i></i></button>
-      <button class="seg" data-i="9" type="button" aria-label="Alien Bug Inspector"><i></i></button>
-      <button class="seg" data-i="10" type="button" aria-label="Shrink Ray"><i></i></button>
-      <button class="seg" data-i="11" type="button" aria-label="The Minotaur’s Maze"><i></i></button>
-      <button class="seg" data-i="12" type="button" aria-label="Kill a Billion Goblins"><i></i></button>
+      <button class="seg on" data-i="0" type="button" aria-label="Shroom Siege" aria-current="true"><i></i></button>
+      <button class="seg" data-i="1" type="button" aria-label="The Moon Ferry"><i></i></button>
+      <button class="seg" data-i="2" type="button" aria-label="The Wishing Field"><i></i></button>
+      <button class="seg" data-i="3" type="button" aria-label="The Kite Queen’s Mail"><i></i></button>
+      <button class="seg" data-i="4" type="button" aria-label="Ember of the Wishing Tree"><i></i></button>
+      <button class="seg" data-i="5" type="button" aria-label="The House Cut"><i></i></button>
+      <button class="seg" data-i="6" type="button" aria-label="Neon Gate"><i></i></button>
+      <button class="seg" data-i="7" type="button" aria-label="Signal Salvage"><i></i></button>
+      <button class="seg" data-i="8" type="button" aria-label="The Last Stamp"><i></i></button>
+      <button class="seg" data-i="9" type="button" aria-label="Orbit Gardener"><i></i></button>
+      <button class="seg" data-i="10" type="button" aria-label="Alien Bug Inspector"><i></i></button>
+      <button class="seg" data-i="11" type="button" aria-label="Shrink Ray"><i></i></button>
+      <button class="seg" data-i="12" type="button" aria-label="The Minotaur’s Maze"><i></i></button>
+      <button class="seg" data-i="13" type="button" aria-label="Kill a Billion Goblins"><i></i></button>
       <button class="pz" id="pz" type="button" aria-label="Pause or resume auto-advance"><svg class="ic-pause" viewBox="0 0 14 14"><path d="M1 0h4v14H1zM9 0h4v14H9z"/></svg><svg class="ic-play" viewBox="0 0 14 14"><path d="M2 0l11 7-11 7z"/></svg></button>
     </div>
   </div>
@@ -469,9 +471,10 @@
   </section>
 
   <section class="sec wrap" id="daily" aria-labelledby="daily-h">
-    <div class="sec-head"><h2 id="daily-h">Daily Roguelikes</h2><span class="count" aria-hidden="true">9</span><p>One new bite-sized roguelike a day. Newest first.</p></div>
+    <div class="sec-head"><h2 id="daily-h">Daily Roguelikes</h2><span class="count" aria-hidden="true">10</span><p>One new bite-sized roguelike a day. Newest first.</p></div>
     <!-- ORDER: newest first. When a new daily roguelike is pushed, add its card at the FRONT of this row. -->
     <div class="grid">
+      <a class="card p-shroom" href="shroom-siege/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🍄</span></span><span class="cbody"><h3>Shroom Siege</h3><p class="blurb">Pop the mushroom mob before it eats your corn. Grab the blaster.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-moon" href="daily-roguelike-the-moon-ferry-2026-11-13/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🌙</span></span><span class="cbody"><h3>The Moon Ferry</h3><p class="blurb">Drag the moon, raise the tide. Clear the reefs, haul the wrecks.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-field" href="daily-roguelike-the-wishing-field-2026-11-12/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🌱</span></span><span class="cbody"><h3>The Wishing Field</h3><p class="blurb">Plant seeds, hedge the odds. Thirty blooms by day six.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-kite" href="daily-roguelike-the-kite-queen-s-mail-2026-11-11/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🪁</span></span><span class="cbody"><h3>The Kite Queen’s Mail</h3><p class="blurb">Steer the kite through the gusts. Deliver six letters.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
@@ -571,6 +574,9 @@
 
   /* ---------- hero ---------- */
   var featured = [
+    { bg: '#B8F5D0', ac: '#FF3DA5', emoji: '🍄', kicker: 'New from the workshop', title: 'Shroom Siege',
+      pitch: 'Pop the mushroom mob before it eats your corn. Grab the blaster.',
+      meta: ['Wave defense', 'Pop-corn Blaster', '126 stalks'], href: 'shroom-siege/index.html' },
     { bg: '#9CD9FF', ac: '#FF3DA5', emoji: '🌙', kicker: 'New from the workshop', title: 'The Moon Ferry',
       pitch: 'Drag the moon, raise the tide. Clear the reefs, haul the wrecks.',
       meta: ['Tide control', '6 reaches', '40 glow'], href: 'daily-roguelike-the-moon-ferry-2026-11-13/index.html' },
