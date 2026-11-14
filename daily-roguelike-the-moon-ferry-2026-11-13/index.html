@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>Daily Roguelike — The Moon Ferry (2026-11-13)</title>
+<style>
+  :root{
+    --bg:#070b1d; --panel:#101736; --panel2:#0b1128;
+    --ink:#f7f3e3; --inkdim:#c9d4e8;
+    --teal:#2dd4bf; --pink:#ff5d8f; --orange:#ff9f43; --gold:#ffd23f; --red:#ff4757;
+    --line:#000;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow:hidden;
+  }
+  #app{
+    position:relative; height:100dvh; max-width:860px; margin:0 auto;
+    display:flex; flex-direction:column; overflow:hidden;
+    background:var(--bg);
+  }
+  /* ---------- HUD ---------- */
+  #hud{
+    flex:0 0 56px; display:flex; align-items:center; gap:10px;
+    padding:6px 10px; background:var(--panel);
+    border-bottom:3px solid var(--line); z-index:5;
+  }
+  #glowWrap{ flex:1 1 auto; min-width:0; }
+  #glowLabel{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-weight:900; font-size:12px; letter-spacing:.06em; color:var(--ink);
+    margin-bottom:3px; white-space:nowrap;
+  }
+  #glowNum{ font-variant-numeric:tabular-nums; color:var(--gold); }
+  #glowBar{
+    height:14px; background:#05081a; border:2px solid var(--line);
+    overflow:hidden;
+  }
+  #glowFill{
+    height:100%; width:0%; background:var(--gold);
+    transition:width .25s ease;
+  }
+  .pipGroup{ display:flex; flex-direction:column; gap:3px; flex:0 0 auto; }
+  .pipLabel{ font-size:10px; font-weight:900; letter-spacing:.08em; color:var(--inkdim); line-height:1; }
+  .pips{ display:flex; gap:4px; }
+  .pip{
+    width:14px; height:14px; background:#05081a; border:2px solid var(--line);
+  }
+  .pip.on{ background:var(--teal); }
+  .pip.hull.on{ background:var(--pink); }
+  .pip.hull.lost{ background:#3a1220; }
+  .pip.reach.done{ background:var(--orange); }
+  .pip.reach.now{ background:var(--ink); }
+  .hudBtn{
+    flex:0 0 auto; min-height:40px; min-width:44px; padding:6px 10px;
+    font:inherit; font-weight:900; font-size:13px; letter-spacing:.04em;
+    color:#0b1128; background:var(--teal); border:3px solid var(--line);
+    box-shadow:3px 3px 0 var(--line); cursor:pointer; border-radius:0;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .hudBtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--line); }
+  #btnLaws{ background:var(--pink); }
+  .hudBtn svg{ display:block; }
+  /* ---------- Scene ---------- */
+  #scene{
+    position:relative; flex:1 1 auto; min-height:0; overflow:hidden;
+    touch-action:none; cursor:grab; background:#070b1d;
+  }
+  #scene:active{ cursor:grabbing; }
+  #cv{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  /* Tide gauge */
+  #gauge{
+    position:absolute; top:10px; right:10px; bottom:10px; width:40px;
+    background:#05081acc; border:3px solid var(--line); z-index:4;
+    overflow:hidden;
+  }
+  #gaugeFill{
+    position:absolute; left:0; right:0; bottom:0; height:50%;
+    background:var(--teal); border-top:3px solid var(--line);
+  }
+  #gaugeLow{
+    position:absolute; left:0; right:0; bottom:0; height:35%;
+    border-top:2px dashed var(--gold);
+  }
+  #gaugeTick{
+    position:absolute; left:-3px; right:-3px; height:0;
+    border-top:4px solid var(--pink); bottom:50%; z-index:2;
+  }
+  #gaugeNum{
+    position:absolute; top:2px; left:0; right:0; text-align:center;
+    font-weight:900; font-size:14px; color:var(--ink);
+    text-shadow:0 0 4px #000, 0 0 4px #000; z-index:3;
+    font-variant-numeric:tabular-nums;
+  }
+  #surgeArrow{
+    position:absolute; bottom:4px; left:0; right:0; text-align:center;
+    font-size:16px; font-weight:900; color:var(--orange); z-index:3;
+    text-shadow:0 0 4px #000; display:none; line-height:1;
+  }
+  /* ---------- Strip ---------- */
+  #strip{
+    flex:0 0 32px; display:flex; align-items:center; justify-content:center;
+    background:var(--panel2); border-top:3px solid var(--line);
+    font-weight:900; font-size:14px; letter-spacing:.1em; color:var(--ink);
+    z-index:5; padding:0 8px; white-space:nowrap; overflow:hidden;
+  }
+  #strip.warn{ color:var(--gold); }
+  #strip.bad{ color:#fff; background:var(--red); }
+  /* ---------- Sheets (cards / laws / end) ---------- */
+  #sheet{
+    position:absolute; inset:0; z-index:20; display:none;
+    align-items:center; justify-content:center; padding:18px;
+    background:#04060fd9;
+  }
+  #sheet.show{ display:flex; }
+  .card{
+    width:100%; max-width:420px; background:var(--panel);
+    border:4px solid var(--line); box-shadow:8px 8px 0 var(--line);
+    padding:22px 20px 18px; text-align:left;
+  }
+  .card h1{
+    margin:0 0 6px; font-size:26px; font-weight:900; letter-spacing:.02em;
+    line-height:1.1; color:var(--ink);
+  }
+  .card h2{
+    margin:0 0 10px; font-size:20px; font-weight:900; line-height:1.15; color:var(--ink);
+  }
+  .card p{ margin:0 0 14px; font-size:17px; line-height:1.45; color:var(--ink); }
+  .card .stat{
+    display:flex; justify-content:space-between; font-weight:900; font-size:15px;
+    border-top:2px solid var(--line); padding:7px 0 0; margin-top:4px; color:var(--ink);
+  }
+  .card .stat b{ color:var(--gold); font-variant-numeric:tabular-nums; }
+  .bigBtn{
+    display:block; width:100%; min-height:48px; margin-top:14px;
+    font:inherit; font-weight:900; font-size:17px; letter-spacing:.06em;
+    color:#0b1128; background:var(--gold); border:3px solid var(--line);
+    box-shadow:4px 4px 0 var(--line); cursor:pointer; border-radius:0;
+  }
+  .bigBtn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--line); }
+  .bigBtn.alt{ background:var(--teal); }
+  .lawItem{ border:3px solid var(--line); background:var(--panel2); padding:9px 11px; margin:0 0 9px; }
+  .lawItem b{ display:block; font-size:15px; letter-spacing:.05em; color:var(--orange); }
+  .lawItem span{ font-size:14px; color:var(--ink); line-height:1.35; display:block; margin-top:2px; }
+  .lawEmpty{ font-size:15px; color:var(--ink); margin:0 0 6px; line-height:1.4; }
+  /* ---------- Spotlight ---------- */
+  #spot{ position:absolute; inset:0; z-index:15; display:none; }
+  #spot.show{ display:block; }
+  #spotDim{ position:absolute; inset:0; background:#04060fb3; }
+  #spotFrame{
+    position:absolute; border:4px solid var(--gold);
+    box-shadow:0 0 0 3px var(--line), 0 0 22px #ffd23f88;
+    pointer-events:none; display:none;
+  }
+  #spotCard{
+    position:absolute; left:50%; transform:translateX(-50%);
+    bottom:44px; width:min(92%, 380px);
+    background:var(--panel); border:4px solid var(--line);
+    box-shadow:6px 6px 0 var(--line); padding:14px 14px 12px;
+  }
+  #spotCard b{ display:block; font-size:16px; letter-spacing:.05em; color:var(--gold); margin-bottom:4px; }
+  #spotCard span{ display:block; font-size:15px; line-height:1.4; color:var(--ink); }
+  #spotBtn{
+    display:block; width:100%; min-height:44px; margin-top:11px;
+    font:inherit; font-weight:900; font-size:15px; letter-spacing:.06em;
+    color:#0b1128; background:var(--gold); border:3px solid var(--line);
+    box-shadow:3px 3px 0 var(--line); cursor:pointer; border-radius:0;
+  }
+  #spotBtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--line); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <div id="glowWrap">
+      <div id="glowLabel"><span>GLOW</span><span id="glowNum">0/40</span></div>
+      <div id="glowBar"><div id="glowFill"></div></div>
+    </div>
+    <div class="pipGroup">
+      <div class="pipLabel">HULL</div>
+      <div class="pips" id="hullPips">
+        <div class="pip hull on"></div><div class="pip hull on"></div><div class="pip hull on"></div>
+      </div>
+    </div>
+    <div class="pipGroup">
+      <div class="pipLabel">REACH</div>
+      <div class="pips" id="reachPips">
+        <div class="pip reach now"></div><div class="pip reach"></div><div class="pip reach"></div>
+        <div class="pip reach"></div><div class="pip reach"></div><div class="pip reach"></div>
+      </div>
+    </div>
+    <button class="hudBtn" id="btnSound" aria-label="Toggle sound">
+      <svg id="sndOn" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="#0b1128"/><path d="M16 9c1.2 1.6 1.2 4.4 0 6M18.5 6.5c2.2 3 2.2 8 0 11" stroke="#0b1128" stroke-width="2.2" fill="none"/></svg>
+      <svg id="sndOff" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="#0b1128"/><path d="M16 9l6 6M22 9l-6 6" stroke="#0b1128" stroke-width="2.2" fill="none"/></svg>
+    </button>
+    <button class="hudBtn" id="btnLaws">LAWS</button>
+  </div>
+
+  <div id="scene">
+    <canvas id="cv"></canvas>
+    <div id="gauge" aria-hidden="true">
+      <div id="gaugeFill"></div>
+      <div id="gaugeLow"></div>
+      <div id="gaugeTick"></div>
+      <div id="gaugeNum">50</div>
+      <div id="surgeArrow">▲</div>
+    </div>
+  </div>
+
+  <div id="strip">THE MOON FERRY</div>
+
+  <div id="spot">
+    <div id="spotDim"></div>
+    <div id="spotFrame"></div>
+    <div id="spotCard">
+      <b id="spotTitle"></b>
+      <span id="spotText"></span>
+      <button id="spotBtn">GOT IT</button>
+    </div>
+  </div>
+
+  <div id="sheet"><div class="card" id="sheetCard"></div></div>
+</div>
+
+<script>
+"use strict";
+/* ================= STATE ================= */
+var GOAL = 40, LOW_TIDE = 35;
+var SPEEDS = [1.0, 1.15, 1.25, 1.35, 1.45, 1.60];
+var REEF_COUNT = [3, 3, 4, 5, 5, 6];
+var LAWS = {
+  2: { name: "FASTER CURRENT", desc: "The ship sails 15% faster." },
+  3: { name: "FOG", desc: "Reef depths hide as “?” until the reef is near." },
+  4: { name: "TWIN REEFS", desc: "Reefs arrive in close pairs." },
+  5: { name: "STORM SURGE", desc: "The tide drifts ±10 on its own. Watch the gauge arrow." },
+  6: { name: "FULL GALE", desc: "Every curse at once — and 15% faster again." }
+};
+var S = null;
+function freshState() {
+  return {
+    phase: "story", storyIdx: 0,
+    reach: 1, glow: 0, hull: 3,
+    tide: 50, moonTarget: 50,
+    camU: 0, reefs: [], wrecks: [],
+    surgeT: 0, surge: 0,
+    shake: 0, flash: 0, time: 0,
+    dragging: false, keys: {},
+    muted: false,
+    stripMsg: "", stripUntil: 0, stripKind: "",
+    particles: [], confetti: [],
+    tour: { moon: false, gauge: false, reef: false, wreck: false, glow: false },
+    lawsSeen: {}, pendingSpot: null, spotQueue: [], spotReturn: "play",
+    over: null, hauledOnce: false
+  };
+}
+S = freshState();
+
+/* ================= DOM ================= */
+var $ = function (id) { return document.getElementById(id); };
+var app = $("app"), scene = $("scene"), cv = $("cv"), ctx = cv.getContext("2d");
+var W = 0, H = 0, DPR = 1;
+function fit() {
+  var r = scene.getBoundingClientRect();
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = Math.max(200, r.width); H = Math.max(200, r.height);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+window.addEventListener("resize", fit);
+
+/* ================= AUDIO ================= */
+var AC = null;
+function audio() {
+  if (S.muted) return null;
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === "suspended") AC.resume();
+    return AC;
+  } catch (e) { return null; }
+}
+function tone(f0, f1, dur, type, vol, delay) {
+  var ac = audio(); if (!ac) return;
+  try {
+    var t = ac.currentTime + (delay || 0);
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(ac.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+function sndScrape() { tone(170, 55, 0.3, "sawtooth", 0.25); tone(90, 40, 0.35, "square", 0.15, 0.03); }
+function sndChime() { tone(880, 880, 0.14, "sine", 0.22); tone(1318, 1318, 0.22, "sine", 0.22, 0.09); }
+function sndClear() { tone(520, 660, 0.07, "triangle", 0.08); }
+function sndWin() { [523, 659, 784, 1046].forEach(function (f, i) { tone(f, f, 0.22, "triangle", 0.2, i * 0.11); }); }
+function sndLose() { tone(220, 70, 0.7, "sawtooth", 0.2); }
+
+/* ================= REACH GEN ================= */
+var WORLD = 5.2; // reach length in screen-widths
+function rnd(a, b) { return a + Math.random() * (b - a); }
+function genReach(n) {
+  var count = REEF_COUNT[n - 1], reefs = [], i, u;
+  if (n >= 4) {
+    // twin reefs: close pairs
+    var placed = 0;
+    u = rnd(0.10, 0.14);
+    while (placed < count) {
+      reefs.push({ u: u, depth: Math.round(rnd(25, 70)), resolved: false });
+      placed++;
+      if (placed < count) {
+        reefs.push({ u: u + rnd(0.045, 0.06), depth: Math.round(rnd(25, 70)), resolved: false });
+        placed++;
+      }
+      u += rnd(0.17, 0.24);
+      if (u > 0.94) break;
+    }
+    while (reefs.length > count) reefs.pop();
+    while (reefs.length < count) reefs.push({ u: rnd(0.3, 0.9), depth: Math.round(rnd(25, 70)), resolved: false });
+    reefs.sort(function (a, b) { return a.u - b.u; });
+  } else {
+    for (i = 0; i < count; i++) {
+      u = 0.12 + (i + 0.5) * (0.8 / count) + rnd(-0.025, 0.025);
+      reefs.push({ u: u, depth: Math.round(rnd(25, 70)), resolved: false });
+    }
+  }
+  var wrecks = [], tries = 0;
+  while (wrecks.length < 4 && tries < 300) {
+    tries++;
+    var wu = rnd(0.09, 0.95), ok = true;
+    for (i = 0; i < reefs.length; i++) if (Math.abs(reefs[i].u - wu) < 0.055) { ok = false; break; }
+    if (ok) for (i = 0; i < wrecks.length; i++) if (Math.abs(wrecks[i].u - wu) < 0.07) { ok = false; break; }
+    if (ok) wrecks.push({ u: wu, hauled: false, resolved: false });
+  }
+  wrecks.sort(function (a, b) { return a.u - b.u; });
+  S.reefs = reefs; S.wrecks = wrecks; S.camU = 0;
+}
+function objX(u) { return (u - S.camU) * WORLD * W + W * 0.20; }
+function shipX() { return W * 0.20; }
+function surfY(tide) { return H * 0.88 - (tide / 100) * H * 0.52; }
+function moonPos() {
+  return { x: W * 0.70, y: H * 0.72 - (S.moonTarget / 100) * H * 0.54, r: Math.max(24, Math.min(W, H) * 0.085) };
+}
+
+/* ================= SHEETS & SPOTLIGHTS ================= */
+var sheet = $("sheet"), sheetCard = $("sheetCard");
+var spot = $("spot"), spotFrame = $("spotFrame");
+function hideAll() { sheet.classList.remove("show"); spot.classList.remove("show"); }
+function showSheet(html) { hideAll(); sheetCard.innerHTML = html; sheet.classList.add("show"); }
+function elRect(el) {
+  var a = app.getBoundingClientRect(), r = el.getBoundingClientRect();
+  return { x: r.left - a.left, y: r.top - a.top, w: r.width, h: r.height };
+}
+function spotTargetRect(kind) {
+  var cr = cv.getBoundingClientRect(), a = app.getBoundingClientRect();
+  var ox = cr.left - a.left, oy = cr.top - a.top, i, o;
+  if (kind === "moon") { var m = moonPos(); return { x: ox + m.x - m.r - 12, y: oy + m.y - m.r - 12, w: m.r * 2 + 24, h: m.r * 2 + 24 }; }
+  if (kind === "gauge") return elRect($("gauge"));
+  if (kind === "glow") return elRect($("glowWrap"));
+  if (kind === "reef") {
+    for (i = 0; i < S.reefs.length; i++) { o = S.reefs[i]; if (!o.resolved) {
+      var x = objX(o.u), py = surfY(o.depth);
+      return { x: ox + x - 34, y: oy + py - 62, w: 78, h: H * 0.88 - py + 62 };
+    } }
+  }
+  if (kind === "wreck") {
+    for (i = 0; i < S.wrecks.length; i++) { o = S.wrecks[i]; if (!o.resolved) {
+      var wx = objX(o.u);
+      return { x: ox + wx - 42, y: oy + H * 0.86, w: 84, h: H * 0.13 };
+    } }
+  }
+  return null;
+}
+function queueSpot(p) { S.spotQueue.push(p); }
+function showSpot(kind, title, text) {
+  hideAll();
+  S.phase = "spot";
+  $("spotTitle").textContent = title;
+  $("spotText").textContent = text;
+  var r = spotTargetRect(kind);
+  var card = $("spotCard");
+  if (r) {
+    spotFrame.style.display = "block";
+    spotFrame.style.left = r.x + "px"; spotFrame.style.top = r.y + "px";
+    spotFrame.style.width = r.w + "px"; spotFrame.style.height = r.h + "px";
+    // keep the text card clear of a low target (e.g. a wreck on the seabed)
+    var appH = app.getBoundingClientRect().height;
+    if (r.y + r.h > appH * 0.62) { card.style.top = "66px"; card.style.bottom = "auto"; }
+    else { card.style.top = "auto"; card.style.bottom = "44px"; }
+  } else {
+    spotFrame.style.display = "none";
+    card.style.top = "auto"; card.style.bottom = "44px";
+  }
+  spot.classList.add("show");
+}
+$("spotBtn").addEventListener("click", function () {
+  audio();
+  spot.classList.remove("show");
+  var cb = S.spotDone; S.spotDone = null;
+  S.phase = S.spotReturn || "play";
+  if (cb) cb();
+});
+
+/* ---- Story / how-to / end ---- */
+var STORY = [
+  "The drowned strait has one ferry left — yours. Six reaches of black water stand between you and the far shore.",
+  "The moon obeys your hand. Raise the tide to clear the reefs. Drop it low to haul glow from the drowned wrecks. The strait does not forgive."
+];
+function showStory() {
+  S.phase = "story";
+  var last = S.storyIdx === 1;
+  showSheet(
+    "<h1>THE MOON FERRY</h1><p>" + STORY[S.storyIdx] + "</p>" +
+    "<button class='bigBtn' id='cardBtn'>" + (last ? "START" : "NEXT") + "</button>"
+  );
+  $("cardBtn").addEventListener("click", function () {
+    audio();
+    if (!last) { S.storyIdx = 1; showStory(); }
+    else showHowto();
+  });
+}
+function showHowto() {
+  S.phase = "howto";
+  showSheet(
+    "<h2>HOW TO SAIL</h2><p>Drag the moon to raise or lower the tide — clear the reefs, dip low to haul glow from the wrecks.</p>" +
+    "<button class='bigBtn' id='cardBtn'>BEGIN</button>"
+  );
+  $("cardBtn").addEventListener("click", function () {
+    audio();
+    sheet.classList.remove("show");
+    startRun();
+    // guided tour, in play order: moon, then gauge
+    S.spotReturn = "spot";
+    showSpot("moon", "THE MOON", "Drag anywhere on the sea to pull the moon up or down.");
+    S.spotDone = function () {
+      showSpot("gauge", "TIDE GAUGE", "The pink tick is where the moon pulls. The water follows, a breath behind.");
+      S.spotDone = function () { S.phase = "play"; };
+    };
+  });
+}
+function showEnd() {
+  S.phase = "over";
+  var o = S.over, title, sub;
+  if (o === "win") { title = "THE FAR SHORE"; sub = "The ferry grounds on pale sand. The strait lets go."; }
+  else if (o === "breaks") { title = "THE SHIP BREAKS"; sub = "The hull gives out on the black water."; }
+  else { title = "THE STRAIT KEEPS YOU"; sub = "Six reaches sailed, but the glow falls short."; }
+  showSheet(
+    "<h1>" + title + "</h1><p>" + sub + "</p>" +
+    "<div class='stat'><span>GLOW BANKED</span><b>" + S.glow + " / 40</b></div>" +
+    "<div class='stat'><span>REACH</span><b>" + Math.min(S.reach, 6) + " / 6</b></div>" +
+    "<div class='stat'><span>HULL LEFT</span><b>" + S.hull + " / 3</b></div>" +
+    "<button class='bigBtn' id='cardBtn'>RETRY</button>"
+  );
+  $("cardBtn").addEventListener("click", function () {
+    audio();
+    var muted = S.muted;
+    S = freshState(); S.muted = muted;
+    genReach(1); syncHUD(); showStory();
+  });
+}
+function showLaws() {
+  if (S.phase !== "play" && S.phase !== "laws") return;
+  var wasPlay = S.phase === "play";
+  S.phase = "laws";
+  var keys = Object.keys(S.lawsSeen).map(Number).sort(function (a, b) { return b - a; });
+  var html = "<h2>LAWS OF THE STRAIT</h2>";
+  if (!keys.length) html += "<p class='lawEmpty'>No laws yet. The strait adds one each reach — and never takes one back.</p>";
+  keys.forEach(function (k) {
+    html += "<div class='lawItem'><b>" + LAWS[k].name + "</b><span>" + LAWS[k].desc + "</span></div>";
+  });
+  html += "<button class='bigBtn alt' id='cardBtn'>BACK TO SEA</button>";
+  showSheet(html);
+  $("cardBtn").addEventListener("click", function () {
+    audio(); sheet.classList.remove("show");
+    S.phase = wasPlay ? "play" : "play";
+  });
+}
+
+/* ================= HUD ================= */
+function syncHUD() {
+  $("glowNum").textContent = S.glow + "/40";
+  $("glowFill").style.width = Math.min(100, S.glow / GOAL * 100) + "%";
+  var hp = $("hullPips").children;
+  for (var i = 0; i < 3; i++) {
+    hp[i].className = "pip hull" + (i < S.hull ? " on" : " lost");
+  }
+  var rp = $("reachPips").children;
+  for (var j = 0; j < 6; j++) {
+    rp[j].className = "pip reach" + (j + 1 < S.reach ? " done" : (j + 1 === S.reach ? " now" : ""));
+  }
+}
+function setStrip(text, kind, secs) {
+  S.stripMsg = text; S.stripKind = kind || "";
+  S.stripUntil = S.time + (secs || 2.2);
+}
+function updateStrip() {
+  var el = $("strip"), txt, kind = "";
+  if (S.time < S.stripUntil) { txt = S.stripMsg; kind = S.stripKind; }
+  else {
+    txt = "REACH " + S.reach + " OF 6";
+    for (var i = 0; i < S.wrecks.length; i++) {
+      var o = S.wrecks[i];
+      if (!o.resolved && !o.hauled) {
+        var d = objX(o.u) - shipX();
+        if (d > 0 && d < W * 0.55) { txt = "WRECK BELOW"; kind = "warn"; break; }
+      }
+    }
+  }
+  if (el.textContent !== txt) el.textContent = txt;
+  var cls = kind ? " " + kind : "";
+  if (el.className !== cls.trim() && el.getAttribute("data-k") !== kind) {
+    el.setAttribute("data-k", kind);
+    el.className = kind;
+  }
+}
+
+/* ================= RUN FLOW ================= */
+function startRun() {
+  S.reach = 1; S.glow = 0; S.hull = 3; S.tide = 50; S.moonTarget = 50;
+  genReach(1); syncHUD();
+  setStrip("REACH 1 OF 6", "", 2.2);
+}
+function beginReach(n) {
+  S.reach = n; genReach(n); syncHUD();
+  setStrip("REACH " + n + " OF 6", "", 2.2);
+  if (LAWS[n] && !S.lawsSeen[n]) {
+    S.lawsSeen[n] = true;
+    queueSpot({ kind: n === 5 ? "gauge" : null, title: LAWS[n].name, text: LAWS[n].desc, law: true });
+  }
+}
+function endRun(kind) {
+  S.over = kind;
+  if (kind === "win") { sndWin(); spawnConfetti(); }
+  else sndLose();
+  setTimeout(function () { if (S.phase === "play" || S.phase === "dying") showEnd(); }, kind === "win" ? 500 : 700);
+  S.phase = "dying";
+}
+
+/* ================= FX ================= */
+function burst(x, y, color, n, spread) {
+  for (var i = 0; i < n; i++) {
+    S.particles.push({
+      x: x, y: y, vx: rnd(-spread, spread), vy: rnd(-spread * 1.4, -20),
+      life: rnd(0.4, 0.9), t: 0, color: color, size: rnd(3, 6)
+    });
+  }
+}
+function spawnConfetti() {
+  var colors = ["#2dd4bf", "#ff5d8f", "#ff9f43", "#ffd23f", "#f7f3e3"];
+  for (var i = 0; i < 130; i++) {
+    S.confetti.push({
+      x: rnd(0, W), y: rnd(-H * 0.4, -10), vx: rnd(-16, 16), vy: rnd(50, 130),
+      rot: rnd(0, 6.28), vr: rnd(-4, 4), color: colors[i % colors.length],
+      w: rnd(5, 9), h: rnd(8, 14)
+    });
+  }
+}
+
+/* ================= UPDATE ================= */
+function resolveReef(o) {
+  o.resolved = true;
+  if (S.tide >= o.depth) {
+    sndClear();
+    burst(shipX() + 26, surfY(S.tide) + 8, "#2dd4bf", 7, 60);
+  } else {
+    S.hull--; S.shake = 14; S.flash = 0.55;
+    sndScrape();
+    burst(shipX() + 20, surfY(S.tide) + 14, "#ff4757", 16, 110);
+    setStrip("SCRAPE!", "bad", 1.4);
+    syncHUD();
+    if (S.hull <= 0) endRun("breaks");
+  }
+}
+function resolveWreck(o) {
+  o.resolved = true;
+  if (S.tide < LOW_TIDE) {
+    o.hauled = true; S.glow += 3; S.hauledOnce = true;
+    sndChime();
+    burst(objX(o.u), H * 0.9, "#ffd23f", 20, 90);
+    setStrip("+3 GLOW", "warn", 1.4);
+    syncHUD();
+    if (!S.tour.glow) {
+      S.tour.glow = true;
+      queueSpot({ kind: "glow", title: "GLOW", text: "Hauled glow banks up top. Bank 40 by the far shore to win." });
+    }
+  }
+}
+function update(dt) {
+  S.time += dt;
+  // keyboard moon control
+  var k = S.keys;
+  if (k.up) S.moonTarget = Math.min(100, S.moonTarget + 95 * dt);
+  if (k.down) S.moonTarget = Math.max(0, S.moonTarget - 95 * dt);
+  // storm surge (R5+)
+  if (S.reach >= 5) {
+    S.surgeT += dt;
+    S.surge = Math.sin(S.surgeT * 0.85) * 10;
+  } else S.surge = 0;
+  // tide eases toward moon + surge (lag ~0.08/frame @60fps)
+  var target = Math.max(0, Math.min(100, S.moonTarget + S.surge));
+  var f = 1 - Math.pow(1 - 0.08, dt * 60);
+  S.tide += (target - S.tide) * f;
+  // sail
+  S.camU += dt * SPEEDS[S.reach - 1] / 35;
+  var sx = shipX(), i, o, x;
+  for (i = 0; i < S.reefs.length; i++) {
+    o = S.reefs[i];
+    if (!o.resolved && objX(o.u) <= sx + 6) resolveReef(o);
+    if (S.phase !== "play") return;
+  }
+  for (i = 0; i < S.wrecks.length; i++) {
+    o = S.wrecks[i];
+    if (!o.resolved && objX(o.u) <= sx + 6) resolveWreck(o);
+  }
+  // tour triggers: first reef / first wreck near
+  if (!S.tour.reef) {
+    for (i = 0; i < S.reefs.length; i++) {
+      x = objX(S.reefs[i].u);
+      if (!S.reefs[i].resolved && x < W && x > sx) {
+        S.tour.reef = true;
+        queueSpot({ kind: "reef", title: "REEF", text: "The number is the tide you need to float over it. Below it, you scrape." });
+        break;
+      }
+    }
+  }
+  if (!S.tour.wreck && S.tour.reef) {
+    for (i = 0; i < S.wrecks.length; i++) {
+      x = objX(S.wrecks[i].u);
+      if (!S.wrecks[i].resolved && x - sx > 0 && x - sx < W * 0.5) {
+        S.tour.wreck = true;
+        queueSpot({ kind: "wreck", title: "WRECK", text: "Drowned gold. Dip the tide under 35 as you pass and the crew hauls +3 glow." });
+        break;
+      }
+    }
+  }
+  // reach end
+  if (S.camU >= 1.02) {
+    if (S.reach >= 6) { endRun(S.glow >= GOAL ? "win" : "kept"); return; }
+    beginReach(S.reach + 1);
+  }
+  // queued spotlights pause the run, one at a time, in the order queued
+  if (S.spotQueue.length && S.phase === "play") {
+    var p = S.spotQueue.shift();
+    S.spotReturn = "play";
+    showSpot(p.kind, p.title, p.text);
+  }
+  // particles
+  for (i = S.particles.length - 1; i >= 0; i--) {
+    var pt = S.particles[i]; pt.t += dt;
+    pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vy += 260 * dt;
+    if (pt.t > pt.life) S.particles.splice(i, 1);
+  }
+  for (i = S.confetti.length - 1; i >= 0; i--) {
+    var c = S.confetti[i];
+    c.x += c.vx * dt + Math.sin(S.time * 3 + i) * 18 * dt;
+    c.y += c.vy * dt; c.rot += c.vr * dt;
+    if (c.y > H + 20) S.confetti.splice(i, 1);
+  }
+  S.shake = Math.max(0, S.shake - 42 * dt);
+  S.flash = Math.max(0, S.flash - 1.6 * dt);
+}
+
+/* ================= DRAW ================= */
+var STARS = [];
+for (var si = 0; si < 70; si++) STARS.push({ x: Math.abs(Math.sin(si * 37.7)) , y: Math.abs(Math.cos(si * 91.3)) * 0.55, r: (si % 3) * 0.6 + 0.7 });
+function drawShip(x, y) {
+  var bob = Math.sin(S.time * 2.1) * 2.5, tilt = Math.sin(S.time * 1.6) * 0.02;
+  ctx.save(); ctx.translate(x, y + bob); ctx.rotate(tilt);
+  ctx.lineWidth = 3; ctx.strokeStyle = "#000";
+  // sails (tattered) — pale ghost canvas
+  ctx.fillStyle = "#dcefe8";
+  ctx.beginPath(); // main sail with bites
+  ctx.moveTo(-4, -64); ctx.lineTo(-4, -18); ctx.lineTo(-34, -18);
+  ctx.lineTo(-28, -30); ctx.lineTo(-36, -40); ctx.lineTo(-27, -48); ctx.lineTo(-33, -58);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); // fore sail
+  ctx.moveTo(6, -52); ctx.lineTo(6, -18); ctx.lineTo(30, -18);
+  ctx.lineTo(24, -28); ctx.lineTo(31, -38); ctx.lineTo(23, -45);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  // masts
+  ctx.fillStyle = "#0a0e1f";
+  ctx.fillRect(-6, -68, 4, 52); ctx.fillRect(4, -56, 4, 40);
+  // pennant
+  ctx.fillStyle = "#ff5d8f";
+  ctx.beginPath(); ctx.moveTo(-2, -68); ctx.lineTo(14, -63); ctx.lineTo(-2, -58); ctx.closePath(); ctx.fill(); ctx.stroke();
+  // hull
+  ctx.fillStyle = "#131c38";
+  ctx.beginPath();
+  ctx.moveTo(-42, 0); ctx.lineTo(46, 0); ctx.lineTo(34, 16); ctx.lineTo(-28, 16);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  // hull stripe + lantern
+  ctx.fillStyle = "#2dd4bf"; ctx.fillRect(-28, 5, 62, 3);
+  ctx.fillStyle = "#ffd23f";
+  ctx.beginPath(); ctx.arc(40, -4, 4, 0, 6.29); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+function drawReef(o) {
+  var x = objX(o.u); if (x < -70 || x > W + 70) return;
+  var peakY = surfY(o.depth), baseY = H + 4;
+  ctx.fillStyle = "#0d1526"; ctx.strokeStyle = "#8fa8c8"; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(x - 30, baseY);
+  ctx.lineTo(x - 22, peakY + (baseY - peakY) * 0.45);
+  ctx.lineTo(x - 13, peakY + (baseY - peakY) * 0.22);
+  ctx.lineTo(x - 4, peakY);
+  ctx.lineTo(x + 5, peakY + (baseY - peakY) * 0.3);
+  ctx.lineTo(x + 13, peakY + (baseY - peakY) * 0.14);
+  ctx.lineTo(x + 22, peakY + (baseY - peakY) * 0.5);
+  ctx.lineTo(x + 31, baseY);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  // depth marker: mini gauge + number (fog hides number until near)
+  var fogged = S.reach >= 3 && (x - shipX()) > W * 0.25;
+  var gx = x - 26, gy = peakY - 52, gh = 30;
+  ctx.fillStyle = "#05081a"; ctx.fillRect(gx, gy, 10, gh);
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.strokeRect(gx, gy, 10, gh);
+  ctx.fillStyle = "#ff9f43"; ctx.fillRect(gx + 2, gy + gh - (o.depth / 100) * (gh - 4) - 2, 6, Math.max(2, (o.depth / 100) * (gh - 4)));
+  ctx.fillStyle = "#05081a";
+  var label = fogged ? "?" : String(o.depth);
+  ctx.font = "900 14px system-ui, sans-serif";
+  var tw = ctx.measureText(label).width + 10;
+  ctx.fillRect(gx + 14, gy + 4, tw, 20);
+  ctx.strokeRect(gx + 14, gy + 4, tw, 20);
+  ctx.fillStyle = "#f7f3e3"; ctx.textBaseline = "middle";
+  ctx.fillText(label, gx + 19, gy + 15);
+  ctx.textBaseline = "alphabetic";
+}
+function drawWreck(o) {
+  var x = objX(o.u); if (x < -70 || x > W + 70) return;
+  var y = H * 0.955;
+  var exposed = S.tide < LOW_TIDE && !o.hauled;
+  if (!o.hauled) {
+    var pulse = 0.55 + Math.sin(S.time * 3 + o.u * 40) * 0.2;
+    var g = ctx.createRadialGradient(x, y - 8, 2, x, y - 8, exposed ? 52 : 34);
+    g.addColorStop(0, "rgba(45,212,191," + (exposed ? pulse : pulse * 0.45) + ")");
+    g.addColorStop(1, "rgba(45,212,191,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(x - 56, y - 64, 112, 76);
+  }
+  ctx.save(); ctx.translate(x, y); ctx.rotate(-0.16);
+  ctx.lineWidth = 2.5; ctx.strokeStyle = "#000";
+  ctx.fillStyle = o.hauled ? "#232c47" : "#123332";
+  ctx.beginPath(); // broken hull
+  ctx.moveTo(-30, 0); ctx.lineTo(28, 0); ctx.lineTo(18, -11); ctx.lineTo(2, -11);
+  ctx.lineTo(-4, -4); ctx.lineTo(-14, -12); ctx.lineTo(-22, -5);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#0a0e1f"; ctx.fillRect(6, -26, 3.5, 17); // snapped mast
+  ctx.beginPath(); ctx.moveTo(9.5, -26); ctx.lineTo(20, -19); ctx.lineTo(9.5, -15); ctx.closePath();
+  ctx.fillStyle = o.hauled ? "#3c4767" : "#2dd4bf"; ctx.fill(); ctx.stroke();
+  if (!o.hauled) { ctx.fillStyle = "#ffd23f"; ctx.fillRect(-16, -6, 5, 4); ctx.fillRect(10, -7, 5, 4); }
+  ctx.restore();
+}
+function draw() {
+  ctx.save();
+  if (S.shake > 0) ctx.translate(rnd(-S.shake, S.shake) * 0.5, rnd(-S.shake, S.shake) * 0.5);
+  // sky
+  ctx.fillStyle = "#070b1d"; ctx.fillRect(-20, -20, W + 40, H + 40);
+  ctx.fillStyle = "#f7f3e3";
+  for (var i = 0; i < STARS.length; i++) {
+    var st = STARS[i];
+    ctx.globalAlpha = 0.35 + 0.3 * Math.sin(S.time * 1.3 + i);
+    ctx.fillRect(st.x * W, st.y * H, st.r, st.r);
+  }
+  ctx.globalAlpha = 1;
+  // moon + halo + drag guide
+  var m = moonPos();
+  var halo = ctx.createRadialGradient(m.x, m.y, m.r * 0.4, m.x, m.y, m.r * 2.6);
+  halo.addColorStop(0, "rgba(247,243,227,0.28)"); halo.addColorStop(1, "rgba(247,243,227,0)");
+  ctx.fillStyle = halo; ctx.fillRect(m.x - m.r * 2.6, m.y - m.r * 2.6, m.r * 5.2, m.r * 5.2);
+  ctx.strokeStyle = "rgba(247,243,227,0.25)"; ctx.lineWidth = 2; ctx.setLineDash([4, 7]);
+  ctx.beginPath(); ctx.moveTo(m.x, H * 0.16); ctx.lineTo(m.x, H * 0.76); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = "#f3ecd2"; ctx.strokeStyle = "#000"; ctx.lineWidth = 3.5;
+  ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, 6.29); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#ddd2ac";
+  ctx.beginPath(); ctx.arc(m.x - m.r * 0.3, m.y - m.r * 0.2, m.r * 0.16, 0, 6.29); ctx.fill();
+  ctx.beginPath(); ctx.arc(m.x + m.r * 0.25, m.y + m.r * 0.3, m.r * 0.12, 0, 6.29); ctx.fill();
+  ctx.beginPath(); ctx.arc(m.x + m.r * 0.42, m.y - m.r * 0.38, m.r * 0.09, 0, 6.29); ctx.fill();
+  // wrecks (behind water line glow reads through)
+  for (i = 0; i < S.wrecks.length; i++) drawWreck(S.wrecks[i]);
+  // water
+  var sy = surfY(S.tide);
+  ctx.fillStyle = "rgba(10,38,56,0.88)";
+  ctx.beginPath(); ctx.moveTo(-20, H + 20); ctx.lineTo(-20, sy);
+  for (var wx = -20; wx <= W + 20; wx += 14) ctx.lineTo(wx, sy + Math.sin(wx * 0.045 + S.time * 2.2) * 2.2);
+  ctx.lineTo(W + 20, H + 20); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = "#2dd4bf"; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (wx = -20; wx <= W + 20; wx += 14) {
+    var wy = sy + Math.sin(wx * 0.045 + S.time * 2.2) * 2.2;
+    if (wx === -20) ctx.moveTo(wx, wy); else ctx.lineTo(wx, wy);
+  }
+  ctx.stroke();
+  // seabed
+  ctx.fillStyle = "#04060f"; ctx.fillRect(-20, H * 0.965, W + 40, H * 0.035 + 20);
+  // reefs
+  for (i = 0; i < S.reefs.length; i++) drawReef(S.reefs[i]);
+  // ship
+  drawShip(shipX(), sy - 14);
+  // particles
+  for (i = 0; i < S.particles.length; i++) {
+    var p = S.particles[i];
+    ctx.globalAlpha = Math.max(0, 1 - p.t / p.life);
+    ctx.fillStyle = p.color; ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+  // confetti
+  for (i = 0; i < S.confetti.length; i++) {
+    var c = S.confetti[i];
+    ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot);
+    ctx.fillStyle = c.color; ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+    ctx.restore();
+  }
+  // scrape flash
+  if (S.flash > 0) { ctx.fillStyle = "rgba(255,60,80," + S.flash * 0.5 + ")"; ctx.fillRect(-20, -20, W + 40, H + 40); }
+  ctx.restore();
+  // gauge DOM sync
+  $("gaugeFill").style.height = S.tide + "%";
+  $("gaugeTick").style.bottom = "calc(" + S.moonTarget + "% - 2px)";
+  $("gaugeNum").textContent = Math.round(S.tide);
+  var sa = $("surgeArrow");
+  if (S.reach >= 5 && S.phase !== "story") {
+    sa.style.display = "block";
+    var rising = Math.cos(S.surgeT * 0.85) > 0;
+    sa.textContent = rising ? "▲" : "▼";
+    sa.style.color = rising ? "#2dd4bf" : "#ff9f43";
+  } else sa.style.display = "none";
+}
+
+/* ================= LOOP ================= */
+var lastT = 0;
+function frame(ts) {
+  requestAnimationFrame(frame);
+  var dt = Math.min(0.05, lastT ? (ts - lastT) / 1000 : 0.016);
+  lastT = ts;
+  if (S.phase === "play") update(dt);
+  else {
+    // keep ambient particles/confetti alive on end screens
+    S.time += dt;
+    for (var i = S.confetti.length - 1; i >= 0; i--) {
+      var c = S.confetti[i];
+      c.x += c.vx * dt + Math.sin(S.time * 3 + i) * 18 * dt;
+      c.y += c.vy * dt; c.rot += c.vr * dt;
+      if (c.y > H + 20) S.confetti.splice(i, 1);
+    }
+    S.flash = Math.max(0, S.flash - 1.6 * dt);
+    S.shake = Math.max(0, S.shake - 42 * dt);
+  }
+  draw();
+  if (S.phase === "play" || S.phase === "spot") updateStrip();
+}
+
+/* ================= INPUT ================= */
+function ptrTarget(e) {
+  var r = scene.getBoundingClientRect();
+  var y = (e.clientY - r.top) / r.height;
+  S.moonTarget = Math.max(0, Math.min(100, (1 - y) * 100));
+}
+scene.addEventListener("pointerdown", function (e) {
+  if (S.phase !== "play") return;
+  audio(); S.dragging = true;
+  try { scene.setPointerCapture(e.pointerId); } catch (err) {}
+  ptrTarget(e);
+});
+scene.addEventListener("pointermove", function (e) { if (S.dragging) ptrTarget(e); });
+scene.addEventListener("pointerup", function () { S.dragging = false; });
+scene.addEventListener("pointercancel", function () { S.dragging = false; });
+$("btnSound").addEventListener("click", function () {
+  S.muted = !S.muted;
+  $("sndOn").style.display = S.muted ? "none" : "block";
+  $("sndOff").style.display = S.muted ? "block" : "none";
+  if (!S.muted) audio();
+});
+$("btnLaws").addEventListener("click", function () { audio(); showLaws(); });
+document.addEventListener("keydown", function (e) {
+  var key = e.key.toLowerCase();
+  if (key === "arrowup" || key === "w") { S.keys.up = true; S.moonTarget = Math.min(100, S.moonTarget + 3); e.preventDefault(); }
+  else if (key === "arrowdown" || key === "s") { S.keys.down = true; S.moonTarget = Math.max(0, S.moonTarget - 3); e.preventDefault(); }
+  else if (key === "m") $("btnSound").click();
+  else if (key === "l") { if (S.phase === "play" || S.phase === "laws") $("btnLaws").click(); }
+  else if (key === " " || key === "enter") {
+    if (spot.classList.contains("show")) { $("spotBtn").click(); e.preventDefault(); }
+    else if (sheet.classList.contains("show")) {
+      var b = $("cardBtn"); if (b) { b.click(); e.preventDefault(); }
+    }
+  }
+});
+document.addEventListener("keyup", function (e) {
+  var key = e.key.toLowerCase();
+  if (key === "arrowup" || key === "w") S.keys.up = false;
+  if (key === "arrowdown" || key === "s") S.keys.down = false;
+});
+
+/* ================= BOOT ================= */
+fit();
+genReach(1);
+syncHUD();
+showStory();
+requestAnimationFrame(frame);
+setTimeout(fit, 60);
+</script>
+</body>
+</html>

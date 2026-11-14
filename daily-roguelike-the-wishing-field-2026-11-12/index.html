@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="data:," />
+    <title>Daily Roguelike — The Wishing Field (2026-11-12)</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0; overflow: hidden; background: #8ED8FF; color: #16130E;
+        font-family: "Trebuchet MS", "Segoe UI", Verdana, Geneva, sans-serif;
+        -webkit-tap-highlight-color: transparent;
+      }
+      button { font-family: inherit; color: inherit; }
+      [hidden] { display: none !important; }
+
+      #app {
+        height: 100dvh; max-width: 560px; margin: 0 auto; position: relative;
+        display: flex; flex-direction: column; gap: 8px; padding: 8px;
+        overflow: hidden;
+      }
+      #app.shake { animation: shake .45s ease; }
+      @keyframes shake {
+        0%,100% { transform: translate(0,0); } 20% { transform: translate(-6px,2px); }
+        40% { transform: translate(6px,-2px); } 60% { transform: translate(-5px,-1px); }
+        80% { transform: translate(5px,1px); }
+      }
+      .panel { background: #fff; border: 3px solid #16130E; box-shadow: 4px 4px 0 #16130E; }
+
+      /* ---------- HUD ---------- */
+      #hud { display: flex; align-items: center; gap: 8px; padding: 6px 8px; flex: 0 0 auto; }
+      #dayChip { font-weight: 900; font-size: 15px; letter-spacing: .5px; white-space: nowrap; }
+      #dayPips { display: flex; gap: 3px; }
+      .dpip { width: 13px; height: 13px; border: 2px solid #16130E; background: #fff; }
+      .dpip.done { background: #16130E; }
+      .dpip.now { background: #FF6FA5; }
+      #bloomWrap { flex: 1 1 auto; display: flex; align-items: center; gap: 6px; min-width: 0; }
+      #bloomBar { flex: 1 1 auto; height: 16px; border: 3px solid #16130E; background: #fff; overflow: hidden; }
+      #bloomFill { height: 100%; width: 0%; background: #FF6FA5; transition: width .5s ease; }
+      #bloomLabel { font-weight: 900; font-size: 13px; white-space: nowrap; display: flex; align-items: center; gap: 3px; }
+      .iconBtn {
+        flex: 0 0 auto; width: 38px; height: 38px; min-height: 38px; padding: 5px;
+        background: #fff; border: 3px solid #16130E; box-shadow: 3px 3px 0 #16130E; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .iconBtn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #16130E; }
+      .iconBtn svg { width: 24px; height: 24px; display: block; }
+
+      /* ---------- Field ---------- */
+      #fieldWrap {
+        flex: 1 1 auto; min-height: 0; position: relative; overflow: hidden;
+        background: #69B84F; border: 3px solid #16130E; box-shadow: 4px 4px 0 #16130E; padding: 8px;
+      }
+      #field { height: 100%; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(4, 1fr); gap: 6px; }
+      .cell {
+        position: relative; border: 3px solid #16130E; padding: 2px 1px 1px;
+        cursor: pointer; overflow: hidden; min-height: 0;
+        display: flex; flex-direction: column; align-items: center;
+      }
+      .cell.tierS { background: #C9F29B; }
+      .cell.tierR { background: #FFE45E; }
+      .cell.tierG { background: #FFADAD; }
+      .cell:focus-visible { outline: 4px solid #FF3D8A; outline-offset: 1px; z-index: 3; }
+      .cell .odds { text-align: center; line-height: 1.15; pointer-events: none; z-index: 1; }
+      .cell .odds .tierLine { display: block; font-size: 8px; font-weight: 900; letter-spacing: .3px; white-space: nowrap; }
+      .cell .odds .oLine { display: block; font-size: 9.5px; font-weight: 900; white-space: nowrap; }
+      .cell .odds .oLine b { font-size: 11px; }
+      .cell .mid {
+        flex: 1 1 auto; width: 100%; min-height: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; pointer-events: none; z-index: 2;
+      }
+      .cell .mid svg { width: 58%; height: 58%; max-width: 46px; max-height: 46px; }
+      .cell .mid .resWord { font-size: 11px; font-weight: 900; letter-spacing: .5px; margin-top: 1px; }
+      .cell .mid .spinWord { font-size: 14px; font-weight: 900; letter-spacing: 1px; animation: spinPulse .18s infinite alternate; }
+      @keyframes spinPulse { from { transform: scale(.88); } to { transform: scale(1.1); } }
+      .cell .mid .bloomPop { animation: pop .55s ease; }
+      @keyframes pop { 0% { transform: scale(.2); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+      .cell.locked .odds { opacity: .55; }
+
+      /* ---------- Footer controls ---------- */
+      #controls { flex: 0 0 auto; display: flex; gap: 8px; align-items: stretch; height: 64px; }
+      #seedBox { flex: 0 0 auto; display: flex; flex-direction: column; justify-content: center; gap: 3px; padding: 4px 7px; }
+      #seedBox .slabel { font-size: 10px; font-weight: 900; letter-spacing: 1px; }
+      #seedPips { display: flex; gap: 3px; flex-wrap: wrap; width: 76px; }
+      .spip { width: 16px; height: 16px; display: block; }
+      .spip.used { opacity: .22; }
+      #rainBtn {
+        flex: 1 1 auto; min-height: 44px; cursor: pointer; background: #FFD23F;
+        border: 3px solid #16130E; box-shadow: 4px 4px 0 #16130E;
+        font-size: 21px; font-weight: 900; letter-spacing: 1px;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+      }
+      #rainBtn svg { width: 26px; height: 26px; }
+      #rainBtn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #16130E; }
+      #rainBtn:disabled { opacity: .55; cursor: default; }
+
+      /* ---------- Spotlight hint (one at a time, non-blocking) ---------- */
+      .spot { outline: 4px solid #FF3D8A !important; outline-offset: 2px; z-index: 26; animation: spotPulse .6s infinite alternate; }
+      @keyframes spotPulse { from { outline-offset: 1px; } to { outline-offset: 5px; } }
+      #tourBar {
+        position: absolute; left: 8px; right: 8px; bottom: 80px; z-index: 30;
+        background: #FFE45E; border: 3px solid #16130E; box-shadow: 4px 4px 0 #16130E;
+        padding: 10px; display: flex; gap: 10px; align-items: center;
+        pointer-events: none;
+      }
+      #tourText { flex: 1 1 auto; font-weight: 800; font-size: 16px; line-height: 1.3; }
+      .okBtn {
+        flex: 0 0 auto; min-height: 40px; padding: 6px 16px; cursor: pointer; pointer-events: auto;
+        background: #16130E; color: #fff; border: 3px solid #16130E; font-weight: 900; font-size: 15px;
+      }
+
+      /* ---------- Modal (story / chapter / end / confirm) ---------- */
+      #modal {
+        position: absolute; inset: 0; z-index: 40; background: rgba(12,22,32,.55);
+        display: flex; align-items: center; justify-content: center; padding: 18px;
+      }
+      #modalCard {
+        background: #fff; border: 4px solid #16130E; box-shadow: 8px 8px 0 #16130E;
+        max-width: 350px; width: 100%; padding: 20px 18px; text-align: center;
+        max-height: 92%; overflow: hidden;
+      }
+      #modalCard .kicker { font-size: 12px; font-weight: 900; letter-spacing: 2px; color: #8A2B52; }
+      #modalCard .bigTitle { font-size: 27px; font-weight: 900; line-height: 1.15; margin: 6px 0; }
+      #modalCard .storyText { font-size: 18px; line-height: 1.5; text-align: left; margin: 8px 0 4px; }
+      #modalCard .endText { font-size: 16px; line-height: 1.45; margin: 6px 0 4px; }
+      #modalCard .art { display: flex; justify-content: center; margin: 4px 0 8px; }
+      #modalCard .art svg { width: 84px; height: 84px; }
+      .bigBtn {
+        margin-top: 14px; width: 100%; min-height: 50px; cursor: pointer;
+        background: #FFD23F; border: 3px solid #16130E; box-shadow: 4px 4px 0 #16130E;
+        font-size: 19px; font-weight: 900; letter-spacing: 1px;
+      }
+      .bigBtn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #16130E; }
+      .ghostBtn {
+        margin-top: 10px; width: 100%; min-height: 44px; cursor: pointer;
+        background: #fff; border: 3px solid #16130E; font-size: 15px; font-weight: 800;
+      }
+
+      /* ---------- Sheet (menu / settings) ---------- */
+      #sheetWrap { position: absolute; inset: 0; z-index: 35; background: rgba(12,22,32,.55); }
+      #sheet {
+        position: absolute; left: 0; right: 0; bottom: 0; max-height: 84%;
+        background: #fff; border-top: 4px solid #16130E; padding: 14px 14px 20px;
+        overflow-y: auto; overscroll-behavior: contain;
+      }
+      #sheet h2 { margin: 0 0 10px; font-size: 19px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; }
+      #sheet h3 { margin: 16px 0 8px; font-size: 14px; font-weight: 900; letter-spacing: 1px; }
+      #recap { font-size: 16px; line-height: 1.45; font-weight: 600; margin: 0; }
+      .dangerBtn {
+        width: 100%; min-height: 48px; cursor: pointer; background: #FF6B6B; color: #16130E;
+        border: 3px solid #16130E; box-shadow: 3px 3px 0 #16130E; font-weight: 900; font-size: 16px;
+      }
+      #sheetClose { width: 40px; height: 40px; min-height: 40px; }
+
+      /* ---------- FX ---------- */
+      #fx { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 5; }
+      .rainDrop { position: absolute; top: -14px; width: 3px; height: 13px; background: #1663A8; animation: fall .65s linear forwards; }
+      @keyframes fall { to { transform: translateY(120vh); opacity: .2; } }
+      .swoop { position: absolute; width: 52px; height: 52px; z-index: 6; pointer-events: none; animation: swoopArc .8s ease-in forwards; }
+      .swoop svg { width: 100%; height: 100%; }
+      @keyframes swoopArc {
+        0% { transform: translate(-64px,-30px) rotate(18deg); opacity: 0; }
+        25% { opacity: 1; }
+        60% { transform: translate(6px,10px) rotate(-6deg); opacity: 1; }
+        100% { transform: translate(70px,-46px) rotate(-24deg); opacity: 0; }
+      }
+      .petal { position: absolute; width: 10px; height: 10px; border: 2px solid #16130E; pointer-events: none; z-index: 7; }
+      #confettiLayer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 55; }
+      .confetto { position: absolute; top: -16px; width: 11px; height: 15px; border: 2px solid #16130E; animation: confFall linear forwards; }
+      @keyframes confFall { to { transform: translateY(115vh) rotate(560deg); } }
+
+      @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: .01s !important; transition-duration: .01s !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header id="hud" class="panel">
+        <span id="dayChip">DAY 1</span>
+        <div id="dayPips" aria-label="Days"></div>
+        <div id="bloomWrap">
+          <div id="bloomBar"><div id="bloomFill"></div></div>
+          <span id="bloomLabel"></span>
+        </div>
+        <button id="soundBtn" class="iconBtn" aria-label="Sound on or off"></button>
+        <button id="menuBtn" class="iconBtn" aria-label="Menu and settings"></button>
+      </header>
+
+      <main id="fieldWrap">
+        <div id="field" role="grid" aria-label="The wishing field"></div>
+        <div id="fx"></div>
+      </main>
+
+      <footer id="controls">
+        <div id="seedBox" class="panel" aria-label="Seeds left">
+          <span class="slabel">SEEDS</span>
+          <div id="seedPips"></div>
+        </div>
+        <button id="rainBtn"></button>
+      </footer>
+
+      <div id="tourBar" hidden>
+        <span id="tourText"></span>
+        <button id="tourOk" class="okBtn">OK</button>
+      </div>
+
+      <div id="sheetWrap" hidden>
+        <div id="sheet">
+          <h2>MENU <button id="sheetClose" class="iconBtn" aria-label="Close">✕</button></h2>
+          <h3>HOW TO PLAY</h3>
+          <p id="recap">Tap a plot to plant a seed, then LET IT RAIN — every seed rolls the odds printed on its plot.</p>
+          <h3>SETTINGS</h3>
+          <button id="abandonBtn" class="dangerBtn">ABANDON RUN</button>
+        </div>
+      </div>
+
+      <div id="modal" hidden><div id="modalCard"></div></div>
+      <div id="confettiLayer"></div>
+    </div>
+
+    <script>
+      "use strict";
+      /* ================= SVG art (item-specific, hand-drawn) ================= */
+      var SVG = {
+        crow: '<svg viewBox="0 0 24 24"><path d="M21 4 L14 8 C11 5 6 5 4 9 C2 13 4 18 8 20 L7 22 L9 21 C13 22 18 19 19 14 L23 10 L19 11 C20 8 21 4 21 4 Z" fill="#16130E"/><circle cx="16.5" cy="8.5" r="1.3" fill="#FFD23F"/></svg>',
+        seed: '<svg viewBox="0 0 24 24"><ellipse cx="11" cy="15" rx="6" ry="7.5" transform="rotate(-18 11 15)" fill="#8A5A2B" stroke="#16130E" stroke-width="2"/><path d="M13 8 C13 4 16 2 20 2 C20 6 17 9 13 8 Z" fill="#4CAF50" stroke="#16130E" stroke-width="1.8"/><path d="M13 8 C12 5 9 3 6 3 C6 7 9 9 13 8 Z" fill="#7BC950" stroke="#16130E" stroke-width="1.8"/></svg>',
+        bloom: function (petal) {
+          var p = "";
+          for (var k = 0; k < 6; k++) {
+            p += '<ellipse cx="12" cy="5.4" rx="3.4" ry="4.6" fill="' + petal + '" stroke="#16130E" stroke-width="1.7" transform="rotate(' + (k * 60) + ' 12 12)"/>';
+          }
+          return '<svg viewBox="0 0 24 24">' + p + '<circle cx="12" cy="12" r="3.4" fill="#FFD23F" stroke="#16130E" stroke-width="1.7"/></svg>';
+        },
+        bloomSmall: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5.4" rx="3.4" ry="4.6" fill="#FF6FA5" stroke="#16130E" stroke-width="1.7"/><ellipse cx="12" cy="5.4" rx="3.4" ry="4.6" fill="#FF6FA5" stroke="#16130E" stroke-width="1.7" transform="rotate(72 12 12)"/><ellipse cx="12" cy="5.4" rx="3.4" ry="4.6" fill="#FF6FA5" stroke="#16130E" stroke-width="1.7" transform="rotate(144 12 12)"/><ellipse cx="12" cy="5.4" rx="3.4" ry="4.6" fill="#FF6FA5" stroke="#16130E" stroke-width="1.7" transform="rotate(216 12 12)"/><ellipse cx="12" cy="5.4" rx="3.4" ry="4.6" fill="#FF6FA5" stroke="#16130E" stroke-width="1.7" transform="rotate(288 12 12)"/><circle cx="12" cy="12" r="3.2" fill="#FFD23F" stroke="#16130E" stroke-width="1.7"/></svg>',
+        wither: '<svg viewBox="0 0 24 24"><path d="M12 22 L12 12" stroke="#6B6B6B" stroke-width="2.6"/><path d="M12 13 C8 13 5 10 5 6 C9 6 12 9 12 13 Z" fill="#9A9A9A" stroke="#16130E" stroke-width="1.8"/><path d="M12 11 C15 9 19 9 21 12 C18 15 14 14 12 11 Z" fill="#B5B5B5" stroke="#16130E" stroke-width="1.8"/></svg>',
+        soundOn: '<svg viewBox="0 0 24 24"><path d="M3 9 L3 15 L7 15 L13 20 L13 4 L7 9 Z" fill="#16130E"/><path d="M16 8 C18 10 18 14 16 16 M18.5 5.5 C22 9 22 15 18.5 18.5" fill="none" stroke="#16130E" stroke-width="2.2"/></svg>',
+        soundOff: '<svg viewBox="0 0 24 24"><path d="M3 9 L3 15 L7 15 L13 20 L13 4 L7 9 Z" fill="#16130E"/><path d="M16 9 L22 15 M22 9 L16 15" stroke="#C62F2F" stroke-width="2.6"/></svg>',
+        menu: '<svg viewBox="0 0 24 24"><path d="M4 6 L20 6 M4 12 L20 12 M4 18 L20 18" stroke="#16130E" stroke-width="3"/></svg>',
+        cloud: '<svg viewBox="0 0 24 24"><path d="M6 15 a5 5 0 1 1 1.2-9.9 A6 6 0 0 1 19 7 a4 4 0 0 1-1 8 Z" fill="#fff" stroke="#16130E" stroke-width="2"/><path d="M8 18 L7 21 M13 18 L12 21 M18 18 L17 21" stroke="#1663A8" stroke-width="2.2"/></svg>'
+      };
+
+      /* ================= Percent-chance core =================
+         Every plot prints its odds before you plant:
+           rain %  -> the seed blooms, paying the tier payout
+           crow %  -> crows eat the seed
+           the rest (100 - rain - crow) is dry -> the seed withers
+         Odds are fixed the moment a day's field is dealt and never
+         change once shown; later days just deal worse odds. */
+      var TARGET = 30, MAXSEEDS = 8, DAYS = 6, CELLS = 20;
+      var TIERS = {
+        S: { name: "SAFE",   pay: 1, rainLo: 70, rainHi: 90, crowLo: 5,  crowHi: 15 },
+        R: { name: "RISKY",  pay: 2, rainLo: 40, rainHi: 60, crowLo: 30, crowHi: 40 },
+        G: { name: "GAMBLE", pay: 3, rainLo: 25, rainHi: 35, crowLo: 40, crowHi: 50 }
+      };
+      /* How many of each tier are dealt per day — the escalation is the mix
+         shifting and the odds drifting, shown on the plots themselves. */
+      var MIX = [null,
+        { S: 14, R: 6, G: 0 },
+        { S: 12, R: 6, G: 2 },
+        { S: 10, R: 6, G: 4 },
+        { S: 9,  R: 6, G: 5 },
+        { S: 8,  R: 6, G: 6 },
+        { S: 7,  R: 6, G: 7 }
+      ];
+      var STORY = [
+        "Once, the wishing field bloomed for anyone who planted a wish. Then the crows learned to read the sky.",
+        "You are the last seed-keeper. Six days of rain remain — grow thirty blooms before the field sleeps for a hundred years."
+      ];
+      var CHAPTER = "On the third night, the oldest crow left one black feather on the gate. A warning, maybe. Or an invitation.";
+      var SAVE_KEY = "wishing-field-2026-11-12-v2";
+
+      /* ================= RNG / day generation ================= */
+      function mulberry(seed) {
+        return function () {
+          seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+          var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+          t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+          return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
+      }
+      function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+      function dealPlot(rand, tierKey, day) {
+        var T = TIERS[tierKey], drift = day - 1;
+        var rain = Math.round(T.rainLo + rand() * (T.rainHi - T.rainLo));
+        var crow = Math.round(T.crowLo + rand() * (T.crowHi - T.crowLo));
+        rain = clamp(rain - 2 * drift, tierKey === "S" ? 55 : (tierKey === "R" ? 32 : 20), T.rainHi);
+        crow = clamp(crow + drift, T.crowLo, tierKey === "S" ? 20 : (tierKey === "R" ? 45 : 55));
+        if (rain + crow > 92) crow = 92 - rain; /* dry always keeps at least 8% */
+        return { t: tierKey, rain: rain, crow: crow };
+      }
+      function genDay(day, runSeed) {
+        var rand = mulberry(runSeed * 7919 + day * 104729);
+        var keys = [];
+        ["S", "R", "G"].forEach(function (k) { for (var i = 0; i < MIX[day][k]; i++) keys.push(k); });
+        for (var i = keys.length - 1; i > 0; i--) { var j = (rand() * (i + 1)) | 0; var tmp = keys[i]; keys[i] = keys[j]; keys[j] = tmp; }
+        return keys.map(function (k) { return dealPlot(rand, k, day); });
+      }
+
+      /* ================= State ================= */
+      function freshState() {
+        var seed = (Math.random() * 1e9) | 0;
+        return {
+          v: 2, seed: seed, started: false, storyIdx: 0, phase: "story",
+          day: 1, blooms: 0, plots: genDay(1, seed),
+          planted: [], pendingCards: [],
+          hints: { plant: false, uproot: false, roll: false, crow: false, gamble: false },
+          crowPending: false, muted: false, endKind: null
+        };
+      }
+      var state = freshState();
+      function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} }
+      function load() {
+        try {
+          var raw = localStorage.getItem(SAVE_KEY);
+          if (!raw) return;
+          var s = JSON.parse(raw);
+          if (s && s.v === 2 && s.plots) state = s;
+        } catch (e) {}
+      }
+
+      /* ================= DOM ================= */
+      var $ = function (id) { return document.getElementById(id); };
+      var appEl = $("app"), fieldEl = $("field"), fxEl = $("fx"),
+          dayChip = $("dayChip"), dayPips = $("dayPips"), bloomFill = $("bloomFill"),
+          bloomLabel = $("bloomLabel"), seedPips = $("seedPips"),
+          soundBtn = $("soundBtn"), menuBtn = $("menuBtn"), rainBtn = $("rainBtn"),
+          tourBar = $("tourBar"), tourText = $("tourText"), tourOk = $("tourOk"),
+          modal = $("modal"), modalCard = $("modalCard"), sheetWrap = $("sheetWrap");
+
+      bloomLabel.innerHTML = SVG.bloomSmall.replace('<svg ', '<svg width="16" height="16" ') + "30 blooms";
+      rainBtn.innerHTML = SVG.cloud + "<span>LET IT RAIN</span>";
+      menuBtn.innerHTML = SVG.menu;
+
+      var cellEls = [];
+      for (var ci = 0; ci < CELLS; ci++) {
+        (function (idx) {
+          var b = document.createElement("button");
+          b.className = "cell"; b.type = "button";
+          b.setAttribute("role", "gridcell");
+          b.addEventListener("click", function () { onCell(idx); });
+          fieldEl.appendChild(b); cellEls.push(b);
+        })(ci);
+      }
+      var dpipEls = [], spipEls = [], d;
+      for (d = 0; d < DAYS; d++) { var dp = document.createElement("span"); dp.className = "dpip"; dayPips.appendChild(dp); dpipEls.push(dp); }
+      for (d = 0; d < MAXSEEDS; d++) { var sp = document.createElement("span"); sp.className = "spip"; sp.innerHTML = SVG.seed; seedPips.appendChild(sp); spipEls.push(sp); }
+
+      /* ================= Audio ================= */
+      var AC = null;
+      function tone(f, dur, type, vol, delay) {
+        try {
+          if (state.muted) return;
+          AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+          if (AC.state === "suspended") AC.resume();
+          var t = AC.currentTime + (delay || 0);
+          var o = AC.createOscillator(), g = AC.createGain();
+          o.type = type || "square"; o.frequency.value = f;
+          g.gain.setValueAtTime(vol || 0.04, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+          o.connect(g); g.connect(AC.destination);
+          o.start(t); o.stop(t + dur);
+        } catch (e) {}
+      }
+      function sPlant() { tone(520, .08, "square", .04); tone(780, .07, "square", .03, .05); }
+      function sUproot() { tone(340, .08, "triangle", .04); }
+      function sTick() { tone(980, .03, "square", .018); }
+      function sBloom(pay) { tone(660, .12, "square", .04); tone(880, .12, "square", .04, .09); if (pay > 1) tone(1174, .16, "square", .04, .18); if (pay > 2) tone(1568, .18, "square", .04, .27); }
+      function sEaten() { tone(150, .25, "sawtooth", .06); tone(110, .3, "sawtooth", .05, .08); }
+      function sDry() { tone(220, .18, "triangle", .035); }
+      function sWin() { [523, 659, 784, 1046, 784, 1046].forEach(function (f, i) { tone(f, .18, "square", .045, i * .13); }); }
+
+      /* ================= Render ================= */
+      var resolving = false, view = null;
+      /* view: display override during resolution
+         { plots, planted, results:{idx:"bloom"|"crow"|"dry"}, spinning:{idx:word} } */
+      function curView() {
+        return view || { plots: state.plots, planted: state.planted, results: null, spinning: null };
+      }
+      function render() {
+        var v = curView();
+        dayChip.textContent = "DAY " + state.day;
+        dpipEls.forEach(function (el, i) {
+          el.className = "dpip" + (i + 1 < state.day || state.phase === "end" ? " done" : (i + 1 === state.day ? " now" : ""));
+        });
+        bloomFill.style.width = Math.min(100, state.blooms / TARGET * 100) + "%";
+        spipEls.forEach(function (el, i) { el.className = "spip" + (i < v.planted.length ? " used" : ""); });
+        soundBtn.innerHTML = state.muted ? SVG.soundOff : SVG.soundOn;
+        rainBtn.disabled = resolving || state.phase !== "play";
+
+        cellEls.forEach(function (el, i) {
+          var p = v.plots[i], T = TIERS[p.t];
+          var planted = v.planted.indexOf(i) >= 0;
+          var res = v.results ? v.results[i] : null;
+          var spin = v.spinning ? v.spinning[i] : null;
+          el.className = "cell tier" + p.t + (planted && !res ? " locked" : "");
+          var html = '<span class="odds">' +
+            '<span class="tierLine">' + T.name + " · ×" + T.pay + "</span>" +
+            '<span class="oLine"><b>' + p.rain + "%</b> RAIN</span>" +
+            '<span class="oLine"><b>' + p.crow + "%</b> CROW</span>" +
+          "</span>";
+          html += '<span class="mid">';
+          if (spin) {
+            html += '<span class="spinWord">' + spin + "</span>";
+          } else if (res === "bloom") {
+            html += '<span class="bloomPop">' + SVG.bloom(p.t === "G" ? "#7B5CFF" : "#FF6FA5") + '</span><span class="resWord">RAIN +' + T.pay + "</span>";
+          } else if (res === "crow") {
+            html += SVG.crow + '<span class="resWord">CROWS!</span>';
+          } else if (res === "dry") {
+            html += SVG.wither + '<span class="resWord">DRY</span>';
+          } else if (planted) {
+            html += SVG.seed;
+          }
+          html += "</span>";
+          el.innerHTML = html;
+          var bits = ["Plot", T.name.toLowerCase(), "pays " + T.pay,
+            p.rain + " percent rain", p.crow + " percent crows", (100 - p.rain - p.crow) + " percent dry"];
+          if (planted) bits.push("planted");
+          if (res === "bloom") bits.push("bloomed");
+          if (res === "crow") bits.push("eaten by crows");
+          if (res === "dry") bits.push("withered dry");
+          el.setAttribute("aria-label", bits.join(", "));
+        });
+      }
+
+      /* ================= Modal / cards ================= */
+      var modalAction = null;
+      function modalOpen() { return !modal.hidden; }
+      function showModal(html, action) {
+        modalCard.innerHTML = html;
+        modalAction = action || null;
+        modal.hidden = false;
+        hideHint();
+      }
+      function hideModal() { modal.hidden = true; modalAction = null; }
+      modalCard.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-act]");
+        if (!b || !modalAction) return;
+        modalAction(b.getAttribute("data-act"));
+      });
+
+      function showStoryCard() {
+        var idx = state.storyIdx;
+        showModal(
+          '<div class="art">' + SVG.bloom("#FF6FA5") + '</div>' +
+          '<p class="storyText">' + STORY[idx] + "</p>" +
+          '<button class="bigBtn" data-act="go">' + (idx === 0 ? "NEXT" : "START") + "</button>",
+          function () {
+            if (idx === 0) { state.storyIdx = 1; save(); showStoryCard(); }
+            else {
+              state.started = true; state.phase = "play"; save();
+              hideModal(); render(); maybeHints();
+            }
+          });
+      }
+      function showNextCard() {
+        var kind = state.pendingCards[0];
+        if (kind === "chapter") {
+          showModal(
+            '<div class="kicker">THE STORY GOES ON</div>' +
+            '<div class="art">' + SVG.crow + '</div>' +
+            '<p class="storyText">' + CHAPTER + "</p>" +
+            '<button class="bigBtn" data-act="go">CONTINUE</button>',
+            function () { state.pendingCards.shift(); save(); hideModal(); afterCards(); });
+        }
+      }
+      function afterCards() {
+        render();
+        if (state.pendingCards.length) { showNextCard(); return; }
+        maybeHints();
+      }
+      function showEnd() {
+        var k = state.endKind;
+        var title = k === "win" ? "THE FIELD BLOOMS" : k === "givesup" ? "THE FIELD GIVES UP" : "THE FIELD SLEEPS";
+        var text = k === "win" ? "Thirty blooms. The field wakes, singing, and every wish comes home."
+          : k === "givesup" ? "Too few days remain to reach thirty blooms. The field folds its petals."
+          : "The sixth rain has passed. The field sleeps for a hundred years.";
+        var art = k === "win" ? SVG.bloom("#FF6FA5") : SVG.wither;
+        showModal(
+          '<div class="art">' + art + '</div>' +
+          '<div class="bigTitle">' + title + "</div>" +
+          '<p class="endText">' + text + "</p>" +
+          '<button class="bigBtn" data-act="go">RETRY</button>',
+          function () { resetRun(); });
+        if (k === "win") { sWin(); confetti(); }
+      }
+      function resetRun() {
+        state = freshState();
+        view = null; resolving = false; forceQueue = null;
+        save(); hideModal(); render(); showStoryCard();
+      }
+
+      /* ================= Hints: one at a time, at first use ================= */
+      var hintId = null, hintTarget = null, hintAction = null;
+      function hintVisible() { return !tourBar.hidden; }
+      function showHint(id, target, text, actionDriven) {
+        clearSpot();
+        hintId = id; hintTarget = target || null; hintAction = actionDriven || null;
+        tourText.textContent = text;
+        tourOk.hidden = !!actionDriven;
+        tourBar.hidden = false;
+        if (hintTarget) hintTarget.classList.add("spot");
+      }
+      function clearSpot() { if (hintTarget) hintTarget.classList.remove("spot"); hintTarget = null; }
+      function hideHint() { tourBar.hidden = true; clearSpot(); hintId = null; hintAction = null; }
+      function completeHint(id) {
+        if (hintId !== id) return;
+        state.hints[id] = true;
+        hideHint(); save(); render(); maybeHints();
+      }
+      tourOk.addEventListener("click", function () {
+        if (!hintId) return;
+        var id = hintId;
+        state.hints[id] = true;
+        hideHint(); save(); render(); maybeHints();
+      });
+      function firstGambleIdx() {
+        for (var i = 0; i < CELLS; i++) if (state.plots[i].t === "G") return i;
+        return -1;
+      }
+      function maybeHints() {
+        if (state.phase !== "play" || resolving || modalOpen() || !sheetWrap.hidden || hintVisible()) return;
+        var gi = firstGambleIdx();
+        if (!state.hints.gamble && gi >= 0) {
+          showHint("gamble", cellEls[gi], "A GAMBLE plot — low rain chance, but a bloom pays ×3.");
+        } else if (state.crowPending && !state.hints.crow) {
+          showHint("crow", null, "A crow took that seed — the CROW % was its chance.");
+        } else if (!state.hints.plant) {
+          var si = 0;
+          for (var i = 0; i < CELLS; i++) if (state.plots[i].t === "S") { si = i; break; }
+          showHint("plant", cellEls[si], "Tap a plot to plant a seed.", "plant");
+        } else if (!state.hints.uproot && state.planted.length > 0) {
+          showHint("uproot", cellEls[state.planted[0]], "Tap a planted seed to pull it back up.");
+        }
+      }
+
+      /* ================= Input ================= */
+      function blocked() {
+        return state.phase !== "play" || resolving || modalOpen() || !sheetWrap.hidden;
+      }
+      function onCell(i) {
+        if (blocked()) return;
+        var p = state.planted.indexOf(i);
+        if (p >= 0) { state.planted.splice(p, 1); sUproot(); }
+        else {
+          if (state.planted.length >= MAXSEEDS) { tone(160, .1, "square", .04); return; }
+          state.planted.push(i); sPlant();
+        }
+        save(); render();
+        if (p < 0) completeHint("plant"); else maybeHints();
+      }
+      rainBtn.addEventListener("click", onRain);
+      soundBtn.addEventListener("click", function () {
+        state.muted = !state.muted; save(); render();
+        if (!state.muted) tone(660, .08, "square", .04);
+      });
+      menuBtn.addEventListener("click", function () {
+        if (resolving) return;
+        sheetWrap.hidden = false;
+      });
+      $("sheetClose").addEventListener("click", function () { sheetWrap.hidden = true; maybeHints(); });
+      $("abandonBtn").addEventListener("click", function () {
+        sheetWrap.hidden = true;
+        showModal(
+          '<div class="bigTitle">ABANDON RUN?</div>' +
+          '<p class="endText">This run ends. A new field waits.</p>' +
+          '<button class="bigBtn" data-act="yes">ABANDON</button>' +
+          '<button class="ghostBtn" data-act="no">KEEP PLAYING</button>',
+          function (act) {
+            if (act === "yes") resetRun();
+            else { hideModal(); maybeHints(); }
+          });
+      });
+      fieldEl.addEventListener("keydown", function (e) {
+        var cur = cellEls.indexOf(document.activeElement);
+        if (cur < 0) return;
+        var n = null;
+        if (e.key === "ArrowRight") n = cur + 1;
+        else if (e.key === "ArrowLeft") n = cur - 1;
+        else if (e.key === "ArrowDown") n = cur + 5;
+        else if (e.key === "ArrowUp") n = cur - 5;
+        if (n !== null && n >= 0 && n < CELLS) { e.preventDefault(); cellEls[n].focus(); }
+      });
+
+      /* ================= Rain resolution: a visible roll per seed =================
+         Outcomes are decided and banked the moment LET IT RAIN is tapped;
+         the spinner reveal below is cosmetic and never holds game state. */
+      var forceQueue = null; /* test hook only */
+      function rollOutcome(plot, forced) {
+        if (forced === "bloom" || forced === "crow" || forced === "dry") return forced;
+        var r = Math.random() * 100;
+        if (r < plot.rain) return "bloom";
+        if (r < plot.rain + plot.crow) return "crow";
+        return "dry";
+      }
+      function onRain() {
+        if (blocked()) return;
+        var plots = state.plots, planted = state.planted.slice();
+        var outcomes = {}, gained = 0, anyCrow = false, anyBloom = false;
+        planted.forEach(function (idx, k) {
+          var o = rollOutcome(plots[idx], forceQueue ? forceQueue[k] : null);
+          outcomes[idx] = o;
+          if (o === "bloom") { gained += TIERS[plots[idx].t].pay; anyBloom = true; }
+          if (o === "crow") anyCrow = true;
+        });
+        forceQueue = null;
+        state.blooms += gained; /* banked NOW, never in an animation callback */
+        if (anyCrow && !state.hints.crow) state.crowPending = true;
+
+        var endKind = null;
+        if (state.day === DAYS) endKind = state.blooms >= TARGET ? "win" : "sleeps";
+        else if (state.blooms + (DAYS - state.day) * MAXSEEDS * 3 < TARGET) endKind = "givesup";
+
+        view = { plots: plots, planted: planted, results: {}, spinning: {} };
+        resolving = true;
+        hideHint();
+
+        if (endKind) {
+          state.phase = "end"; state.endKind = endKind;
+        } else {
+          state.day++;
+          state.plots = genDay(state.day, state.seed);
+          state.planted = [];
+          if (state.day === 4) state.pendingCards.push("chapter");
+          if (state.day === 3 && !state.hints.crow && !state.crowPending) state.crowPending = true;
+          state.phase = "play";
+        }
+        save(); render();
+
+        fxRain();
+        if (!state.hints.roll) {
+          state.hints.roll = true; save();
+          showHint("roll", null, "Every seed rolls the odds on its plot.", "roll");
+          tourOk.hidden = true;
+        }
+
+        var SPIN_MS = 460, GAP_MS = 90, start = 550;
+        planted.forEach(function (idx, k) {
+          var at = start + k * (SPIN_MS + GAP_MS);
+          setTimeout(function () { startSpin(idx); }, at);
+          setTimeout(function () { landRoll(idx, outcomes[idx]); }, at + SPIN_MS);
+        });
+        var total = planted.length ? start + planted.length * (SPIN_MS + GAP_MS) + 350 : 1100;
+        setTimeout(finishResolution, total);
+      }
+      var spinTimers = {};
+      function startSpin(idx) {
+        if (!view) return;
+        var words = ["RAIN", "CROWS", "DRY"], w = 0;
+        view.spinning[idx] = words[0];
+        render();
+        spinTimers[idx] = setInterval(function () {
+          if (!view) { clearInterval(spinTimers[idx]); return; }
+          w = (w + 1) % 3;
+          view.spinning[idx] = words[w];
+          sTick();
+          render();
+        }, 80);
+      }
+      function landRoll(idx, outcome) {
+        if (spinTimers[idx]) { clearInterval(spinTimers[idx]); delete spinTimers[idx]; }
+        if (!view) return;
+        delete view.spinning[idx];
+        view.results[idx] = outcome;
+        render();
+        var p = view.plots[idx];
+        if (outcome === "bloom") { sBloom(TIERS[p.t].pay); fxPetals(idx); }
+        else if (outcome === "crow") {
+          sEaten(); fxSwoop(idx);
+          appEl.classList.add("shake");
+          setTimeout(function () { appEl.classList.remove("shake"); }, 480);
+        } else sDry();
+      }
+      function finishResolution() {
+        view = null; resolving = false;
+        if (hintId === "roll") hideHint();
+        render();
+        if (state.phase === "end") showEnd();
+        else if (state.pendingCards.length) showNextCard();
+        else maybeHints();
+      }
+
+      /* ================= FX ================= */
+      function fxRain() {
+        try {
+          for (var i = 0; i < 46; i++) {
+            var dEl = document.createElement("span");
+            dEl.className = "rainDrop";
+            dEl.style.left = (Math.random() * 100) + "%";
+            dEl.style.animationDelay = (Math.random() * .35) + "s";
+            fxEl.appendChild(dEl);
+            (function (n) { setTimeout(function () { n.remove(); }, 1300); })(dEl);
+          }
+        } catch (e) {}
+      }
+      function cellCenter(idx) {
+        var fxRect = fxEl.getBoundingClientRect();
+        var r = cellEls[idx].getBoundingClientRect();
+        return { x: r.left - fxRect.left, y: r.top - fxRect.top, w: r.width, h: r.height };
+      }
+      function fxSwoop(idx) {
+        try {
+          var c = cellCenter(idx);
+          var el = document.createElement("div");
+          el.className = "swoop";
+          el.innerHTML = SVG.crow;
+          el.style.left = (c.x + c.w / 2 - 26) + "px";
+          el.style.top = (c.y + c.h / 2 - 26) + "px";
+          fxEl.appendChild(el);
+          setTimeout(function () { el.remove(); }, 900);
+        } catch (e) {}
+      }
+      function fxPetals(idx) {
+        try {
+          var c = cellCenter(idx);
+          var cx = c.x + c.w / 2, cy = c.y + c.h / 2;
+          for (var i = 0; i < 6; i++) {
+            var p = document.createElement("span");
+            p.className = "petal";
+            p.style.background = i % 2 ? "#FFD23F" : "#FF6FA5";
+            p.style.left = cx + "px"; p.style.top = cy + "px";
+            fxEl.appendChild(p);
+            var ang = (Math.PI * 2 * i) / 6, dist = 26 + Math.random() * 22;
+            try {
+              p.animate([
+                { transform: "translate(-50%,-50%) rotate(0deg)", opacity: 1 },
+                { transform: "translate(" + (Math.cos(ang) * dist - 5) + "px," + (Math.sin(ang) * dist - 5) + "px) rotate(200deg)", opacity: 0 }
+              ], { duration: 650, easing: "ease-out" });
+            } catch (e) {}
+            (function (n) { setTimeout(function () { n.remove(); }, 700); })(p);
+          }
+        } catch (e) {}
+      }
+      function confetti() {
+        try {
+          var layer = $("confettiLayer");
+          var colors = ["#FF6FA5", "#FFD23F", "#7BC950", "#4FC3F7", "#FF8A3D", "#B388FF"];
+          for (var i = 0; i < 42; i++) {
+            var c = document.createElement("span");
+            c.className = "confetto";
+            c.style.left = (Math.random() * 100) + "%";
+            c.style.background = colors[i % colors.length];
+            c.style.animationDuration = (1.6 + Math.random() * 1.6) + "s";
+            c.style.animationDelay = (Math.random() * .5) + "s";
+            layer.appendChild(c);
+            (function (n) { setTimeout(function () { n.remove(); }, 4200); })(c);
+          }
+        } catch (e) {}
+      }
+
+      /* ================= Boot ================= */
+      load();
+      render();
+      if (state.phase === "story") showStoryCard();
+      else if (state.phase === "end") showEnd();
+      else if (state.pendingCards && state.pendingCards.length) showNextCard();
+      else maybeHints();
+
+      /* Debug hooks for verification (read/force state only) */
+      window.__WF = {
+        get state() { return state; },
+        setBlooms: function (n) { state.blooms = n; save(); render(); },
+        setOdds: function (i, rain, crow) { state.plots[i].rain = rain; state.plots[i].crow = crow; save(); render(); },
+        forceRolls: function (arr) { forceQueue = arr.slice(); },
+        plant: function (i) { onCell(i); },
+        rain: function () { onRain(); },
+        skipToDay: function (day) {
+          state.day = day; state.plots = genDay(day, state.seed);
+          state.planted = []; state.phase = "play"; state.pendingCards = [];
+          save(); render();
+        }
+      };
+    </script>
+  </body>
+</html>

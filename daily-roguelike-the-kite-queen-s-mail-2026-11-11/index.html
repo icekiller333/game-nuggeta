@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<link rel="icon" href="data:," />
+<title>Daily Roguelike — The Kite Queen's Mail (2026-11-11)</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --ink:#14100a; --paper:#fff6d8; --yellow:#ffd21f; --pink:#ff8fb2; --teal:#2ec4b6;
+    --sky:#aee7ff; --orange:#ff9f1c; --red:#e63946; --green:#7bd747; --lav:#cdb4f6;
+  }
+  html,body{height:100dvh;overflow:hidden;background:#14100a}
+  body{font-family:Verdana,Geneva,Tahoma,sans-serif;color:var(--ink)}
+  button{min-height:44px;font-family:inherit;cursor:pointer}
+  #app{height:100dvh;display:flex;flex-direction:column;background:var(--sky);overflow:hidden}
+
+  /* HUD */
+  #hud{height:52px;flex:0 0 52px;background:var(--yellow);border-bottom:4px solid #14100a;display:flex;align-items:center;gap:6px;padding:0 8px;overflow:hidden}
+  .hudLabel{font-weight:900;font-size:11px;letter-spacing:.3px;white-space:nowrap}
+  #skyNum{font-weight:900;font-size:16px;background:#14100a;color:#fff;padding:2px 6px;white-space:nowrap}
+  .pips{display:flex;gap:3px;align-items:center}
+  .lpip{width:12px;height:12px;background:#fff;border:2px solid #14100a;transform:rotate(45deg);flex:0 0 auto}
+  .lpip.on{background:var(--orange)}
+  .spip{width:8px;height:18px;background:#fff;border:2px solid #14100a;flex:0 0 auto}
+  .spip.on{background:var(--teal)}
+  .spip.lost{background:var(--red)}
+  #muteBtn{margin-left:auto;background:#fff;border:3px solid #14100a;box-shadow:3px 3px 0 #14100a;font-weight:900;font-size:11px;padding:0 8px;white-space:nowrap;flex:0 0 auto}
+  #muteBtn:active{transform:translate(3px,3px);box-shadow:0 0 0 #14100a}
+
+  /* Laws bar */
+  #lawsBar{min-height:34px;flex:0 0 auto;background:var(--lav);border-bottom:4px solid #14100a;display:flex;align-items:center;gap:6px;padding:4px 8px;overflow:hidden;flex-wrap:nowrap}
+  #lawsBar .wtag{font-weight:900;font-size:11px;white-space:nowrap}
+  #lawsList{display:flex;gap:5px;overflow:hidden;flex-wrap:nowrap}
+  .law{background:#fff;border:2px solid #14100a;font-size:11px;font-weight:900;padding:2px 7px;white-space:nowrap;box-shadow:2px 2px 0 #14100a}
+  .law.newest{background:var(--pink)}
+
+  /* Stage */
+  #stage{flex:1 1 auto;min-height:0;position:relative;overflow:hidden;background:var(--sky)}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  #flash{position:absolute;inset:0;background:var(--red);opacity:0;pointer-events:none}
+  #flash.go{animation:fl .35s steps(2) 1}
+  @keyframes fl{0%{opacity:.55}100%{opacity:0}}
+  .shake{animation:shk .3s steps(4) 1}
+  @keyframes shk{0%{transform:translate(0,0)}25%{transform:translate(-8px,4px)}50%{transform:translate(8px,-4px)}75%{transform:translate(-5px,-3px)}100%{transform:translate(0,0)}}
+
+  #howto{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:min(92%,520px);background:#14100a;color:#fff;font-weight:700;font-size:14px;line-height:1.35;padding:10px 14px;text-align:center;z-index:6}
+  #stormWarn{position:absolute;top:52px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-weight:900;font-size:15px;padding:6px 14px;border:3px solid #14100a;z-index:5}
+  .hidden{display:none !important}
+
+  /* Steer deck — a fixed strip below the play field, so buttons never cover the kite, seals, or thorns */
+  #controls{position:absolute;left:0;right:0;bottom:0;height:88px;background:var(--paper);border-top:4px solid #14100a;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;z-index:7;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  .ctlCluster{display:flex;gap:10px}
+  .ctlBtn{width:62px;height:62px;min-height:62px;background:#fff;border:3px solid #14100a;box-shadow:3px 3px 0 #14100a;font-size:26px;font-weight:900;color:#14100a;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  .ctlBtn.held{background:var(--yellow);transform:translate(3px,3px);box-shadow:0 0 0 #14100a}
+  .ctlMid{font-weight:900;font-size:11px;letter-spacing:1px;text-align:center;line-height:1.5}
+  @media (max-height:480px){ .ctlBtn{width:52px;height:52px;min-height:52px;font-size:22px} }
+
+  /* Overlays */
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;z-index:10;background:rgba(20,16,10,.45)}
+  .card{background:var(--paper);border:4px solid #14100a;box-shadow:8px 8px 0 #14100a;padding:22px 20px;max-width:440px;width:100%;text-align:center;max-height:100%;overflow:hidden}
+  .card h1{font-size:26px;line-height:1.15;margin-bottom:12px;text-transform:uppercase}
+  .card h2{font-size:22px;line-height:1.2;margin-bottom:12px;text-transform:uppercase}
+  .card p{font-size:16px;line-height:1.5;margin-bottom:16px;font-weight:600}
+  .bigBtn{background:var(--yellow);border:4px solid #14100a;box-shadow:5px 5px 0 #14100a;font-weight:900;font-size:18px;padding:10px 28px;text-transform:uppercase}
+  .bigBtn:active{transform:translate(5px,5px);box-shadow:0 0 0 #14100a}
+  .pinkBtn{background:var(--pink)}
+  .tealBtn{background:var(--teal)}
+  .kiteArt{font-size:44px;line-height:1;margin-bottom:10px}
+
+  /* Tour */
+  #tourOverlay{position:absolute;inset:0;z-index:9;pointer-events:none}
+  #spotBox{position:absolute;border:4px solid var(--yellow);box-shadow:0 0 0 3px #14100a, 0 0 0 9999px rgba(20,16,10,.45);pointer-events:none}
+  #tourCard{position:absolute;left:50%;transform:translateX(-50%);top:12px;width:min(92%,420px);background:#fff;border:4px solid #14100a;box-shadow:6px 6px 0 #14100a;padding:12px 14px;text-align:center;pointer-events:auto}
+  #tourCard p{font-size:16px;font-weight:800;margin-bottom:10px}
+  #tourBtn{background:var(--teal);border:3px solid #14100a;box-shadow:4px 4px 0 #14100a;font-weight:900;font-size:15px;padding:8px 22px}
+  #tourBtn:active{transform:translate(4px,4px);box-shadow:0 0 0 #14100a}
+  #scoreLine{font-size:14px;font-weight:900;margin-bottom:14px}
+  @media (max-height:480px){ .card h1{font-size:21px} .card p{font-size:14px;margin-bottom:10px} .card{padding:14px} }
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hud">
+    <span class="hudLabel">SKY</span><span id="skyNum">1 / 6</span>
+    <span class="hudLabel">MAIL</span><div class="pips" id="letterPips"></div>
+    <span class="hudLabel">STRING</span><div class="pips" id="stringPips"></div>
+    <button id="muteBtn" aria-label="Toggle sound">SOUND: ON</button>
+  </header>
+  <div id="lawsBar"><span class="wtag">WINDS:</span><div id="lawsList"></div></div>
+  <div id="stage">
+    <canvas id="game"></canvas>
+    <div id="flash"></div>
+    <div id="stormWarn" class="hidden">⚠ STORM COMING</div>
+    <div id="howto" class="hidden">Hold the arrow buttons to steer: catch glowing letters, dodge the thorn-branches.</div>
+
+    <div id="controls" class="hidden">
+      <div class="ctlCluster">
+        <button class="ctlBtn" id="btnLeft" aria-label="Steer left">◀</button>
+        <button class="ctlBtn" id="btnRight" aria-label="Steer right">▶</button>
+      </div>
+      <div class="ctlMid">HOLD<br>TO STEER</div>
+      <div class="ctlCluster">
+        <button class="ctlBtn" id="btnUp" aria-label="Steer up">▲</button>
+        <button class="ctlBtn" id="btnDown" aria-label="Steer down">▼</button>
+      </div>
+    </div>
+
+    <div id="tourOverlay" class="hidden">
+      <div id="spotBox"></div>
+      <div id="tourCard"><p id="tourText"></p><button id="tourBtn">GOT IT →</button></div>
+    </div>
+
+    <div id="storyOverlay" class="overlay">
+      <div class="card" id="storyCard">
+        <div class="kiteArt" aria-hidden="true">🪁</div>
+        <h1 id="storyTitle">The Lost Letters</h1>
+        <p id="storyText">The Sky Queen lost her letters. You are the last kite-messenger of the cloud kingdom.</p>
+        <button class="bigBtn" id="storyBtn">NEXT →</button>
+      </div>
+    </div>
+
+    <div id="chapterOverlay" class="overlay hidden">
+      <div class="card">
+        <h2>Letter Delivered!</h2>
+        <p id="chapterText"></p>
+        <button class="bigBtn tealBtn" id="chapterBtn">FLY ON →</button>
+      </div>
+    </div>
+
+    <div id="endOverlay" class="overlay hidden">
+      <div class="card">
+        <h1 id="endTitle">THE KITE FALLS</h1>
+        <p id="endText"></p>
+        <div id="scoreLine"></div>
+        <button class="bigBtn pinkBtn" id="retryBtn">RETRY</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById('game'), ctx=cv.getContext('2d');
+var stage=document.getElementById('stage');
+var W=0,H=0,DPR=1;
+
+var LAWS=[
+  {name:'Crosswind', sky:1},
+  {name:'Updraft', sky:2},
+  {name:'Shear Wind', sky:3},
+  {name:'Storm Pulse', sky:4},
+  {name:'Twin Crosswinds', sky:5},
+  {name:'Full Gale', sky:6}
+];
+var CHAPTERS=[
+  "The first letter hums a lullaby only clouds remember.",
+  "Somewhere below, the valley holds its breath.",
+  "The Queen's crest gleams on every seal you carry.",
+  "Far away, a tower bell rings for no one.",
+  "The last sky darkens — the Queen is waiting."
+];
+var TOUR=[
+  {key:'controls', text:'Hold the arrow buttons to steer your kite.'},
+  {key:'seal', text:'Catch the glowing letter-seal.'},
+  {key:'thorn', text:'Dodge the thorn-branch.'},
+  {key:'wind', text:'Wind bands shove your kite. Fight them — or ride them.'}
+];
+
+var S={
+  mode:'story', storyStep:1, tourStep:0,
+  sky:1, letters:0, sealsGot:0, strings:3,
+  kite:{x:90,y:160,tx:90,ty:160,vx:0,vy:0},
+  seals:[], thorns:[], particles:[], confetti:[], trail:[],
+  sealTimer:0, thornTimer:0, invuln:0, time:0,
+  stormT:0, stormPhase:'calm', howtoShown:false,
+  btn:{left:false,right:false,up:false,down:false}, keys:{}, muted:false, started:false
+};
+var DECK_H=88; // height of the #controls strip; gameplay happens above it
+function FH(){ return Math.max(160, H-DECK_H); } // play-field height (stage minus steer deck)
+
+/* ---------- Audio ---------- */
+var AC=null;
+function beep(f,d,type,g){
+  if(S.muted) return;
+  try{
+    if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended') AC.resume();
+    var o=AC.createOscillator(), gn=AC.createGain();
+    o.type=type||'square'; o.frequency.value=f;
+    gn.gain.setValueAtTime(g||0.06,AC.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+(d||0.12));
+    o.connect(gn); gn.connect(AC.destination);
+    o.start(); o.stop(AC.currentTime+(d||0.12));
+  }catch(e){}
+}
+function sndCollect(){beep(660,.1,'square',.07); setTimeout(function(){beep(990,.14,'square',.07);},70);}
+function sndHit(){beep(140,.25,'sawtooth',.1);}
+function sndWin(){[523,659,784,1046].forEach(function(f,i){setTimeout(function(){beep(f,.2,'square',.07);},i*130);});}
+function sndLose(){[400,300,200,110].forEach(function(f,i){setTimeout(function(){beep(f,.22,'sawtooth',.08);},i*140);});}
+
+/* ---------- Sizing ---------- */
+function resize(){
+  var r=stage.getBoundingClientRect();
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  W=Math.max(280,r.width); H=Math.max(200,r.height);
+  cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize',resize);
+
+/* ---------- HUD ---------- */
+var lp=document.getElementById('letterPips'), sp=document.getElementById('stringPips');
+for(var i=0;i<6;i++){var d=document.createElement('div');d.className='lpip';lp.appendChild(d);}
+for(var j=0;j<3;j++){var d2=document.createElement('div');d2.className='spip on';sp.appendChild(d2);}
+function renderHUD(){
+  document.getElementById('skyNum').textContent=S.sky+' / 6';
+  var lc=lp.children; for(var a=0;a<6;a++) lc[a].className='lpip'+(a<S.letters?' on':'');
+  var sc=sp.children; for(var b=0;b<3;b++) sc[b].className='spip'+(b<S.strings?' on':' lost');
+  var ll=document.getElementById('lawsList'); ll.innerHTML='';
+  var active=LAWS.filter(function(l){return l.sky<=S.sky;}).slice().reverse();
+  active.forEach(function(l,idx){
+    var el=document.createElement('span'); el.className='law'+(idx===0&&S.sky>1?' newest':'');
+    el.textContent=l.name; ll.appendChild(el);
+  });
+}
+
+/* ---------- Wind bands ---------- */
+/* fx/fy are ACCELERATIONS (px/s^2) applied to the kite's velocity every frame
+   while it is inside the band. They must be this large: the old values (26/64)
+   were velocity nudges fed into a stiff target-spring, which cancelled them to
+   a ~4-9px offset — the crosswind was effectively zero. */
+function bands(){
+  var out=[], sp2=S.sky>=6?1.45:1, fh=FH();
+  // S1 crosswind: mid horizontal band shoving down-right
+  out.push({x:0,y:fh*0.40,w:W,h:fh*0.20,fx:240*sp2,fy:520*sp2,col:'rgba(255,210,31,0.30)',dir:'dr',label:'CROSSWIND'});
+  if(S.sky>=2) out.push({x:W*0.55,y:0,w:W*0.20,h:fh,fx:0,fy:-880*sp2,col:'rgba(46,196,182,0.30)',dir:'up',label:'UPDRAFT'});
+  if(S.sky>=3) out.push({x:0,y:fh*0.06,w:W,h:fh*0.17,fx:-340*sp2,fy:-300*sp2,col:'rgba(255,143,178,0.32)',dir:'ul',label:'SHEAR'});
+  if(S.sky>=5){
+    out.push({x:0,y:fh*0.72,w:W,h:fh*0.16,fx:420*sp2,fy:240*sp2,col:'rgba(255,159,28,0.32)',dir:'dr',label:'CROSSWIND 2'});
+  }
+  return out;
+}
+function windAt(x,y){
+  var fx=0,fy=0, bs=bands();
+  for(var i=0;i<bs.length;i++){var b=bs[i];
+    if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){fx+=b.fx;fy+=b.fy;}}
+  if(S.sky>=4&&S.stormPhase==='pulse'){fy+=1250;fx+=300;}
+  return {x:fx,y:fy};
+}
+
+/* ---------- Spawning ---------- */
+function spawnSeal(){
+  S.seals.push({x:W+40,y:40+Math.random()*(FH()-90),r:20,ph:Math.random()*6.28,got:false});
+}
+function spawnThorn(){
+  var speed=1+(S.sky>=6?0.5:0);
+  S.thorns.push({x:W+50,y:26+Math.random()*(FH()-60),r:24,rot:Math.random()*6.28,vr:(Math.random()-.5)*0.02,sp:(1.5+Math.random()*0.9)*speed});
+}
+function burst(x,y,col,n){
+  for(var i=0;i<(n||16);i++){var a=Math.random()*6.28,v=1+Math.random()*3.4;
+    S.particles.push({x:x,y:y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1,col:col,sz:3+Math.random()*4});}
+}
+function makeConfetti(){
+  S.confetti=[]; var cols=['#ffd21f','#ff8fb2','#2ec4b6','#ff9f1c','#7bd747','#cdb4f6'];
+  for(var i=0;i<90;i++) S.confetti.push({x:Math.random()*W,y:-20-Math.random()*H*0.6,vx:(Math.random()-.5)*1.4,vy:1.4+Math.random()*2.4,rot:Math.random()*6.28,vr:(Math.random()-.5)*0.2,col:cols[i%6],w:6+Math.random()*6,h:4+Math.random()*5});
+}
+
+/* ---------- Drawing ---------- */
+function drawKite(x,y,tilt,blink){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(tilt);
+  if(blink){ctx.globalAlpha=0.35;}
+  // string to hand (bottom-left)
+  ctx.strokeStyle='#14100a'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(-6,16); ctx.lineTo(-46,58); ctx.stroke();
+  // tail
+  ctx.beginPath(); ctx.moveTo(0,20);
+  for(var i=1;i<=4;i++){ctx.lineTo(Math.sin(i*1.4+S.time*4)*8,20+i*13);}
+  ctx.strokeStyle='#14100a'; ctx.lineWidth=2.5; ctx.stroke();
+  for(var t=1;t<=3;t++){var tx2=Math.sin(t*1.4+S.time*4)*8,ty2=20+t*13;
+    ctx.fillStyle=t%2?'#ff8fb2':'#2ec4b6'; ctx.strokeStyle='#14100a'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(tx2-6,ty2); ctx.lineTo(tx2+6,ty2); ctx.lineTo(tx2,ty2+7); ctx.closePath(); ctx.fill(); ctx.stroke();}
+  // diamond body: 4 panels
+  ctx.lineWidth=3; ctx.strokeStyle='#14100a';
+  var quads=[['#ffd21f',0,-26,-20,0,0,0],['#ff8fb2',0,-26,0,0,20,0],['#2ec4b6',0,0,-20,0,0,24],['#ff9f1c',0,0,0,24,20,0]];
+  quads.forEach(function(q){ctx.fillStyle=q[0];ctx.beginPath();ctx.moveTo(q[1],q[2]);ctx.lineTo(q[3],q[4]);ctx.lineTo(q[5],q[6]);ctx.lineTo(q[7]!==undefined?q[7]:0,q[8]!==undefined?q[8]:0);ctx.closePath();ctx.fill();ctx.stroke();});
+  ctx.fillStyle='#14100a'; ctx.beginPath(); ctx.arc(0,0,3.4,0,6.29); ctx.fill();
+  ctx.restore();
+}
+function drawSeal(s){
+  var bobY=s.y+Math.sin(S.time*3+s.ph)*5;
+  ctx.save(); ctx.translate(s.x,bobY);
+  var pulse=1+Math.sin(S.time*6+s.ph)*0.1;
+  ctx.scale(pulse,pulse);
+  // glow
+  var g=ctx.createRadialGradient(0,0,4,0,0,34);
+  g.addColorStop(0,'rgba(255,210,31,0.85)'); g.addColorStop(1,'rgba(255,210,31,0)');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,34,0,6.29); ctx.fill();
+  // envelope
+  ctx.fillStyle='#ffffff'; ctx.strokeStyle='#14100a'; ctx.lineWidth=3;
+  ctx.fillRect(-19,-13,38,26); ctx.strokeRect(-19,-13,38,26);
+  ctx.beginPath(); ctx.moveTo(-19,-13); ctx.lineTo(0,2); ctx.lineTo(19,-13); ctx.stroke();
+  // wax seal
+  ctx.fillStyle='#e63946'; ctx.beginPath(); ctx.arc(0,4,7.5,0,6.29); ctx.fill();
+  ctx.strokeStyle='#14100a'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.font='900 8px Verdana'; ctx.textAlign='center'; ctx.fillText('Q',0,7);
+  ctx.restore();
+}
+function drawThorn(t){
+  ctx.save(); ctx.translate(t.x,t.y); ctx.rotate(t.rot);
+  ctx.strokeStyle='#5b3a1e'; ctx.lineWidth=6; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-26,8); ctx.quadraticCurveTo(0,-10,26,4); ctx.stroke();
+  ctx.lineWidth=3.4; ctx.beginPath(); ctx.moveTo(-8,0); ctx.quadraticCurveTo(4,12,16,14); ctx.stroke();
+  // thorns
+  ctx.fillStyle='#e63946';
+  var pts=[[-18,2,-24,-8],[-4,-6,-4,-17],[10,-3,16,-13],[20,4,27,-3]];
+  pts.forEach(function(p){ctx.beginPath();ctx.moveTo(p[0]-4,p[1]+3);ctx.lineTo(p[2],p[3]);ctx.lineTo(p[0]+4,p[1]+3);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#14100a';ctx.lineWidth=1.4;ctx.stroke();});
+  // leaf
+  ctx.fillStyle='#3d9970'; ctx.beginPath(); ctx.ellipse(-14,10,7,3.6,-0.6,0,6.29); ctx.fill();
+  ctx.strokeStyle='#14100a'; ctx.lineWidth=1.4; ctx.stroke();
+  ctx.restore();
+}
+function drawBand(b){
+  ctx.save();
+  ctx.fillStyle=b.col; ctx.fillRect(b.x,b.y,b.w,b.h);
+  ctx.strokeStyle='rgba(20,16,10,0.55)'; ctx.lineWidth=2; ctx.setLineDash([8,7]);
+  ctx.strokeRect(b.x+1,b.y+1,Math.max(0,b.w-2),Math.max(0,b.h-2)); ctx.setLineDash([]);
+  // chevrons
+  ctx.strokeStyle='#14100a'; ctx.lineWidth=3; ctx.lineCap='round';
+  var horiz=b.w>=b.h, len=horiz?b.w:b.h, step=52;
+  var off=(S.time*40)%step;
+  for(var p=-step+off;p<len+step;p+=step){
+    var cx,cy;
+    if(horiz){cx=b.x+p; cy=b.y+b.h/2; if(cx<b.x+8||cx>b.x+b.w-8) continue;}
+    else{cx=b.x+b.w/2; cy=b.y+p; if(cy<b.y+8||cy>b.y+b.h-8) continue;}
+    ctx.beginPath();
+    if(b.dir==='up'){ctx.moveTo(cx-8,cy+6);ctx.lineTo(cx,cy-6);ctx.lineTo(cx+8,cy+6);}
+    else if(b.dir==='ul'){ctx.moveTo(cx+6,cy-7);ctx.lineTo(cx-6,cy+1);ctx.lineTo(cx+5,cy+8);}
+    else{ctx.moveTo(cx-7,cy-6);ctx.lineTo(cx+6,cy+1);ctx.lineTo(cx-6,cy+8);}
+    ctx.stroke();
+  }
+  ctx.fillStyle='#14100a'; ctx.font='900 10px Verdana'; ctx.textAlign='left';
+  ctx.fillText(b.label,b.x+8,b.y+15);
+  ctx.restore();
+}
+function drawClouds(){
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  var off=(S.time*14)%(W+220);
+  for(var i=0;i<5;i++){
+    var cx=((i*230+ i*47)-off+W+220)%(W+220)-110, cy=30+((i*83)%Math.max(60,H-120));
+    ctx.beginPath();
+    ctx.arc(cx,cy,17,0,6.29); ctx.arc(cx+18,cy+4,13,0,6.29); ctx.arc(cx-18,cy+5,12,0,6.29); ctx.fill();
+  }
+}
+function render(){
+  ctx.clearRect(0,0,W,H);
+  var grad=ctx.createLinearGradient(0,0,0,H);
+  if(S.sky>=5){grad.addColorStop(0,'#8fd0ff');grad.addColorStop(1,'#ffd9e8');}
+  else{grad.addColorStop(0,'#aee7ff');grad.addColorStop(1,'#e8fbff');}
+  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+  bands().forEach(drawBand);
+  if(S.sky>=4&&S.stormPhase==='pulse'){ctx.fillStyle='rgba(230,57,70,0.13)';ctx.fillRect(0,0,W,H);}
+  drawClouds();
+  // seal counter in-sky
+  // trail
+  for(var i=0;i<S.trail.length;i++){var tp=S.trail[i];
+    ctx.fillStyle='rgba(255,143,178,'+(0.12+0.5*(i/S.trail.length))+')';
+    ctx.beginPath();ctx.arc(tp.x,tp.y,2+3*(i/S.trail.length),0,6.29);ctx.fill();}
+  S.seals.forEach(drawSeal);
+  S.thorns.forEach(drawThorn);
+  var blink=S.invuln>0&&(Math.floor(S.time*10)%2===0);
+  var tilt=Math.max(-0.4,Math.min(0.4,S.kite.vx*0.002+S.kite.vy*0.0012));
+  drawKite(S.kite.x,S.kite.y,tilt,blink);
+  S.particles.forEach(function(p){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.col;ctx.fillRect(p.x-p.sz/2,p.y-p.sz/2,p.sz,p.sz);});
+  ctx.globalAlpha=1;
+  S.confetti.forEach(function(c){ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.rot);ctx.fillStyle=c.col;ctx.fillRect(-c.w/2,-c.h/2,c.w,c.h);ctx.restore();});
+  // seals remaining badge (just above the steer deck)
+  ctx.fillStyle='#14100a'; ctx.fillRect(8,FH()-34,132,26);
+  ctx.fillStyle='#fff'; ctx.font='900 12px Verdana'; ctx.textAlign='left';
+  ctx.fillText('SEALS: '+S.sealsGot+' / 3',16,FH()-16);
+}
+
+/* ---------- Collisions (resolved immediately in frame step) ---------- */
+function dist(a,b){var dx=a.x-b.x,dy=a.y-b.y;return Math.sqrt(dx*dx+dy*dy);}
+function collectSeal(s){
+  s.got=true;
+  burst(s.x,s.y,'#ffd21f',20); burst(s.x,s.y,'#ff8fb2',10);
+  sndCollect();
+  S.sealsGot++;
+  if(S.sealsGot>=3){ deliverLetter(); }
+}
+function hitThorn(t){
+  if(S.invuln>0) return;
+  S.strings--; S.invuln=1.3;
+  t.dead=true;
+  burst(S.kite.x,S.kite.y,'#e63946',18);
+  sndHit();
+  var fl=document.getElementById('flash'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
+  stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake');
+  renderHUD();
+  if(S.strings<=0){ loseGame(); }
+}
+function deliverLetter(){
+  S.letters++;
+  renderHUD();
+  if(S.letters>=6){ winGame(); return; }
+  S.mode='chapter';
+  document.getElementById('chapterText').textContent=CHAPTERS[S.sky-1];
+  document.getElementById('chapterOverlay').classList.remove('hidden');
+}
+function winGame(){
+  S.mode='win'; makeConfetti(); sndWin();
+  document.getElementById('endTitle').textContent="THE QUEEN'S MAIL IS DELIVERED";
+  document.getElementById('endText').textContent='All six letters reached the Sky Queen. The cloud kingdom cheers your name.';
+  document.getElementById('scoreLine').textContent='SKIES FLOWN: 6 / 6 · STRINGS LEFT: '+S.strings+' / 3';
+  document.getElementById('endOverlay').classList.remove('hidden');
+}
+function loseGame(){
+  S.mode='lose'; sndLose();
+  document.getElementById('endTitle').textContent='THE KITE FALLS';
+  document.getElementById('endText').textContent='The thorns took your last string over Sky '+S.sky+'. The letters drift down into the clouds.';
+  document.getElementById('scoreLine').textContent='LETTERS DELIVERED: '+S.letters+' / 6';
+  document.getElementById('endOverlay').classList.remove('hidden');
+}
+
+/* ---------- Game step ---------- */
+var lastT=0;
+function step(ts){
+  requestAnimationFrame(step);
+  var dt=Math.min(0.033,(ts-lastT)/1000||0.016); lastT=ts;
+  if(W===0){resize();}
+  S.time+=dt;
+  // confetti always animates on win
+  if(S.mode==='win'){S.confetti.forEach(function(c){c.x+=c.vx;c.y+=c.vy;c.rot+=c.vr;if(c.y>H+20){c.y=-16;c.x=Math.random()*W;}});}
+  S.particles=S.particles.filter(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life-=dt*1.6;return p.life>0;});
+
+  // steer deck is visible exactly while steering matters
+  var deckEl=document.getElementById('controls');
+  var deckOn=(S.mode==='play'||S.mode==='tour');
+  if(deckEl.classList.contains('hidden')===deckOn) deckEl.classList.toggle('hidden',!deckOn);
+
+  if(S.mode==='play'||S.mode==='tour'){
+    var k=S.kite;
+    if(S.mode==='play'){
+      // steering: held arrow buttons (or keys) thrust the kite; wind accelerates it too.
+      // Velocity + damping, no target-spring — so a wind shove builds up real drift
+      // the player has to fight, instead of being cancelled out.
+      var ix=0, iy=0;
+      if(S.btn.left||S.keys.ArrowLeft||S.keys.a) ix-=1;
+      if(S.btn.right||S.keys.ArrowRight||S.keys.d) ix+=1;
+      if(S.btn.up||S.keys.ArrowUp||S.keys.w) iy-=1;
+      if(S.btn.down||S.keys.ArrowDown||S.keys.s) iy+=1;
+      if(ix!==0&&iy!==0){ix*=0.7071;iy*=0.7071;}
+      var w=windAt(k.x,k.y);
+      var THRUST=1150, DAMP=2.6;
+      k.vx+=(ix*THRUST+w.x)*dt;
+      k.vy+=(iy*THRUST+w.y)*dt;
+      var dampF=Math.exp(-DAMP*dt);
+      k.vx*=dampF; k.vy*=dampF;
+      k.x+=k.vx*dt; k.y+=k.vy*dt;
+      if(k.x<22){k.x=22;k.vx=0;} if(k.x>W-22){k.x=W-22;k.vx=0;}
+      if(k.y<24){k.y=24;k.vy=0;} if(k.y>FH()-20){k.y=FH()-20;k.vy=0;}
+      if(S.invuln>0)S.invuln-=dt;
+      // trail
+      S.trail.push({x:k.x-14,y:k.y+8}); if(S.trail.length>16)S.trail.shift();
+      // storm pulse cycle
+      if(S.sky>=4){
+        S.stormT+=dt;
+        var warn=document.getElementById('stormWarn');
+        if(S.stormPhase==='calm'&&S.stormT>4.4){S.stormPhase='warn';S.stormT=0;warn.classList.remove('hidden');beep(220,.15,'square',.06);}
+        else if(S.stormPhase==='warn'&&S.stormT>1){S.stormPhase='pulse';S.stormT=0;warn.classList.add('hidden');}
+        else if(S.stormPhase==='pulse'&&S.stormT>1.2){S.stormPhase='calm';S.stormT=0;}
+      }
+      // spawns
+      S.sealTimer-=dt;
+      if(S.seals.length===0&&S.sealTimer<=0){spawnSeal();}
+      S.thornTimer-=dt;
+      var thornRate=S.sky>=6?0.95:1.5;
+      if(S.thornTimer<=0){spawnThorn();S.thornTimer=thornRate+Math.random()*0.7;}
+      // move entities
+      var scroll=S.sky>=6?2.3:1.7;
+      S.seals.forEach(function(s){s.x-=scroll;});
+      S.thorns.forEach(function(t){t.x-=t.sp*(S.sky>=6?1.4:1);t.rot+=t.vr;});
+      // collisions — resolved now, synchronously
+      S.seals.slice().forEach(function(s){ if(dist(k,s)<40){ collectSeal(s); } });
+      S.seals=S.seals.filter(function(s){return !s.got&&s.x>-50;});
+      if(S.mode==='play'){ // deliverLetter may have changed mode
+        S.thorns.slice().forEach(function(t){ if(dist(k,t)<34){ hitThorn(t); } });
+      }
+      S.thorns=S.thorns.filter(function(t){return !t.dead&&t.x>-60;});
+      if(S.seals.length===0&&S.mode==='play'&&S.sealTimer<=0) S.sealTimer=0.4;
+    }
+    render();
+  } else if(S.mode==='chapter'||S.mode==='win'||S.mode==='lose'||S.mode==='story'){
+    render();
+  }
+}
+requestAnimationFrame(step);
+resize();
+
+/* ---------- Input: on-screen arrow buttons (hold to steer). No drag steering. ---------- */
+function bindSteer(id,dir){
+  var el=document.getElementById(id);
+  function on(e){ e.preventDefault(); S.btn[dir]=true; el.classList.add('held');
+    try{el.setPointerCapture(e.pointerId);}catch(err){} }
+  function off(e){ S.btn[dir]=false; el.classList.remove('held'); }
+  el.addEventListener('pointerdown',on);
+  el.addEventListener('pointerup',off);
+  el.addEventListener('pointercancel',off);
+  el.addEventListener('lostpointercapture',off);
+  el.addEventListener('contextmenu',function(e){e.preventDefault();});
+}
+bindSteer('btnLeft','left'); bindSteer('btnRight','right');
+bindSteer('btnUp','up'); bindSteer('btnDown','down');
+function clearSteer(){
+  S.btn.left=S.btn.right=S.btn.up=S.btn.down=false;
+  var held=document.querySelectorAll('.ctlBtn.held');
+  for(var i=0;i<held.length;i++) held[i].classList.remove('held');
+}
+window.addEventListener('blur',clearSteer);
+window.addEventListener('keydown',function(e){
+  S.keys[e.key]=true; S.keys[e.key.toLowerCase()]=true;
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].indexOf(e.key)>=0) e.preventDefault();
+});
+window.addEventListener('keyup',function(e){S.keys[e.key]=false;S.keys[e.key.toLowerCase()]=false;});
+
+/* ---------- Tour ---------- */
+var tourTargets={
+  controls:function(){return{x:6,y:H-DECK_H+5,w:Math.max(0,W-12),h:DECK_H-10};},
+  seal:function(){return{x:W*0.62-40,y:FH()*0.34-40,w:80,h:80};},
+  thorn:function(){return{x:W*0.60-42,y:FH()*0.68-36,w:84,h:72};},
+  wind:function(){var b=bands()[0];return{x:b.x+4,y:b.y+2,w:Math.min(b.w-8,300),h:b.h-4};}
+};
+function setupTourScene(){
+  S.kite.x=Math.min(110,W*0.28); S.kite.y=FH()*0.45; S.kite.tx=S.kite.x; S.kite.ty=S.kite.y; S.kite.vx=0; S.kite.vy=0;
+  S.seals=[{x:W*0.62,y:FH()*0.34,r:20,ph:1,got:false}];
+  S.thorns=[{x:W*0.60,y:FH()*0.68,r:24,rot:0.4,vr:0,sp:0}];
+}
+function showTourStep(){
+  var t=TOUR[S.tourStep];
+  document.getElementById('tourText').textContent=t.text;
+  document.getElementById('tourBtn').textContent=S.tourStep===TOUR.length-1?'START FLYING →':'GOT IT →';
+  var r=tourTargets[t.key]();
+  var box=document.getElementById('spotBox');
+  box.style.left=r.x+'px'; box.style.top=r.y+'px'; box.style.width=r.w+'px'; box.style.height=r.h+'px';
+}
+document.getElementById('tourBtn').addEventListener('click',function(){
+  beep(520,.07,'square',.05);
+  S.tourStep++;
+  if(S.tourStep>=TOUR.length){
+    document.getElementById('tourOverlay').classList.add('hidden');
+    beginSky(true);
+  } else showTourStep();
+});
+
+/* ---------- Flow ---------- */
+function beginSky(first){
+  S.mode='play'; S.seals=[]; S.thorns=[]; S.sealsGot=0; S.sealTimer=0.3; S.thornTimer=1.1;
+  S.stormT=0; S.stormPhase='calm'; S.trail=[];
+  document.getElementById('stormWarn').classList.add('hidden');
+  S.kite.x=Math.min(100,W*0.25); S.kite.y=FH()*0.45; S.kite.tx=S.kite.x; S.kite.ty=S.kite.y; S.kite.vx=0; S.kite.vy=0;
+  clearSteer();
+  renderHUD();
+  if(first&&!S.howtoShown){
+    S.howtoShown=true;
+    var h=document.getElementById('howto'); h.classList.remove('hidden');
+    setTimeout(function(){h.classList.add('hidden');},5200);
+  }
+}
+document.getElementById('storyBtn').addEventListener('click',function(){
+  beep(520,.07,'square',.05);
+  if(S.storyStep===1){
+    S.storyStep=2;
+    document.getElementById('storyTitle').textContent='Six Skies';
+    document.getElementById('storyText').textContent='Fly six skies. Deliver six letters. Do not let the thorns take your strings.';
+    document.getElementById('storyBtn').textContent='START';
+    document.getElementById('storyBtn').classList.add('tealBtn');
+  } else {
+    document.getElementById('storyOverlay').classList.add('hidden');
+    S.mode='tour'; S.tourStep=0;
+    setupTourScene(); renderHUD();
+    document.getElementById('tourOverlay').classList.remove('hidden');
+    showTourStep();
+  }
+});
+document.getElementById('chapterBtn').addEventListener('click',function(){
+  beep(520,.07,'square',.05);
+  document.getElementById('chapterOverlay').classList.add('hidden');
+  S.sky++; beginSky(false);
+});
+document.getElementById('retryBtn').addEventListener('click',function(){ resetAll(); });
+function resetAll(){
+  S.mode='story'; S.storyStep=1; S.tourStep=0; S.sky=1; S.letters=0; S.sealsGot=0; S.strings=3;
+  S.seals=[]; S.thorns=[]; S.particles=[]; S.confetti=[]; S.trail=[]; S.invuln=0; S.stormPhase='calm'; S.stormT=0;
+  S.howtoShown=false; clearSteer();
+  document.getElementById('endOverlay').classList.add('hidden');
+  document.getElementById('chapterOverlay').classList.add('hidden');
+  document.getElementById('tourOverlay').classList.add('hidden');
+  document.getElementById('stormWarn').classList.add('hidden');
+  document.getElementById('howto').classList.add('hidden');
+  document.getElementById('storyTitle').textContent='The Lost Letters';
+  document.getElementById('storyText').textContent='The Sky Queen lost her letters. You are the last kite-messenger of the cloud kingdom.';
+  var sb=document.getElementById('storyBtn'); sb.textContent='NEXT →'; sb.classList.remove('tealBtn');
+  document.getElementById('storyOverlay').classList.remove('hidden');
+  S.kite.x=90;S.kite.y=160;S.kite.tx=90;S.kite.ty=160;
+  renderHUD();
+}
+document.getElementById('muteBtn').addEventListener('click',function(){
+  S.muted=!S.muted;
+  this.textContent=S.muted?'SOUND: OFF':'SOUND: ON';
+  if(!S.muted) beep(660,.08,'square',.05);
+});
+renderHUD();
+})();
+</script>
+</body>
+</html>

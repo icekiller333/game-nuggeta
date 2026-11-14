@@ -1,0 +1,1164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Daily Roguelike — Ember of the Wishing Tree (2026-11-10)</title>
+    <style>
+      :root{
+        --ink:#141414;
+        --paper:#fffdf4;
+        --yellow:#ffd93d;
+        --gold:#ffc300;
+        --orange:#ff7b33;
+        --pink:#ff8fab;
+        --mint:#7be0ad;
+        --sky:#8ecae6;
+        --red:#ef476f;
+        --night:#23235c;
+        --night2:#191940;
+        --soil:#4a2f1d;
+      }
+      *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+      html,body{ height:100%; }
+      body{
+        margin:0;
+        font-family:"Trebuchet MS","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+        background:#ffd9e8;
+        color:var(--ink);
+        overflow:hidden;
+      }
+      @media (prefers-color-scheme: dark){
+        body{ background:#10101e; }
+      }
+      button{ font-family:inherit; cursor:pointer; }
+      button:focus-visible{ outline:4px solid var(--ink); outline-offset:2px; }
+
+      #app{
+        height:100dvh;
+        max-width:480px;
+        margin:0 auto;
+        display:flex;
+        flex-direction:column;
+        background:var(--night);
+        border-left:4px solid var(--ink);
+        border-right:4px solid var(--ink);
+        overflow:hidden;
+      }
+
+      /* ---------- HUD ---------- */
+      #hud{
+        flex:0 0 56px;
+        display:flex;
+        align-items:stretch;
+        gap:6px;
+        padding:6px;
+        background:var(--yellow);
+        border-bottom:4px solid var(--ink);
+        z-index:30;
+      }
+      #hud.hidden{ visibility:hidden; }
+      .hud-chip{
+        display:flex;
+        align-items:center;
+        gap:4px;
+        flex:0 0 auto;
+        background:var(--paper);
+        border:3px solid var(--ink);
+        box-shadow:3px 3px 0 var(--ink);
+        padding:2px 5px;
+        min-width:0;
+        overflow:hidden;
+      }
+      .hud-chip.grow{ flex:1 1 auto; }
+      .hud-label{ font-weight:900; font-size:10px; letter-spacing:.05em; white-space:nowrap; }
+      .hud-num{ font-weight:900; font-size:14px; white-space:nowrap; }
+      .bar{
+        flex:1 1 auto;
+        height:16px;
+        min-width:16px;
+        background:#fff;
+        border:3px solid var(--ink);
+        overflow:hidden;
+      }
+      #emberFill{
+        height:100%;
+        width:0%;
+        background:repeating-linear-gradient(45deg,var(--orange) 0 10px,var(--gold) 10px 20px);
+        transition:width .18s ease-out;
+      }
+      .pips{ display:flex; gap:2px; align-items:center; }
+      .npip{
+        width:12px; height:12px;
+        background:#fff;
+        border:3px solid var(--ink);
+      }
+      .npip.done{ background:var(--orange); }
+      .npip.now{ background:var(--ink); }
+      .lpip{ width:15px; height:20px; display:block; }
+      .lpip.lost{ opacity:.28; filter:grayscale(1); }
+      .keyico{ width:20px; height:20px; display:block; }
+
+      /* ---------- STAGE / FIELD ---------- */
+      #stage{
+        position:relative;
+        flex:1 1 auto;
+        overflow:hidden;
+        background:linear-gradient(180deg,var(--night) 0%,var(--night2) 100%);
+      }
+      #stage.shaking{ animation:shake .4s linear; }
+      @keyframes shake{
+        0%,100%{ transform:translate(0,0); }
+        20%{ transform:translate(-9px,4px); }
+        40%{ transform:translate(8px,-5px); }
+        60%{ transform:translate(-6px,-3px); }
+        80%{ transform:translate(5px,3px); }
+      }
+      #dim{ position:absolute; inset:0; background:#000; opacity:0; pointer-events:none; z-index:2; }
+      #field{ position:absolute; inset:0; overflow:hidden; touch-action:none; z-index:1; }
+      .star{ position:absolute; background:#fff; z-index:0; animation:twinkle 1.6s ease-in-out infinite alternate; }
+      @keyframes twinkle{ from{ opacity:.35; } to{ opacity:1; } }
+      #moon{ position:absolute; top:114px; right:12px; width:40px; height:40px; z-index:0; }
+      #tree{ position:absolute; top:0; left:0; width:100%; height:104px; z-index:3; pointer-events:none; }
+      #ground{
+        position:absolute; left:0; right:0; bottom:0; height:24px; z-index:2;
+        background:repeating-linear-gradient(90deg,var(--soil) 0 26px,#3a2415 26px 52px);
+        border-top:4px solid var(--ink);
+      }
+      #windChip{
+        position:absolute; top:110px; left:50%; transform:translateX(-50%);
+        z-index:6; display:none;
+        background:var(--yellow); border:3px solid var(--ink); box-shadow:3px 3px 0 var(--ink);
+        font-weight:900; font-size:17px; letter-spacing:.15em; padding:2px 10px; color:var(--ink);
+      }
+      #windChip.on{ display:block; }
+      #items,#fx{ position:absolute; inset:0; z-index:4; pointer-events:none; overflow:hidden; }
+      .item{ position:absolute; top:0; left:0; will-change:transform; }
+      .item svg{ display:block; filter:drop-shadow(2px 3px 0 rgba(0,0,0,.45)); }
+      .item .glow{ animation:pulse .5s ease-in-out infinite alternate; transform-origin:50% 60%; }
+      @keyframes pulse{ from{ transform:scale(1); } to{ transform:scale(1.09); } }
+      .particle{ position:absolute; width:9px; height:9px; border:2px solid var(--ink); z-index:7; }
+      .floater{
+        position:absolute; z-index:8; font-weight:900; font-size:22px; color:var(--yellow);
+        text-shadow:2px 2px 0 var(--ink), -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink);
+        animation:floatUp .8s ease-out forwards; pointer-events:none; white-space:nowrap;
+      }
+      .floater.bad{ color:var(--red); }
+      .floater.ward{ color:var(--sky); font-size:18px; }
+      @keyframes floatUp{ from{ transform:translateY(0); opacity:1; } to{ transform:translateY(-52px); opacity:0; } }
+      #basket{
+        position:absolute; bottom:20px; left:0; width:92px; height:60px; z-index:5;
+        will-change:transform; pointer-events:none;
+      }
+      #basket svg{ display:block; filter:drop-shadow(3px 4px 0 rgba(0,0,0,.5)); }
+      #flash{
+        position:absolute; inset:0; background:var(--red); opacity:0; z-index:9; pointer-events:none;
+      }
+      #flash.go{ animation:flashA .35s ease-out; }
+      @keyframes flashA{ 0%{ opacity:.45; } 100%{ opacity:0; } }
+      #nightChip{
+        position:absolute; top:38%; left:50%; transform:translate(-50%,-50%);
+        z-index:10; display:none;
+        background:var(--paper); border:4px solid var(--ink); box-shadow:5px 5px 0 var(--ink);
+        font-weight:900; font-size:26px; letter-spacing:.08em; padding:8px 18px; color:var(--ink);
+      }
+      #nightChip.on{ display:block; animation:chipIn 1.15s ease-out forwards; }
+      @keyframes chipIn{ 0%{ opacity:0; } 15%{ opacity:1; } 80%{ opacity:1; } 100%{ opacity:0; } }
+
+      /* ---------- TUTORIAL SPOTLIGHT ---------- */
+      #tutBox{
+        position:absolute; top:112px; left:50%; transform:translateX(-50%);
+        width:calc(100% - 24px); max-width:356px; z-index:15;
+        background:var(--paper); color:var(--ink);
+        border:4px solid var(--ink); box-shadow:6px 6px 0 var(--ink);
+        padding:12px 14px 13px; display:none; pointer-events:none;
+      }
+      #tutBox.on{ display:block; }
+      #tutBox .tag{ margin-bottom:8px; }
+      #tutText{ font-size:20px; line-height:1.3; font-weight:800; margin:0; }
+      #tutDots{ display:none; gap:6px; margin-top:10px; align-items:center; }
+      #tutDots.on{ display:flex; }
+      .tdot{ width:14px; height:14px; border:3px solid var(--ink); background:#fff; }
+      .tdot.caught{ background:var(--orange); }
+      .tdot.missed{ background:#c9c9c9; }
+
+      /* ---------- OVERLAYS ---------- */
+      .overlay{
+        position:absolute; inset:0; z-index:20;
+        display:none; align-items:center; justify-content:center;
+        padding:16px;
+        background:rgba(16,16,34,.55);
+      }
+      .overlay.on{ display:flex; }
+      .panel{
+        background:var(--paper); color:var(--ink);
+        border:4px solid var(--ink); box-shadow:8px 8px 0 var(--ink);
+        padding:20px 18px; max-width:360px; width:100%;
+        max-height:100%; overflow:hidden;
+      }
+      .panel.pink{ background:#ffe3ee; }
+      .panel.mint{ background:#dcf7e9; }
+      .panel.sky{ background:#dff2fb; }
+      .panel.butter{ background:#fff3bf; }
+      .tag{
+        display:inline-block; background:var(--ink); color:#fff;
+        font-weight:900; font-size:11px; letter-spacing:.12em; padding:3px 8px; margin-bottom:12px;
+      }
+      .story-text{ font-size:23px; line-height:1.35; font-weight:800; margin:0 0 18px; }
+      .howto-text{ font-size:22px; line-height:1.35; font-weight:800; margin:0 0 18px; }
+      .btn{
+        display:block; width:100%;
+        background:var(--yellow); color:var(--ink);
+        border:4px solid var(--ink); box-shadow:5px 5px 0 var(--ink);
+        font-weight:900; font-size:18px; letter-spacing:.05em;
+        padding:12px 10px; margin-top:10px; text-align:center;
+      }
+      .btn:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 var(--ink); }
+      .btn.alt{ background:var(--mint); }
+      .btn.pinkb{ background:var(--pink); }
+      .btn:disabled{ background:#c9c9c9; color:#4d4d4d; box-shadow:none; cursor:not-allowed; }
+      .btn .sub{ display:block; font-size:12px; font-weight:800; letter-spacing:.04em; margin-top:3px; }
+      .panel h2{ margin:0 0 8px; font-size:27px; font-weight:900; letter-spacing:.03em; line-height:1.1; }
+      .panel .big-emoji-art{ display:block; margin:0 auto 10px; }
+      .keys-line{ font-weight:900; font-size:16px; margin:0 0 6px; display:flex; align-items:center; gap:7px; }
+      .law-row{
+        border:3px solid var(--ink); background:#fff; padding:8px 10px; margin-top:8px;
+        box-shadow:3px 3px 0 var(--ink);
+      }
+      .law-row b{ font-size:15px; letter-spacing:.04em; }
+      .law-row span{ display:block; font-size:13px; font-weight:700; margin-top:2px; }
+      .spot-name{ font-size:26px; font-weight:900; margin:0 0 6px; letter-spacing:.03em; }
+      .spot-line{ font-size:17px; font-weight:800; margin:0 0 14px; line-height:1.3; }
+      .end-stats{ font-weight:900; font-size:16px; margin:6px 0 4px; letter-spacing:.03em; }
+      .confetti{ position:absolute; width:10px; height:14px; border:2px solid var(--ink); z-index:25; pointer-events:none; animation:cfall linear forwards; }
+      @keyframes cfall{ from{ transform:translateY(-20px) rotate(0deg); } to{ transform:translateY(105vh) rotate(560deg); } }
+      .mini-note{ font-size:13px; font-weight:800; margin:10px 0 0; }
+
+      /* ---------- FOOTER CONTROLS ---------- */
+      #controls{
+        flex:0 0 50px;
+        display:flex; align-items:center; gap:8px;
+        padding:6px;
+        background:var(--pink);
+        border-top:4px solid var(--ink);
+        z-index:30;
+      }
+      .cbtn{
+        display:inline-flex; align-items:center; gap:6px;
+        background:var(--paper); color:var(--ink);
+        border:3px solid var(--ink); box-shadow:3px 3px 0 var(--ink);
+        font-weight:900; font-size:14px; letter-spacing:.06em; padding:7px 12px;
+      }
+      .cbtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+      .cbtn svg{ display:block; }
+      #controls .spacer{ flex:1; }
+      @media (prefers-reduced-motion: reduce){
+        #stage.shaking{ animation:none; }
+        .star,.item .glow{ animation:none; }
+        .confetti{ animation-duration:.01s; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- HUD -->
+      <header id="hud" class="hidden">
+        <div class="hud-chip grow" data-testid="embers-bar">
+          <span class="hud-label">EMBERS</span>
+          <div class="bar"><div id="emberFill"></div></div>
+          <span class="hud-num" id="emberCount">0/40</span>
+        </div>
+        <div class="hud-chip" data-testid="lantern-pips" role="img" aria-label="Lanterns remaining">
+          <div class="pips" id="lanternPips"></div>
+        </div>
+        <div class="hud-chip" data-testid="night-pips" role="img" aria-label="Nights">
+          <div class="pips" id="nightPips"></div>
+        </div>
+        <div class="hud-chip" data-testid="keys" role="img" aria-label="Keys held">
+          <span id="keyIcons" style="display:flex;gap:3px;align-items:center"></span>
+          <span class="hud-num" id="keyCount">0</span>
+        </div>
+      </header>
+
+      <!-- STAGE -->
+      <div id="stage">
+        <div id="field" data-testid="field">
+          <div id="moon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="44" height="44"><path d="M32 4a19 19 0 1 0 12 32A22 22 0 0 1 32 4Z" fill="#ffd93d" stroke="#141414" stroke-width="3"/></svg>
+          </div>
+          <svg id="tree" viewBox="0 0 400 104" preserveAspectRatio="xMidYMin slice" aria-hidden="true">
+            <path d="M30 0 L44 44 L58 0 Z" fill="#6b4423" stroke="#141414" stroke-width="3"/>
+            <path d="M330 0 L346 40 L362 0 Z" fill="#6b4423" stroke="#141414" stroke-width="3"/>
+            <path d="M70 30 C110 48 150 40 190 34" fill="none" stroke="#6b4423" stroke-width="7"/>
+            <path d="M330 26 C290 46 250 40 215 34" fill="none" stroke="#6b4423" stroke-width="7"/>
+            <g stroke="#141414" stroke-width="3">
+              <circle cx="34" cy="26" r="31" fill="#46a05e"/>
+              <circle cx="104" cy="15" r="37" fill="#57b96e"/>
+              <circle cx="186" cy="22" r="42" fill="#46a05e"/>
+              <circle cx="272" cy="13" r="37" fill="#57b96e"/>
+              <circle cx="352" cy="24" r="33" fill="#46a05e"/>
+              <circle cx="398" cy="14" r="24" fill="#57b96e"/>
+            </g>
+            <g stroke="#141414" stroke-width="1.6">
+              <line x1="70" y1="48" x2="70" y2="62"/><circle cx="70" cy="68" r="5" fill="#ff7b33"/>
+              <line x1="150" y1="52" x2="150" y2="68"/><circle cx="150" cy="74" r="5" fill="#ffc300"/>
+              <line x1="238" y1="48" x2="238" y2="62"/><circle cx="238" cy="68" r="5" fill="#ff7b33"/>
+              <line x1="316" y1="46" x2="316" y2="64"/><circle cx="316" cy="70" r="5" fill="#ffc300"/>
+            </g>
+          </svg>
+          <div id="windChip" data-testid="wind-chip">WIND ▶▶▶</div>
+          <div id="items"></div>
+          <div id="fx"></div>
+          <div id="basket" data-testid="basket" aria-label="Woven basket">
+            <svg viewBox="0 0 96 62" width="92" height="60" aria-hidden="true">
+              <defs>
+                <clipPath id="basketClip"><path d="M10 18 L86 18 L76 56 L20 56 Z"/></clipPath>
+              </defs>
+              <path d="M16 15 C22 -2 74 -2 80 15" fill="none" stroke="#141414" stroke-width="8"/>
+              <path d="M16 15 C22 -2 74 -2 80 15" fill="none" stroke="#a8641f" stroke-width="4"/>
+              <path d="M10 18 L86 18 L76 56 L20 56 Z" fill="#e39a3b"/>
+              <g clip-path="url(#basketClip)">
+                <rect x="24" y="16" width="8" height="42" fill="#b96f24" opacity=".65"/>
+                <rect x="44" y="16" width="8" height="42" fill="#b96f24" opacity=".65"/>
+                <rect x="64" y="16" width="8" height="42" fill="#b96f24" opacity=".65"/>
+                <rect x="8" y="29" width="80" height="6" fill="#8a4d16" opacity=".55"/>
+                <rect x="8" y="43" width="80" height="6" fill="#8a4d16" opacity=".55"/>
+              </g>
+              <path d="M10 18 L86 18 L76 56 L20 56 Z" fill="none" stroke="#141414" stroke-width="3.5"/>
+              <rect x="3" y="11" width="90" height="11" fill="#8a4d16" stroke="#141414" stroke-width="3.5"/>
+            </svg>
+          </div>
+          <div id="ground"></div>
+          <div id="dim"></div>
+          <div id="flash"></div>
+          <div id="nightChip">NIGHT 1</div>
+          <div id="tutBox" data-testid="tutorial">
+            <span class="tag" id="tutTag">STEP 1 OF 3</span>
+            <p id="tutText" data-testid="tutorial-text">Watch — an ember falls into your basket.</p>
+            <div id="tutDots" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <!-- STORY -->
+        <div class="overlay" id="storyOverlay">
+          <div class="panel pink" data-testid="story-card" id="storyCard">
+            <span class="tag" id="storyTag">STORY · 1 OF 2</span>
+            <svg class="big-emoji-art" width="72" height="72" viewBox="0 0 72 72" aria-hidden="true">
+              <circle cx="36" cy="26" r="22" fill="#57b96e" stroke="#141414" stroke-width="3"/>
+              <circle cx="16" cy="32" r="13" fill="#46a05e" stroke="#141414" stroke-width="3"/>
+              <circle cx="56" cy="32" r="13" fill="#46a05e" stroke="#141414" stroke-width="3"/>
+              <rect x="32" y="42" width="8" height="18" fill="#6b4423" stroke="#141414" stroke-width="3"/>
+              <circle cx="26" cy="24" r="4" fill="#ff7b33" stroke="#141414" stroke-width="2"/>
+              <circle cx="46" cy="18" r="4" fill="#ffc300" stroke="#141414" stroke-width="2"/>
+              <circle cx="38" cy="34" r="4" fill="#ff7b33" stroke="#141414" stroke-width="2"/>
+            </svg>
+            <p class="story-text" id="storyText">Once a year the Wishing Tree lets fall its embers. Catch forty before the last night ends, and it grants your wish.</p>
+            <button class="btn" id="storyNext" data-testid="story-next">NEXT ▶</button>
+          </div>
+        </div>
+
+        <!-- HOW TO -->
+        <div class="overlay" id="howtoOverlay">
+          <div class="panel sky" data-testid="howto">
+            <span class="tag">HOW TO PLAY</span>
+            <p class="howto-text">Slide the basket to catch glowing embers and dodge cold ash.</p>
+            <button class="btn" id="startBtn" data-testid="start-button">START ▶</button>
+          </div>
+        </div>
+
+        <!-- SPOTLIGHT (new law) -->
+        <div class="overlay" id="spotOverlay">
+          <div class="panel butter" data-testid="spotlight">
+            <span class="tag">NEW LAW</span>
+            <p class="spot-name" id="spotName">ASH FALLS</p>
+            <p class="spot-line" id="spotLine">Cold ash falls. Dodge it!</p>
+            <button class="btn pinkb" id="spotBtn" data-testid="spotlight-ok">GOT IT ▶</button>
+          </div>
+        </div>
+
+        <!-- BETWEEN-NIGHT CHOICE -->
+        <div class="overlay" id="choiceOverlay">
+          <div class="panel mint" data-testid="choice-screen">
+            <span class="tag" id="choiceTag">NIGHT 1 CLEAR</span>
+            <h2>SPEND A KEY?</h2>
+            <p class="keys-line">
+              <svg class="keyico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="#ffc300" stroke="#141414" stroke-width="2.4"/><path d="M11.5 11.5 L21 21 M17 17 L20.5 13.5 M14 14 L17 11" stroke="#141414" stroke-width="2.6" fill="none"/></svg>
+              KEYS HELD: <span id="choiceKeys">0</span>
+            </p>
+            <button class="btn" id="starBtn" data-testid="choice-star-branch">★ STAR BRANCH<span class="sub">1 KEY · 20S BONUS NIGHT · GOLD ONLY</span></button>
+            <button class="btn alt" id="wardBtn" data-testid="choice-ward">🛡 WARD<span class="sub">1 KEY · BLOCKS ONE ASH STRIKE</span></button>
+            <button class="btn pinkb" id="saveBtn" data-testid="choice-save">SAVE KEYS<span class="sub">KEEP KEYS · NEXT NIGHT</span></button>
+          </div>
+        </div>
+
+        <!-- LAWS SHEET -->
+        <div class="overlay" id="lawsOverlay">
+          <div class="panel sky" data-testid="laws-sheet">
+            <span class="tag">LAWS · NEWEST FIRST</span>
+            <div id="lawsList"></div>
+            <p class="mini-note" id="lawsEmpty">No laws yet. Survive the nights.</p>
+            <button class="btn" id="lawsClose" data-testid="laws-close">CLOSE ▶</button>
+          </div>
+        </div>
+
+        <!-- END -->
+        <div class="overlay" id="endOverlay">
+          <div class="panel butter" data-testid="end-screen" id="endPanel">
+            <span class="tag" id="endTag">RUN OVER</span>
+            <h2 id="endTitle" data-testid="end-title">THE WISH IS YOURS</h2>
+            <p class="end-stats" id="endStats">EMBERS 40/40 · NIGHTS 6/6</p>
+            <p class="mini-note" id="endLine">The tree bows. Your wish takes flight.</p>
+            <button class="btn" id="retryBtn" data-testid="retry-button">RETRY ↻</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTROLS -->
+      <footer id="controls">
+        <button class="cbtn" id="lawsBtn" data-testid="laws-button" aria-label="Open laws sheet">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1 L10 6 L15 6.5 L11 10 L12.5 15 L8 12 L3.5 15 L5 10 L1 6.5 L6 6 Z" fill="#ffc300" stroke="#141414" stroke-width="1.6"/></svg>
+          LAWS
+        </button>
+        <span class="spacer"></span>
+        <button class="cbtn" id="soundBtn" data-testid="sound-button" aria-label="Toggle sound">
+          <svg id="soundOnIco" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9 L3 15 L8 15 L14 20 L14 4 L8 9 Z" fill="#141414"/><path d="M17 8 C19 10 19 14 17 16 M19.5 5.5 C23 9 23 15 19.5 18.5" stroke="#141414" stroke-width="2.2" fill="none"/></svg>
+          <svg id="soundOffIco" width="18" height="18" viewBox="0 0 24 24" style="display:none" aria-hidden="true"><path d="M3 9 L3 15 L8 15 L14 20 L14 4 L8 9 Z" fill="#141414"/><path d="M17 9 L22 15 M22 9 L17 15" stroke="#141414" stroke-width="2.4" fill="none"/></svg>
+          <span id="soundLabel">SOUND ON</span>
+        </button>
+      </footer>
+    </div>
+
+    <script>
+    (function(){
+      "use strict";
+      var $ = function(id){ return document.getElementById(id); };
+      var field=$("field"), itemsLayer=$("items"), fxLayer=$("fx"), basketEl=$("basket"),
+          stage=$("stage"), hud=$("hud"), dimEl=$("dim"), flashEl=$("flash"),
+          windChip=$("windChip"), nightChip=$("nightChip");
+
+      var GOAL=40, NIGHTS=6, NIGHT_LEN=30, BONUS_LEN=20;
+
+      var LAWS={
+        2:{name:"ASH FALLS", line:"Cold ash falls. Dodge it!"},
+        3:{name:"WIND GUSTS", line:"Embers drift sideways. Watch the arrows!"},
+        4:{name:"DOUBLE FALL", line:"Two embers fall at once, faster."},
+        5:{name:"STORM NIGHT", line:"Heavy ash. Everything falls faster."},
+        6:{name:"LAST LIGHT", line:"Final night. Golden embers fall often."}
+      };
+      var CFG={
+        1:{ash:0,    gold:0.12, spawn:0.85, speed:1.00, wind:false, dbl:false},
+        2:{ash:0.20, gold:0.12, spawn:0.82, speed:1.02, wind:false, dbl:false},
+        3:{ash:0.22, gold:0.12, spawn:0.80, speed:1.05, wind:true,  dbl:false},
+        4:{ash:0.25, gold:0.12, spawn:0.78, speed:1.20, wind:true,  dbl:true},
+        5:{ash:0.42, gold:0.12, spawn:0.74, speed:1.50, wind:true,  dbl:true},
+        6:{ash:0.35, gold:0.30, spawn:0.72, speed:1.50, wind:true,  dbl:true}
+      };
+      var BONUS_CFG={ash:0, gold:1, spawn:0.66, speed:1.05, wind:false, dbl:false};
+
+      var S;
+      function freshState(){
+        return {
+          screen:"tut1", night:1, embers:0, lanterns:3, keys:0,
+          laws:[], ward:false, bonus:false, over:false,
+          timeLeft:NIGHT_LEN, spawnT:0.5,
+          spotlight:false, lawsOpen:false,
+          windDir:0, windPhase:"idle", windT:2.2,
+          basketX:0, basketTarget:0, keyL:false, keyR:false,
+          tutCatches:0, tutResolved:0, tutSpawned:0, tutBusy:false, tutAdvancing:false, tutDotStates:[]
+        };
+      }
+      S=freshState();
+
+      var items=[], particles=[];
+      var fieldW=360, fieldH=480;
+
+      function measure(){
+        fieldW=field.clientWidth||360;
+        fieldH=field.clientHeight||480;
+        if(!S.basketX){ S.basketX=fieldW/2; S.basketTarget=fieldW/2; }
+        S.basketX=Math.max(46,Math.min(fieldW-46,S.basketX));
+        S.basketTarget=Math.max(46,Math.min(fieldW-46,S.basketTarget));
+      }
+
+      /* ---------- stars ---------- */
+      (function stars(){
+        for(var i=0;i<26;i++){
+          var st=document.createElement("div");
+          st.className="star";
+          var sz=2+Math.floor(Math.random()*3);
+          st.style.width=sz+"px"; st.style.height=sz+"px";
+          st.style.left=(Math.random()*97)+"%";
+          st.style.top=(Math.random()*52)+"%";
+          st.style.animationDelay=(Math.random()*1.4)+"s";
+          if(Math.random()<0.3) st.style.background="#ffd93d";
+          field.insertBefore(st, field.firstChild);
+        }
+      })();
+
+      /* ---------- audio ---------- */
+      var AC=null;
+      function audio(){
+        if(S.muted) return null;
+        try{
+          if(!AC){ var Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx) return null; AC=new Ctx(); }
+          if(AC.state==="suspended") AC.resume();
+          return AC;
+        }catch(e){ return null; }
+      }
+      function tone(freq,dur,type,vol,delay,slideTo){
+        var ac=audio(); if(!ac) return;
+        try{
+          var t=ac.currentTime+(delay||0);
+          var o=ac.createOscillator(), g=ac.createGain();
+          o.type=type||"square"; o.frequency.setValueAtTime(freq,t);
+          if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,t+dur);
+          g.gain.setValueAtTime(vol||0.06,t);
+          g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+          o.connect(g); g.connect(ac.destination);
+          o.start(t); o.stop(t+dur+0.02);
+        }catch(e){}
+      }
+      function sfx(name){
+        if(S.muted) return;
+        if(name==="catch"){ tone(660,0.09,"square",0.05,0,990); }
+        else if(name==="gold"){ tone(660,0.09,"square",0.05,0); tone(880,0.09,"square",0.05,0.07); tone(1320,0.14,"square",0.05,0.14); }
+        else if(name==="ash"){ tone(170,0.25,"sawtooth",0.08,0,70); }
+        else if(name==="ward"){ tone(520,0.12,"triangle",0.07,0,780); }
+        else if(name==="key"){ tone(990,0.1,"square",0.05,0); tone(1480,0.16,"square",0.05,0.08); }
+        else if(name==="click"){ tone(440,0.05,"square",0.04,0); }
+        else if(name==="win"){ [523,659,784,1046,1318].forEach(function(f,i){ tone(f,0.16,"square",0.05,i*0.09); }); }
+        else if(name==="lose"){ tone(300,0.5,"sawtooth",0.06,0,80); }
+      }
+      S.muted=false;
+
+      /* ---------- item art ---------- */
+      function emberSVG(gold){
+        var outer=gold?"#ffc300":"#ff7b33", inner=gold?"#fff3b0":"#ffd93d";
+        var spark=gold?'<path d="M6 6 l1.6 3.4 L11 11 l-3.4 1.6 L6 16 l-1.6 -3.4 L1 11 l3.4 -1.6 Z" fill="#fff" stroke="#141414" stroke-width="1.2"/><path d="M33 2 l1.2 2.6 L37 6 l-2.8 1.2 L33 10 l-1.2 -2.8 L29 6 l2.8 -1.4 Z" fill="#fff" stroke="#141414" stroke-width="1.2"/>':"";
+        return '<svg class="glow" width="38" height="46" viewBox="0 0 40 48">'+spark+
+          '<path d="M20 3 C26 13 34 19 34 30 a14 14 0 1 1 -28 0 C6 19 14 13 20 3Z" fill="'+outer+'" stroke="#141414" stroke-width="3"/>'+
+          '<path d="M20 19 C24 25 27 28 27 34 a7 7 0 1 1 -14 0 C13 28 16 25 20 19Z" fill="'+inner+'" stroke="#141414" stroke-width="2.2"/></svg>';
+      }
+      function ashSVG(){
+        return '<svg width="40" height="34" viewBox="0 0 44 36">'+
+          '<path d="M6 26 C2 20 6 12 13 11 C14 5 22 2 27 6 C34 3 41 9 39 16 C43 21 39 29 32 29 C28 34 18 34 15 30 C10 31 6 30 6 26Z" fill="#d5dbe4" stroke="#141414" stroke-width="3"/>'+
+          '<circle cx="16" cy="16" r="2.4" fill="#5a6270"/><circle cx="27" cy="12" r="2" fill="#5a6270"/>'+
+          '<circle cx="30" cy="22" r="2.6" fill="#5a6270"/><circle cx="20" cy="25" r="1.8" fill="#5a6270"/></svg>';
+      }
+      function lanternSVG(){
+        return '<svg class="lpip" viewBox="0 0 20 26"><rect x="7" y="1" width="6" height="3" fill="#141414"/>'+
+          '<rect x="3" y="5" width="14" height="17" fill="#ffd93d" stroke="#141414" stroke-width="2.2"/>'+
+          '<path d="M10 9 C12 12 13 13.4 13 16 a3 3 0 1 1 -6 0 C7 13.4 8 12 10 9Z" fill="#ff7b33" stroke="#141414" stroke-width="1.4"/>'+
+          '<rect x="5" y="22" width="10" height="3" fill="#141414"/></svg>';
+      }
+      var KEY_SVG='<svg class="keyico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="#ffc300" stroke="#141414" stroke-width="2.4"/><path d="M11.5 11.5 L21 21 M17 17 L20.5 13.5 M14 14 L17 11" stroke="#141414" stroke-width="2.6" fill="none"/></svg>';
+
+      /* ---------- HUD ---------- */
+      function renderHUD(){
+        $("emberFill").style.width=Math.min(100,(S.embers/GOAL)*100)+"%";
+        $("emberCount").textContent=S.embers+"/"+GOAL;
+        var lp=$("lanternPips"); lp.innerHTML="";
+        for(var i=0;i<3;i++){
+          var d=document.createElement("div"); d.innerHTML=lanternSVG();
+          var svg=d.firstChild; if(i>=S.lanterns) svg.classList.add("lost");
+          lp.appendChild(svg);
+        }
+        var np=$("nightPips"); np.innerHTML="";
+        for(var n=1;n<=NIGHTS;n++){
+          var p=document.createElement("div"); p.className="npip";
+          if(n<S.night) p.classList.add("done");
+          else if(n===S.night && !S.over) p.classList.add("now");
+          np.appendChild(p);
+        }
+        var ki=$("keyIcons"); ki.innerHTML="";
+        if(S.keys===0) ki.innerHTML='<span style="opacity:.3;filter:grayscale(1);display:flex">'+KEY_SVG+'</span>';
+        for(var k=0;k<S.keys;k++) ki.innerHTML+=KEY_SVG;
+        $("keyCount").textContent=S.keys;
+      }
+
+      /* ---------- overlays ---------- */
+      var overlays={ story:$("storyOverlay"), howto:$("howtoOverlay"), spot:$("spotOverlay"),
+                     choice:$("choiceOverlay"), laws:$("lawsOverlay"), end:$("endOverlay") };
+      function showOnly(name){
+        for(var k in overlays) overlays[k].classList.toggle("on", k===name);
+        if(name!=="laws") S.lawsOpen=(name==="laws");
+        if(name==="laws") S.lawsOpen=true;
+        if(!name) S.lawsOpen=false;
+      }
+      function hudVisible(v){ hud.classList.toggle("hidden", !v); }
+
+      /* ---------- fx ---------- */
+      function burst(x,y,color,n){
+        for(var i=0;i<(n||9);i++){
+          var el=document.createElement("div");
+          el.className="particle"; el.style.background=color;
+          fxLayer.appendChild(el);
+          particles.push({el:el,x:x,y:y,vx:(Math.random()-0.5)*260,vy:-60-Math.random()*190,life:0.55+Math.random()*0.25,t:0});
+        }
+      }
+      function floater(x,y,text,cls){
+        var el=document.createElement("div");
+        el.className="floater"+(cls?" "+cls:"");
+        el.textContent=text;
+        el.style.left=Math.max(4,x-16)+"px"; el.style.top=y+"px";
+        fxLayer.appendChild(el);
+        setTimeout(function(){ el.remove(); },850);
+      }
+      function shake(){
+        stage.classList.remove("shaking");
+        void stage.offsetWidth;
+        stage.classList.add("shaking");
+        setTimeout(function(){ stage.classList.remove("shaking"); },450);
+      }
+      function flash(){
+        flashEl.classList.remove("go"); void flashEl.offsetWidth; flashEl.classList.add("go");
+      }
+      function confetti(){
+        var colors=["#ffd93d","#ff8fab","#7be0ad","#8ecae6","#ff7b33","#ffc300"];
+        for(var i=0;i<64;i++){
+          var c=document.createElement("div");
+          c.className="confetti";
+          c.style.left=(Math.random()*100)+"%";
+          c.style.top="-20px";
+          c.style.background=colors[i%colors.length];
+          c.style.animationDuration=(1.1+Math.random()*1.3)+"s";
+          c.style.animationDelay=(Math.random()*0.7)+"s";
+          stage.appendChild(c);
+          (function(el){ setTimeout(function(){ el.remove(); },3400); })(c);
+        }
+      }
+
+      /* ---------- spawning ---------- */
+      function spawnItem(type,x){
+        measure();
+        var el=document.createElement("div");
+        el.className="item";
+        el.innerHTML= type==="ash" ? ashSVG() : emberSVG(type==="gold");
+        itemsLayer.appendChild(el);
+        var ix = (typeof x==="number") ? Math.max(24,Math.min(fieldW-24,x)) : 24+Math.random()*(fieldW-48);
+        var it={el:el,type:type,x:ix,y:64+Math.random()*10,vy:0,seed:Math.random()*6.28};
+        items.push(it);
+        return it;
+      }
+      function spawnEvent(){
+        var cfg=S.bonus?BONUS_CFG:CFG[S.night];
+        var r=Math.random();
+        if(r<cfg.ash){ spawnItem("ash"); return; }
+        var gold=Math.random()<cfg.gold;
+        spawnItem(gold?"gold":"ember");
+        if(cfg.dbl && !gold && Math.random()<0.85) spawnItem(Math.random()<cfg.gold?"gold":"ember");
+        else if(cfg.dbl && gold && Math.random()<0.5) spawnItem("ember");
+      }
+
+      /* ---------- game flow ---------- */
+      function unlockLaw(n){
+        var law=LAWS[n]; if(!law) return false;
+        if(S.laws.indexOf(law.name)===-1) S.laws.unshift(law.name);
+        return true;
+      }
+      function showSpotlight(n){
+        var law=LAWS[n];
+        $("spotName").textContent=law.name;
+        $("spotLine").textContent=law.line;
+        S.spotlight=true;
+        S.spotT=performance.now();
+        showOnly("spot");
+        $("spotBtn").focus();
+      }
+      function dismissSpotlight(){
+        if(!S.spotlight) return;
+        S.spotlight=false;
+        showOnly(null);
+        sfx("click");
+      }
+      function startNight(n,isBonus){
+        hideTut();
+        S.night=n; S.bonus=!!isBonus; S.over=false;
+        S.timeLeft=isBonus?BONUS_LEN:NIGHT_LEN;
+        S.spawnT=0.55; S.windDir=0; S.windPhase="idle"; S.windT=2.4;
+        windChip.classList.remove("on");
+        clearItems();
+        S.screen="play";
+        hudVisible(true);
+        renderHUD();
+        if(!isBonus && n>=2 && unlockLaw(n) && S.laws[0]===LAWS[n].name && !S["lawShown"+n]){
+          S["lawShown"+n]=true;
+          showSpotlight(n);
+        } else {
+          showOnly(null);
+          nightChip.textContent=(isBonus?"★ BONUS NIGHT":"NIGHT "+n);
+          nightChip.classList.remove("on"); void nightChip.offsetWidth; nightChip.classList.add("on");
+        }
+      }
+      function clearItems(){
+        for(var i=0;i<items.length;i++) items[i].el.remove();
+        items=[];
+        for(var j=0;j<particles.length;j++) particles[j].el.remove();
+        particles=[];
+      }
+
+      /* ---------- tutorial ---------- */
+      var tutBox=$("tutBox"), tutTag=$("tutTag"), tutText=$("tutText"), tutDots=$("tutDots");
+      function renderTutDots(){
+        tutDots.innerHTML="";
+        for(var i=0;i<5;i++){
+          var d=document.createElement("div"); d.className="tdot";
+          tutDots.appendChild(d);
+        }
+      }
+      function paintTutDots(){
+        var kids=tutDots.children;
+        for(var i=0;i<kids.length;i++){
+          if(i<S.tutResolved){
+            /* mark caught vs missed by order is not tracked per-dot beyond count;
+               use caught count for fill order approximation via dataset */
+          }
+        }
+        /* dots reflect resolved count; caught dots stored on S.tutDotStates */
+        var states=S.tutDotStates||[];
+        for(var j=0;j<kids.length;j++){
+          kids[j].className="tdot"+(states[j]==="c"?" caught":states[j]==="m"?" missed":"");
+        }
+      }
+      function showTut(step,text){
+        tutTag.textContent="STEP "+step+" OF 3";
+        tutText.textContent=text;
+        tutBox.classList.add("on");
+        tutDots.classList.toggle("on", step===3);
+        if(step===3){ renderTutDots(); paintTutDots(); }
+      }
+      function hideTut(){ tutBox.classList.remove("on"); tutDots.classList.remove("on"); }
+      function isTut(){ return S.screen==="tut1"||S.screen==="tut2"||S.screen==="tut3"; }
+      function startTutorial(){
+        S.screen="tut1"; S.tutAdvancing=false; S.tutBusy=false;
+        S.tutCatches=0; S.tutResolved=0; S.tutSpawned=0; S.tutDotStates=[];
+        clearItems();
+        hudVisible(false);
+        showOnly(null);
+        measure();
+        S.basketX=fieldW/2; S.basketTarget=fieldW/2;
+        showTut(1,"Watch — an ember falls into your basket.");
+        /* spawn a single ember directly above the centred basket */
+        var it=spawnItem("ember", S.basketX);
+        if(it){ it.y=238; S.tutSpawned=1; S.tutBusy=true; }
+      }
+      function startTut2(){
+        if(S.screen!=="tut1") return;
+        S.screen="tut2"; S.tutAdvancing=false; S.tutBusy=true;
+        clearItems();
+        measure();
+        /* basket starts away from the ember so the player must drag */
+        S.basketX=Math.min(fieldW-46, fieldW*0.72); S.basketTarget=S.basketX;
+        showTut(2,"Now you try — drag your basket under it.");
+        var it=spawnItem("ember", 64);
+        if(it){ it.y=278; it.held=true; it.x=64; }
+      }
+      function startTut3(){
+        if(S.screen!=="tut2") return;
+        S.screen="tut3"; S.tutAdvancing=false;
+        S.tutCatches=0; S.tutResolved=0; S.tutSpawned=0; S.tutDotStates=[];
+        clearItems();
+        showTut(3,"Catch 3 or more. Missing one is fine.");
+        tutSpawnNext();
+      }
+      function tutSpawnNext(){
+        if(S.screen!=="tut3") return;
+        if(S.tutSpawned>=5){ return; }
+        S.tutBusy=true;
+        var fracs=[0.28,0.68,0.45,0.78,0.34];
+        var x=fieldW*fracs[S.tutSpawned%fracs.length];
+        var it=spawnItem("ember", x);
+        if(it){ it.y=110; }
+        S.tutSpawned++;
+      }
+      function tutAdvance(fn,delay){
+        if(S.tutAdvancing) return;
+        S.tutAdvancing=true;
+        setTimeout(fn, delay||750);
+      }
+      function finishTutorial(){
+        if(S.screen!=="tut3") return;
+        hideTut();
+        clearItems();
+        S.screen="story1";
+        S.embers=0; /* tutorial embers never count toward the bank */
+        $("storyTag").textContent="STORY · 1 OF 2";
+        $("storyText").textContent="Once a year the Wishing Tree lets fall its embers. Catch forty before the last night ends, and it grants your wish.";
+        $("storyNext").textContent="NEXT ▶";
+        showOnly("story");
+        renderHUD();
+        $("storyNext").focus();
+      }
+      function resolveTutCatch(it){
+        var bx=it.x, by=fieldH-92;
+        burst(bx,by,"#ff7b33",9);
+        floater(bx,by-8,"+1");
+        sfx("catch");
+        if(S.screen==="tut1"){
+          tutAdvance(startTut2,800);
+        } else if(S.screen==="tut2"){
+          tutAdvance(startTut3,800);
+        } else if(S.screen==="tut3"){
+          S.tutCatches++; S.tutResolved++; S.tutDotStates.push("c"); paintTutDots();
+          S.tutBusy=false;
+          if(S.tutResolved>=5){ tutAdvance(finishTutorial,850); }
+          else { var scr=S.screen; setTimeout(function(){ if(S.screen===scr && !S.tutBusy) tutSpawnNext(); },380); }
+        }
+      }
+      function resolveTutMiss(it){
+        if(S.screen==="tut3"){
+          S.tutResolved++; S.tutDotStates.push("m"); paintTutDots();
+          S.tutBusy=false;
+          if(S.tutResolved>=5){ tutAdvance(finishTutorial,850); }
+          else { var scr2=S.screen; setTimeout(function(){ if(S.screen===scr2 && !S.tutBusy) tutSpawnNext(); },380); }
+        } else if(S.screen==="tut1"){
+          /* cannot happen in practice (centred drop); respawn so the watch step always completes */
+          S.tutBusy=false;
+          var it2=spawnItem("ember", S.basketX); if(it2){ it2.y=238; S.tutBusy=true; }
+        } else if(S.screen==="tut2"){
+          /* released only when aligned, so a miss should not occur; re-hold a fresh ember */
+          var it3=spawnItem("ember", 64); if(it3){ it3.y=278; it3.held=true; it3.x=64; S.tutBusy=true; }
+        }
+      }
+      function endNight(){
+        clearItems();
+        if(S.bonus){ startNight(S.night+1,false); return; }
+        if(S.night>=NIGHTS){
+          if(S.embers>=GOAL) endGame("win"); else endGame("dark");
+          return;
+        }
+        S.screen="choice";
+        $("choiceTag").textContent="NIGHT "+S.night+" CLEAR";
+        $("choiceKeys").textContent=S.keys;
+        $("starBtn").disabled = S.keys<1;
+        $("wardBtn").disabled = S.keys<1 || S.ward;
+        $("wardBtn").firstChild.textContent = S.ward ? "🛡 WARD ACTIVE" : "🛡 WARD";
+        showOnly("choice");
+        renderHUD();
+        $("saveBtn").focus();
+      }
+      function endGame(kind){
+        S.over=true; S.screen="end";
+        clearItems();
+        showOnly("end");
+        var title=$("endTitle"), tag=$("endTag"), line=$("endLine"), panel=$("endPanel");
+        panel.className="panel butter"; panel.setAttribute("data-testid","end-screen");
+        if(kind==="win"){
+          title.textContent="THE WISH IS YOURS";
+          tag.textContent="WISH GRANTED";
+          line.textContent="The tree bows. Your wish takes flight.";
+          sfx("win"); confetti();
+        } else if(kind==="lantern"){
+          title.textContent="THE LANTERN GOES OUT";
+          tag.textContent="RUN OVER";
+          line.textContent="Three ash strikes snuffed the light.";
+          panel.className="panel sky";
+          sfx("lose");
+        } else {
+          title.textContent="THE TREE GOES DARK";
+          tag.textContent="RUN OVER";
+          line.textContent="The last night ended short of forty.";
+          panel.className="panel sky";
+          sfx("lose");
+        }
+        $("endStats").textContent="EMBERS "+S.embers+"/"+GOAL+" · NIGHTS "+Math.min(S.night,NIGHTS)+"/"+NIGHTS+" · KEYS "+S.keys;
+        renderHUD();
+        $("retryBtn").focus();
+      }
+
+      function addEmbers(v,x,y){
+        var before=Math.floor(S.embers/10);
+        S.embers+=v;
+        var after=Math.floor(S.embers/10);
+        if(after>before){
+          var gain=Math.min(after-before, 3-S.keys);
+          if(gain>0){ S.keys+=gain; sfx("key"); floater(x,y-30,"+KEY","ward"); }
+        }
+        renderHUD();
+      }
+
+      function resolveCatch(it){
+        var bx=it.x, by=fieldH-92;
+        if(it.type==="ash"){
+          if(S.ward){
+            S.ward=false;
+            burst(bx,by,"#8ecae6",10);
+            floater(bx,by-8,"WARD BLOCKED","ward");
+            sfx("ward");
+          } else {
+            S.lanterns--;
+            burst(bx,by,"#ef476f",12);
+            floater(bx,by-8,"ASH STRIKE","bad");
+            shake(); flash(); sfx("ash");
+            renderHUD();
+            if(S.lanterns<=0){ endGame("lantern"); }
+          }
+        } else if(it.type==="gold"){
+          burst(bx,by,"#ffc300",13);
+          floater(bx,by-8,"+3");
+          sfx("gold");
+          addEmbers(3,bx,by);
+        } else {
+          burst(bx,by,"#ff7b33",9);
+          floater(bx,by-8,"+1");
+          sfx("catch");
+          addEmbers(1,bx,by);
+        }
+      }
+
+      /* ---------- main loop ---------- */
+      var lastT=0;
+      function loop(ts){
+        requestAnimationFrame(loop);
+        if(!lastT) lastT=ts;
+        var dt=Math.min(0.05,(ts-lastT)/1000); lastT=ts;
+        measure();
+
+        /* basket movement */
+        var kv=460*dt;
+        if(S.keyL) S.basketTarget-=kv;
+        if(S.keyR) S.basketTarget+=kv;
+        S.basketTarget=Math.max(46,Math.min(fieldW-46,S.basketTarget));
+        S.basketX+=(S.basketTarget-S.basketX)*Math.min(1,dt*20);
+        basketEl.style.transform="translateX("+(S.basketX-46)+"px)";
+
+        var playing=(S.screen==="play" && !S.over);
+        var frozen=S.spotlight || S.lawsOpen;
+
+        if(playing && !frozen){
+          S.timeLeft-=dt;
+          dimEl.style.opacity=String(0.28*(1-Math.max(0,S.timeLeft)/(S.bonus?BONUS_LEN:NIGHT_LEN)));
+          var cfg=S.bonus?BONUS_CFG:CFG[S.night];
+          S.spawnT-=dt;
+          if(S.spawnT<=0){ spawnEvent(); S.spawnT=cfg.spawn*(0.82+Math.random()*0.36); }
+
+          /* wind state machine */
+          if(cfg.wind){
+            S.windT-=dt;
+            if(S.windPhase==="idle" && S.windT<=0){
+              S.windPhase="tele"; S.windT=0.7;
+              S.windDir=Math.random()<0.5?-1:1;
+              windChip.textContent=S.windDir<0?"WIND ◀◀◀":"WIND ▶▶▶";
+              windChip.classList.add("on");
+            } else if(S.windPhase==="tele" && S.windT<=0){
+              S.windPhase="gust"; S.windT=2.2;
+            } else if(S.windPhase==="gust" && S.windT<=0){
+              S.windPhase="idle"; S.windT=2.4+Math.random()*1.8; S.windDir=0;
+              windChip.classList.remove("on");
+            }
+          }
+          if(S.timeLeft<=0){ endNight(); return; }
+        }
+
+        /* items physics (runs during spotlight too, so debug spawns resolve) */
+        var inTut=isTut();
+        if(playing || inTut){
+          var cfg2=inTut?{speed:1.0}: (S.bonus?BONUS_CFG:CFG[S.night]);
+          var baseV=fieldH*0.44*cfg2.speed;
+          var basketTop=fieldH-80, basketBot=fieldH-24;
+          for(var i=items.length-1;i>=0;i--){
+            var it=items[i];
+            if(it.held){
+              /* step 2: ember waits until the basket is underneath it */
+              if(Math.abs(S.basketX-it.x)<=42){ it.held=false; }
+              it.el.style.transform="translate("+(it.x-20)+"px,"+it.y+"px)";
+              continue;
+            }
+            it.y+=baseV*dt;
+            var drift=0;
+            if(!inTut && S.windPhase==="gust") drift=S.windDir*74;
+            if(!inTut) it.x+=drift*dt + Math.sin(ts/300+it.seed)*6*dt;
+            it.x=Math.max(20,Math.min(fieldW-20,it.x));
+            it.el.style.transform="translate("+(it.x-20)+"px,"+it.y+"px)";
+            var caught=false, missed=false;
+            if(it.y+40>=basketTop && it.y+18<=basketBot && Math.abs(it.x-S.basketX)<=52) caught=true;
+            else if(it.y>fieldH-30) missed=true;
+            if(caught){
+              it.el.remove(); items.splice(i,1);
+              if(inTut){ resolveTutCatch(it); }
+              else { resolveCatch(it); if(S.over) return; }
+            } else if(missed){
+              it.el.remove(); items.splice(i,1);
+              if(inTut){ resolveTutMiss(it); }
+              else if(it.type==="ash") burst(it.x,fieldH-26,"#d5dbe4",4);
+            }
+          }
+        }
+
+        /* particles */
+        for(var j=particles.length-1;j>=0;j--){
+          var p=particles[j]; p.t+=dt;
+          p.vy+=620*dt; p.x+=p.vx*dt; p.y+=p.vy*dt;
+          p.el.style.transform="translate("+p.x+"px,"+p.y+"px) rotate("+(p.t*320)+"deg)";
+          p.el.style.opacity=String(Math.max(0,1-p.t/p.life));
+          if(p.t>=p.life){ p.el.remove(); particles.splice(j,1); }
+        }
+      }
+      requestAnimationFrame(loop);
+
+      /* ---------- input: pointer ---------- */
+      function pointToBasket(e){
+        var r=field.getBoundingClientRect();
+        var x=(e.clientX-r.left);
+        S.basketTarget=Math.max(46,Math.min(fieldW-46,x));
+      }
+      field.addEventListener("pointerdown",function(e){ pointToBasket(e); try{ field.setPointerCapture(e.pointerId); }catch(err){} });
+      field.addEventListener("pointermove",function(e){ if(e.buttons||e.pointerType==="touch") pointToBasket(e); });
+
+      /* ---------- input: buttons ---------- */
+      $("storyNext").addEventListener("click",function(){
+        sfx("click");
+        if(S.screen==="story1"){
+          S.screen="story2";
+          $("storyTag").textContent="STORY · 2 OF 2";
+          $("storyText").textContent="Cold ash falls too. Three ash strikes snuff your lantern, and the wish is lost.";
+          $("storyNext").textContent="NEXT ▶";
+          $("storyNext").focus();
+        } else if(S.screen==="story2"){
+          showOnly(null);
+          startNight(1,false);
+        }
+      });
+      $("startBtn").addEventListener("click",function(){
+        sfx("click");
+        showOnly(null);
+        startNight(1,false);
+      });
+      $("spotBtn").addEventListener("click",dismissSpotlight);
+      overlays.spot.addEventListener("click",function(e){ if(e.target===overlays.spot) dismissSpotlight(); });
+      setInterval(function(){ if(S.spotlight && performance.now()-(S.spotT||0)>2600) dismissSpotlight(); },300);
+
+      $("starBtn").addEventListener("click",function(){
+        if(S.keys<1) return;
+        S.keys--; sfx("key");
+        showOnly(null);
+        startNight(S.night,true);
+        renderHUD();
+      });
+      $("wardBtn").addEventListener("click",function(){
+        if(S.keys<1 || S.ward) return;
+        S.keys--; S.ward=true; sfx("ward");
+        showOnly(null);
+        startNight(S.night+1,false);
+        renderHUD();
+      });
+      $("saveBtn").addEventListener("click",function(){
+        sfx("click");
+        showOnly(null);
+        startNight(S.night+1,false);
+      });
+
+      function renderLaws(){
+        var list=$("lawsList"); list.innerHTML="";
+        $("lawsEmpty").style.display=S.laws.length?"none":"block";
+        S.laws.forEach(function(name){
+          var line="";
+          for(var n in LAWS) if(LAWS[n].name===name) line=LAWS[n].line;
+          var row=document.createElement("div");
+          row.className="law-row";
+          row.innerHTML="<b>"+name+"</b><span>"+line+"</span>";
+          list.appendChild(row);
+        });
+      }
+      $("lawsBtn").addEventListener("click",function(){
+        sfx("click");
+        renderLaws();
+        showOnly("laws");
+        $("lawsClose").focus();
+      });
+      $("lawsClose").addEventListener("click",function(){
+        sfx("click");
+        S.lawsOpen=false;
+        if(S.spotlight){ showOnly("spot"); $("spotBtn").focus(); return; }
+        showOnly(currentOverlayForScreen());
+      });
+      function currentOverlayForScreen(){
+        if(S.screen==="choice") return "choice";
+        if(S.screen==="end") return "end";
+        if(S.screen==="story1"||S.screen==="story2") return "story";
+        if(S.screen==="howto") return "howto";
+        return null;
+      }
+
+      $("retryBtn").addEventListener("click",function(){
+        sfx("click");
+        var muted=S.muted;
+        S=freshState(); S.muted=muted;
+        clearItems();
+        dimEl.style.opacity="0";
+        $("storyTag").textContent="STORY · 1 OF 2";
+        $("storyText").textContent="Once a year the Wishing Tree lets fall its embers. Catch forty before the last night ends, and it grants your wish.";
+        $("storyNext").textContent="NEXT ▶";
+        hudVisible(false);
+        showOnly(null);
+        renderHUD();
+        startTutorial();
+      });
+
+      $("soundBtn").addEventListener("click",function(){
+        S.muted=!S.muted;
+        $("soundOnIco").style.display=S.muted?"none":"block";
+        $("soundOffIco").style.display=S.muted?"block":"none";
+        $("soundLabel").textContent=S.muted?"SOUND OFF":"SOUND ON";
+        if(!S.muted) sfx("click");
+      });
+
+      /* ---------- input: keyboard ---------- */
+      document.addEventListener("keydown",function(e){
+        if(e.key==="ArrowLeft"){ S.keyL=true; if(S.screen==="play") e.preventDefault(); }
+        else if(e.key==="ArrowRight"){ S.keyR=true; if(S.screen==="play") e.preventDefault(); }
+        else if((e.key===" "||e.key==="Enter")){
+          var tag=(e.target&&e.target.tagName)||"";
+          if(tag==="BUTTON") return; /* native button activation */
+          if(S.spotlight){ dismissSpotlight(); e.preventDefault(); }
+          else if(S.screen==="story1"||S.screen==="story2"){ $("storyNext").click(); e.preventDefault(); }
+          else if(S.screen==="howto"){ $("startBtn").click(); e.preventDefault(); }
+        }
+      });
+      document.addEventListener("keyup",function(e){
+        if(e.key==="ArrowLeft") S.keyL=false;
+        if(e.key==="ArrowRight") S.keyR=false;
+      });
+      window.addEventListener("resize",measure);
+
+      /* ---------- init ---------- */
+      measure();
+      renderHUD();
+      hudVisible(false);
+      showOnly(null);
+      startTutorial();
+
+      /* ---------- test API ---------- */
+      window.__ember={
+        getState:function(){
+          return { screen:S.screen, night:S.night, embers:S.embers, lanterns:S.lanterns, keys:S.keys, laws:S.laws.slice(),
+                   tutCatches:S.tutCatches, tutResolved:S.tutResolved, tutSpawned:S.tutSpawned,
+                   tutText:tutText.textContent, tutVisible:tutBox.classList.contains("on"),
+                   basketX:S.basketX, basketTarget:S.basketTarget,
+                   heldCount:items.filter(function(it){return it.held;}).length,
+                   itemCount:items.length,
+                   items:items.map(function(it){return {type:it.type,x:Math.round(it.x),y:Math.round(it.y),held:!!it.held};}) };
+        },
+        tutItemX:function(){ return items.length?items[0].x:null; },
+        restartTutorial:function(){ var m=S.muted; S=freshState(); S.muted=m; clearItems(); dimEl.style.opacity="0"; hudVisible(false); showOnly(null); renderHUD(); startTutorial(); return window.__ember.getState(); },
+        spawnEmber:function(x){ return !!spawnItem("ember",x); },
+        spawnGolden:function(x){ return !!spawnItem("gold",x); },
+        spawnAsh:function(x){ return !!spawnItem("ash",x); },
+        skipToNight:function(n){
+          n=Math.max(1,Math.min(NIGHTS,n|0));
+          for(var k=2;k<n;k++){ unlockLaw(k); S["lawShown"+k]=true; }
+          S.over=false; S.ward=S.ward||false;
+          hideTut();
+          hudVisible(true);
+          startNight(n,false);
+          return window.__ember.getState();
+        },
+        addKey:function(){ if(S.keys<3) S.keys++; renderHUD(); return S.keys; },
+        setBasket:function(x){ S.basketTarget=Math.max(46,Math.min(fieldW-46,x)); S.basketX=S.basketTarget; }
+      };
+    })();
+    </script>
+  </body>
+</html>

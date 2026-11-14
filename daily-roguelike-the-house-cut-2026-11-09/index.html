@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Daily Roguelike — The House Cut (2026-11-09)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        --bg:#ffc8dd;
+        --panel:#fff6ec;
+        --panel2:#a7e8bd;
+        --ink:#141414;
+        --gold:#ffc300;
+        --gold-soft:#ffe066;
+        --red:#ef476f;
+        --blue:#118ab2;
+        --green:#1f7a33;
+        --felt:#27ae60;
+        --felt-dark:#14532d;
+        --shadow:5px 5px 0 var(--ink);
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#191924;
+          --panel:#262633;
+          --panel2:#1e3a2a;
+          --ink:#f5efe0;
+          --gold:#ffc300;
+          --gold-soft:#8a6d00;
+          --felt:#1e7a3c;
+          --felt-dark:#0d2b18;
+        }
+      }
+      *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+      html,body{ height:100%; }
+      body{
+        margin:0; background:var(--bg); color:var(--ink);
+        font-family:"Archivo",system-ui,sans-serif;
+        overflow:hidden;
+      }
+      #app{
+        height:100dvh; max-width:520px; margin:0 auto;
+        display:flex; flex-direction:column;
+        padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+        gap:6px; overflow:hidden;
+      }
+      .disp{ font-family:"Archivo Black","Archivo",sans-serif; letter-spacing:.01em; }
+      .mono{ font-family:"Space Mono",monospace; }
+
+      /* ---------- generic screens ---------- */
+      .screen{ display:none; flex:1; min-height:0; flex-direction:column; }
+      .screen.on{ display:flex; }
+
+      /* ---------- story / howto / end ---------- */
+      .center-wrap{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; min-height:0; }
+      .card{
+        background:var(--panel); border:3px solid var(--ink); box-shadow:var(--shadow);
+        padding:22px 20px; width:100%; max-width:420px; text-align:center;
+      }
+      .card .big{ font-size:26px; line-height:1.25; }
+      .card .small{ font-size:15px; font-weight:700; line-height:1.5; margin-top:10px; }
+      .btn{
+        font-family:"Archivo Black","Archivo",sans-serif; font-size:18px;
+        background:var(--gold); color:#141414; border:3px solid #141414;
+        box-shadow:5px 5px 0 #141414; padding:13px 30px; cursor:pointer;
+        text-transform:uppercase; letter-spacing:.03em;
+      }
+      .btn:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 #141414; }
+      .btn.alt{ background:var(--panel2); }
+      .mini-blade{ font-size:34px; line-height:1; }
+
+      /* ---------- HUD ---------- */
+      #hud{ display:none; flex-direction:column; gap:6px; }
+      #hud.on{ display:flex; }
+      .topbar{
+        display:flex; align-items:stretch; gap:6px;
+      }
+      .stat{
+        background:var(--panel); border:3px solid var(--ink);
+        padding:4px 8px; display:flex; flex-direction:column; justify-content:center;
+        min-width:0;
+      }
+      .stat .lab{ font-size:10px; font-weight:900; letter-spacing:.08em; }
+      .stat .val{ font-family:"Space Mono",monospace; font-weight:700; font-size:19px; line-height:1.1; white-space:nowrap; }
+      .stat.grow{ flex:1; }
+      .iconbtn{
+        background:var(--gold-soft); border:3px solid var(--ink); color:var(--ink);
+        width:46px; display:flex; align-items:center; justify-content:center;
+        cursor:pointer; padding:0; flex:0 0 auto;
+      }
+      .iconbtn:active{ transform:translate(2px,2px); }
+      .iconbtn svg{ width:24px; height:24px; display:block; }
+      .pips{ display:flex; gap:4px; align-items:center; margin-top:2px; }
+      .pip{
+        width:17px; height:17px; border-radius:50%; border:2.5px solid var(--ink);
+        background:var(--red); position:relative; flex:0 0 auto;
+      }
+      .pip::after{
+        content:""; position:absolute; inset:3px; border-radius:50%;
+        border:2px dashed #fff;
+      }
+      .pip.lost{ background:transparent; opacity:.35; }
+      .pip.lost::after{ border-color:var(--ink); }
+
+      #laws{
+        min-height:27px; max-height:27px; overflow:hidden;
+        background:var(--ink); color:var(--gold);
+        display:flex; align-items:center; gap:6px; padding:3px 8px;
+        font-size:11px; font-weight:900; letter-spacing:.03em; white-space:nowrap;
+      }
+      #laws .tag{ background:var(--gold); color:#141414; padding:1px 5px; flex:0 0 auto; }
+      #laws .items{ overflow:hidden; text-overflow:ellipsis; }
+      #laws:empty{ visibility:hidden; }
+
+      #aids{ display:flex; gap:6px; }
+      .aid{
+        flex:1; border:3px solid var(--ink); background:var(--panel2); color:var(--ink);
+        padding:4px 6px; text-align:center; font-weight:900; font-size:13px;
+        display:flex; align-items:center; justify-content:center; gap:5px;
+        min-height:32px; cursor:pointer; font-family:"Archivo",sans-serif;
+      }
+      .aid:active{ transform:translate(2px,2px); }
+      .aid svg{ width:17px; height:17px; flex:0 0 auto; display:block; }
+      .aid.gone{ background:var(--panel); opacity:.45; text-decoration:line-through; }
+
+      /* ---------- stage ---------- */
+      #stage-wrap{
+        position:relative; flex:1; min-height:0;
+        border:3px solid var(--ink); box-shadow:var(--shadow);
+        background:var(--felt-dark); overflow:hidden;
+        touch-action:manipulation; user-select:none; -webkit-user-select:none;
+      }
+      #stage{ width:100%; height:100%; display:block; }
+      #stage-wrap.shake{ animation:shake .32s linear; }
+      @keyframes shake{
+        0%,100%{ transform:translate(0,0); }
+        20%{ transform:translate(-7px,3px); }
+        40%{ transform:translate(6px,-3px); }
+        60%{ transform:translate(-5px,-2px); }
+        80%{ transform:translate(4px,2px); }
+      }
+      /* the ONE message line: every teach + feedback goes through here, one at a time */
+      #banner{
+        position:absolute; left:50%; top:38%; transform:translate(-50%,-50%) rotate(-3deg);
+        background:var(--gold); color:#141414; border:3px solid #141414;
+        box-shadow:4px 4px 0 #141414; padding:8px 16px;
+        font-family:"Archivo Black","Archivo",sans-serif; font-size:20px;
+        display:none; z-index:5; max-width:92%; text-align:center; pointer-events:none;
+      }
+      #banner.bad{ background:var(--red); color:#141414; }
+      #banner.on{ display:block; }
+      #spot-gold{
+        position:absolute; left:50%; top:16%; transform:translateX(-50%);
+        width:104px; height:62%; border:4px dashed var(--red);
+        display:none; z-index:4; pointer-events:none;
+      }
+      #spot-gold .spotlab{
+        position:absolute; top:-17px; left:50%; transform:translateX(-50%);
+        background:var(--red); color:#141414; font-weight:900; font-size:12px;
+        padding:2px 8px; white-space:nowrap; border:2.5px solid #141414;
+      }
+      #spot-gold.on{ display:block; animation:spotpulse .7s ease-in-out infinite alternate; }
+      @keyframes spotpulse{ from{ opacity:.65; } to{ opacity:1; } }
+
+      /* ---------- bottom controls ---------- */
+      #controls{ display:none; align-items:center; gap:10px; }
+      #controls.on{ display:flex; }
+      #swings{ display:flex; flex-direction:column; gap:3px; align-items:flex-start; }
+      #swings .lab{ font-size:10px; font-weight:900; letter-spacing:.08em; }
+      .swpips{ display:flex; gap:4px; }
+      .swpip{
+        width:15px; height:15px; background:var(--gold);
+        border:2.5px solid var(--ink); clip-path:polygon(50% 0,100% 100%,0 100%);
+      }
+      .swpip.used{ background:transparent; opacity:.3; }
+      #cutbtn{
+        flex:1; font-family:"Archivo Black","Archivo",sans-serif; font-size:26px;
+        background:var(--red); color:#141414; border:3px solid var(--ink);
+        box-shadow:5px 5px 0 var(--ink); padding:14px 10px; cursor:pointer;
+        letter-spacing:.05em; min-height:62px;
+      }
+      #cutbtn:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 var(--ink); }
+      #cutbtn:disabled{ opacity:.45; }
+
+      /* ---------- sacrifice ---------- */
+      #sacrifice{
+        display:none; flex:1; min-height:0; flex-direction:column;
+        align-items:center; justify-content:center; gap:14px;
+      }
+      #sacrifice.on{ display:flex; }
+      #sacrifice h2{ margin:0; font-size:24px; text-align:center; }
+      #sacrifice .sub{ font-weight:700; font-size:14px; text-align:center; }
+      #sac-choices{ display:flex; flex-direction:column; gap:10px; width:100%; max-width:340px; position:relative; padding:8px; }
+      .sacbtn{
+        display:flex; align-items:center; gap:10px; text-align:left;
+        background:var(--panel); color:var(--ink); border:3px solid var(--ink);
+        box-shadow:4px 4px 0 var(--ink); padding:12px 14px; cursor:pointer;
+        font-family:"Archivo",sans-serif;
+      }
+      .sacbtn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink); }
+      .sacbtn .key{
+        font-family:"Space Mono",monospace; font-weight:700; background:var(--ink);
+        color:var(--gold); padding:3px 8px; font-size:15px; flex:0 0 auto;
+      }
+      .sacbtn .nm{ font-family:"Archivo Black","Archivo",sans-serif; font-size:18px; }
+      .sacbtn .ds{ font-size:12.5px; font-weight:700; display:block; margin-top:2px; }
+
+      @media (prefers-reduced-motion: reduce){
+        #stage-wrap.shake{ animation:none; }
+        #spot-gold.on{ animation:none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+
+      <!-- STORY -->
+      <section class="screen on" id="scr-story">
+        <div class="center-wrap">
+          <div class="card">
+            <div class="mini-blade" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 44 44"><line x1="22" y1="3" x2="22" y2="24" stroke="#141414" stroke-width="3.5"/><path d="M12,24 L32,24 L32,33 Q32,40 22,40 Q12,40 12,33 Z" fill="#e8edf2" stroke="#141414" stroke-width="2.5"/><circle cx="22" cy="3" r="3.5" fill="#ef476f" stroke="#141414" stroke-width="2"/></svg></div>
+            <div class="big disp" id="story-text"></div>
+          </div>
+          <button class="btn" id="story-btn">Continue</button>
+        </div>
+      </section>
+
+      <!-- HOW TO -->
+      <section class="screen" id="scr-howto">
+        <div class="center-wrap">
+          <div class="card">
+            <div class="small" style="font-size:17px; margin-top:0;">Tap CUT when the blade crosses the gold line.</div>
+          </div>
+          <button class="btn" id="begin-btn">Begin</button>
+        </div>
+      </section>
+
+      <!-- GAME -->
+      <div id="hud">
+        <div class="topbar">
+          <div class="stat grow">
+            <span class="lab">BANK · GOAL 60</span>
+            <span class="val" id="bank">0</span>
+          </div>
+          <div class="stat">
+            <span class="lab">ROUND</span>
+            <span class="val" id="round">1 / 6</span>
+          </div>
+          <div class="stat">
+            <span class="lab">TABLE CHIPS</span>
+            <div class="pips" id="lives">
+              <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+            </div>
+          </div>
+          <button class="iconbtn" id="soundbtn" aria-label="Toggle sound">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+              <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none"/>
+              <g id="sound-waves"><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></g>
+              <g id="sound-x" style="display:none"><path d="M16 9l6 6M22 9l-6 6"/></g>
+            </svg>
+          </button>
+        </div>
+        <div id="laws" aria-label="House laws"></div>
+        <div id="aids">
+          <button class="aid" id="aid-slow" aria-label="Slow aid">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2.5h6"/></svg>
+            SLOW
+          </button>
+          <button class="aid" id="aid-wide" aria-label="Wide aid">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h18M3 12l4-4M3 12l4 4M21 12l-4-4M21 12l-4 4"/></svg>
+            WIDE
+          </button>
+          <button class="aid" id="aid-spot" aria-label="Spot aid">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/></svg>
+            SPOT
+          </button>
+        </div>
+      </div>
+
+      <section class="screen" id="scr-game">
+        <div id="stage-wrap">
+          <svg id="stage" viewBox="0 0 360 300" preserveAspectRatio="xMidYMid meet" aria-label="Pendulum blade over a chip stack">
+            <!-- rafters -->
+            <rect x="0" y="0" width="360" height="26" fill="#3b2d20"/>
+            <rect x="0" y="22" width="360" height="5" fill="#141414"/>
+            <!-- felt table -->
+            <rect x="14" y="216" width="332" height="70" fill="#27ae60" stroke="#141414" stroke-width="3"/>
+            <rect x="26" y="227" width="308" height="48" fill="none" stroke="#14532d" stroke-width="2"/>
+            <rect x="14" y="278" width="332" height="8" fill="#7a4a21"/>
+            <!-- gold cut zone -->
+            <g id="goldzone">
+              <rect id="goldrect" x="165" y="196" width="30" height="92" fill="#ffc300" opacity="0.55"/>
+              <rect id="goldline" x="178.5" y="192" width="3" height="100" fill="#ffc300"/>
+            </g>
+            <!-- spot preview flash -->
+            <g id="spotflash" style="display:none">
+              <path d="M0,-13 L9,0 L0,13 L-9,0 Z" fill="#fff" stroke="#141414" stroke-width="2.5"/>
+            </g>
+            <!-- chip stack -->
+            <g id="stack"></g>
+            <text id="stackval" x="180" y="262" text-anchor="middle" font-family="Archivo Black, sans-serif" font-size="21" fill="#141414"></text>
+            <!-- pendulum -->
+            <g id="pendulum">
+              <line x1="180" y1="12" x2="180" y2="168" stroke="#141414" stroke-width="6"/>
+              <line x1="180" y1="12" x2="180" y2="168" stroke="#c0c6ce" stroke-width="2.5"/>
+              <g id="bladedrop">
+                <g id="blade">
+                  <path d="M163,140 L197,140 L197,178 Q197,198 180,198 Q163,198 163,178 Z" fill="#e8edf2" stroke="#141414" stroke-width="3" stroke-linejoin="round"/>
+                  <circle cx="180" cy="158" r="6" fill="#ffc300" stroke="#141414" stroke-width="2.5"/>
+                </g>
+              </g>
+            </g>
+            <circle cx="180" cy="12" r="8" fill="#ef476f" stroke="#141414" stroke-width="3"/>
+            <!-- THIN tap target: the lower stack / table area, clear of the swinging blade -->
+            <rect id="stackhit" x="112" y="204" width="136" height="84" fill="#ffffff" opacity="0"/>
+            <g id="particles"></g>
+          </svg>
+          <div id="spot-gold"><span class="spotlab">THE GOLD LINE</span></div>
+          <div id="banner"></div>
+        </div>
+
+        <div id="sacrifice">
+          <h2 class="disp">THE HOUSE TAKES ITS CUT</h2>
+          <div class="sub" id="sac-sub">Choose what you give up.</div>
+          <div id="sac-choices"></div>
+        </div>
+      </section>
+
+      <div id="controls">
+        <div id="swings">
+          <span class="lab">SWINGS LEFT</span>
+          <div class="swpips" id="swpips">
+            <span class="swpip"></span><span class="swpip"></span><span class="swpip"></span><span class="swpip"></span><span class="swpip"></span>
+          </div>
+        </div>
+        <button id="cutbtn">CUT</button>
+      </div>
+
+      <!-- END -->
+      <section class="screen" id="scr-end">
+        <div class="center-wrap">
+          <div class="card">
+            <div class="big disp" id="end-title"></div>
+            <div class="small" id="end-sub"></div>
+            <div class="small mono" id="end-bank" style="font-size:20px;"></div>
+          </div>
+          <button class="btn" id="retry-btn">Retry</button>
+        </div>
+      </section>
+    </div>
+
+    <script>
+    (function(){
+      "use strict";
+      var STACKS = [8, 10, 12, 14, 16, 20];
+      var BASE_OMEGA = [1.45, 1.6, 2.15, 2.3, 2.45, 3.0];
+      var PIVOT_X = 180, R_LEN = 165, AMP = 0.62;
+      var BASE_HALF = 15, NEAR_MARGIN = 13;
+      var AID_INFO = {
+        slow: { name: "SLOW", desc: "Blade swings slower", teach: "SLOW — the blade swings slower." },
+        wide: { name: "WIDE", desc: "Gold zone is wider", teach: "WIDE — a wider gold line." },
+        spot: { name: "SPOT", desc: "Flash warns the crossing", teach: "SPOT — a flash shows where the blade will land." }
+      };
+      var STORY = [
+        "The Halcyon Casino has been dead for years. The lights are still on. The chips are still stacked. Something in the walls is still hungry.",
+        "It let you in for one reason: you can cut. Bank sixty chips before the night ends, and the house lets you walk out. It never says what it keeps."
+      ];
+
+      var S = null;
+      function freshState(){
+        return {
+          screen: "story", storyIdx: 0,
+          round: 1, bank: 0, lives: 3, swings: 5,
+          aids: { slow: true, wide: true, spot: true },
+          phase: 0, dir: 1, t: 0, goldX: 180,
+          dropping: false, dropY: 0, busy: false,
+          muted: false, goldSpotDone: false,
+          thinned: false, golden: false, goldCleans: 0,
+          seenNear: false, seenMiss: false, seenLast: false,
+          seenThinTeach: false, seenGoldenTeach: false,
+          seenLaw3: false, seenLaw5: false, seenLaw6: false,
+          seenSacTeach: false,
+          over: false
+        };
+      }
+      S = freshState();
+
+      /* ---------- DOM ---------- */
+      function $(id){ return document.getElementById(id); }
+      var el = {
+        story: $("scr-story"), storyText: $("story-text"), storyBtn: $("story-btn"),
+        howto: $("scr-howto"), beginBtn: $("begin-btn"),
+        hud: $("hud"), game: $("scr-game"), end: $("scr-end"),
+        bank: $("bank"), round: $("round"), lives: $("lives"),
+        laws: $("laws"), stageWrap: $("stage-wrap"), stage: $("stage"),
+        pendulum: $("pendulum"), bladedrop: $("bladedrop"),
+        goldrect: $("goldrect"), goldline: $("goldline"),
+        spotflash: $("spotflash"), stack: $("stack"), stackval: $("stackval"),
+        stackhit: $("stackhit"),
+        particles: $("particles"), banner: $("banner"), spotGold: $("spot-gold"),
+        controls: $("controls"), cutbtn: $("cutbtn"), swpips: $("swpips"),
+        sacrifice: $("sacrifice"), sacChoices: $("sac-choices"), sacSub: $("sac-sub"),
+        endTitle: $("end-title"), endSub: $("end-sub"), endBank: $("end-bank"),
+        retryBtn: $("retry-btn"),
+        soundWaves: $("sound-waves"), soundX: $("sound-x")
+      };
+
+      /* ---------- audio (never blocks input) ---------- */
+      var AC = null;
+      function audio(){
+        if (S.muted) return null;
+        try {
+          if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+          if (AC.state === "suspended") AC.resume();
+          return AC;
+        } catch (e) { return null; }
+      }
+      function tone(freq, dur, type, gain, when, slideTo){
+        var ac = audio(); if (!ac) return;
+        try {
+          var o = ac.createOscillator(), g = ac.createGain();
+          var t0 = ac.currentTime + (when || 0);
+          o.type = type || "square"; o.frequency.setValueAtTime(freq, t0);
+          if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+          g.gain.setValueAtTime(gain || 0.08, t0);
+          g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+          o.connect(g); g.connect(ac.destination);
+          o.start(t0); o.stop(t0 + dur + 0.02);
+        } catch (e) {}
+      }
+      function whoosh(){ tone(900, 0.16, "sawtooth", 0.05, 0, 180); }
+      function thunk(){ tone(120, 0.12, "square", 0.12, 0, 60); }
+      function chime(){ tone(660, 0.12, "triangle", 0.1, 0); tone(880, 0.14, "triangle", 0.1, 0.09); tone(1320, 0.2, "triangle", 0.09, 0.18); }
+      function buzz(){ tone(160, 0.3, "sawtooth", 0.1, 0, 70); }
+
+      /* ---------- ONE message at a time: a single queue feeding #banner ---------- */
+      var msgQ = [], msgBusy = false, msgTimer = null, msgHeld = false;
+      function showMsg(text, opt){
+        opt = opt || {};
+        msgQ.push({ text: text, bad: !!opt.bad, dur: opt.dur || 1700, hold: !!opt.hold });
+        pumpMsg();
+      }
+      function pumpMsg(){
+        if (msgBusy || !msgQ.length) return;
+        var m = msgQ.shift();
+        msgBusy = true; msgHeld = m.hold;
+        el.banner.textContent = m.text;
+        el.banner.className = m.bad ? "bad on" : "on";
+        if (m.hold) return;
+        msgTimer = setTimeout(function(){
+          el.banner.className = ""; msgBusy = false; msgHeld = false;
+          pumpMsg();
+        }, m.dur);
+      }
+      function clearHeldMsg(){
+        if (msgBusy && msgHeld) {
+          if (msgTimer) clearTimeout(msgTimer);
+          el.banner.className = ""; msgBusy = false; msgHeld = false;
+          pumpMsg();
+        }
+      }
+      function clearAllMsg(){
+        msgQ.length = 0;
+        if (msgTimer) clearTimeout(msgTimer);
+        el.banner.className = ""; msgBusy = false; msgHeld = false;
+      }
+
+      /* ---------- derived values ---------- */
+      function omega(){
+        var w = BASE_OMEGA[S.round - 1];
+        if (S.aids.slow) w *= 0.65;
+        return w;
+      }
+      function goldHalf(){
+        var h = BASE_HALF;
+        if (S.aids.wide) h *= 1.5;   /* WIDE widens the base zone first */
+        if (S.round >= 6) h *= 0.7;  /* R6: narrower line */
+        if (S.thinned) h *= 0.5;     /* THIN then halves whatever the zone currently is */
+        return h;
+      }
+      function bladeX(){
+        return PIVOT_X + R_LEN * Math.sin(AMP * Math.sin(S.phase));
+      }
+      function driftX(t){
+        if (S.round >= 5) return 26 * Math.sin(t * 0.85);
+        return 0;
+      }
+      function canThin(){
+        return S.screen === "play" && !S.dropping && !S.busy && !S.over &&
+               S.round >= 2 && !S.thinned && S.swings === 5;
+      }
+      function payout(){
+        var printed = STACKS[S.round - 1];
+        var mult = (S.golden ? 2 : 1) * (S.thinned ? 2 : 1);
+        return { printed: printed, mult: mult, full: printed * mult };
+      }
+      function payoutText(p){
+        if (p.mult === 1) return "CLEAN — banked " + p.full;
+        var parts = [String(p.printed)];
+        if (S.golden) parts.push("×2");
+        if (S.thinned) parts.push("×2");
+        return "CLEAN — banked " + parts.join(" ") + " = " + p.full;
+      }
+
+      /* ---------- stack drawing ---------- */
+      var CHIP_COLORS = ["#ef476f", "#118ab2", "#ffd166", "#06d6a0", "#8338ec", "#ff7b00"];
+      var GOLD_COLORS = ["#ffc300", "#ffd95e", "#ffb700", "#ffe066", "#ffc300", "#ffd95e"];
+      function drawStack(){
+        var v = STACKS[S.round - 1];
+        var n = Math.min(4 + Math.ceil(v / 3), 9);
+        var cols = S.golden ? GOLD_COLORS : CHIP_COLORS;
+        var s = "";
+        for (var i = 0; i < n; i++) {
+          var y = 214 - i * 7;
+          var c = cols[(i + S.round) % cols.length];
+          s += '<g><ellipse cx="180" cy="' + y + '" rx="46" ry="9" fill="' + c + '" stroke="#141414" stroke-width="2.5"/>' +
+               '<ellipse cx="180" cy="' + y + '" rx="30" ry="5" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="5 5" opacity="0.85"/></g>';
+        }
+        if (S.golden) {
+          s += '<text x="180" y="140" text-anchor="middle" font-family="Archivo Black, sans-serif" font-size="13" fill="#ffc300" stroke="#141414" stroke-width="0.6">GOLDEN ×2</text>';
+          for (var p = 0; p < 2; p++) {
+            var px = p === 0 ? 164 : 196;
+            s += '<circle cx="' + px + '" cy="154" r="7.5" fill="' + (p < S.goldCleans ? "#ffc300" : "none") + '" stroke="#141414" stroke-width="2.5"/>';
+          }
+        }
+        if (S.thinned) {
+          s += '<g><rect x="139" y="226" width="82" height="21" fill="#ffc300" stroke="#141414" stroke-width="2.5"/>' +
+               '<text x="180" y="241" text-anchor="middle" font-family="Archivo Black, sans-serif" font-size="12.5" fill="#141414">THIN ×2</text></g>';
+        }
+        el.stack.innerHTML = s;
+        el.stackval.textContent = v + " CHIPS";
+        el.stackhit.style.cursor = canThin() ? "pointer" : "";
+      }
+
+      /* ---------- HUD ---------- */
+      function lawsList(){
+        var L = [];
+        if (S.round >= 3) L.push({ r: 3, text: "FASTER BLADE" });
+        if (S.round >= 5) L.push({ r: 5, text: "LINE DRIFTS" });
+        if (S.round >= 6) L.push({ r: 6, text: "FASTER · NARROWER LINE" });
+        return L.reverse(); /* newest first */
+      }
+      function renderHUD(){
+        el.bank.textContent = S.bank;
+        el.round.textContent = S.round + " / 6";
+        var pips = el.lives.children;
+        for (var i = 0; i < 3; i++) pips[i].className = "pip" + (i < S.lives ? "" : " lost");
+        var sw = el.swpips.children;
+        for (var j = 0; j < 5; j++) sw[j].className = "swpip" + (j < S.swings ? "" : " used");
+        ["slow", "wide", "spot"].forEach(function(k){
+          $("aid-" + k).className = "aid" + (S.aids[k] ? "" : " gone");
+        });
+        var L = lawsList();
+        if (L.length) {
+          el.laws.innerHTML = '<span class="tag">LAWS</span><span class="items">' +
+            L.map(function(x){ return "R" + x.r + " " + x.text; }).join(" &nbsp;·&nbsp; ") + "</span>";
+          el.laws.style.visibility = "visible";
+        } else {
+          el.laws.innerHTML = "";
+          el.laws.style.visibility = "hidden";
+        }
+      }
+
+      /* ---------- screens ---------- */
+      function show(name){
+        S.screen = name;
+        el.story.classList.toggle("on", name === "story");
+        el.howto.classList.toggle("on", name === "howto");
+        el.end.classList.toggle("on", name === "end");
+        var inGame = (name === "play" || name === "sacrifice");
+        el.game.classList.toggle("on", inGame);
+        el.hud.classList.toggle("on", inGame);
+        el.controls.classList.toggle("on", name === "play");
+        el.stageWrap.style.display = name === "sacrifice" ? "none" : "";
+        el.sacrifice.classList.toggle("on", name === "sacrifice");
+      }
+
+      /* ---------- particles / shake (juice, no text) ---------- */
+      var parts = [];
+      function burst(x, y){
+        for (var i = 0; i < 12; i++) {
+          var c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          var col = CHIP_COLORS[i % CHIP_COLORS.length];
+          c.setAttribute("r", 5 + Math.random() * 4);
+          c.setAttribute("fill", col);
+          c.setAttribute("stroke", "#141414"); c.setAttribute("stroke-width", "1.5");
+          el.particles.appendChild(c);
+          parts.push({ n: c, x: x, y: y, vx: (Math.random() - 0.5) * 190, vy: -90 - Math.random() * 130, life: 0.85 });
+        }
+      }
+      function stepParticles(dt){
+        for (var i = parts.length - 1; i >= 0; i--) {
+          var p = parts[i];
+          p.life -= dt; p.vy += 420 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+          if (p.life <= 0 || p.y > 320) { p.n.remove(); parts.splice(i, 1); continue; }
+          p.n.setAttribute("cx", p.x); p.n.setAttribute("cy", p.y);
+          p.n.setAttribute("opacity", Math.min(1, p.life * 2));
+        }
+      }
+      function shake(){
+        el.stageWrap.classList.remove("shake");
+        void el.stageWrap.offsetWidth;
+        el.stageWrap.classList.add("shake");
+      }
+
+      /* ---------- flow ---------- */
+      function startRound(){
+        S.swings = 5;
+        S.dropping = false; S.dropY = 0; S.busy = false;
+        S.phase = Math.random() * Math.PI * 2;
+        S.thinned = false;
+        S.goldCleans = 0;
+        /* golden: guaranteed in round 3 (where it is taught), sometimes in rounds 4–6 */
+        S.golden = S.round === 3 ? true : (S.round >= 4 && Math.random() < 0.5);
+        drawStack();
+        renderHUD();
+        show("play");
+        el.cutbtn.disabled = false;
+        /* onboarding, one line at a time, only at first use */
+        if (S.round === 1 && !S.goldSpotDone) {
+          el.spotGold.classList.add("on");
+          showMsg("Wait for the gold line — tap CUT.", { hold: true, dur: 2000 });
+        }
+        if (S.round === 2 && !S.seenThinTeach) {
+          S.seenThinTeach = true;
+          showMsg("Tap the stack to thin the gold line — double the chips, half the room.", { dur: 3000 });
+        }
+        if (S.round === 3 && !S.seenLaw3) {
+          S.seenLaw3 = true;
+          showMsg("The blade swings faster now.", { dur: 2100 });
+        }
+        if (S.golden && !S.seenGoldenTeach) {
+          S.seenGoldenTeach = true;
+          showMsg("A golden stack needs two clean cuts.", { dur: 2400 });
+        }
+        if (S.round === 5 && !S.seenLaw5) {
+          S.seenLaw5 = true;
+          showMsg("The gold line drifts.", { dur: 2100 });
+        }
+        if (S.round === 6 && !S.seenLaw6) {
+          S.seenLaw6 = true;
+          showMsg("Faster, drifting, narrower.", { dur: 2100 });
+        }
+      }
+      function endRun(kind){
+        S.over = true;
+        clearAllMsg();
+        show("end");
+        if (kind === "win") {
+          el.endTitle.textContent = "THE HOUSE PAYS";
+          el.endSub.textContent = "You beat the dead casino.";
+        } else if (kind === "chips") {
+          el.endTitle.textContent = "OUT OF CHIPS";
+          el.endSub.textContent = "The table takes your seat.";
+        } else {
+          el.endTitle.textContent = "SHORT OF 60";
+          el.endSub.textContent = "The house keeps the rest.";
+        }
+        el.endBank.textContent = "BANKED " + S.bank + " / 60";
+      }
+      function afterRound(){
+        if (S.lives <= 0) { endRun("chips"); return; }
+        if (S.round >= 6) { endRun(S.bank >= 60 ? "win" : "short"); return; }
+        if (S.round === 2 || S.round === 4) { openSacrifice(); return; }
+        S.round++;
+        startRound();
+      }
+      function openSacrifice(){
+        clearAllMsg();
+        show("sacrifice");
+        if (!S.seenSacTeach) {
+          S.seenSacTeach = true;
+          el.sacSub.textContent = "The house takes its cut. Choose what you give up.";
+        } else {
+          el.sacSub.textContent = "Choose what you give up.";
+        }
+        var keys = ["slow", "wide", "spot"].filter(function(k){ return S.aids[k]; });
+        el.sacChoices.innerHTML = "";
+        keys.forEach(function(k, i){
+          var b = document.createElement("button");
+          b.className = "sacbtn";
+          b.innerHTML = '<span class="key">' + (i + 1) + '</span><span><span class="nm">' +
+            AID_INFO[k].name + '</span><span class="ds">' + AID_INFO[k].desc + '</span></span>';
+          b.addEventListener("click", function(){ pickSacrifice(k); });
+          el.sacChoices.appendChild(b);
+        });
+      }
+      function pickSacrifice(k){
+        if (S.screen !== "sacrifice" || !S.aids[k]) return;
+        S.aids[k] = false;
+        thunk();
+        S.round++;
+        renderHUD();
+        startRound();
+      }
+
+      /* ---------- THIN: one tap on the stack before its first swing ---------- */
+      function doThin(){
+        if (!canThin()) return;
+        S.thinned = true;
+        tone(980, 0.1, "triangle", 0.09, 0, 1400);
+        drawStack();
+      }
+
+      /* ---------- the cut: outcomes resolve HERE, synchronously ---------- */
+      function doCut(){
+        if (S.screen !== "play" || S.dropping || S.busy || S.over) return;
+        clearHeldMsg();
+        whoosh();
+        var bx = bladeX();
+        var dx = Math.abs(bx - S.goldX);
+        var half = goldHalf();
+        var p = payout();
+        var outcome, gained = 0, bankedNow = false;
+        if (dx <= half) outcome = "clean";
+        else if (dx <= half + NEAR_MARGIN) outcome = "near";
+        else outcome = "miss";
+
+        S.swings--;
+        if (outcome === "miss") {
+          S.lives--;
+        } else if (outcome === "clean") {
+          if (S.golden) {
+            S.goldCleans++;
+            if (S.goldCleans >= 2) { gained = p.full; bankedNow = true; }
+          } else {
+            gained = p.full; bankedNow = true;
+          }
+        } else if (outcome === "near" && !S.golden) {
+          gained = Math.floor(p.full / 2); bankedNow = true;
+        }
+        /* a near cut on a golden stack banks nothing and does not count */
+        if (bankedNow) S.bank += gained;
+        S.goldSpotDone = true;
+        el.spotGold.classList.remove("on");
+        renderHUD();
+        if (S.golden && outcome === "clean" && !bankedNow) drawStack();
+
+        /* visuals + the one feedback line */
+        S.dropping = true; S.dropY = 0;
+        setTimeout(thunk, 110);
+        if (outcome === "clean" && bankedNow) {
+          showMsg(payoutText(p), { dur: 1500 }); burst(180, 205); chime();
+        } else if (outcome === "clean") {
+          showMsg("CLEAN — one more to bank.", { dur: 1400 }); burst(180, 205); tone(760, 0.14, "triangle", 0.09, 0);
+        } else if (outcome === "near") {
+          if (S.golden) {
+            showMsg("Close — golden needs clean cuts.", { dur: 1500 }); tone(520, 0.15, "triangle", 0.09, 0);
+          } else if (!S.seenNear) {
+            S.seenNear = true;
+            showMsg("Close — half the stack.", { dur: 1600 }); burst(180, 205); tone(520, 0.15, "triangle", 0.09, 0);
+          } else {
+            showMsg("NEAR — banked " + gained, { dur: 1300 }); burst(180, 205); tone(520, 0.15, "triangle", 0.09, 0);
+          }
+        } else {
+          if (!S.seenMiss) {
+            S.seenMiss = true;
+            showMsg("Miss — one table chip lost.", { bad: true, dur: 1600 });
+          } else {
+            showMsg("MISS", { bad: true, dur: 1100 });
+          }
+          shake(); buzz();
+        }
+
+        var roundOver = bankedNow || S.swings <= 0 || S.lives <= 0;
+        var whisked = !bankedNow && S.swings <= 0 && S.lives > 0;
+        if (whisked) {
+          setTimeout(function(){
+            showMsg(S.thinned || S.golden ? "Stack taken — nothing banked." : "STACK TAKEN", { bad: true, dur: 1400 });
+            buzz();
+          }, 1250);
+        }
+        /* the 5-swing limit is taught only when a stack reaches its final swing */
+        if (!roundOver && S.swings === 1 && !S.seenLast) {
+          S.seenLast = true;
+          showMsg("Last swing.", { dur: 1400 });
+        }
+        S.busy = true;
+        setTimeout(function(){
+          S.dropping = false; S.dropY = 0; S.busy = false;
+          if (roundOver) afterRound();
+          else drawStack();
+        }, whisked ? 1950 : 620);
+      }
+
+      /* ---------- main loop ---------- */
+      var lastTs = null;
+      function frame(ts){
+        requestAnimationFrame(frame);
+        if (lastTs == null) lastTs = ts;
+        var dt = Math.min(0.05, (ts - lastTs) / 1000);
+        lastTs = ts;
+        if (S.screen !== "play" && S.screen !== "sacrifice") { stepParticles(dt); return; }
+        S.t += dt;
+        if (S.screen === "play" && !S.dropping && !S.busy) {
+          S.phase += omega() * dt;
+        }
+        if (S.dropping) {
+          S.dropY = Math.min(52, S.dropY + dt * 460);
+        }
+        S.goldX = 180 + driftX(S.t);
+        var ang = AMP * Math.sin(S.phase);
+        el.pendulum.setAttribute("transform", "rotate(" + (ang * 180 / Math.PI).toFixed(2) + " 180 12)");
+        el.bladedrop.setAttribute("transform", "translate(0 " + S.dropY.toFixed(1) + ")");
+        var half = goldHalf();
+        el.goldrect.setAttribute("x", (S.goldX - half).toFixed(1));
+        el.goldrect.setAttribute("width", (half * 2).toFixed(1));
+        el.goldline.setAttribute("x", (S.goldX - 1.5).toFixed(1));
+
+        /* SPOT aid: flash when a crossing is ~0.15s away */
+        var showSpot = false;
+        if (S.aids.spot && S.screen === "play" && !S.dropping) {
+          var ph = S.phase, w = omega();
+          for (var s = 0.01; s <= 0.3; s += 0.01) {
+            var fx = PIVOT_X + R_LEN * Math.sin(AMP * Math.sin(ph + w * s));
+            var gx = 180 + driftX(S.t + s);
+            var dNow = bladeX() - S.goldX, dFut = fx - gx;
+            if ((dNow < 0 && dFut >= 0) || (dNow > 0 && dFut <= 0)) {
+              if (s <= 0.17) showSpot = true;
+              break;
+            }
+            if (Math.abs(dFut) < 1.5 && s <= 0.17) { showSpot = true; break; }
+          }
+        }
+        el.spotflash.style.display = showSpot ? "" : "none";
+        if (showSpot) {
+          el.spotflash.setAttribute("transform", "translate(" + S.goldX.toFixed(1) + " 205)");
+          el.spotflash.setAttribute("opacity", (0.55 + 0.45 * Math.sin(S.t * 40)).toFixed(2));
+        }
+        stepParticles(dt);
+      }
+      requestAnimationFrame(frame);
+
+      /* ---------- input ---------- */
+      el.stackhit.addEventListener("pointerdown", function(e){
+        if (canThin()) {
+          e.preventDefault(); e.stopPropagation();
+          doThin();
+        }
+        /* otherwise the tap bubbles to the stage and cuts, as before */
+      });
+      el.stageWrap.addEventListener("pointerdown", function(e){ e.preventDefault(); doCut(); });
+      el.cutbtn.addEventListener("pointerdown", function(e){ e.preventDefault(); e.stopPropagation(); doCut(); });
+      ["slow", "wide", "spot"].forEach(function(k){
+        $("aid-" + k).addEventListener("click", function(){
+          if (S.aids[k]) showMsg(AID_INFO[k].teach, { dur: 2100 });
+        });
+      });
+      document.addEventListener("keydown", function(e){
+        if (e.code === "Space") {
+          e.preventDefault();
+          if (!e.repeat) doCut();
+        } else if (S.screen === "sacrifice" && (e.key === "1" || e.key === "2" || e.key === "3")) {
+          var keys = ["slow", "wide", "spot"].filter(function(k){ return S.aids[k]; });
+          var pick = keys[parseInt(e.key, 10) - 1];
+          if (pick) pickSacrifice(pick);
+        }
+      });
+
+      el.storyBtn.addEventListener("click", function(){
+        if (S.storyIdx === 0) {
+          S.storyIdx = 1;
+          el.storyText.textContent = STORY[1];
+          el.storyBtn.textContent = "Continue";
+        } else {
+          show("howto");
+        }
+      });
+      el.beginBtn.addEventListener("click", function(){ startRound(); });
+      el.retryBtn.addEventListener("click", function(){
+        var muted = S.muted;
+        S = freshState(); S.muted = muted;
+        clearAllMsg();
+        el.spotGold.classList.remove("on");
+        el.storyText.textContent = STORY[0];
+        el.storyBtn.textContent = "Continue";
+        renderHUD();
+        show("story");
+      });
+      $("soundbtn").addEventListener("click", function(){
+        S.muted = !S.muted;
+        el.soundWaves.style.display = S.muted ? "none" : "";
+        el.soundX.style.display = S.muted ? "" : "none";
+        if (!S.muted) tone(700, 0.08, "triangle", 0.07, 0);
+      });
+
+      el.storyText.textContent = STORY[0];
+      renderHUD();
+    })();
+    </script>
+  </body>
+</html>

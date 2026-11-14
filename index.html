@@ -278,6 +278,12 @@
   .p-stamp     { --bg: #FFF08A; --ac: #8A4DFF; }
   .p-post      { --bg: #FFB6C9; --ac: #FFE600; }
   .p-mirror    { --bg: #EBD9FF; --ac: #00E5FF; }
+.p-moon      { --bg: #9CD9FF; --ac: #FF3DA5; }
+.p-field     { --bg: #C8F7A0; --ac: #FF8A00; }
+.p-kite      { --bg: #BFE9FF; --ac: #FF3DA5; }
+.p-ember     { --bg: #FFD9A0; --ac: #FF3DA5; }
+.p-cut       { --bg: #FFD24D; --ac: #8A4DFF; }
+.p-neon      { --bg: #FF9DE2; --ac: #00E5FF; }
   .p-goblins   { --bg: #3A1C7A; --ac: #B6FF00; }
   .p-mtd       { --bg: #A8E4FF; --ac: #FF8A00; }
   .p-brick     { --bg: #FFBE8F; --ac: #00E5FF; }
@@ -403,7 +409,7 @@
   </div>
 </div>
 
-<section class="hero swap" id="hero" aria-roledescription="carousel" aria-label="Featured games" style="--hbg:#6BF2D1;--hac:#FF3DA5">
+<section class="hero swap" id="hero" aria-roledescription="carousel" aria-label="Featured games" style="--hbg:#9CD9FF;--hac:#FF3DA5">
   <div class="hero-bg" aria-hidden="true">
     <svg class="d1" viewBox="0 0 100 90"><polygon points="50,6 96,84 4,84"/></svg>
     <svg class="d2" viewBox="0 0 60 60"><polygon points="22,2 38,2 38,22 58,22 58,38 38,38 38,58 22,58 22,38 2,38 2,22 22,22"/></svg>
@@ -412,24 +418,30 @@
   <div class="hero-in">
     <div class="hero-top">
       <span class="kick" id="heroKicker">New from the workshop</span>
-      <div class="stk" aria-hidden="true"><span class="rays"></span><span class="tile"><span id="heroEmoji">🛰️</span></span></div>
+      <div class="stk" aria-hidden="true"><span class="rays"></span><span class="tile"><span id="heroEmoji">🌙</span></span></div>
     </div>
-    <h1 id="heroTitle">Signal Salvage</h1>
-    <p class="pitch" id="heroPitch">Bounce the salvage laser off mirrors in 3D space. Lock 60 scrap before the ring goes silent.</p>
-    <div class="chips" id="heroMeta"><span>3D laser aiming</span><span>Bounce to lock</span><span>60 scrap</span></div>
+    <h1 id="heroTitle">The Moon Ferry</h1>
+    <p class="pitch" id="heroPitch">Drag the moon, raise the tide. Clear the reefs, haul the wrecks.</p>
+    <div class="chips" id="heroMeta"><span>Tide control</span><span>6 reaches</span><span>40 glow</span></div>
     <div class="ctl">
-      <a class="play-btn" id="heroPlay" href="daily-roguelike-signal-salvage-2026-11-08/index.html"><i class="tri" aria-hidden="true"></i>Play now</a>
+      <a class="play-btn" id="heroPlay" href="daily-roguelike-the-moon-ferry-2026-11-13/index.html"><i class="tri" aria-hidden="true"></i>Play now</a>
       <button class="sq" id="prev" type="button" aria-label="Previous featured game"><svg viewBox="0 0 24 24"><path d="M16 3 5 12l11 9z"/></svg></button>
       <button class="sq" id="next" type="button" aria-label="Next featured game"><svg viewBox="0 0 24 24"><path d="M8 3l11 9-11 9z"/></svg></button>
     </div>
     <div class="segs" role="group" aria-label="Featured games">
-      <button class="seg on" data-i="0" type="button" aria-label="Signal Salvage" aria-current="true"><i></i></button>
-      <button class="seg" data-i="1" type="button" aria-label="The Last Stamp"><i></i></button>
-      <button class="seg" data-i="2" type="button" aria-label="Orbit Gardener"><i></i></button>
-      <button class="seg" data-i="3" type="button" aria-label="Alien Bug Inspector"><i></i></button>
-      <button class="seg" data-i="4" type="button" aria-label="Shrink Ray"><i></i></button>
-      <button class="seg" data-i="5" type="button" aria-label="The Minotaur’s Maze"><i></i></button>
-      <button class="seg" data-i="6" type="button" aria-label="Kill a Billion Goblins"><i></i></button>
+      <button class="seg on" data-i="0" type="button" aria-label="The Moon Ferry" aria-current="true"><i></i></button>
+      <button class="seg" data-i="1" type="button" aria-label="The Wishing Field"><i></i></button>
+      <button class="seg" data-i="2" type="button" aria-label="The Kite Queen’s Mail"><i></i></button>
+      <button class="seg" data-i="3" type="button" aria-label="Ember of the Wishing Tree"><i></i></button>
+      <button class="seg" data-i="4" type="button" aria-label="The House Cut"><i></i></button>
+      <button class="seg" data-i="5" type="button" aria-label="Neon Gate"><i></i></button>
+      <button class="seg" data-i="6" type="button" aria-label="Signal Salvage"><i></i></button>
+      <button class="seg" data-i="7" type="button" aria-label="The Last Stamp"><i></i></button>
+      <button class="seg" data-i="8" type="button" aria-label="Orbit Gardener"><i></i></button>
+      <button class="seg" data-i="9" type="button" aria-label="Alien Bug Inspector"><i></i></button>
+      <button class="seg" data-i="10" type="button" aria-label="Shrink Ray"><i></i></button>
+      <button class="seg" data-i="11" type="button" aria-label="The Minotaur’s Maze"><i></i></button>
+      <button class="seg" data-i="12" type="button" aria-label="Kill a Billion Goblins"><i></i></button>
       <button class="pz" id="pz" type="button" aria-label="Pause or resume auto-advance"><svg class="ic-pause" viewBox="0 0 14 14"><path d="M1 0h4v14H1zM9 0h4v14H9z"/></svg><svg class="ic-play" viewBox="0 0 14 14"><path d="M2 0l11 7-11 7z"/></svg></button>
     </div>
   </div>
@@ -437,9 +449,10 @@
 
 <main>
   <section class="sec wrap" id="dev" aria-labelledby="dev-h">
-    <div class="sec-head"><h2 id="dev-h">In Development</h2><span class="count" aria-hidden="true">12</span><p>Fresh from the workshop. Newest first, tap one to play.</p></div>
+    <div class="sec-head"><h2 id="dev-h">In Development</h2><span class="count" aria-hidden="true">13</span><p>Fresh from the workshop. Newest first, tap one to play.</p></div>
     <!-- ORDER: newest first. When a new game is pushed, add its card at the FRONT of this row. -->
     <div class="grid">
+      <a class="card p-neon" href="neon-gate/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🚪</span></span><span class="cbody"><h3>Neon Gate</h3><p class="blurb">Read the rules, tap the signs that get in. Ten rounds, three strikes.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-orbit" href="orbit-gardener/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🪐</span></span><span class="cbody"><h3>Orbit Gardener</h3><p class="blurb">Grow starflowers on a tiny planet, then rocket to the moon.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-bug" href="alien-bug-inspector/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🐛</span></span><span class="cbody"><h3>Alien Bug Inspector</h3><p class="blurb">Customs for the weird: find the alien bugs, stamp PASS.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-shrink" href="shrink-ray/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🔬</span></span><span class="cbody"><h3>Shrink Ray</h3><p class="blurb">Hold near, never touch — shrink critters into the jar.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
@@ -456,9 +469,14 @@
   </section>
 
   <section class="sec wrap" id="daily" aria-labelledby="daily-h">
-    <div class="sec-head"><h2 id="daily-h">Daily Roguelikes</h2><span class="count" aria-hidden="true">4</span><p>One new bite-sized roguelike a day. Newest first.</p></div>
+    <div class="sec-head"><h2 id="daily-h">Daily Roguelikes</h2><span class="count" aria-hidden="true">9</span><p>One new bite-sized roguelike a day. Newest first.</p></div>
     <!-- ORDER: newest first. When a new daily roguelike is pushed, add its card at the FRONT of this row. -->
     <div class="grid">
+      <a class="card p-moon" href="daily-roguelike-the-moon-ferry-2026-11-13/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🌙</span></span><span class="cbody"><h3>The Moon Ferry</h3><p class="blurb">Drag the moon, raise the tide. Clear the reefs, haul the wrecks.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
+      <a class="card p-field" href="daily-roguelike-the-wishing-field-2026-11-12/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🌱</span></span><span class="cbody"><h3>The Wishing Field</h3><p class="blurb">Plant seeds, hedge the odds. Thirty blooms by day six.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
+      <a class="card p-kite" href="daily-roguelike-the-kite-queen-s-mail-2026-11-11/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🪁</span></span><span class="cbody"><h3>The Kite Queen’s Mail</h3><p class="blurb">Steer the kite through the gusts. Deliver six letters.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
+      <a class="card p-ember" href="daily-roguelike-ember-of-the-wishing-tree-2026-11-10/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🔥</span></span><span class="cbody"><h3>Ember of the Wishing Tree</h3><p class="blurb">Catch the falling embers. Bank forty before the last night.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
+      <a class="card p-cut" href="daily-roguelike-the-house-cut-2026-11-09/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">✂️</span></span><span class="cbody"><h3>The House Cut</h3><p class="blurb">Drop the blade on the gold line. Bank sixty before the night ends.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-signal" href="daily-roguelike-signal-salvage-2026-11-08/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🛰️</span></span><span class="cbody"><h3>Signal Salvage</h3><p class="blurb">Bounce the salvage laser off mirrors. Lock 60 scrap.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-stamp" href="daily-roguelike-the-last-stamp-2026-11-07/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">📮</span></span><span class="cbody"><h3>The Last Stamp</h3><p class="blurb">Stamp the dead’s permits. Pay the rent. Free your soul.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-post" href="daily-roguelike-the-last-post-2026-10-28/index.html"><span class="panel"><span class="emblem" aria-hidden="true">✉️</span></span><span class="cbody"><h3>The Last Post</h3><p class="blurb">Sort thirty letters across five villages before the post is late.</p></span><span class="cfoot"><span class="tag">Daily roguelike</span><span class="go" aria-hidden="true"></span></span></a>
@@ -553,6 +571,24 @@
 
   /* ---------- hero ---------- */
   var featured = [
+    { bg: '#9CD9FF', ac: '#FF3DA5', emoji: '🌙', kicker: 'New from the workshop', title: 'The Moon Ferry',
+      pitch: 'Drag the moon, raise the tide. Clear the reefs, haul the wrecks.',
+      meta: ['Tide control', '6 reaches', '40 glow'], href: 'daily-roguelike-the-moon-ferry-2026-11-13/index.html' },
+    { bg: '#C8F7A0', ac: '#FF8A00', emoji: '🌱', kicker: 'New from the workshop', title: 'The Wishing Field',
+      pitch: 'Plant seeds, hedge the odds. Thirty blooms by day six.',
+      meta: ['Percent chances', 'Hedge your bets', '30 blooms'], href: 'daily-roguelike-the-wishing-field-2026-11-12/index.html' },
+    { bg: '#BFE9FF', ac: '#FF3DA5', emoji: '🪁', kicker: 'New from the workshop', title: 'The Kite Queen’s Mail',
+      pitch: 'Steer the kite through the gusts. Deliver six letters.',
+      meta: ['Arrow steering', 'Gust ladder', '6 skies'], href: 'daily-roguelike-the-kite-queen-s-mail-2026-11-11/index.html' },
+    { bg: '#FFD9A0', ac: '#FF3DA5', emoji: '🔥', kicker: 'New from the workshop', title: 'Ember of the Wishing Tree',
+      pitch: 'Catch the falling embers. Bank forty before the last night.',
+      meta: ['Catch embers', 'Key economy', '6 nights'], href: 'daily-roguelike-ember-of-the-wishing-tree-2026-11-10/index.html' },
+    { bg: '#FFD24D', ac: '#8A4DFF', emoji: '✂️', kicker: 'New from the workshop', title: 'The House Cut',
+      pitch: 'Drop the blade on the gold line. Bank sixty before the night ends.',
+      meta: ['Timing cuts', 'Sacrifice ladder', '60 chips'], href: 'daily-roguelike-the-house-cut-2026-11-09/index.html' },
+    { bg: '#FF9DE2', ac: '#00E5FF', emoji: '🚪', kicker: 'New from the workshop', title: 'Neon Gate',
+      pitch: 'Read the rules, tap the signs that get in. Ten rounds, three strikes.',
+      meta: ['Shape rules', 'Growing grids', '10 rounds'], href: 'neon-gate/index.html' },
     { bg: '#6BF2D1', ac: '#FF3DA5', emoji: '🛰️', kicker: 'New from the workshop', title: 'Signal Salvage',
       pitch: 'Bounce the salvage laser off mirrors in 3D space. Lock 60 scrap before the ring goes silent.',
       meta: ['3D laser aiming', 'Bounce to lock', '60 scrap'], href: 'daily-roguelike-signal-salvage-2026-11-08/index.html' },

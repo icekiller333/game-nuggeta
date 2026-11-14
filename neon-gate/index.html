@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>NEON GATE</title>
+<style>
+  :root{
+    --bg:#07070f; --panel:#12121f; --panel2:#1a1a2e; --ink:#ffffff; --ink-dim:#d7d7e8;
+    --pink:#ff5da2; --cyan:#2ee6ff; --yellow:#ffe14d; --lime:#b6ff4d; --orange:#ffab4d; --purple:#cf8bff;
+    --red:#ff3b3b; --black:#000000; --gold:#ffd700;
+    --lime-old:#86b45e; --pink-old:#c07a92;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Arial Narrow",Arial,Helvetica,sans-serif;
+    overflow:hidden;
+  }
+  button{font-family:inherit; cursor:pointer; min-height:44px;}
+  #app{
+    position:relative; height:100dvh; max-width:520px; margin:0 auto;
+    display:flex; flex-direction:column; overflow:hidden;
+    background:
+      radial-gradient(220px 90px at 12% 96%, rgba(255,93,162,.28), transparent 70%),
+      radial-gradient(260px 110px at 88% 98%, rgba(46,230,255,.22), transparent 70%),
+      radial-gradient(180px 80px at 70% 2%, rgba(207,139,255,.20), transparent 70%),
+      linear-gradient(180deg,#0a0a18 0%, #07070f 60%, #0d0716 100%);
+  }
+  #app::before{
+    content:""; position:absolute; left:0; right:0; bottom:0; height:120px; pointer-events:none; opacity:.5;
+    background:
+      linear-gradient(90deg, transparent 0 4%, #05050c 4% 12%, transparent 12% 16%, #05050c 16% 27%, transparent 27% 31%, #05050c 31% 44%, transparent 44% 49%, #05050c 49% 63%, transparent 63% 67%, #05050c 67% 80%, transparent 80% 85%, #05050c 85% 96%, transparent 96%);
+    border-top:3px solid #000;
+  }
+  .shake{animation:shake .32s linear;}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(4px)}}
+
+  /* per-shape neon character */
+  .fx-crackle{animation:crackle 1.7s steps(1) infinite; transform-box:fill-box; transform-origin:center;}
+  @keyframes crackle{0%,86%{transform:rotate(0deg) scale(1)}88%{transform:rotate(-2.5deg) scale(1.06)}92%{transform:rotate(2deg) scale(.96)}96%{transform:rotate(0deg) scale(1.04)}100%{transform:rotate(0deg) scale(1)}}
+  .fx-flicker{animation:flicker 2.6s linear infinite;}
+  @keyframes flicker{0%,100%{opacity:1}40%{opacity:1}41%{opacity:.3}42%{opacity:1}70%{opacity:1}71%{opacity:.45}72%{opacity:.95}73%{opacity:.35}74%{opacity:1}}
+  .fx-breathe{animation:breathe 3.2s ease-in-out infinite; transform-box:fill-box; transform-origin:center;}
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  .fx-pulse{animation:pulseRing 1.8s ease-in-out infinite; transform-box:fill-box; transform-origin:center;}
+  @keyframes pulseRing{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.08);opacity:1}}
+  @media (prefers-reduced-motion: reduce){
+    .shake{animation:none} .tile.correct{animation:none}
+    .fx-crackle,.fx-flicker,.fx-breathe,.fx-pulse{animation:none}
+  }
+
+  .view{position:relative; z-index:2; display:none; flex-direction:column; height:100%; padding:12px; gap:8px; overflow:hidden;}
+  .view.on{display:flex;}
+
+  /* ---------- START / STORY ---------- */
+  #view-start{align-items:stretch; justify-content:center;}
+  .logo{
+    font-size:44px; font-weight:900; letter-spacing:2px; line-height:.95; text-align:center;
+    color:var(--yellow); text-shadow:3px 3px 0 #000, 0 0 18px rgba(255,225,77,.55); margin:0 0 4px;
+  }
+  .logo span{color:var(--pink); text-shadow:3px 3px 0 #000, 0 0 18px rgba(255,93,162,.6);}
+  .tagline{text-align:center; color:var(--ink-dim); font-size:14px; letter-spacing:3px; font-weight:700; margin:0 0 14px;}
+  .card{
+    background:var(--panel); border:3px solid #000; box-shadow:6px 6px 0 #000;
+    padding:20px 18px; font-size:20px; line-height:1.45; font-weight:700;
+  }
+  .card .step{font-size:12px; letter-spacing:3px; color:var(--cyan); font-weight:900; margin-bottom:10px;}
+  .bigbtn{
+    margin-top:16px; width:100%; padding:14px; font-size:20px; font-weight:900; letter-spacing:2px;
+    background:var(--lime); color:#000; border:3px solid #000; box-shadow:5px 5px 0 #000;
+  }
+  .bigbtn:active{transform:translate(3px,3px); box-shadow:2px 2px 0 #000;}
+  .bigbtn.alt{background:var(--cyan);}
+  .howto{
+    margin-top:14px; background:var(--yellow); color:#000; border:3px solid #000; box-shadow:5px 5px 0 #000;
+    padding:12px 14px; font-size:17px; font-weight:900; line-height:1.35; display:none;
+  }
+
+  /* ---------- PLAY ---------- */
+  .topbar{display:flex; align-items:center; gap:6px; flex:none;}
+  .roundlabel{font-weight:900; letter-spacing:.5px; font-size:13px; white-space:nowrap; background:#000; color:var(--yellow); padding:6px 6px; border:2px solid var(--yellow);}
+  .pips{display:flex; gap:2px; align-items:center;}
+  .pip{width:8px; height:8px; background:#2a2a44; border:2px solid #000;}
+  .pip.done{background:var(--cyan);}
+  .pip.now{background:var(--yellow);}
+  .spacer{flex:1;}
+  .strikes{display:flex; gap:4px; align-items:center;}
+  .strike-label{font-size:10px; font-weight:900; letter-spacing:.5px; color:var(--ink-dim);}
+  .spip{width:16px; height:16px; background:var(--lime); border:2px solid #000; transform:rotate(45deg);}
+  .spip.lost{background:var(--red);}
+  #btn-settings{
+    width:44px; height:44px; flex:none; background:var(--panel2); border:3px solid #000; box-shadow:3px 3px 0 #000;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  #btn-settings:active{transform:translate(2px,2px); box-shadow:1px 1px 0 #000;}
+
+  /* ---------- RULE BOARD ---------- */
+  #board{
+    flex:none; width:100%; text-align:left; background:var(--panel); border:3px solid #000; box-shadow:5px 5px 0 #000;
+    padding:7px 9px; color:var(--ink); position:relative;
+  }
+  #board .board-title{font-size:12px; font-weight:900; letter-spacing:3px; color:var(--cyan); margin-bottom:5px; display:flex; justify-content:space-between;}
+  #board .board-title em{font-style:normal; color:var(--ink-dim); letter-spacing:1px; font-size:11px;}
+  .bgroups{display:flex; gap:10px;}
+  .bgroup{flex:1; min-width:0;}
+  .bhead{font-size:10px; font-weight:900; letter-spacing:2px; padding:2px 5px; margin-bottom:4px; border:2px solid #000; display:inline-block;}
+  .bhead.allow{background:var(--lime); color:#000;}
+  .bhead.reject{background:var(--pink); color:#000;}
+  .bchips{display:flex; flex-wrap:wrap; gap:4px;}
+  .rule-chip{
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:11px; font-weight:900; letter-spacing:.3px; padding:3px 6px 3px 4px; border:2px solid #000; line-height:1;
+    white-space:nowrap;
+  }
+  .rule-chip svg{width:15px; height:15px; flex:none; display:block;}
+  .rule-chip.allow{background:var(--lime); color:#000;}
+  .rule-chip.reject{background:var(--pink); color:#000;}
+  .rule-chip.old.allow{background:var(--lime-old);}
+  .rule-chip.old.reject{background:var(--pink-old);}
+  .rule-chip.newest{outline:3px solid #fff; outline-offset:1px; font-size:12px; padding:4px 7px 4px 5px;}
+  .rule-chip .newtag{background:#000; color:#fff; font-size:9px; padding:2px 3px; letter-spacing:1px;}
+  .prevrow{display:flex; gap:8px; margin-top:7px; border-top:2px solid #000; padding-top:6px;}
+  .prev{flex:1; display:flex; align-items:center; gap:7px; background:var(--panel2); border:2px solid #000; padding:3px 7px 3px 4px; min-width:0;}
+  .prev .prevsign{width:34px; height:34px; flex:none;}
+  .prev .prevsign svg{width:100%; height:100%; display:block;}
+  .prev .prevlab{font-size:11px; font-weight:900; letter-spacing:1px; line-height:1.15;}
+  .prev.in .prevlab{color:var(--lime);}
+  .prev.out .prevlab{color:var(--pink);}
+  .prev .prevlab small{display:block; color:var(--ink-dim); font-size:9px; letter-spacing:.5px;}
+  /* practice board */
+  .prac-wrap{display:flex; align-items:center; gap:10px;}
+  .prac-icon{width:52px; height:52px; flex:none; background:var(--panel2); border:2px solid #000; padding:4px;}
+  .prac-icon svg{width:100%; height:100%; display:block;}
+  .prac-law{font-size:16px; font-weight:900; line-height:1.3;}
+  .prac-tag{font-size:10px; font-weight:900; letter-spacing:2px; color:var(--yellow); margin-bottom:3px;}
+
+  .timerrow{flex:none; display:flex; align-items:center; gap:8px;}
+  .timerlabel{font-size:14px; font-weight:900; min-width:38px; text-align:center; background:#000; color:#fff; padding:4px 0; border:2px solid #fff;}
+  .timerlabel.low{color:#fff; background:var(--red); border-color:#000;}
+  .timerlabel.prac{color:#000; background:var(--yellow); border-color:#000; font-size:11px; letter-spacing:1px;}
+  .timerbar{flex:1; height:16px; background:#23233c; border:3px solid #000; overflow:hidden;}
+  #timerfill{height:100%; width:100%; background:var(--cyan); transition:width .1s linear;}
+  #timerfill.low{background:var(--red);}
+  #timerfill.prac{background:var(--yellow);}
+
+  .gridwrap{flex:1; min-height:0; display:flex; align-items:center; justify-content:center; position:relative;}
+  #grid{display:grid; gap:7px; margin:0 auto; flex:none;}
+  .tile{
+    position:relative; border:3px solid #000; box-shadow:4px 4px 0 #000; background:#141428;
+    padding:4px; display:flex; align-items:center; justify-content:center; overflow:hidden; min-height:44px;
+  }
+  .tile svg{width:100%; height:100%; max-height:100%; display:block; pointer-events:none;}
+  .tile:active{transform:translate(2px,2px); box-shadow:2px 2px 0 #000;}
+  .tile.banked{background:#0d2b16; border-color:var(--lime); pointer-events:none;}
+  .tile.wronged{background:#2b0d12; pointer-events:none;}
+  .tile.correct{animation:pulse .45s ease;}
+  @keyframes pulse{0%{transform:scale(1)}40%{transform:scale(1.13)}100%{transform:scale(1)}}
+  .tile.jackpot{border-color:var(--gold); box-shadow:4px 4px 0 #000, 0 0 12px rgba(255,215,0,.65);}
+  .jbadge{
+    position:absolute; top:2px; left:2px; background:var(--gold); color:#000; border:2px solid #000;
+    font-size:10px; font-weight:900; padding:0 4px; line-height:1.5; pointer-events:none; z-index:3;
+  }
+  .stamp{
+    position:absolute; font-weight:900; font-size:clamp(14px,4.5vw,26px); letter-spacing:2px;
+    color:#04140a; background:var(--lime); border:3px solid #000; padding:1px 8px; transform:rotate(-12deg);
+    pointer-events:none; z-index:4;
+  }
+  .pts{
+    position:absolute; top:2px; right:2px; background:var(--yellow); color:#000; border:2px solid #000;
+    font-size:12px; font-weight:900; padding:0 5px; line-height:1.6; pointer-events:none; z-index:4;
+  }
+  .xmark{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;
+    color:var(--red); font-size:clamp(28px,9vw,54px); font-weight:900; text-shadow:2px 2px 0 #000; line-height:1; z-index:4;
+  }
+  .particle{position:absolute; width:8px; height:8px; pointer-events:none; z-index:5;}
+  #btn-keepout{
+    flex:none; display:none; width:100%; padding:12px; font-size:18px; font-weight:900; letter-spacing:1px;
+    background:var(--pink); color:#000; border:3px solid #000; box-shadow:4px 4px 0 #000;
+  }
+  #btn-keepout.on{display:block;}
+  #btn-keepout:active{transform:translate(2px,2px); box-shadow:2px 2px 0 #000;}
+  .foundrow{flex:none; text-align:center; font-weight:900; letter-spacing:2px; font-size:13px; color:var(--ink-dim); min-height:18px;}
+  .foundrow b{color:var(--yellow);}
+
+  /* ---------- BEAT BANNER ---------- */
+  #beat{
+    position:absolute; inset:0; z-index:30; display:none; align-items:center; justify-content:center; padding:20px;
+    background:rgba(4,4,12,.72);
+  }
+  #beat.on{display:flex;}
+  #beat .beat-card{
+    background:var(--yellow); color:#000; border:4px solid #000; box-shadow:8px 8px 0 #000;
+    padding:22px 26px; text-align:center; max-width:340px; width:100%;
+  }
+  #beat .beat-title{font-size:30px; font-weight:900; letter-spacing:2px; line-height:1.05;}
+  #beat .beat-sub{font-size:16px; font-weight:700; margin-top:8px; line-height:1.4;}
+
+  /* ---------- SPOTLIGHT ---------- */
+  #spot{position:absolute; inset:0; z-index:50; display:none; background:rgba(3,3,10,.66);}
+  #spot.on{display:block;}
+  #spot-card{
+    position:absolute; left:14px; right:14px; bottom:22px;
+    background:#fff; color:#000; border:4px solid #000; box-shadow:7px 7px 0 #000; padding:16px;
+  }
+  #spot-text{font-size:19px; font-weight:900; line-height:1.35;}
+  #spot-btn{margin-top:12px; width:100%; background:var(--pink); color:#000; border:3px solid #000; box-shadow:4px 4px 0 #000; font-size:17px; font-weight:900; letter-spacing:1px; padding:10px;}
+  #spot-btn:active{transform:translate(2px,2px); box-shadow:2px 2px 0 #000;}
+  .spotlit{position:relative !important; z-index:55 !important; outline:4px solid var(--yellow) !important; outline-offset:3px;}
+
+  /* ---------- SHEETS ---------- */
+  .sheet{position:absolute; inset:0; z-index:60; display:none; background:rgba(3,3,10,.78); align-items:flex-end; justify-content:center;}
+  .sheet.on{display:flex;}
+  .sheet-card{
+    background:var(--panel); border-top:4px solid #000; width:100%; max-width:520px; max-height:82dvh; overflow-y:auto;
+    padding:18px 16px calc(18px + env(safe-area-inset-bottom)); box-shadow:0 -6px 0 #000;
+  }
+  .sheet-card h2{margin:0 0 4px; font-size:22px; letter-spacing:2px; color:var(--yellow); text-shadow:2px 2px 0 #000;}
+  .sheet-card .sub{color:var(--ink-dim); font-size:13px; font-weight:700; margin-bottom:12px; line-height:1.45;}
+  .lawhead{font-size:11px; font-weight:900; letter-spacing:2px; padding:3px 7px; margin:10px 0 6px; border:2px solid #000; display:inline-block; color:#000;}
+  .lawhead.allow{background:var(--lime);} .lawhead.reject{background:var(--pink);}
+  .lawrow{
+    display:flex; gap:10px; align-items:center; padding:8px 10px; margin-bottom:6px; border:3px solid #000;
+    font-weight:900; font-size:15px; color:#000;
+  }
+  .lawrow.allow{background:var(--lime);} .lawrow.reject{background:var(--pink);}
+  .lawrow .lic{width:26px; height:26px; flex:none;}
+  .lawrow .lic svg{width:100%; height:100%; display:block;}
+  .lawrow .newtag{background:#000; color:#fff; font-size:9px; padding:2px 4px; letter-spacing:1px; flex:none;}
+  .sheetbtn{
+    width:100%; margin-top:10px; padding:13px; font-size:17px; font-weight:900; letter-spacing:1px;
+    border:3px solid #000; box-shadow:4px 4px 0 #000; background:var(--cyan); color:#000;
+  }
+  .sheetbtn:active{transform:translate(2px,2px); box-shadow:2px 2px 0 #000;}
+  .sheetbtn.danger{background:var(--red); color:#fff;}
+  .sheetbtn.confirm{background:#000; color:var(--red); border-color:var(--red);}
+  .switchrow{display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--panel2); border:3px solid #000; padding:10px 12px; font-weight:900; font-size:16px;}
+  .switch{width:64px; height:36px; flex:none; background:#000; border:3px solid #fff; position:relative; padding:0;}
+  .switch::after{content:""; position:absolute; top:3px; left:3px; width:24px; height:24px; background:var(--red); transition:left .15s;}
+  .switch[aria-checked="true"]::after{left:31px; background:var(--lime);}
+
+  /* ---------- END ---------- */
+  #view-end{align-items:stretch; justify-content:center; text-align:center;}
+  .end-title{font-size:46px; font-weight:900; letter-spacing:2px; line-height:1; margin:0; text-shadow:4px 4px 0 #000;}
+  .end-title.win{color:var(--lime); text-shadow:4px 4px 0 #000, 0 0 22px rgba(182,255,77,.5);}
+  .end-title.lose{color:var(--red); text-shadow:4px 4px 0 #000, 0 0 22px rgba(255,59,59,.5);}
+  .end-sub{font-size:17px; font-weight:700; color:var(--ink-dim); margin-top:12px; line-height:1.45;}
+  .end-stats{
+    margin-top:16px; background:var(--panel); border:3px solid #000; box-shadow:5px 5px 0 #000;
+    padding:14px; font-size:17px; font-weight:900; letter-spacing:1px; line-height:1.6;
+  }
+  .end-stats b{color:var(--yellow);}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- START / STORY -->
+  <section class="view on" id="view-start">
+    <div>
+      <h1 class="logo">NEON <span>GATE</span></h1>
+      <p class="tagline">GATE INSPECTOR · NIGHT SHIFT</p>
+      <div class="card" id="story-card">
+        <div class="step" id="story-step">SHIFT BRIEFING · 1 / 2</div>
+        <div id="story-text">The Neon District never sleeps. Every sign that comes through the gate tonight is yours to judge.</div>
+      </div>
+      <div class="howto" id="howto">Tap every sign that matches the rule board — before the timer runs out.</div>
+      <button class="bigbtn alt" id="btn-story-next">NEXT ▸</button>
+      <button class="bigbtn" id="btn-start" style="display:none">START SHIFT</button>
+      <button class="bigbtn" id="btn-continue" style="display:none">CONTINUE SHIFT</button>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section class="view" id="view-play">
+    <div class="topbar">
+      <div class="roundlabel" id="round-label">ROUND 1/10</div>
+      <div class="pips" id="round-pips" aria-label="Rounds"></div>
+      <div class="spacer"></div>
+      <div class="strikes" aria-label="Strikes">
+        <span class="strike-label">STRIKES</span>
+        <div id="strike-pips" style="display:flex;gap:5px;padding:0 3px;">
+          <div class="spip"></div><div class="spip"></div><div class="spip"></div>
+        </div>
+      </div>
+      <button id="btn-settings" aria-label="Settings">
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="#ffe14d" stroke="#000" stroke-width="1.4" d="M12 8.2A3.8 3.8 0 1 0 12 15.8 3.8 3.8 0 0 0 12 8.2Zm9.1 5.1.1-2.6-2.3-.9a7.6 7.6 0 0 0-.7-1.7l.7-2.4-1.9-1.8-2.2 1.1a7.6 7.6 0 0 0-1.9-.4L12.4 2H9.6L9.1 4.6a7.6 7.6 0 0 0-1.9.4L5 3.9 3.1 5.7l.7 2.4a7.6 7.6 0 0 0-.7 1.7l-2.3.9.1 2.6 2.3.9c.2.6.4 1.2.7 1.7l-.7 2.4 1.9 1.8 2.2-1.1c.6.2 1.2.4 1.9.4l.5 2.6h2.8l.5-2.6c.7 0 1.3-.2 1.9-.4l2.2 1.1 1.9-1.8-.7-2.4c.3-.5.5-1.1.7-1.7l2.3-.9Z" transform="scale(0.92) translate(1,1)"/></svg>
+      </button>
+    </div>
+
+    <button id="board" aria-label="Rule board — tap to see all laws">
+      <div class="board-title"><span id="board-title-text">RULE BOARD</span><em id="board-title-sub">TAP FOR ALL LAWS</em></div>
+      <div id="board-body"></div>
+    </button>
+
+    <div class="timerrow" id="timerrow">
+      <div class="timerlabel" id="timer-label">30</div>
+      <div class="timerbar"><div id="timerfill"></div></div>
+    </div>
+
+    <div class="gridwrap" id="gridwrap">
+      <div id="grid"></div>
+    </div>
+    <button id="btn-keepout">✕ KEEP OUT — IT DOESN'T MATCH</button>
+    <div class="foundrow" id="foundrow"></div>
+
+    <div id="beat"><div class="beat-card"><div class="beat-title" id="beat-title">ROUND CLEAR</div><div class="beat-sub" id="beat-sub"></div></div></div>
+  </section>
+
+  <!-- END -->
+  <section class="view" id="view-end">
+    <div>
+      <h2 class="end-title" id="end-title">SHIFT COMPLETE</h2>
+      <p class="end-sub" id="end-sub"></p>
+      <div class="end-stats" id="end-stats"></div>
+      <button class="bigbtn" id="btn-retry">RETRY — NEW SHIFT</button>
+    </div>
+  </section>
+
+  <!-- SPOTLIGHT -->
+  <div id="spot"><div id="spot-card"><div id="spot-text"></div><button id="spot-btn">GOT IT</button></div></div>
+
+  <!-- LAWS SHEET -->
+  <div class="sheet" id="sheet-rules">
+    <div class="sheet-card">
+      <h2>THE LAWS</h2>
+      <div class="sub">Grouped by what they do. Laws only stack — nothing is ever taken back. A sign gets in only if it obeys EVERY law. A DOUBLE match pays +2, a gold-ringed JACKPOT pays +3, and a round with no wrong taps pays a +5 CLEAN bonus.</div>
+      <div id="laws-list"></div>
+      <button class="sheetbtn" id="btn-rules-close">BACK TO THE GATE</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS SHEET -->
+  <div class="sheet" id="sheet-settings">
+    <div class="sheet-card">
+      <h2>SETTINGS</h2>
+      <div class="sub">Gate controls.</div>
+      <div class="switchrow"><span>SOUND</span><button class="switch" id="switch-sound" role="switch" aria-checked="true" aria-label="Sound on or off"></button></div>
+      <button class="sheetbtn danger" id="btn-abandon">ABANDON RUN</button>
+      <button class="sheetbtn" id="btn-settings-close">BACK TO THE GATE</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ================= DATA ================= */
+var COLORS = ["#ff5da2","#2ee6ff","#ffe14d","#b6ff4d","#ffab4d","#cf8bff"];
+var SHAPES = ["star","circle","triangle","square","diamond","hexagon","crescent","bolt"];
+/* Slower ramp: round 1 = 1x1, rounds 2-3 stay 2x2, 5x5 only at round 8+. */
+var GRID_N   = [1,2,2,3,3,4,4,5,5,5];
+/* Generous early timers; the squeeze comes from grid size + stacked rules late. */
+var TIMERS   = [30,35,40,40,40,45,45,45,50,50];
+var MATCH_RANGE = {1:[1,1],4:[1,2],9:[2,3],16:[3,4],25:[4,6]};
+/* Rules in the order they are ADDED (round index+1 = round learned). They stack, never reverse. */
+var RULES = [
+  {id:"star",    type:"allow",  short:"STAR",     law:"Stars get in. The main shape must be a star.",        announce:""},
+  {id:"triangle",type:"reject", short:"TRIANGLE", law:"No triangles — main shape or stacked shape.",        announce:"NEW RULE: Triangles are OUT."},
+  {id:"ring",    type:"allow",  short:"RING",     law:"Only signs WITH a glowing ring get in.",             announce:"NEW RULE: Only signs WITH a ring get in."},
+  {id:"dot",     type:"reject", short:"DOT",      law:"No dots. A dot in the middle keeps a sign out.",     announce:"NEW RULE: Signs with a dot are OUT."},
+  {id:"double",  type:"allow",  short:"DOUBLE",   law:"Only DOUBLE signs get in — two shapes stacked. A double match pays +2.", announce:"NEW RULE: Only DOUBLE signs get in — two shapes stacked. Doubles pay +2."},
+  {id:"crescent",type:"reject", short:"CRESCENT", law:"No crescents — main shape or stacked shape.",        announce:"NEW RULE: Crescents are OUT — top or bottom shape."},
+  {id:"stackedcircle",type:"allow",short:"BOTTOM ○", law:"The BOTTOM stacked shape must be a circle.",     announce:"NEW RULE: The bottom stacked shape must be a CIRCLE."},
+  {id:"hexagon", type:"reject", short:"HEXAGON",  law:"No hexagons — main shape or stacked shape.",         announce:"NEW RULE: Hexagons are OUT — top or bottom shape."},
+  {id:"square",  type:"reject", short:"SQUARE",   law:"No squares — main shape or stacked shape.",          announce:"NEW RULE: Squares are OUT — top or bottom shape."},
+  {id:"bolt",    type:"reject", short:"BOLT",     law:"No lightning bolts — main shape or stacked shape.",  announce:"NEW RULE: Lightning bolts are OUT — top or bottom shape."}
+];
+var SAVE_KEY = "neon-gate-save-v1";
+var MUTE_KEY = "neon-gate-muted-v1";
+
+/* ================= STATE ================= */
+var S = {
+  phase:"start",           // start | practice | play | roundclear | timesup | fired | win
+  round:1, strikes:0, score:0, learned:1,
+  grid:[], matchesLeft:0, totalMatches:0, wrongThisRound:0,
+  timeLeft:0, roundTime:30,
+  muted:false, strikesTaught:false, jackpotTaught:false,
+  preview:null, gridN:1,
+  practiceQueue:[], practiceIdx:0, practiceBusy:false
+};
+try{ S.muted = localStorage.getItem(MUTE_KEY)==="1"; }catch(e){}
+
+/* ================= AUDIO ================= */
+var AC=null;
+function ac(){ try{ if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended") AC.resume(); return AC; }catch(e){ return null; } }
+function tone(freq,dur,type,vol,when,slideTo){
+  if(S.muted) return; var ctx=ac(); if(!ctx) return;
+  try{
+    var t=ctx.currentTime+(when||0);
+    var o=ctx.createOscillator(), g=ctx.createGain();
+    o.type=type||"sine"; o.frequency.setValueAtTime(freq,t);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,t+dur);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol||0.16,t+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t+dur+0.05);
+  }catch(e){}
+}
+function sndChime(){ tone(880,0.12,"sine",0.18,0); tone(1318,0.16,"sine",0.16,0.07); }
+function sndJackpot(){ tone(1046,0.1,"square",0.14,0); tone(1318,0.1,"square",0.14,0.08); tone(1568,0.18,"square",0.14,0.16); }
+function sndBuzz(){ tone(140,0.28,"sawtooth",0.2,0,70); }
+function sndClear(){ tone(659,0.12,"triangle",0.18,0); tone(880,0.12,"triangle",0.18,0.1); tone(1174,0.2,"triangle",0.18,0.2); }
+function sndTick(){ tone(1200,0.05,"square",0.07,0); }
+function sndBad(){ tone(220,0.2,"sawtooth",0.16,0,110); tone(160,0.3,"sawtooth",0.16,0.12,80); }
+
+/* ================= HELPERS ================= */
+function $(id){ return document.getElementById(id); }
+function rnd(n){ return Math.floor(Math.random()*n); }
+function pick(arr){ return arr[rnd(arr.length)]; }
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=rnd(i+1); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+
+/* ================= RULE LOGIC ================= */
+function ruleActive(idx, round){ return idx < round; } // RULES[0] active from round 1
+function isMatch(sign, round){
+  for(var i=0;i<RULES.length;i++){
+    if(!ruleActive(i,round)) continue;
+    var r=RULES[i];
+    if(r.id==="star" && sign.shape!=="star") return false;
+    if(r.id==="triangle" && (sign.shape==="triangle"||sign.stackedShape==="triangle")) return false;
+    if(r.id==="ring" && !sign.ring) return false;
+    if(r.id==="dot" && sign.dot) return false;
+    if(r.id==="double" && !sign.double) return false;
+    if(r.id==="crescent" && (sign.shape==="crescent"||sign.stackedShape==="crescent")) return false;
+    if(r.id==="stackedcircle" && !(sign.double && sign.stackedShape==="circle")) return false;
+    if(r.id==="hexagon" && (sign.shape==="hexagon"||sign.stackedShape==="hexagon")) return false;
+    if(r.id==="square" && (sign.shape==="square"||sign.stackedShape==="square")) return false;
+    if(r.id==="bolt" && (sign.shape==="bolt"||sign.stackedShape==="bolt")) return false;
+  }
+  return true;
+}
+/* A perfect match template for a round; randomize only what no rule cares about. */
+function matchTemplate(round){
+  var dbl = round>=5;
+  var stacked=null;
+  if(dbl){
+    if(round>=7) stacked="circle";
+    else stacked = pick(["circle","diamond","star"]); // never a rejected shape
+  }
+  return {
+    shape:"star",
+    ring: round>=3,
+    dot:false,
+    double:dbl,
+    stackedShape:stacked,
+    color: pick(COLORS),
+    jackpot:false
+  };
+}
+/* Copy a match and break exactly one active rule (near-miss). Breaking a late
+   REJECT rule yields a "trap": passes every ALLOW, killed by one reject. */
+function nearMiss(round, ruleIdx){
+  var s = matchTemplate(round);
+  var r = RULES[ruleIdx];
+  if(r.id==="star"){ s.shape = pick(["circle","diamond"]); }
+  else if(r.id==="triangle"){ if(s.double) s.stackedShape="triangle"; else s.shape="triangle"; }
+  else if(r.id==="ring"){ s.ring=false; }
+  else if(r.id==="dot"){ s.dot=true; }
+  else if(r.id==="double"){ s.double=false; s.stackedShape=null; }
+  else if(r.id==="crescent"){ if(s.double) s.stackedShape="crescent"; else s.shape="crescent"; }
+  else if(r.id==="stackedcircle"){ s.stackedShape="diamond"; }
+  else if(r.id==="hexagon"){ s.stackedShape="hexagon"; }
+  else if(r.id==="square"){ s.stackedShape="square"; }
+  else if(r.id==="bolt"){ s.stackedShape="bolt"; }
+  s.color = pick(COLORS);
+  return s;
+}
+function genGrid(round){
+  if(round===1){
+    return [{shape:"star",ring:false,dot:false,double:false,stackedShape:null,color:pick(COLORS),jackpot:false,isMatch:true,tapped:false,banked:false}];
+  }
+  var n = GRID_N[round-1], total = n*n;
+  var range = MATCH_RANGE[total];
+  var mcount = range[0] + rnd(range[1]-range[0]+1);
+  var signs=[];
+  var i, s;
+  for(i=0;i<mcount;i++){ s=matchTemplate(round); s.isMatch=true; signs.push(s); }
+  var activeIdx=[]; for(i=0;i<round;i++) activeIdx.push(i);
+  /* Trap bias: in later rounds most near-misses break one of the newest rules,
+     so a sign can look perfect and still be OUT — the read is the game. */
+  var newestIdx=[]; for(i=Math.max(0,round-3);i<round;i++) newestIdx.push(i);
+  for(i=mcount;i<total;i++){
+    var nm;
+    if(Math.random()<0.85){
+      var pool = (round>=6 && Math.random()<0.65) ? newestIdx : activeIdx;
+      nm = nearMiss(round, pick(pool));
+    } else {
+      nm = { shape:pick(SHAPES), ring: round>=3 && Math.random()<0.5, dot: round>=4 && Math.random()<0.4,
+             double: round>=5 && Math.random()<0.5, stackedShape:null, color:pick(COLORS), jackpot:false };
+      if(nm.double) nm.stackedShape = pick(SHAPES);
+    }
+    if(isMatch(nm,round)){ nm.shape="circle"; nm.stackedShape = nm.double ? nm.stackedShape : null; if(isMatch(nm,round)){ nm.ring=false; } }
+    nm.isMatch=false; signs.push(nm);
+  }
+  /* One match per round (from round 3) may be a gold-ringed JACKPOT worth +3. */
+  if(round>=3 && Math.random()<0.65){
+    var ms = signs.filter(function(x){return x.isMatch;});
+    if(ms.length) ms[0].jackpot=true;
+  }
+  shuffle(signs);
+  signs.forEach(function(x){ x.tapped=false; x.banked=false; });
+  return signs;
+}
+/* Concrete examples for the board preview: one that gets in, one kept out.
+   The kept-out example breaks the NEWEST rule, so the newest law stays vivid. */
+function makePreview(round){
+  var m = matchTemplate(round);
+  var no = nearMiss(round, round-1);
+  var guard=0;
+  while(isMatch(no,round) && guard<8){ no = nearMiss(round, rnd(round)); guard++; }
+  if(isMatch(no,round)){ no.shape="triangle"; no.stackedShape = no.double ? "triangle" : null; }
+  return {match:m, no:no};
+}
+
+/* ================= SVG SIGNS =================
+   Bold filled silhouettes, dark inner detail, one neon character per shape:
+   star crackles, bolt flickers, crescent breathes, the ring pulses. */
+function shapeInner(shape){
+  switch(shape){
+    case "star": return '<g class="fx-crackle"><polygon points="50,4 62,37 97,37 68,58 79,94 50,72 21,94 32,58 3,37" fill="COLORF" stroke="COLOR" stroke-width="5" stroke-linejoin="round"/><polygon points="50,30 56,44 71,44 59,53 63,68 50,59 37,68 41,53 29,44 44,44" fill="none" stroke="INKC" stroke-width="4" stroke-linejoin="round"/></g>';
+    case "circle": return '<circle cx="50" cy="50" r="36" fill="COLORF" stroke="COLOR" stroke-width="6"/><circle cx="50" cy="50" r="21" fill="none" stroke="INKC" stroke-width="5"/>';
+    case "triangle": return '<polygon points="50,10 92,86 8,86" fill="COLORF" stroke="COLOR" stroke-width="6" stroke-linejoin="round"/><polygon points="50,36 72,76 28,76" fill="none" stroke="INKC" stroke-width="4.5" stroke-linejoin="round"/>';
+    case "square": return '<rect x="15" y="15" width="70" height="70" fill="COLORF" stroke="COLOR" stroke-width="6"/><polygon points="50,28 72,50 50,72 28,50" fill="none" stroke="INKC" stroke-width="4.5" stroke-linejoin="round"/>';
+    case "diamond": return '<polygon points="50,5 93,50 50,95 7,50" fill="COLORF" stroke="COLOR" stroke-width="6" stroke-linejoin="round"/><path d="M7 50 H93 M50 5 V95 M28 28 L72 72 M72 28 L28 72" stroke="INKC" stroke-width="3" fill="none" opacity=".8"/>';
+    case "hexagon": return '<polygon points="50,5 88,27 88,73 50,95 12,73 12,27" fill="COLORF" stroke="COLOR" stroke-width="6" stroke-linejoin="round"/><polygon points="50,28 69,39 69,61 50,72 31,61 31,39" fill="none" stroke="INKC" stroke-width="4.5" stroke-linejoin="round"/>';
+    case "crescent": return '<g class="fx-breathe"><path d="M70 6 A44 44 0 1 0 70 94 A34 34 0 1 1 70 6 Z" fill="COLOR" stroke="COLOR" stroke-width="3" stroke-linejoin="round"/></g>';
+    case "bolt": return '<g class="fx-flicker"><polygon points="57,2 22,57 43,57 36,98 80,40 57,40" fill="COLORF" stroke="COLOR" stroke-width="5" stroke-linejoin="round"/></g>';
+  }
+  return "";
+}
+function paintShape(html, color){
+  return html.split("COLORF").join(color+"59").split("COLOR").join(color).split("INKC").join("#0b0b18");
+}
+function signSVG(sign){
+  var c = sign.color;
+  var inner="";
+  if(sign.jackpot) inner += '<circle cx="50" cy="50" r="48" fill="none" stroke="#ffd700" stroke-width="3" stroke-dasharray="7 5"/>';
+  if(sign.ring) inner += '<circle class="fx-pulse" cx="50" cy="50" r="45" fill="none" stroke="'+c+'" stroke-width="4"/>';
+  if(sign.double){
+    inner += '<g transform="translate(50,27) scale(0.52) translate(-50,-50)">'+paintShape(shapeInner(sign.shape),c)+'</g>';
+    inner += '<g transform="translate(50,74) scale(0.52) translate(-50,-50)">'+paintShape(shapeInner(sign.stackedShape||"circle"),c)+'</g>';
+  } else {
+    inner += paintShape(shapeInner(sign.shape),c);
+  }
+  if(sign.dot) inner += '<circle cx="50" cy="50" r="8.5" fill="#ffffff" stroke="'+c+'" stroke-width="3.5"/><circle cx="50" cy="50" r="3" fill="#0b0b18"/>';
+  return '<svg viewBox="0 0 100 100" style="filter:drop-shadow(0 0 6px '+c+')" aria-hidden="true">'+inner+'</svg>';
+}
+/* Small dark icon for a rule, used on chips, the laws sheet, and practice. */
+function ruleIcon(rule){
+  var D="#101018";
+  var body="";
+  if(rule.id==="ring") body='<circle cx="50" cy="50" r="36" fill="none" stroke="'+D+'" stroke-width="11"/>';
+  else if(rule.id==="dot") body='<circle cx="50" cy="50" r="20" fill="'+D+'"/>';
+  else if(rule.id==="double") body='<rect x="24" y="8" width="52" height="36" fill="'+D+'"/><rect x="24" y="56" width="52" height="36" fill="'+D+'"/>';
+  else if(rule.id==="stackedcircle") body='<rect x="24" y="8" width="52" height="36" fill="'+D+'"/><circle cx="50" cy="74" r="19" fill="'+D+'"/>';
+  else body=shapeInner({star:"star",triangle:"triangle",crescent:"crescent",hexagon:"hexagon",square:"square",bolt:"bolt"}[rule.id]||"circle")
+             .split("COLORF").join(D).split("COLOR").join(D).split("INKC").join("#e8e8f2");
+  return '<svg viewBox="0 0 100 100" aria-hidden="true">'+body+'</svg>';
+}
+
+/* ================= SAVE ================= */
+function saveGame(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({round:S.round, strikes:S.strikes, score:S.score, learned:S.learned})); }catch(e){}
+}
+function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+function readSave(){
+  try{ var v=localStorage.getItem(SAVE_KEY); if(!v) return null; var o=JSON.parse(v);
+    if(o && o.round>=1 && o.round<=10 && o.strikes>=0 && o.strikes<3){
+      return {round:o.round, strikes:o.strikes, score:(typeof o.score==="number"?o.score:0), learned:(typeof o.learned==="number"?o.learned:o.round-1)};
+    } }catch(e){}
+  return null;
+}
+
+/* ================= UI REFS ================= */
+var app=$("app"), viewStart=$("view-start"), viewPlay=$("view-play"), viewEnd=$("view-end");
+function showView(v){
+  [viewStart,viewPlay,viewEnd].forEach(function(x){ x.classList.remove("on"); });
+  v.classList.add("on");
+}
+
+/* ================= SPOTLIGHTS ================= */
+var spotQueue=[], spotActive=false, spotTarget=null;
+function spotlight(targetEl, text, onDone){
+  spotQueue.push({el:targetEl, text:text, onDone:onDone||null});
+  if(!spotActive) nextSpot();
+}
+function nextSpot(){
+  var item = spotQueue.shift();
+  if(!item){ spotActive=false; $("spot").classList.remove("on"); return; }
+  var stuck=document.querySelectorAll(".spotlit");
+  for(var k=0;k<stuck.length;k++) stuck[k].classList.remove("spotlit");
+  spotActive=true; spotTarget=item;
+  if(item.el) item.el.classList.add("spotlit");
+  $("spot-text").textContent = item.text;
+  $("spot").classList.add("on");
+}
+$("spot-btn").addEventListener("click", function(){
+  var item = spotTarget;
+  if(item && item.el) item.el.classList.remove("spotlit");
+  spotTarget=null;
+  $("spot").classList.remove("on");
+  spotActive=false;
+  if(item && item.onDone) item.onDone();
+  if(!spotActive) nextSpot();
+});
+function anyOverlayOpen(){
+  return spotActive || $("sheet-rules").classList.contains("on") || $("sheet-settings").classList.contains("on") || $("beat").classList.contains("on");
+}
+
+/* ================= BOARD / PIPS ================= */
+function chipHTML(r, idx){
+  var age = (S.round-1) - idx; // 0 = newest
+  var cls = "rule-chip "+r.type + (idx===S.round-1 ? " newest" : (age>=3 ? " old" : ""));
+  return '<span class="'+cls+'">'+ruleIcon(r)+"<span>"+r.short+"</span>"+(idx===S.round-1&&S.round>1?'<span class="newtag">NEW</span>':"")+"</span>";
+}
+function renderBoard(){
+  $("board-title-text").textContent="RULE BOARD";
+  $("board-title-sub").textContent="TAP FOR ALL LAWS";
+  if(S.phase==="practice"){
+    var r=RULES[S.round-1];
+    $("board-body").innerHTML =
+      '<div class="prac-wrap"><div class="prac-icon">'+ruleIcon(r)+'</div><div>'+
+      '<div class="prac-tag">NEW RULE · PRACTICE — NO CLOCK, NO STRIKES</div>'+
+      '<div class="prac-law">'+r.law+'</div></div></div>';
+    return;
+  }
+  var allow="", reject="";
+  for(var i=S.round-1;i>=0;i--){
+    if(RULES[i].type==="allow") allow += chipHTML(RULES[i], i);
+    else reject += chipHTML(RULES[i], i);
+  }
+  var html='<div class="bgroups">'+
+    '<div class="bgroup"><span class="bhead allow">ALLOW · IN</span><div class="bchips">'+(allow||'<span class="rule-chip allow">—</span>')+'</div></div>'+
+    '<div class="bgroup"><span class="bhead reject">REJECT · OUT</span><div class="bchips">'+(reject||'<span class="rule-chip reject">—</span>')+'</div></div>'+
+    '</div>';
+  if(S.preview){
+    html += '<div class="prevrow">'+
+      '<div class="prev in"><span class="prevsign">'+signSVG(S.preview.match)+'</span><span class="prevlab">GETS IN ✓<small>obeys every law</small></span></div>'+
+      '<div class="prev out"><span class="prevsign">'+signSVG(S.preview.no)+'</span><span class="prevlab">KEPT OUT ✕<small>breaks the newest law</small></span></div>'+
+      '</div>';
+  }
+  $("board-body").innerHTML = html;
+  /* laws sheet: grouped, newest first within each group, icon per law */
+  var lp="";
+  var groups=[["allow","ALLOW · LET IN"],["reject","REJECT · KEEP OUT"]];
+  for(var g=0;g<2;g++){
+    lp += '<div><span class="lawhead '+groups[g][0]+'">'+groups[g][1]+'</span></div>';
+    for(var j=S.round-1;j>=0;j--){
+      var rr=RULES[j];
+      if(rr.type!==groups[g][0]) continue;
+      lp += '<div class="lawrow '+rr.type+'"><span class="lic">'+ruleIcon(rr)+'</span><span>'+rr.law+'</span>'+(j===S.round-1&&S.round>1?'<span class="newtag">NEW</span>':"")+'</div>';
+    }
+  }
+  $("laws-list").innerHTML = lp;
+}
+function renderPips(){
+  var html="";
+  for(var i=1;i<=10;i++) html += '<div class="pip'+(i<S.round?" done":i===S.round?" now":"")+'"></div>';
+  $("round-pips").innerHTML = html;
+  $("round-label").textContent = "ROUND "+S.round+"/10";
+  var sp = $("strike-pips").children;
+  for(var j=0;j<3;j++) sp[j].className = "spip"+(j<S.strikes?" lost":"");
+}
+function renderFound(){
+  if(S.phase==="practice"){
+    $("foundrow").innerHTML = "PRACTICE <b>"+(S.practiceIdx+1)+" / "+S.practiceQueue.length+"</b> — TAP THE SIGN IF IT GETS IN, OR KEEP OUT";
+    return;
+  }
+  var found = S.totalMatches - S.matchesLeft;
+  $("foundrow").innerHTML = (S.phase==="play"||S.phase==="roundclear"||S.phase==="timesup")
+    ? "SIGNS IN: <b>"+found+" / "+S.totalMatches+"</b> · SCORE <b>"+S.score+"</b>" : "";
+}
+
+/* ================= ROUND FLOW ================= */
+function startRound(round, opts){
+  opts = opts||{};
+  if(round>10) round=10; // round-10 timeout replays round 10; a shift is won only by clearing it
+  S.round = round;
+  S.preview = makePreview(round);
+  saveGame();
+  if(opts.practice && round>=2 && round>S.learned){ beginPractice(round); return; }
+  beginPlay(round);
+}
+function beginPractice(round){
+  S.phase="practice";
+  S.practiceBusy=false;
+  var m = matchTemplate(round); m.isMatch=true; m.tapped=false;
+  var no = nearMiss(round, round-1); no.isMatch=false; no.tapped=false;
+  var guard=0;
+  while(isMatch(no,round) && guard<8){ no = nearMiss(round, round-1); guard++; }
+  if(isMatch(no,round)){ no.shape="triangle"; }
+  S.practiceQueue = shuffle([m, no]);
+  S.practiceIdx = 0;
+  saveGame();
+  renderPips(); renderBoard(); renderPracticeSign(); renderTimer(); renderFound();
+  $("btn-keepout").classList.add("on");
+  spotlight($("board"), RULES[round-1].announce+" Practice it first — one sign at a time.", null);
+}
+function renderPracticeSign(){
+  var sign = S.practiceQueue[S.practiceIdx];
+  S.gridN = 1;
+  var grid = $("grid");
+  grid.style.gridTemplateColumns = "repeat(1, 1fr)";
+  grid.style.gridTemplateRows = "repeat(1, 1fr)";
+  grid.innerHTML="";
+  var b=document.createElement("button");
+  b.className="tile"+(sign.jackpot?" jackpot":""); b.setAttribute("aria-label","Practice sign");
+  b.innerHTML = signSVG(sign);
+  b.addEventListener("click", function(){ practiceDecision(true); });
+  grid.appendChild(b);
+  fitGrid();
+  if(window.requestAnimationFrame) requestAnimationFrame(fitGrid);
+  renderFound();
+}
+function practiceDecision(saysIn){
+  if(S.phase!=="practice" || S.practiceBusy || anyOverlayOpen()) return;
+  var sign = S.practiceQueue[S.practiceIdx];
+  var tile = $("grid").children[0];
+  var correct = (saysIn === sign.isMatch);
+  if(!correct){
+    sndBuzz();
+    app.classList.remove("shake"); void app.offsetWidth; app.classList.add("shake");
+    $("foundrow").innerHTML = "NOT QUITE — CHECK THE <b>NEW RULE</b> ON THE BOARD AND TRY AGAIN";
+    return;
+  }
+  S.practiceBusy = true;
+  if(sign.isMatch){
+    tile.classList.add("banked","correct");
+    var st=document.createElement("span"); st.className="stamp"; st.textContent="IN"; tile.appendChild(st);
+    sndChime(); burst(tile, sign.color);
+  } else {
+    tile.classList.add("wronged");
+    var x=document.createElement("span"); x.className="xmark"; x.textContent="✕"; tile.appendChild(x);
+    sndChime();
+  }
+  setTimeout(function(){
+    S.practiceIdx++;
+    S.practiceBusy=false;
+    if(S.practiceIdx >= S.practiceQueue.length){
+      S.learned = S.round;
+      $("btn-keepout").classList.remove("on");
+      beginPlay(S.round);
+    } else {
+      renderPracticeSign();
+    }
+  }, 560);
+}
+$("btn-keepout").addEventListener("click", function(){ practiceDecision(false); });
+
+function beginPlay(round){
+  S.phase = "play";
+  S.grid = genGrid(round);
+  S.totalMatches = S.grid.filter(function(x){return x.isMatch;}).length;
+  S.matchesLeft = S.totalMatches;
+  S.wrongThisRound = 0;
+  S.roundTime = TIMERS[round-1];
+  S.timeLeft = S.roundTime;
+  saveGame();
+  renderBoard(); renderPips(); renderGrid(); renderFound(); renderTimer();
+  if(!S.jackpotTaught){
+    for(var i=0;i<S.grid.length;i++){
+      if(S.grid[i].jackpot && S.grid[i].isMatch){
+        S.jackpotTaught = true;
+        (function(idx){
+          var tile = $("grid").children[idx];
+          spotlight(tile||$("grid"), "Gold ring = JACKPOT. If it matches the board, it's worth +3.", null);
+        })(i);
+        break;
+      }
+    }
+  }
+}
+function fitGrid(){
+  var grid=$("grid"), wrap=$("gridwrap");
+  if(!wrap || !grid) return;
+  var n = S.gridN || 1;
+  var cap = n===1 ? 250 : 430;
+  var size = Math.max(120, Math.min(wrap.clientWidth, wrap.clientHeight, cap));
+  grid.style.width = size+"px";
+  grid.style.height = size+"px";
+}
+function renderGrid(){
+  var n = GRID_N[S.round-1];
+  S.gridN = n;
+  var grid = $("grid");
+  grid.style.gridTemplateColumns = "repeat("+n+", 1fr)";
+  grid.style.gridTemplateRows = "repeat("+n+", 1fr)";
+  grid.innerHTML="";
+  S.grid.forEach(function(sign, idx){
+    var b=document.createElement("button");
+    b.className="tile"+(sign.jackpot?" jackpot":""); b.setAttribute("aria-label","Neon sign "+(idx+1));
+    b.innerHTML = signSVG(sign) + (sign.jackpot ? '<span class="jbadge">✦ +3</span>' : "");
+    b.addEventListener("click", function(){ tapSign(idx); });
+    grid.appendChild(b);
+  });
+  fitGrid();
+  if(window.requestAnimationFrame) requestAnimationFrame(fitGrid);
+}
+function renderTimer(){
+  if(S.phase==="practice"){
+    $("timerfill").style.width = "100%";
+    $("timerfill").className = "prac";
+    $("timer-label").textContent = "NEW";
+    $("timer-label").className = "timerlabel prac";
+    return;
+  }
+  var pct = S.roundTime>0 ? Math.max(0,(S.timeLeft/S.roundTime)*100) : 0;
+  $("timerfill").style.width = pct+"%";
+  var low = S.timeLeft<=5.05 && S.phase==="play";
+  $("timerfill").className = low ? "low" : "";
+  $("timer-label").textContent = Math.ceil(S.timeLeft);
+  $("timer-label").className = "timerlabel"+(low?" low":"");
+}
+
+/* ---------- particles ---------- */
+function burst(tile, color){
+  try{
+    for(var i=0;i<8;i++){
+      var p=document.createElement("span");
+      p.className="particle"; p.style.background=color; p.style.left="50%"; p.style.top="50%";
+      p.style.boxShadow="2px 2px 0 #000";
+      tile.appendChild(p);
+      var ang=(Math.PI*2*i)/8 + Math.random()*0.5, dist=26+Math.random()*22;
+      var dx=Math.cos(ang)*dist, dy=Math.sin(ang)*dist;
+      if(p.animate) p.animate([{transform:"translate(-50%,-50%)",opacity:1},{transform:"translate(calc(-50% + "+dx+"px), calc(-50% + "+dy+"px))",opacity:0}],{duration:480,easing:"cubic-bezier(.2,.8,.3,1)"});
+      (function(el){ setTimeout(function(){ el.remove(); },520); })(p);
+    }
+  }catch(e){}
+}
+
+/* ================= TAPS ================= */
+function tapSign(idx){
+  if(S.phase!=="play" || anyOverlayOpen()) return;
+  var sign = S.grid[idx];
+  if(!sign || sign.tapped) return;
+  var tile = $("grid").children[idx];
+  sign.tapped = true;
+  if(sign.isMatch){
+    sign.banked = true;
+    S.matchesLeft--;
+    var pts = sign.jackpot ? 3 : (sign.double ? 2 : 1);
+    S.score += pts;
+    tile.classList.add("banked","correct");
+    var st=document.createElement("span"); st.className="stamp"; st.textContent="IN"; tile.appendChild(st);
+    var pt=document.createElement("span"); pt.className="pts"; pt.textContent="+"+pts; tile.appendChild(pt);
+    if(sign.jackpot) sndJackpot(); else sndChime();
+    burst(tile, sign.jackpot ? "#ffd700" : sign.color);
+    renderFound();
+    if(S.matchesLeft<=0) roundClear();
+  } else {
+    S.wrongThisRound++;
+    tile.classList.add("wronged");
+    var x=document.createElement("span"); x.className="xmark"; x.textContent="✕"; tile.appendChild(x);
+    sndBuzz();
+    app.classList.remove("shake"); void app.offsetWidth; app.classList.add("shake");
+    addStrike("wrong");
+  }
+}
+function addStrike(cause){
+  S.strikes++;
+  renderPips(); saveGame();
+  var firstStrike = !S.strikesTaught;
+  if(firstStrike) S.strikesTaught = true;
+  if(S.strikes>=3){ fired(); return; }
+  if(cause==="wrong" && firstStrike){
+    spotlight($("strike-pips"), "Three strikes and you're fired.", null);
+  }
+}
+function showBeat(title, sub, ms, onDone){
+  $("beat-title").textContent=title;
+  $("beat-sub").textContent=sub||"";
+  $("beat").classList.add("on");
+  setTimeout(function(){ $("beat").classList.remove("on"); if(onDone) onDone(); }, ms);
+}
+function roundClear(){
+  S.phase="roundclear";
+  sndClear();
+  var clean = S.wrongThisRound===0;
+  if(clean) S.score += 5;
+  renderFound();
+  if(S.round>=10){ winShift(); return; }
+  var next=S.round+1;
+  var sub = "Round "+S.round+" of 10 done." + (clean ? " CLEAN ROUND — no wrong taps! +5 bonus." : "") + " Score: "+S.score+".";
+  showBeat(clean ? "CLEAN ROUND!" : "ROUND CLEAR", sub, 1500, function(){
+    startRound(next, {practice:true});
+  });
+}
+function timeUp(){
+  if(S.phase!=="play") return;
+  S.phase="timesup";
+  sndBad();
+  var missed=S.matchesLeft;
+  var firstStrike = !S.strikesTaught;
+  if(firstStrike) S.strikesTaught=true;
+  S.strikes++; renderPips(); saveGame();
+  showBeat("TIME'S UP", missed===1 ? "1 matching sign got away." : missed+" matching signs got away.", 1900, function(){
+    if(S.strikes>=3){ fired(); return; }
+    var after = function(){ startRound(S.round+1, {practice:true}); };
+    if(firstStrike) spotlight($("strike-pips"), "Three strikes and you're fired.", after);
+    else after();
+  });
+}
+function fired(){
+  S.phase="fired"; clearSave();
+  $("btn-keepout").classList.remove("on");
+  showView(viewEnd);
+  $("end-title").textContent="FIRED";
+  $("end-title").className="end-title lose";
+  $("end-sub").textContent="Three strikes. The gate takes your badge — the district's signs glow on without you.";
+  $("end-stats").innerHTML="ROUNDS CLEARED: <b>"+(S.round-1)+"</b> · STRIKES USED: <b>"+S.strikes+"</b><br>SCORE: <b>"+S.score+"</b>";
+  sndBad();
+}
+function winShift(){
+  S.phase="win"; clearSave();
+  $("btn-keepout").classList.remove("on");
+  showView(viewEnd);
+  $("end-title").textContent="SHIFT COMPLETE";
+  $("end-title").className="end-title win";
+  $("end-sub").textContent="Every sign judged, every law kept. The Neon District lets you keep the badge.";
+  $("end-stats").innerHTML="ROUNDS CLEARED: <b>10</b> · STRIKES USED: <b>"+S.strikes+"</b><br>FINAL SCORE: <b>"+S.score+"</b>";
+  sndClear(); setTimeout(sndClear, 350);
+}
+
+/* ================= TIMER ================= */
+var lastTickSec=-1;
+setInterval(function(){
+  if(S.phase!=="play" || anyOverlayOpen()) return;
+  S.timeLeft = Math.max(0, S.timeLeft-0.1);
+  renderTimer();
+  var sec = Math.ceil(S.timeLeft);
+  if(S.timeLeft<=5.05 && sec!==lastTickSec && S.timeLeft>0){ lastTickSec=sec; sndTick(); }
+  if(S.timeLeft<=0) timeUp();
+},100);
+
+/* ================= START FLOW ================= */
+var storyStep=0;
+var STORY=[
+  "The Neon District never sleeps. Every sign that comes through the gate tonight is yours to judge.",
+  "The rule board says what's allowed in. The rules only stack — nothing is ever taken back. Three mistakes and the gate takes your badge."
+];
+function renderStart(){
+  var save=readSave();
+  storyStep=0;
+  $("story-text").textContent=STORY[0];
+  $("story-step").textContent="SHIFT BRIEFING · 1 / 2";
+  $("howto").style.display="none";
+  $("btn-story-next").textContent="NEXT ▸";
+  $("btn-story-next").style.display = save ? "none":"block";
+  $("story-card").style.display = save ? "none":"block";
+  $("btn-start").style.display="none";
+  var c=$("btn-continue");
+  if(save){ c.style.display="block"; c.textContent="CONTINUE SHIFT — ROUND "+save.round; }
+  else c.style.display="none";
+}
+$("btn-story-next").addEventListener("click", function(){
+  ac();
+  if(storyStep===0){
+    storyStep=1;
+    $("story-text").textContent=STORY[1];
+    $("story-step").textContent="SHIFT BRIEFING · 2 / 2";
+    $("btn-story-next").textContent="OKAY ▸";
+  } else {
+    $("story-card").style.display="none";
+    $("btn-story-next").style.display="none";
+    $("howto").style.display="block";
+    $("btn-start").style.display="block";
+  }
+});
+function beginShift(round, strikes, score, learned, withTour){
+  S.strikes=strikes; S.score=score; S.learned=learned;
+  S.strikesTaught = strikes>0;
+  showView(viewPlay);
+  startRound(round, {practice:true});
+  if(withTour){
+    spotlight($("board"), "The board is the law. Tap only what it allows.", function(){
+      spotlight($("timerrow"), "Beat the clock.", function(){
+        var tile=$("grid").children[0];
+        spotlight(tile||$("grid"), "Tap the sign that matches.", null);
+      });
+    });
+  }
+}
+$("btn-start").addEventListener("click", function(){ ac(); beginShift(1,0,0,1,true); });
+$("btn-continue").addEventListener("click", function(){
+  var save=readSave(); ac();
+  if(save) beginShift(save.round, save.strikes, save.score, save.learned, false);
+  else beginShift(1,0,0,1,true);
+});
+$("btn-retry").addEventListener("click", function(){
+  ac();
+  S.strikes=0; S.score=0; S.learned=1; S.strikesTaught=false; S.jackpotTaught=false;
+  showView(viewPlay);
+  startRound(1,{practice:false});
+});
+
+/* ================= SHEETS ================= */
+$("board").addEventListener("click", function(){
+  if(S.phase==="practice") return; // during practice the board IS the lesson; keep it in view
+  renderBoard(); $("sheet-rules").classList.add("on");
+});
+$("btn-rules-close").addEventListener("click", function(){ $("sheet-rules").classList.remove("on"); });
+$("btn-settings").addEventListener("click", function(){
+  abandonArmed=false; var b=$("btn-abandon"); b.textContent="ABANDON RUN"; b.classList.remove("confirm");
+  $("sheet-settings").classList.add("on");
+});
+$("btn-settings-close").addEventListener("click", function(){ $("sheet-settings").classList.remove("on"); });
+var soundSwitch=$("switch-sound");
+function renderSound(){ soundSwitch.setAttribute("aria-checked", S.muted?"false":"true"); }
+soundSwitch.addEventListener("click", function(){
+  S.muted=!S.muted;
+  try{ localStorage.setItem(MUTE_KEY, S.muted?"1":"0"); }catch(e){}
+  renderSound(); if(!S.muted) sndChime();
+});
+renderSound();
+var abandonArmed=false;
+$("btn-abandon").addEventListener("click", function(){
+  var b=$("btn-abandon");
+  if(!abandonArmed){ abandonArmed=true; b.textContent="TAP AGAIN TO CONFIRM ABANDON"; b.classList.add("confirm"); return; }
+  abandonArmed=false; clearSave();
+  $("sheet-settings").classList.remove("on");
+  $("btn-keepout").classList.remove("on");
+  S.phase="start"; S.strikes=0; S.score=0; S.round=1; S.learned=1;
+  showView(viewStart); renderStart();
+});
+
+/* ================= TEST HOOKS ================= */
+window.__neon = {
+  state: function(){
+    return {
+      round:S.round, strikes:S.strikes, score:S.score, learned:S.learned, phase:S.phase,
+      matchesLeft:S.matchesLeft, timeLeft:Math.round(S.timeLeft*10)/10,
+      practice: S.phase==="practice" ? {idx:S.practiceIdx, total:S.practiceQueue.length, sign:S.practiceQueue[S.practiceIdx] ? {shape:S.practiceQueue[S.practiceIdx].shape, ring:S.practiceQueue[S.practiceIdx].ring, dot:S.practiceQueue[S.practiceIdx].dot, double:S.practiceQueue[S.practiceIdx].double, stackedShape:S.practiceQueue[S.practiceIdx].stackedShape, isMatch:S.practiceQueue[S.practiceIdx].isMatch} : null} : null,
+      preview: S.preview ? {matchIsMatch:isMatch(S.preview.match,S.round), noIsMatch:isMatch(S.preview.no,S.round)} : null,
+      grid:S.grid.map(function(g){ return {shape:g.shape, ring:g.ring, dot:g.dot, double:g.double, stackedShape:g.stackedShape, jackpot:!!g.jackpot, isMatch:g.isMatch, tapped:g.tapped}; })
+    };
+  },
+  tap: function(i){ tapSign(i); },
+  practice: function(saysIn){ practiceDecision(!!saysIn); },
+  skipToRound: function(n){
+    n=Math.max(1,Math.min(10,n|0));
+    spotQueue=[]; spotActive=false; spotTarget=null; $("spot").classList.remove("on");
+    $("sheet-rules").classList.remove("on"); $("sheet-settings").classList.remove("on"); $("beat").classList.remove("on");
+    $("btn-keepout").classList.remove("on");
+    S.learned=Math.max(S.learned,n); S.jackpotTaught=true;
+    showView(viewPlay);
+    startRound(n,{practice:false});
+  }
+};
+
+window.addEventListener("resize", fitGrid);
+renderStart();
+})();
+</script>
+</body>
+</html>
