@@ -510,10 +510,10 @@ var WORLDS = [
     blurb:"A tiny rock, quick little days. Rare cometblooms grow fast here — only four patches." }
 ];
 var PAD_SITE = { lat:-38, lon:150 };
-/* Round 2 item 1: the planet is drawn 10% larger than before (was 50%).
+/* Round 2 item 1, revised: the planet is drawn 20% larger than before.
    Item 9: flowers are drawn smaller. Their net size on screen is
-   PLANET_SCALE x FLOWER_SCALE = 0.55 of what it was. */
-var PLANET_SCALE = 1.1;
+   PLANET_SCALE x FLOWER_SCALE = 0.6 of what it was. */
+var PLANET_SCALE = 1.2;
 var FLOWER_SCALE = 0.5;
 
 /* ============================================================
@@ -1395,7 +1395,8 @@ function surfR(v){ return TERR ? TERR.R + TERR.h(v.x, v.y, v.z) : 0; }
 
 function makeTerrain(wi){
   var def = WORLDS[wi], R = def.radius, s0 = (wi + 1) * 97;
-  var amp = R * (def.id === "moon" ? 0.2 : 0.16);
+  /* Miniature geography: gentle toy-like ridges, not massive spiky hazards. */
+  var amp = R * (def.id === "moon" ? 0.05 : 0.035);
 
   /* garden anchors: patches and the pad site stay level */
   var anchors = def.patches.map(function(pd){
