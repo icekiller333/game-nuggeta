@@ -200,9 +200,186 @@
   .journal-item b{font-size:12px; letter-spacing:1.2px;}
   .journal-item p{margin:4px 0 0; font-size:14px; font-weight:600; line-height:1.4;}
   .journal-item.locked{opacity:.55;}
+  /* ---------- PORTRAIT (3D bust of the character who is talking) ---------- */
+  #portrait{position:absolute; top:10px; right:10px; z-index:21; width:92px; height:118px;
+    background:var(--panel); border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--shadow); overflow:hidden; pointer-events:none;}
+  #portrait canvas{position:absolute; left:0; top:0; width:100%; height:100%; display:block;}
+  #portrait span{position:absolute; left:0; right:0; bottom:0; background:var(--ink); color:var(--yellow);
+    font-weight:900; font-size:10px; letter-spacing:1.4px; text-align:center; padding:1px 0; line-height:12px;}
+  /* ---------- DIALOGUE (task 3) ---------- */
+  #dialogue{position:absolute; left:10px; right:10px; bottom:10px; z-index:22; background:var(--panel);
+    border:3px solid var(--ink); box-shadow:5px 5px 0 var(--shadow); padding:9px 12px 8px; cursor:pointer; user-select:none;}
+  #dialogue.hidden{display:none;}
+  #dlg-name{display:inline-block; background:var(--ink); color:var(--yellow); font-weight:900; font-size:12px; letter-spacing:1.4px; padding:3px 9px; margin-bottom:6px;}
+  #dlg-text{margin:0; min-height:44px; font-weight:800; font-size:15px; line-height:1.32; color:var(--ink);}
+  #dlg-foot{display:flex; align-items:center; justify-content:space-between; margin-top:4px;}
+  #dlg-next{font-weight:900; font-size:12px; letter-spacing:1.2px;}
+  #dlg-skip{background:transparent; border:2px solid var(--ink); color:var(--ink); font-weight:900; font-size:11px; letter-spacing:1px; padding:3px 8px;}
+  #stage.dlg-on #coach, #stage.dlg-on #drag-hint{display:none;}
+  #portrait.hidden{display:none;}
+  /* ---------- CUTSCENE (task 4) ---------- */
+  #lb-top,#lb-bot{position:absolute; left:0; right:0; height:0; background:#000; z-index:19; pointer-events:none;}
+  #lb-top{top:0;} #lb-bot{bottom:0;}
+  #cs-skip{position:absolute; top:10px; left:10px; z-index:28; background:var(--panel); color:var(--ink); border:2.5px solid var(--ink);
+    box-shadow:3px 3px 0 var(--shadow); font-weight:900; font-size:11px; letter-spacing:1.2px; padding:4px 9px;}
+  #cs-skip.hidden{display:none;}
+  #stage.cs-on #item-chip, #stage.cs-on #variant-chip, #stage.cs-on #drag-hint{display:none;}
+  /* ---------- UPGRADES & SHOP (task 7) ---------- */
+  #btn-sweep{position:absolute; top:78px; left:10px; z-index:6; background:#5a4fb0; color:#fff; border:2.5px solid var(--ink);
+    box-shadow:3px 3px 0 var(--shadow); font-weight:900; font-size:12px; letter-spacing:1.2px; padding:4px 10px;}
+  #btn-sweep.hidden{display:none;}
+  #btn-sweep:disabled{background:var(--bg); color:var(--ink); opacity:.6;}
+  .shop-card{max-width:440px; width:92%; max-height:92%; overflow:auto;}
+  .shop-sum{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0 8px;}
+  .shop-sum b{display:block; font-family:'Archivo Black',sans-serif; font-size:17px;}
+  .shop-sum span{display:block; font-size:9.5px; font-weight:900; letter-spacing:1px;}
+  .debt-track{height:10px; background:var(--bg); border:2.5px solid var(--ink); margin-bottom:6px;}
+  .debt-track i{display:block; height:100%; width:0; background:var(--green); transition:width .4s;}
+  .shop-branch{font-weight:900; font-size:12px; letter-spacing:1.6px; margin:12px 0 4px; border-bottom:2.5px solid var(--ink);}
+  .shop-item{border:2.5px solid var(--ink); background:var(--bg); padding:7px 9px; margin:6px 0; box-shadow:3px 3px 0 var(--shadow);}
+  .shop-item.locked{opacity:.55;}
+  .si-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .si-top b{font-size:13px; letter-spacing:.6px;}
+  .si-pips i{display:inline-block; width:11px; height:11px; border:2px solid var(--ink); margin-left:3px; background:var(--panel);}
+  .si-pips i.on{background:var(--green);}
+  .shop-item p{margin:4px 0 6px; font-size:12.5px; font-weight:700;}
+  .si-buy{width:100%; background:var(--yellow); color:#141414; border:2.5px solid var(--ink); font-weight:900; font-size:13px; letter-spacing:.6px; padding:6px;}
+  .si-buy:disabled{background:var(--panel); color:var(--ink); opacity:.55; cursor:default;}
+  /* ---------- CRT CAMERA LOOK (replaces the glare) ---------- */
+  #crt{position:absolute; inset:0; z-index:3; pointer-events:none; overflow:hidden;}
+  .crt-scan{position:absolute; inset:0; opacity:.9;
+    background:repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 1px, rgba(0,0,0,0) 1px 3px);
+    animation:crtFlicker .14s steps(2) infinite;}
+  @keyframes crtFlicker{0%{opacity:.8} 100%{opacity:.96}}
+  .crt-vig{position:absolute; inset:0; box-shadow:inset 0 0 46px rgba(0,0,0,.32);
+    background:radial-gradient(ellipse at center, rgba(0,0,0,0) 58%, rgba(0,0,0,.34) 100%);}
+  .crt-sweep{position:absolute; left:0; right:0; height:24%; top:-28%;
+    background:linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,.08), rgba(255,255,255,0));
+    animation:crtSweep 6.5s linear infinite;}
+  @keyframes crtSweep{to{top:112%}}
+  .crt-rec{position:absolute; top:10px; right:10px; display:flex; align-items:center; gap:5px;
+    font-weight:900; font-size:11px; letter-spacing:1.6px; color:#fff; text-shadow:1px 1px 0 #000, 0 0 6px rgba(0,0,0,.7);}
+  .crt-rec i{width:9px; height:9px; border-radius:50%; background:#ff3b3b; animation:recBlink 1.2s steps(2) infinite;}
+  @keyframes recBlink{0%{opacity:1} 100%{opacity:.15}}
+  /* the rolling static bar: taps inside it do not land (from Day 3) */
+  #glare{position:absolute; left:0; right:0; top:-40%; height:0; display:none;
+    background:linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,.6) 14%, rgba(255,255,255,.3) 50%, rgba(255,255,255,.6) 86%, rgba(255,255,255,0));}
+  #glare::after{content:""; position:absolute; inset:0; background-image:var(--noise); opacity:.55; animation:noiseShift .22s steps(4) infinite;}
+  @keyframes noiseShift{0%{background-position:0 0} 25%{background-position:-23px 11px} 50%{background-position:17px -29px} 75%{background-position:-9px 31px} 100%{background-position:0 0}}
+  .crt-tear{position:absolute; left:0; right:0; background-color:rgba(255,255,255,.55); background-image:var(--noise); opacity:.85;}
+  #canvas-wrap canvas.glitch{animation:glitch .42s steps(1,end) 1;}
+  @keyframes glitch{
+    0%{transform:translate(0,0); filter:none}
+    12%{transform:translate(-7px,0) skewX(3deg); filter:drop-shadow(5px 0 0 rgba(255,0,60,.75)) drop-shadow(-5px 0 0 rgba(0,230,255,.75))}
+    30%{transform:translate(6px,1px); filter:hue-rotate(70deg) contrast(1.45)}
+    48%{transform:translate(-4px,-1px) skewX(-4deg); filter:drop-shadow(-4px 0 0 rgba(255,0,60,.75)) drop-shadow(4px 0 0 rgba(0,230,255,.75)) saturate(2)}
+    68%{transform:translate(4px,0); filter:invert(.14)}
+    84%{transform:translate(-2px,0); filter:none}
+    100%{transform:translate(0,0); filter:none}}
+  @media (prefers-reduced-motion: reduce){ .crt-scan,.crt-sweep,.crt-rec i,#glare::after{animation:none;} }
+
+  /* ---------- LOADING SCREEN ---------- */
+  #loading{position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; padding:20px;
+    background:var(--bg); background-image:radial-gradient(var(--ink-soft) 1.4px, transparent 1.6px); background-size:22px 22px;
+    background-position:0 0; transition:opacity .45s ease;}
+  #loading.out{opacity:0; pointer-events:none;}
+  #loading.gone{display:none;}
+  .load-card{width:100%; max-width:420px; background:var(--panel); border:3.5px solid var(--ink); box-shadow:8px 8px 0 var(--shadow); padding:26px 20px 22px; text-align:center;}
+  .load-card h1{font-family:'Archivo Black',sans-serif; font-size:32px; line-height:1.02; margin:6px 0 22px; letter-spacing:.5px;}
+  .load-track-wrap{position:relative; height:70px; margin:0 6px;}
+  .load-track{position:absolute; left:0; right:0; bottom:6px; height:26px; border:3.5px solid var(--ink); background:var(--bg); overflow:hidden;}
+  .load-fill{height:100%; width:0%; background:var(--green);
+    background-image:repeating-linear-gradient(-45deg, rgba(0,0,0,.16) 0 8px, transparent 8px 16px);}
+  .lbug{position:absolute; bottom:12px; width:46px; height:31px; margin-left:-23px; z-index:2; pointer-events:none;}
+  .lbug.mite{width:30px; height:20px; margin-left:-15px;}
+  .lbug svg{display:block; width:100%; height:100%; overflow:visible; animation:bugbob .26s ease-in-out infinite alternate;}
+  .lbug .flip svg{transform:scaleX(-1);}
+  .lbug.rev svg{transform:scaleX(-1);}
+  @keyframes bugbob{from{transform:translateY(0)} to{transform:translateY(-1.5px)}}
+  .lbug.rev svg{animation-name:bugbobrev;}
+  @keyframes bugbobrev{from{transform:scaleX(-1) translateY(0)} to{transform:scaleX(-1) translateY(-1.5px)}}
+  .lbug .la{animation:legA .18s linear infinite alternate;}
+  .lbug .lb{animation:legB .18s linear infinite alternate;}
+  @keyframes legA{from{transform:translateX(-2px)} to{transform:translateX(2px)}}
+  @keyframes legB{from{transform:translateX(2px)} to{transform:translateX(-2px)}}
+  .lbug .shim{animation:shim 1.4s ease-in-out infinite alternate;}
+  @keyframes shim{from{opacity:.1} to{opacity:.7}}
+  .lbug.walk{animation:crawlR var(--dur,4s) linear infinite; animation-delay:var(--del,0s);}
+  .lbug.walk.rev{animation-name:crawlL;}
+  @keyframes crawlR{from{left:-8%} to{left:108%}}
+  @keyframes crawlL{from{left:108%} to{left:-8%}}
+  .load-pct{font-family:'Archivo Black',sans-serif; font-size:15px; letter-spacing:1.4px; margin-top:6px;}
+  .load-tip{font-weight:700; font-size:13.5px; margin:8px 0 0; min-height:19px; color:var(--ink-soft);}
+  @media (prefers-reduced-motion: reduce){
+    .lbug svg, .lbug .la, .lbug .lb, .lbug .shim{animation:none;}
+    .lbug.walk{animation-duration:12s;}
+  }
+  /* ---------- MAIN MENU ---------- */
+  #menu-overlay{background:var(--bg); background-image:radial-gradient(var(--ink-soft) 1.4px, transparent 1.6px); background-size:22px 22px;}
+  .menu-card{text-align:center; position:relative; overflow:hidden; padding-bottom:0;}
+  .menu-title{font-family:'Archivo Black',sans-serif; font-size:38px; line-height:1; margin:4px 0 8px; letter-spacing:.5px;}
+  .menu-sub{font-weight:700; font-size:14.5px; margin:0 0 18px; color:var(--ink-soft);}
+  .menu-card .big-btn{margin-top:10px;}
+  .menu-progress{font-weight:900; font-size:12px; letter-spacing:1.2px; margin:8px 0 2px; color:var(--ink-soft);}
+  .menu-strip{position:relative; height:34px; margin:22px -20px 0; border-top:3px solid var(--ink); background:var(--bg);}
+  .menu-strip .lbug{bottom:3px;}
+  #confirm-overlay{z-index:65;}
+  /* ---------- SETTINGS EXTRAS ---------- */
+  .row-box{cursor:default;}
+  .vol-row input[type=range]{flex:1 1 auto; min-width:0; accent-color:var(--orange); height:26px;}
+  #sheet-card.menu-mode .game-only{display:none !important;}
+  .credit-block{border:2.5px solid var(--ink); box-shadow:3px 3px 0 var(--shadow); background:var(--bg); padding:14px 14px 12px; margin-bottom:12px; text-align:center;}
+  .credit-block b{display:block; font-family:'Archivo Black',sans-serif; font-size:21px; line-height:1.1; letter-spacing:.6px;}
+  .credit-block span{display:block; font-weight:900; font-size:12px; letter-spacing:1.4px; margin-top:6px;}
+  .credit-block.studio b{font-size:19px; margin-top:6px;}
+  .credit-block.studio span{margin-top:0;}
 </style>
 </head>
 <body>
+<!-- LOADING SCREEN -->
+<div id="loading" role="status" aria-live="polite">
+  <div class="load-card">
+    <span class="tag pink">ORBITAL PORT 7</span>
+    <h1>ALIEN BUG<br>INSPECTOR</h1>
+    <div class="load-track-wrap" aria-hidden="true">
+      <div class="load-track"><div class="load-fill" id="load-fill"></div></div>
+      <div class="lbug" id="load-lead"></div>
+      <div class="lbug mite walk" id="lb-mite" style="--dur:3.4s; --del:-.6s"></div>
+      <div class="lbug walk" id="lb-camo" style="--dur:5.2s; --del:-2.4s"></div>
+      <div class="lbug walk rev" id="lb-beetle2" style="--dur:6.4s; --del:-4s"></div>
+    </div>
+    <div class="load-pct" id="load-pct">LOADING 0%</div>
+    <p class="load-tip" id="load-tip">Warming up the stamp&hellip;</p>
+  </div>
+</div>
+
+<!-- MAIN MENU -->
+<div class="overlay" id="menu-overlay">
+  <div class="card menu-card">
+    <span class="tag pink">ORBITAL PORT 7</span>
+    <h1 class="menu-title">ALIEN BUG<br>INSPECTOR</h1>
+    <p class="menu-sub">Stamp the clean. Catch the crawlers.</p>
+    <button class="big-btn green" id="menu-main" type="button">START</button>
+    <div class="menu-progress" id="menu-progress"></div>
+    <button class="big-btn coral" id="menu-new" type="button">NEW RUN</button>
+    <button class="big-btn blue" id="menu-settings" type="button">SETTINGS</button>
+    <div class="menu-strip" aria-hidden="true">
+      <div class="lbug walk" id="mn-beetle" style="--dur:7s; --del:-1s"></div>
+      <div class="lbug mite walk rev" id="mn-mite" style="--dur:5s; --del:-3s"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW RUN CONFIRM -->
+<div class="overlay" id="confirm-overlay">
+  <div class="card">
+    <span class="tag coral">ARE YOU SURE?</span>
+    <h1 style="font-size:26px;">Start a new run?</h1>
+    <p>This wipes your saved game &mdash; your days, catches, collection and journal. There&rsquo;s no undo.</p>
+    <button class="big-btn coral" id="confirm-yes" type="button">YES, WIPE IT</button>
+    <button class="ghost-btn" id="confirm-no" type="button">KEEP MY GAME</button>
+  </div>
+</div>
 <div id="app">
   <header id="hud">
     <div id="hud-row1">
@@ -227,6 +404,15 @@
   <div id="stage">
     <div id="canvas-wrap"></div>
     <div id="item-chip">ITEM 1/8</div>
+    <div id="portrait" class="hidden" aria-hidden="true"><span>VEX</span></div>
+    <div id="crt" aria-hidden="true">
+      <div class="crt-sweep"></div>
+      <div id="glare"></div>
+      <div class="crt-scan"></div>
+      <div class="crt-vig"></div>
+      <div class="crt-rec"><i></i>CAM 07</div>
+    </div>
+    <button id="btn-sweep" class="hidden" type="button">SWEEP ×0</button>
     <div id="variant-chip"></div>
     <div id="toast" role="status"></div>
     <div id="alarm-lights" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
@@ -235,6 +421,13 @@
     <div id="stamp-mark">PASS</div>
     <div id="coach"><p id="coach-text"></p><button id="coach-ok">GOT IT</button></div>
     <div id="drag-hint">DRAG TO SPIN</div>
+    <div id="lb-top"></div><div id="lb-bot"></div>
+    <button id="cs-skip" type="button" class="hidden">SKIP SCENE ▸▸</button>
+    <div id="dialogue" class="hidden" role="dialog" aria-live="polite">
+      <div id="dlg-name">SHIFT LOG</div>
+      <p id="dlg-text"></p>
+      <div id="dlg-foot"><button id="dlg-skip" type="button">SKIP</button><span id="dlg-next">NEXT ▶</span></div>
+    </div>
   </div>
 
   <div id="deck">
@@ -246,7 +439,7 @@
 </div>
 
 <!-- STORY / START -->
-<div class="overlay show" id="story-overlay">
+<div class="overlay" id="story-overlay">
   <div class="card">
     <span class="tag" id="story-tag">ORBITAL PORT 7 · URGENT</span>
     <h1 id="story-title">Called in.</h1>
@@ -282,6 +475,46 @@
   </div>
 </div>
 
+<!-- SHOP (task 7) -->
+<div class="overlay" id="shop-overlay">
+  <div class="card shop-card">
+    <span class="tag blue">SHOP &middot; AFTER THE SHIFT</span>
+    <div class="shop-sum">
+      <div><b id="sh-earned">$0</b><span>EARNED</span></div>
+      <div><b id="sh-install">$0</b><span>DEBT TAKEN</span></div>
+      <div><b id="sh-tip">$0</b><span>TIP JAR</span></div>
+      <div><b id="sh-debt">$0</b><span>DEBT LEFT</span></div>
+      <div><b id="sh-savings">$0</b><span>SAVINGS</span></div>
+    </div>
+    <div class="debt-track"><i id="sh-debt-bar"></i></div>
+    <div id="shop-list"></div>
+    <button class="big-btn green" id="shop-next">NEXT SHIFT</button>
+  </div>
+</div>
+
+<!-- ENDING (task 9) -->
+<div class="overlay" id="end-overlay">
+  <div class="card shop-card">
+    <span class="tag coral">THE END OF THE STORY</span>
+    <h1>Caught.</h1>
+    <p id="end-caption" style="font-weight:900; letter-spacing:.6px; margin:8px 0 12px;"></p>
+    <div class="shop-sum" id="end-stats"></div>
+    <p style="margin:10px 0 12px;">The run is over. The port still needs an inspector, and the shifts keep coming.</p>
+    <button class="big-btn green" id="end-keep">KEEP INSPECTING</button>
+    <button class="big-btn coral" id="end-new" style="margin-top:8px;">NEW RUN</button>
+  </div>
+</div>
+
+<!-- CHOICE (midpoint) -->
+<div class="overlay" id="choice-overlay">
+  <div class="card">
+    <span class="tag coral">YOUR CALL</span>
+    <h1 id="choice-prompt" style="font-size:22px; line-height:1.2;"></h1>
+    <button class="big-btn green" id="choice-a" type="button"></button>
+    <button class="big-btn coral" id="choice-b" type="button" style="margin-top:8px;"></button>
+  </div>
+</div>
+
 <!-- FIRED -->
 <div class="overlay" id="fired-overlay">
   <div class="card">
@@ -312,10 +545,13 @@
     <div class="sheet-sec show" id="sec-main">
       <h2>SETTINGS</h2>
       <button class="row-btn" id="mute-btn">SOUND <span class="pill-toggle" id="mute-pill">ON</span></button>
-      <button class="row-btn" id="collection-btn">INSPECTION COLLECTION <span>&rarr;</span></button>
-      <button class="row-btn" id="journal-btn">JOURNAL <span>&rarr;</span></button>
-      <button class="row-btn" id="rules-btn">HOW IT WORKS <span>&rarr;</span></button>
-      <button class="row-btn" id="abandon-btn" style="background:var(--coral); color:#141414;">ABANDON RUN</button>
+      <div class="row-btn row-box vol-row"><span>VOLUME</span><input type="range" id="vol-range" min="0" max="100" step="5" value="100" aria-label="Volume" /></div>
+      <button class="row-btn game-only" id="collection-btn">INSPECTION COLLECTION <span>&rarr;</span></button>
+      <button class="row-btn game-only" id="journal-btn">JOURNAL <span>&rarr;</span></button>
+      <button class="row-btn" id="rules-btn">HOW TO PLAY <span>&rarr;</span></button>
+      <button class="row-btn" id="credits-btn">CREDITS <span>&rarr;</span></button>
+      <button class="row-btn game-only" id="menu-btn">MAIN MENU <span>&rarr;</span></button>
+      <button class="row-btn game-only" id="abandon-btn" style="background:var(--coral); color:#141414;">ABANDON RUN</button>
       <button class="ghost-btn" id="sheet-close">CLOSE</button>
     </div>
     <div class="sheet-sec" id="sec-collection">
@@ -334,7 +570,7 @@
       <button class="ghost-btn" data-back>BACK</button>
     </div>
     <div class="sheet-sec" id="sec-rules">
-      <h2>HOW IT WORKS</h2>
+      <h2>HOW TO PLAY</h2>
       <ul class="rule-list">
         <li>Any item can arrive Rare, Mythic, Legendary — or very rarely Shiny. Same inspection, but every find is logged in your Collection.</li>
         <li>New item types arrive as the days go on — Days 2, 3 and 4 each bring one.</li>
@@ -344,7 +580,15 @@
         <li>Finish the day&rsquo;s quota before the shift timer runs out.</li>
         <li>Tap a bug to collect it.</li>
         <li>Drag to spin the item and check every side.</li>
+        <li>Some items arrive shut &mdash; lunchboxes, and crates from Day 5. Tap the item to open it, then look inside. A bug you never opened up to is still a strike.</li>
+        <li>From Day 3 a bar of static rolls down the camera feed now and then. Taps inside the bar don&rsquo;t land, so wait for it to pass.</li>
       </ul>
+      <button class="ghost-btn" data-back>BACK</button>
+    </div>
+    <div class="sheet-sec" id="sec-credits">
+      <h2>CREDITS</h2>
+      <div class="credit-block"><b>KEN WHEDON</b><span>GAME DESIGNER &middot; MANAGER &middot; QA</span></div>
+      <div class="credit-block studio"><span>PRODUCED BY</span><b>WEIRD DEMON GAMES</b></div>
       <button class="ghost-btn" data-back>BACK</button>
     </div>
     <div class="sheet-sec" id="sec-abandon">
@@ -356,17 +600,525 @@
   </div>
 </div>
 <script>
+/* station_species.js
+   Shared rigs for the two station species, Tarnak and Oolun.
+   Extracted from the Station species viewer. Requires three.js r128 loaded first.
+   Exposes window.StationSpecies. Nothing here touches the page, the DOM beyond
+   canvas textures, or the scene: the host builds the scene and calls these. */
+(function (global) {
+'use strict';
+const THREE = global.THREE;
+/* ---------- helpers ---------- */
+const Y=new THREE.Vector3(0,1,0), Z=new THREE.Vector3(0,0,1);
+const lerp=(a,b,t)=>a+(b-a)*t;
+const sphereG=new THREE.SphereGeometry(1,32,24);
+function ell(p,rx,ry,rz,m,par){
+  const o=new THREE.Mesh(sphereG,m); o.position.set(p[0],p[1],p[2]); o.scale.set(rx,ry,rz);
+  o.castShadow=true; par.add(o); return o;
+}
+function seg(a,b,r1,r2,m,par,joints){
+  const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),d=B.clone().sub(A),len=d.length();
+  const o=new THREE.Mesh(new THREE.CylinderGeometry(r2,r1,len,18,1),m);
+  o.position.copy(A).add(B).multiplyScalar(.5);
+  o.quaternion.setFromUnitVectors(Y,d.normalize()); o.castShadow=true; par.add(o);
+  if(joints!==false){ ell(a,r1,r1,r1,m,par); ell(b,r2,r2,r2,m,par); }
+  return o;
+}
+function cone(a,b,r,m,par,flat){
+  const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),d=B.clone().sub(A),len=d.length();
+  const o=new THREE.Mesh(new THREE.ConeGeometry(r,len,12),m);
+  o.position.copy(A).add(B).multiplyScalar(.5);
+  o.quaternion.setFromUnitVectors(Y,d.normalize()); if(flat) o.scale.x=flat;
+  o.castShadow=true; par.add(o); return o;
+}
+function torus(p,R,r,m,par,sz){
+  const o=new THREE.Mesh(new THREE.TorusGeometry(R,r,10,40),m);
+  o.position.set(p[0],p[1],p[2]); o.rotation.x=Math.PI/2; if(sz) o.scale.y=sz;
+  o.castShadow=true; par.add(o); return o;
+}
+function chain(n,len,r0,r1,m){
+  const root=new THREE.Group(), joints=[]; let par=root;
+  for(let i=0;i<n;i++){
+    const j=new THREE.Group(); if(i) j.position.y=-len; par.add(j);
+    const ra=lerp(r0,r1,i/n), rb=lerp(r0,r1,(i+1)/n);
+    const c=new THREE.Mesh(new THREE.CylinderGeometry(ra,rb,len,10,1),m);
+    c.position.y=-len/2; c.castShadow=true; j.add(c);
+    const s=new THREE.Mesh(sphereG,m); s.scale.setScalar(rb); s.position.y=-len; s.castShadow=true; j.add(s);
+    joints.push(j); par=j;
+  }
+  return {root,joints};
+}
+function tex(draw,size,rx,ry){
+  const cv=document.createElement('canvas'); cv.width=cv.height=size;
+  draw(cv.getContext('2d'),size);
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry);
+  t.encoding=THREE.sRGBEncoding; t.anisotropy=4; return t;
+}
+
+/* ---------- textures ---------- */
+const scaleTex=tex((g,n)=>{
+  g.fillStyle='#8c8c8c'; g.fillRect(0,0,n,n);
+  const step=32,r=21,rs=n/10;
+  for(let row=-1;row<=11;row++){
+    for(let col=-1;col<=n/step+1;col++){
+      const x=col*step+(row&1?step/2:0), y=row*rs;
+      const gr=g.createRadialGradient(x,y-r*.35,2,x,y,r);
+      gr.addColorStop(0,'#ffffff'); gr.addColorStop(.7,'#d2d2d2'); gr.addColorStop(.93,'#8a8a8a'); gr.addColorStop(1,'#3c3c3c');
+      g.fillStyle=gr; g.beginPath(); g.arc(x,y,r,0,7); g.fill();
+    }
+  }
+},256,5,3);
+const limbTex=scaleTex.clone(); limbTex.repeat.set(2,1.6); limbTex.needsUpdate=true;
+const skinTex=tex((g,n)=>{
+  g.fillStyle='#f4f4f4'; g.fillRect(0,0,n,n);
+  let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  for(let i=0;i<70;i++){
+    const x=rnd()*n,y=rnd()*n,r=4+rnd()*16,a=.05+rnd()*.12;
+    for(const dx of [-n,0,n]) for(const dy of [-n,0,n]){
+      const gr=g.createRadialGradient(x+dx,y+dy,0,x+dx,y+dy,r);
+      gr.addColorStop(0,'rgba(40,40,60,'+a+')'); gr.addColorStop(1,'rgba(40,40,60,0)');
+      g.fillStyle=gr; g.beginPath(); g.arc(x+dx,y+dy,r,0,7); g.fill();
+    }
+  }
+  for(let i=0;i<120;i++){ g.fillStyle='rgba(255,255,255,.7)'; g.beginPath(); g.arc(rnd()*n,rnd()*n,1+rnd()*1.5,0,7); g.fill(); }
+},256,3,3);
+
+/* ---------- feather ---------- */
+function feather(len,w,cBase,cTip){
+  const sh=new THREE.Shape();
+  sh.moveTo(0,0); sh.bezierCurveTo(w*.5,len*.1,w,len*.55,0,len); sh.bezierCurveTo(-w,len*.55,-w*.5,len*.1,0,0);
+  const geo=new THREE.ShapeGeometry(sh,10);
+  const pos=geo.attributes.position, col=new Float32Array(pos.count*3);
+  const a=new THREE.Color(cBase).convertSRGBToLinear(), b=new THREE.Color(cTip).convertSRGBToLinear(), c=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const t=Math.min(1,Math.max(0,pos.getY(i)/len));
+    pos.setZ(i,-.25*len*t*t+Math.abs(pos.getX(i))*-.5);   // slight curl and V fold
+    c.copy(a).lerp(b,Math.pow(t,1.4)); col.set([c.r,c.g,c.b],i*3);
+  }
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3)); geo.computeVertexNormals();
+  const piv=new THREE.Group();
+  const m=new THREE.Mesh(geo,featherMat); m.castShadow=true; piv.add(m);
+  const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.002,.006,len*.9,5),shaftMat);
+  shaft.position.set(0,len*.45,.004); shaft.rotation.x=-.12; piv.add(shaft);
+  return piv;
+}
+const featherMat=new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:.55,metalness:.1});
+const shaftMat=new THREE.MeshStandardMaterial({color:0x5a2340,roughness:.5});
+
+/* ================= TARNAK ================= */
+const TM={
+  hide:new THREE.MeshStandardMaterial({color:0xb8842e,map:scaleTex,bumpMap:scaleTex,bumpScale:.03,roughness:.72,metalness:.05}),
+  limb:new THREE.MeshStandardMaterial({color:0xb8842e,map:limbTex,bumpMap:limbTex,bumpScale:.03,roughness:.72,metalness:.05}),
+  belly:new THREE.MeshStandardMaterial({color:0xdcbd7c,map:scaleTex,bumpMap:scaleTex,bumpScale:.015,roughness:.8}),
+  scute:new THREE.MeshStandardMaterial({color:0x6e4a1c,roughness:.55,metalness:.1,flatShading:false}),
+  claw:new THREE.MeshStandardMaterial({color:0x26201c,roughness:.35}),
+  beak:new THREE.MeshStandardMaterial({vertexColors:true,roughness:.32,metalness:.05}),
+  socket:new THREE.MeshStandardMaterial({color:0x140d08,roughness:.9}),
+  eye:new THREE.MeshStandardMaterial({color:0xffb020,emissive:0xff8a00,emissiveIntensity:.9,roughness:.2}),
+  pupil:new THREE.MeshBasicMaterial({color:0x000000})
+};
+const T_TONES={ochre:{hide:0xb8842e,belly:0xdcbd7c,scute:0x6e4a1c},slate:{hide:0x4f6a7a,belly:0xa9bcc0,scute:0x2a3a46}};
+const crest=[];
+
+function beakGeo(r,h,hook,cA,cB){
+  const g=new THREE.ConeGeometry(r,h,24,10), p=g.attributes.position, col=new Float32Array(p.count*3);
+  const a=new THREE.Color(cA).convertSRGBToLinear(), b=new THREE.Color(cB).convertSRGBToLinear(), c=new THREE.Color();
+  for(let i=0;i<p.count;i++){
+    const t=(p.getY(i)+h/2)/h;
+    p.setZ(i,p.getZ(i)+t*t*hook);
+    if(p.getZ(i)<0) p.setZ(i,p.getZ(i)*1.15);            // raised culmen ridge on top
+    c.copy(a).lerp(b,Math.pow(t,1.6)); col.set([c.r,c.g,c.b],i*3);
+  }
+  g.setAttribute('color',new THREE.BufferAttribute(col,3)); g.rotateX(Math.PI/2); g.computeVertexNormals(); return g;
+}
+
+function buildTarnak(){
+  const g=new THREE.Group(), M=TM;
+  // trunk
+  ell([0,.98,-.02],.36,.30,.33,M.hide,g);
+  ell([0,1.38,.04],.50,.44,.38,M.hide,g);
+  ell([0,1.33,.17],.39,.40,.29,M.belly,g);
+  ell([0,.98,.10],.27,.24,.25,M.belly,g);
+  for(let i=0;i<5;i++) ell([0,1.58-i*.13,.455-Math.abs(i-1.6)*.022],.2-i*.012,.016,.03,M.scute,g).rotation.x=-.1+i*.07; // belly scute bands
+  // spine plates
+  for(let y=1.74;y>1.02;y-=.115){
+    const k=(y-1.38)/.44, z=.04-.38*Math.sqrt(Math.max(.05,1-k*k));
+    cone([0,y,z+.04],[0,y+.07,z-.15],.075,M.scute,g,.32);
+  }
+  // tail
+  const tp=[[0,.98,-.26],[0,.84,-.62],[0,.64,-.96],[0,.47,-1.26],[0,.37,-1.5],[0,.33,-1.72]], tr=[.27,.21,.155,.105,.065,.03];
+  for(let i=0;i<5;i++){
+    seg(tp[i],tp[i+1],tr[i],tr[i+1],M.limb,g);
+    const mx=[(tp[i][1]+tp[i+1][1])/2,(tp[i][2]+tp[i+1][2])/2], rr=(tr[i]+tr[i+1])/2;
+    cone([0,mx[0]+rr*.8,mx[1]],[0,mx[0]+rr+.09,mx[1]-.1],.03+rr*.25,M.scute,g,.32);
+    cone([0,tp[i][1]+tr[i]*.85,tp[i][2]-.02],[0,tp[i][1]+tr[i]+.1,tp[i][2]-.12],.03+tr[i]*.25,M.scute,g,.32);
+  }
+  for(let k=-2;k<=2;k++){
+    const f=feather(.4-Math.abs(k)*.04,.085,0x7a1fa2,0x19d3e6);
+    f.position.set(0,.33,-1.68); f.rotation.set(-Math.PI/2-.12,0,k*.28); g.add(f);
+  }
+  // limbs
+  for(const s of [-1,1]){
+    // shoulder mass and plates
+    ell([s*.56,1.62,0],.25,.23,.25,M.hide,g);
+    ell([s*.58,1.75,0],.23,.085,.23,M.scute,g).rotation.z=-s*.25;
+    ell([s*.72,1.66,0],.15,.07,.2,M.scute,g).rotation.z=-s*.75;
+    cone([s*.62,1.80,0],[s*.72,1.93,-.03],.045,M.scute,g);
+    // arm
+    const sh=[s*.63,1.57,0], el=[s*.76,1.17,-.03], wr=[s*.67,.86,.27];
+    seg(sh,el,.155,.13,M.limb,g); seg(el,wr,.13,.095,M.limb,g);
+    ell([s*.80,1.17,-.07],.07,.09,.08,M.scute,g);                       // elbow cap
+    ell([s*.755,1.02,.13],.075,.15,.085,M.scute,g).rotation.x=.75;      // forearm plate
+    for(let k=0;k<3;k++){                                                // forearm quills
+      const f=feather(.26-k*.03,.06,0xc2185b,0xffc233);
+      f.position.set(s*.79,1.1-k*.08,.03+k*.07); f.rotation.set(-2.2,0,-s*.5); g.add(f);
+    }
+    ell([s*.67,.80,.31],.10,.085,.11,M.hide,g);
+    for(let i=-1;i<=1;i++){
+      const b=[s*.67+i*.06,.76,.37], t=[s*.67+i*.085,.64,.45];
+      seg(b,t,.038,.03,M.limb,g); cone(t,[t[0]+i*.01,.555,.475],.028,M.claw,g);
+    }
+    const tb=[s*.67-s*.08,.81,.35], tt=[s*.67-s*.15,.73,.43];
+    seg(tb,tt,.036,.03,M.limb,g); cone(tt,[tt[0]-s*.02,.66,.47],.027,M.claw,g);
+    // leg (digitigrade)
+    const hip=[s*.25,.95,0], kn=[s*.33,.60,.25], an=[s*.31,.30,-.10], ft=[s*.31,.075,.07];
+    seg(hip,kn,.215,.145,M.limb,g); seg(kn,an,.135,.08,M.limb,g); seg(an,ft,.08,.085,M.limb,g);
+    ell([s*.40,.80,.13],.09,.19,.13,M.scute,g).rotation.x=-.6;          // thigh plate
+    ell([s*.33,.60,.33],.07,.08,.06,M.scute,g);                          // knee cap
+    cone([s*.31,.32,-.16],[s*.31,.42,-.27],.035,M.scute,g);              // hock spur
+    for(let i=-1;i<=1;i++){
+      const b=[s*.31+i*.06,.06,.11], t=[s*.31+i*.14,.045,.31];
+      seg(b,t,.052,.042,M.limb,g); cone(t,[t[0]+i*.03,.012,.42],.04,M.claw,g);
+    }
+    seg(ft,[s*.31,.045,-.07],.05,.035,M.limb,g); cone([s*.31,.045,-.07],[s*.31,.012,-.15],.032,M.claw,g);
+  }
+  // neck
+  seg([0,1.70,.06],[0,1.97,.17],.21,.165,M.limb,g);
+  ell([0,1.82,.21],.12,.15,.10,M.belly,g);
+  // head
+  const H=new THREE.Group(); H.position.set(0,2.05,.21); g.add(H); g.userData.head=H;
+  ell([0,0,0],.21,.19,.25,M.hide,H);
+  ell([0,-.03,.19],.155,.125,.15,M.hide,H);
+  ell([0,-.12,.02],.15,.08,.2,M.belly,H);
+  const ub=new THREE.Mesh(beakGeo(.14,.42,.13,0xe9d6a4,0x5a3a14),M.beak); ub.position.set(0,-.015,.37); ub.scale.set(.88,.95,1); ub.castShadow=true; H.add(ub);
+  const lb=new THREE.Mesh(beakGeo(.105,.30,-.03,0xd8c18c,0x5a3a14),M.beak); lb.position.set(0,-.115,.31); lb.scale.set(.9,.42,1); lb.rotation.x=.13; lb.castShadow=true; H.add(lb);
+  ell([0,.075,.245],.06,.035,.06,M.scute,H);                              // cere over the beak base
+  for(const s of [-1,1]){
+    ell([s*.04,.062,.36],.012,.008,.018,M.socket,H);                      // nostril
+    ell([s*.115,.095,.14],.095,.035,.13,M.scute,H).rotation.z=-s*.35;     // brow ridge
+    ell([s*.19,.07,-.02],.05,.03,.12,M.scute,H).rotation.z=-s*.6;         // rear brow
+    [[s*.62,.22,.76,.036],[s*.95,.16,.26,.029]].forEach(e=>{
+      const d=new THREE.Vector3(e[0],e[1],e[2]).normalize();
+      const E=new THREE.Group(); E.position.set(d.x*.20,d.y*.18,d.z*.245+(e[3]>.03?.045:0)); E.quaternion.setFromUnitVectors(Z,d); H.add(E);
+      ell([0,0,-.012],e[3]*1.55,e[3]*1.45,e[3]*.8,M.socket,E);
+      ell([0,0,0],e[3],e[3],e[3]*.75,M.eye,E);
+      ell([0,0,e[3]*.62],e[3]*.2,e[3]*.72,e[3]*.2,M.pupil,E);
+    });
+  }
+  // crest plumage
+  const rows=[[0xd81b60,0xffc233],[0xc2185b,0xff8f1f],[0x7b1fa2,0x1fd6e8],[0x4527a0,0x26e0c0]];
+  for(let j=0;j<4;j++){
+    const z=.10-j*.085, n=j===0?3:5;
+    for(let i=0;i<n;i++){
+      const k=i-(n-1)/2, x=k*.045;
+      const y=.19*Math.sqrt(Math.max(.05,1-(x/.21)**2-(z/.25)**2))-.01;
+      const f=feather(.27+j*.06-Math.abs(k)*.025,.075+j*.008,rows[j][0],rows[j][1]);
+      f.position.set(x,y,z); H.add(f); crest.push({f,j,k,ph:j*1.7+i*.9});
+    }
+  }
+  return g;
+}
+
+/* ================= OOLUN ================= */
+const OM={
+  skin:new THREE.MeshPhysicalMaterial({color:0x2a9d9a,map:skinTex,roughness:.28,clearcoat:.7,clearcoatRoughness:.25}),
+  light:new THREE.MeshPhysicalMaterial({color:0xa6e3d6,roughness:.3,clearcoat:.6,clearcoatRoughness:.3}),
+  rubber:new THREE.MeshStandardMaterial({color:0x23292f,roughness:.92}),
+  trim:new THREE.MeshStandardMaterial({color:0xe9a21a,roughness:.6}),
+  metal:new THREE.MeshStandardMaterial({color:0xb9c4c8,roughness:.3,metalness:.85}),
+  gel:new THREE.MeshPhysicalMaterial({color:0x9fe8ff,transparent:true,opacity:.6,roughness:.08,clearcoat:1}),
+  iris:new THREE.MeshPhysicalMaterial({color:0xe2bd52,roughness:.15,metalness:.4,clearcoat:1}),
+  pupil:new THREE.MeshBasicMaterial({color:0x05080a}),
+  glow:new THREE.MeshBasicMaterial({color:0x6ff0ff}),
+  halo:new THREE.MeshBasicMaterial({color:0x6ff0ff,transparent:true,opacity:.28,blending:THREE.AdditiveBlending,depthWrite:false}),
+  led:new THREE.MeshBasicMaterial({color:0x7dffd0})
+};
+const O_TONES={teal:{skin:0x2a9d9a,light:0xa6e3d6},coral:{skin:0xf0788a,light:0xffd3cb}};
+const tendrils=[], feelers=[]; let cheekLight;
+
+function buildOolun(){
+  const g=new THREE.Group(), M=OM;
+  // torso and suit
+  ell([0,1.54,0],.185,.36,.14,M.skin,g);
+  ell([0,1.6,.035],.13,.26,.115,M.light,g);
+  ell([0,1.40,0],.2,.29,.155,M.rubber,g);
+  ell([0,1.12,0],.175,.15,.14,M.rubber,g);
+  torus([0,1.63,0],.168,.013,M.trim,g).scale.set(1,.78,1);
+  torus([0,1.16,0],.17,.022,M.rubber,g).scale.set(1,.8,1);
+  ell([0,1.16,.135],.035,.028,.012,M.metal,g);                           // belt buckle
+  ell([.11,1.2,.1],.045,.06,.03,M.rubber,g);                              // hip pouch
+  for(const s of [-1,1]){
+    // arm
+    const sh=[s*.215,1.79,0], el=[s*.34,1.36,-.02], wr=[s*.30,.98,.12], mid=[s*.316,1.132,.064];
+    ell(sh,.075,.07,.07,M.skin,g);
+    seg(sh,el,.05,.04,M.skin,g); seg(el,mid,.04,.036,M.skin,g);
+    seg(mid,wr,.05,.044,M.rubber,g);
+    const cuff=torus(mid,.05,.012,M.trim,g); cuff.rotation.set(Math.PI/2-.35,0,0);
+    ell([s*.30,.925,.14],.05,.07,.034,M.rubber,g);
+    for(let i=0;i<4;i++){
+      const k=i-1.5, b=[s*.30+k*.024,.875,.15], m2=[s*.30+k*.036,.775,.185], t=[s*.30+k*.042,.69,.175];
+      seg(b,m2,.015,.013,M.rubber,g); seg(m2,t,.013,.012,M.rubber,g); ell(t,.021,.021,.021,M.rubber,g);
+    }
+    const tb=[s*.30-s*.05,.93,.15], tt=[s*.30-s*.085,.85,.2];
+    seg(tb,tt,.015,.013,M.rubber,g); ell(tt,.02,.02,.02,M.rubber,g);
+    // leg
+    const hip=[s*.10,1.08,0], kn=[s*.13,.62,.04], an=[s*.13,.13,0];
+    seg(hip,kn,.075,.05,M.skin,g); seg(kn,an,.064,.066,M.rubber,g);
+    torus([s*.13,.6,.04],.066,.014,M.trim,g);
+    ell([s*.13,.055,.09],.095,.055,.18,M.rubber,g);
+    ell([s*.13,.02,.09],.105,.02,.19,M.trim,g);                           // sole
+  }
+  // neck and moisture collar
+  seg([0,1.84,0],[0,2.04,.02],.058,.05,M.skin,g);
+  torus([0,1.925,.008],.082,.034,M.gel,g,.9);
+  torus([0,1.955,.01],.086,.011,M.metal,g);
+  torus([0,1.895,.006],.092,.011,M.metal,g);
+  const can=new THREE.Mesh(new THREE.CylinderGeometry(.028,.028,.09,14),M.metal); can.position.set(0,1.915,-.125); can.castShadow=true; g.add(can);
+  seg([0,1.96,-.125],[0,1.96,-.07],.008,.008,M.rubber,g,false);
+  ell([0,1.925,.125],.012,.012,.008,M.led,g);
+  // head
+  const H=new THREE.Group(); H.position.set(0,2.23,.03); H.scale.setScalar(1.18); g.add(H); g.userData.head=H;
+  ell([0,0,.05],.15,.16,.16,M.skin,H);
+  ell([0,.15,-.09],.185,.23,.29,M.skin,H).rotation.x=.5;
+  ell([0,-.06,.1],.105,.095,.115,M.light,H);
+  ell([0,-.085,.21],.03,.01,.01,M.pupil,H);                               // mouth slit
+  for(const s of [-1,1]){
+    const d=new THREE.Vector3(s*.82,.05,.57).normalize();
+    const E=new THREE.Group(); E.position.set(s*.118,.03,.125); E.quaternion.setFromUnitVectors(Z,d); H.add(E);
+    ell([0,0,0],.062,.062,.045,M.iris,E);
+    ell([0,0,.034],.042,.011,.014,M.pupil,E);
+    const lid=torus([0,0,.004],.062,.012,M.skin,E); lid.rotation.x=0;
+    [[.74,-.36,.57,.017],[.56,-.55,.62,.013],[.86,-.5,.28,.012],[.93,-.2,.3,.009]].forEach((c,i)=>{
+      const v=new THREE.Vector3(s*c[0],c[1],c[2]).normalize();
+      const p=[v.x*.153,v.y*.163,v.z*.163+.05];
+      ell(p,c[3],c[3],c[3],M.glow,H).castShadow=false;
+      ell(p,c[3]*2.3,c[3]*2.3,c[3]*2.3,M.halo,H).castShadow=false;
+    });
+    // short feelers under the face
+    [[s*.04,-.14,.15],[s*.085,-.13,.09]].forEach((p,i)=>{
+      const c=chain(5,.04,.016,.005,M.skin); c.root.position.set(p[0],p[1],p[2]); c.root.rotation.y=Math.PI+s*(.3+i*.6);
+      H.add(c.root); feelers.push({c,ph:i*2+s});
+    });
+  }
+  cheekLight=new THREE.PointLight(0x6ff0ff,.5,.9); cheekLight.position.set(0,-.05,.3); H.add(cheekLight);
+  // head tendrils
+  const N=8;
+  for(let i=0;i<N;i++){
+    const phi=lerp(-1.95,1.95,i/(N-1)), len=.058+.03*Math.cos(phi/2);
+    const c=chain(10,len,.032,.007,M.skin);
+    c.root.position.set(-Math.sin(phi)*.155,.13+.05*Math.cos(phi),-.1-Math.cos(phi)*.2);
+    c.root.rotation.y=phi; H.add(c.root);
+    tendrils.push({c,phi,ph:i*1.3});
+  }
+  return g;
+}
+
+/* ---------- pose updates ---------- */
+const glowCol=new THREE.Color();
+function poseSpecies(t, P){
+  const amp=P.reduced?0:1;
+  // Tarnak crest
+  const e=P.S.stress, quiver=e>.55?(e-.55)*.12*amp:0;
+  for(const c of crest){
+    const up=lerp(-1.12-c.j*.06,-.12-c.j*.3,e);
+    c.f.rotation.x=up+Math.sin(t*17+c.ph)*quiver+Math.sin(t*1.3+c.ph)*.02*amp;
+    c.f.rotation.z=-c.k*lerp(.07,.3,e);
+  }
+  P.tarnak.userData.head.rotation.x=lerp(.05,-.1,e)+Math.sin(t*.8)*.015*amp;
+  P.tarnak.scale.y=1+Math.sin(t*1.4)*.004*amp;
+  // Oolun tendrils
+  const m=P.S.mood;
+  for(const o of tendrils){
+    const J=o.c.joints, n=J.length;
+    for(let i=0;i<n;i++){
+      const base=i===0?.6+m*.7:(i<4?-.17:.02);
+      const curl=i<3?0:m*(.12+.55*(i-3)/(n-4));
+      J[i].rotation.x=base+curl+Math.sin(t*(1+m*2.5)+o.ph+i*.45)*.035*(1+m)*amp;
+      J[i].rotation.z=Math.sin(t*.7+o.ph*2+i*.6)*.04*amp;
+    }
+  }
+  for(const o of feelers){
+    o.c.joints.forEach((j,i)=>{ j.rotation.x=(i===0?.35:.1)+m*.35+Math.sin(t*1.6+o.ph+i*.7)*.08*(1+m)*amp; });
+  }
+  const pulse=.75+.25*Math.sin(t*(1.5+m*9))*(P.reduced?0:1);
+  glowCol.setHSL(lerp(.5,.93,m),1,lerp(.62,.58,m)).convertSRGBToLinear().multiplyScalar(pulse);
+  const GM=P.oolun.userData.mats||OM;
+  GM.glow.color.copy(glowCol); GM.halo.color.copy(glowCol); GM.halo.opacity=.18+.3*m*pulse+.1*pulse;
+  if(cheekLight){ cheekLight.color.copy(glowCol); cheekLight.intensity=.35+m*1.1; }
+  P.oolun.userData.head.rotation.x=lerp(.04,-.07,m)+Math.sin(t*.6+1)*.02*amp;
+  P.oolun.userData.head.rotation.z=Math.sin(t*.45)*.025*amp;
+}
+
+let LINEAR = true;   // true: colours are converted to linear (the viewer uses sRGB output). false: raw hex, matching a game that does no colour management.
+function configure(opts){ if(opts && typeof opts.linear === 'boolean') LINEAR = opts.linear; }
+function toLinear(){
+  if(!LINEAR) return;
+  [...Object.values(TM),...Object.values(OM),shaftMat].forEach(m=>{
+    if(m.vertexColors) return; m.color.convertSRGBToLinear(); if(m.emissive) m.emissive.convertSRGBToLinear();
+  });
+}
+function getCheekLight(){ return cheekLight; }
+/* ================= CHARACTERS: the seven people of the story, built from the two rigs ================= */
+/* Each character gets its own copy of the rig's materials, so two characters of the same species can differ.
+   A look adds clothing and props with the same shape helpers the rig uses. Nothing here changes the rig itself. */
+function paint(m,hex){ m.color.setHex(hex); if(LINEAR) m.color.convertSRGBToLinear(); return m; }
+function newMat(hex,rough,metal){ return paint(new THREE.MeshStandardMaterial({roughness:rough==null?.6:rough,metalness:metal||0}),hex); }
+function glowMat(hex){ return paint(new THREE.MeshBasicMaterial({}),hex); }
+function box3(w,h,d,m,p,par,rot){ const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); o.position.set(p[0],p[1],p[2]); if(rot) o.rotation.set(rot[0],rot[1],rot[2]); o.castShadow=true; par.add(o); return o; }
+function arc(p,R,r,m,par,rot){ const o=new THREE.Mesh(new THREE.TorusGeometry(R,r,10,40,Math.PI),m); o.position.set(p[0],p[1],p[2]); if(rot) o.rotation.set(rot[0],rot[1],rot[2]); o.castShadow=true; par.add(o); return o; }
+/* Give a rig its own copies of the named materials, so painting one character leaves the others alone. */
+function ownMaterials(rig, table){
+  const map=new Map(), named={};
+  for(const k of Object.keys(table)){ named[k]=table[k].clone(); map.set(table[k],named[k]); }
+  rig.traverse(n=>{ if(n.isMesh && map.has(n.material)) n.material=map.get(n.material); });
+  rig.userData.mats=named; return named;
+}
+const CHARACTERS = {
+  vex:   { species:'tarnak', name:'Portmaster Vex',  paint:{hide:0xb8842e, limb:0xb8842e, belly:0xdcbd7c, scute:0x6e4a1c}, look:'vex' },
+  kael:  { species:'tarnak', name:'Warden Kael',     paint:{hide:0xa8742a, limb:0xa8742a, belly:0xd9b06a, scute:0x5a3b17}, look:'kael' },
+  dagra: { species:'tarnak', name:'Dagra',           paint:{hide:0x5a6b78, limb:0x5a6b78, belly:0x9aa8ae, scute:0x2a3440}, look:'dagra' },
+  pip:   { species:'oolun',  name:'Dispatcher Pip',  paint:{skin:0xf0788a, light:0xffd3cb}, look:'pip' },
+  nyx:   { species:'oolun',  name:'Senior Inspector Nyx', paint:{skin:0x2a9d9a, light:0xa6e3d6}, look:'nyx' },
+  orin:  { species:'oolun',  name:'Former Inspector Orin', paint:{skin:0x5f7490, light:0x9aa9bf}, look:'orin' },
+  juno:  { species:'oolun',  name:'Juno',            paint:{skin:0x5b3a7a, light:0xb7a2d6}, look:'juno' }
+};
+function paintRig(rig, colours){
+  const M=rig.userData.mats;
+  for(const k of Object.keys(colours)) if(M[k]) paint(M[k],colours[k]);
+}
+const LOOKS = {
+  vex(rig){
+    const g=rig, M=rig.userData.mats;
+    const vest=newMat(0xffd23f,.6), silver=newMat(0xdfe6ea,.3,.6), tan=newMat(0xb9a27a,.8), brown=newMat(0x5e4330,.8), mugM=newMat(0x4a4f57,.4,.5);
+    ell([0,1.38,.07],.535,.46,.37,vest,g);                              // high-vis vest over the chest and belly
+    for(const y of [1.22,1.5]) torus([0,y,0],.49,.018,silver,g,null);   // reflective bands
+    for(const s of [-1,1]){
+      seg([s*.76,1.17,-.03],[s*.67,.86,.27],.14,.115,tan,g,false);     // rolled tan sleeves on the forearms
+      seg([s*.25,.95,0],[s*.33,.60,.25],.225,.15,brown,g,false);       // brown cargo trousers
+    }
+    const hand=[-.22,1.1,.6];                                           // dented mug held up near the chest, in the right hand
+    const mug=new THREE.Mesh(new THREE.CylinderGeometry(.055,.05,.13,18),mugM); mug.position.set(...hand); mug.castShadow=true; g.add(mug);
+    ell([-.22,1.175,.6],.05,.015,.05,mugM,g);                            // mug rim
+    return rig;
+  },
+  kael(rig){
+    const g=rig;
+    const armour=newMat(0x2b2d33,.45,.35), trim=newMat(0xf5b921,.5), black=newMat(0x111214,.6);
+    ell([0,1.42,.2],.48,.42,.26,armour,g);                                 // chest plate
+    ell([0,1.5,.455],.07,.07,.02,trim,g);                                  // port security emblem
+    for(const y of [1.22,1.34]) torus([0,y,0],.5,.016,trim,g,null);       // yellow piping along the seams
+    torus([0,.98,0],.5,.03,black,g,null);                                  // black belt
+    for(const s of [-1,1]){
+      ell([s*.6,1.7,0],.3,.14,.28,armour,g);                               // shoulder pads
+      seg([s*.76,1.17,-.03],[s*.67,.86,.27],.15,.125,armour,g,false);      // forearm guards
+    }
+    box3(.12,.2,.1,black,[-.42,.98,.2],g);                                 // sidearm holster, right hip
+    const baton=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.3,12),black); baton.position.set(.44,.95,.18); baton.rotation.z=.2; g.add(baton);
+    return rig;
+  },
+  dagra(rig){
+    const g=rig;
+    const suit=newMat(0x15171b,.55,.1), rust=newMat(0xb5532a,.5), cloak=newMat(0x1d2024,.9), rifle=newMat(0x2a2d31,.4,.6), teal=glowMat(0x6ff0ff);
+    ell([0,1.38,.04],.5,.44,.34,suit,g);                                   // form-fitting armour
+    for(const s of [-1,1]){
+      ell([s*.63,1.62,0],.27,.19,.25,rust,g);                              // rust shoulder accents
+      seg([s*.76,1.17,-.03],[s*.67,.86,.27],.14,.11,suit,g,false);         // bracers
+    }
+    ell([0,1.0,-.3],.5,.92,.08,cloak,g);                                   // long cloak hanging behind
+    seg([.28,1.78,-.3],[-.36,.92,-.36],.025,.025,rifle,g);                 // rifle slung across the back
+    box3(.16,.16,.12,rifle,[.4,.95,.22],g);                                // sample case at the belt
+    ell([.4,1.04,.3],.035,.035,.035,teal,g);                               // glowing sample
+    return rig;
+  },
+  pip(rig){
+    const g=rig, H=rig.userData.head, M=rig.userData.mats;
+    paint(M.rubber,0x4d5f7d); paint(M.trim,0x1d6f72); paint(M.led,0x6ff0ff);
+    const headset=newMat(0x1b1f24,.5);
+    arc([0,.02,.03],.19,.016,headset,H,[0,0,0]);                          // headset band over the head
+    for(const s of [-1,1]) ell([s*.165,.0,.02],.05,.065,.05,headset,H);   // ear cups
+    seg([-.165,-.02,.04],[-.13,-.12,.2],.012,.012,headset,H,false);       // boom mic
+    ell([-.13,-.12,.21],.02,.02,.02,headset,H);
+    for(const s of [-1,1]) ell([s*.14,.85,.12],.06,.08,.03,M.rubber,g);   // cargo pockets on the thighs
+    box3(.13,.012,.09,M.led,[.31,.93,.16],g,[-.5,0,0]);                    // wrist tablet, left arm
+    return rig;
+  },
+  nyx(rig){
+    const g=rig, M=rig.userData.mats;
+    paint(M.rubber,0x1e5c5f);                                              // dark teal rubber suit and gloves
+    const stamp=newMat(0xb9c4c8,.3,.85), holster=newMat(0x1e5c5f,.8);
+    box3(.07,.16,.06,holster,[-.16,1.12,.1],g);                            // stamp holster, right hip
+    const handle=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.14,10),stamp); handle.position.set(-.16,1.24,.1); g.add(handle);
+    for(const s of [-1,1]) box3(.06,.05,.01,newMat(0xffd23f,.6),[s*.12,1.46,.16],g);   // hazard patches on the chest
+    return rig;
+  },
+  orin(rig){
+    const g=rig, M=rig.userData.mats;
+    const coat=newMat(0x2c3340,.9), collar=newMat(0x20252e,.8), leather=newMat(0x5a3d25,.7), stamp=newMat(0x8c8f94,.6,.4);
+    ell([0,1.2,0],.25,.42,.19,coat,g);                                     // long tattered coat
+    ell([0,.66,-.02],.24,.2,.17,coat,g);                                   // torn hem
+    arc([0,1.66,0],.2,.02,collar,g,[Math.PI/2,0,0]);                       // high collar
+    const cone1=new THREE.Mesh(new THREE.ConeGeometry(.06,.14,4),coat); cone1.position.set(-.1,.52,.2); cone1.rotation.x=Math.PI; g.add(cone1);
+    const handle=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.1,10),stamp); handle.position.set(-.3,.8,.22); g.add(handle);
+    box3(.05,.05,.05,stamp,[-.3,.74,.22],g);                              // old scratched stamp
+    box3(.13,.17,.03,leather,[.36,1.25,.03],g,[0,0,-.1]);                  // logbook under the left arm
+    return rig;
+  },
+  juno(rig){
+    const g=rig, M=rig.userData.mats;
+    paint(M.rubber,0x2a1f3a);                                              // violet fingerless gloves
+    const jacket=newMat(0x1c1a24,.6), silver=newMat(0xc9d0d6,.3,.7), flaskM=newMat(0xb9c4c8,.25,.9);
+    ell([0,1.42,0],.19,.35,.135,jacket,g);                                 // sleeveless dark jacket
+    box3(.012,.5,.01,silver,[0,1.36,.14],g);                               // silver zip
+    const flask=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.12,14),flaskM); flask.position.set(-.31,.82,.22); g.add(flask);
+    box3(.12,.01,.09,M.led,[.31,.93,.16],g,[-.5,0,0]);                    // holo-slate, left wrist
+    paint(M.led,0x6ff0ff);
+    return rig;
+  }
+};
+/* Build a named character: the right rig, its own materials, its colours, and its clothing. */
+function buildCharacter(id){
+  const P=CHARACTERS[id]; if(!P) throw new Error('unknown character: '+id);
+  const rig = P.species==='tarnak' ? buildTarnak() : buildOolun();
+  ownMaterials(rig, P.species==='tarnak' ? TM : OM);
+  paintRig(rig, P.paint);
+  LOOKS[P.look](rig);
+  rig.userData.character = id;
+  return rig;
+}
+
+global.StationSpecies = {
+  tex, lerp, TM, OM, shaftMat, toLinear,
+  buildTarnak, buildOolun, setTarnakTone(tone){ const c=T_TONES[tone]; if(!c) return; setCol(TM.hide,c.hide); setCol(TM.limb,c.hide); setCol(TM.belly,c.belly); setCol(TM.scute,c.scute); },
+  setOolunTone(tone){ const c=O_TONES[tone]; if(!c) return; setCol(OM.skin,c.skin); setCol(OM.light,c.light); },
+  poseSpecies, getCheekLight, configure,
+  buildCharacter, CHARACTERS, paint, paintRig, ownMaterials
+};
+function setCol(m,hex){ m.color.setHex(hex); if(LINEAR) m.color.convertSRGBToLinear(); return m.color; }
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
 (function(){
 "use strict";
 /* ================= STATE ================= */
-var SAVE_KEY = "abi-save-v1";
+var SAVE_KEY = "abi-save-v2", OLD_SAVE_KEY = "abi-save-v1", SAVE_VERSION = 2;
 var S = {
   day:1, quota:8, objectIndex:0, strikes:0,
   totalCaught:0, totalMissed:0, dayCaught:0, dayMissed:0,
   timer:480, playing:false, busy:false, started:false,
-  muted:false, tourSeen:false, tourStep:-1,
+  muted:false, volume:1, tourSeen:false, tourStep:-1,
   chapters:{}, tipsSeen:{},
-  collection:{}, collNew:{}, announcedModels:{}, dayShiny:0,
+  collection:{}, collNew:{}, announcedModels:{}, dayShiny:0, story:{seen:{}, flags:{}}, debt:1200, money:0, up:{magnifier:0,glare:0,motion:0,uv:0,sweep:0,probe:0,quota:0,streak:0,tip:0,ration:0,shield:0,hazard:0}, bought:0, dayEarned:0, lastEarn:0, lastInstall:0, lastTip:0, streak:0, sweepLeft:0, shieldLeft:0, itemsDone:0, bestStreak:0,
   current:null
 };
 var pendingRestore = null;
@@ -408,18 +1160,36 @@ function collectionTotals(){
 }
 function save(){
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify({
-    day:S.day, objectIndex:S.objectIndex, strikes:S.strikes,
+    v:SAVE_VERSION, day:S.day, objectIndex:S.objectIndex, strikes:S.strikes,
     totalCaught:S.totalCaught, totalMissed:S.totalMissed,
     dayCaught:S.dayCaught, dayMissed:S.dayMissed, timer:Math.ceil(S.timer),
-    muted:S.muted, tourSeen:S.tourSeen, chapters:S.chapters, tipsSeen:S.tipsSeen,
+    muted:S.muted, volume:S.volume, tourSeen:S.tourSeen, chapters:S.chapters, tipsSeen:S.tipsSeen,
     collection:S.collection, collNew:S.collNew, announcedModels:S.announcedModels,
-    inProgress:S.started && S.playing
+    story:S.story, itemsDone:S.itemsDone, bestStreak:S.bestStreak, debt:S.debt, money:S.money, up:S.up, bought:S.bought, inProgress:S.started && S.playing
   })); }catch(e){}
 }
 function load(){
-  try{ var d = JSON.parse(localStorage.getItem(SAVE_KEY)||"null"); if(!d) return;
+  try{ var d = readSave(); if(!d) return;
     S.day=d.day||1; S.muted=!!d.muted; S.tourSeen=!!d.tourSeen;
+    if(typeof d.volume === "number" && isFinite(d.volume)) S.volume = Math.max(0, Math.min(1, d.volume));
     S.chapters=d.chapters||{}; S.tipsSeen=d.tipsSeen||{};
+    S.story = (d.story && d.story.seen) ? d.story : {seen:{}, flags:{}};
+    if(typeof d.debt === "number") S.debt = d.debt;
+    if(typeof d.money === "number") S.money = d.money;
+    if(d.up && typeof d.up === "object"){ var fu = freshUp(); UPGRADES.forEach(function(x){ fu[x.id] = (d.up[x.id]|0); }); S.up = fu; }
+    S.bought = d.bought|0;
+    (function(){
+      var refund = 0, count = 0;
+      if(d.up && typeof d.up === "object") for(var rid in REMOVED_UPS){
+        var tt = Math.min(3, d.up[rid]|0);
+        for(var ti=0; ti<tt; ti++){ refund += REMOVED_UPS[rid][ti]; count++; }
+      }
+      if(refund > 0){
+        S.money += refund; S.bought = Math.max(0, S.bought - count); d.money = S.money; d.bought = S.bought; d.up = S.up;
+        try{ localStorage.setItem(SAVE_KEY, JSON.stringify(d)); }catch(e){}
+      }
+    })();
+    S.itemsDone = d.itemsDone|0; S.bestStreak = d.bestStreak|0;
     S.totalCaught=d.totalCaught||0; S.totalMissed=d.totalMissed||0;
     // Migrate old saves safely: no collection data -> empty stats, never crash.
     if(d.collection && typeof d.collection==="object"){
@@ -429,6 +1199,7 @@ function load(){
     if(d.collNew && typeof d.collNew==="object") S.collNew = d.collNew;
     if(d.announcedModels && typeof d.announcedModels==="object") S.announcedModels = d.announcedModels;
     if(d.inProgress){ pendingRestore=d; }
+    if(d._fromV1) save();                       // write the migrated run back under the version 2 key
   }catch(e){}
 }
 function bugScale(){ return Math.max(0.6, 1 - 0.05*(S.day-1)); }
@@ -455,7 +1226,7 @@ function audio(){
   if(AC) { if(AC.state==="suspended") AC.resume(); return AC; }
   try{
     AC = new (window.AudioContext||window.webkitAudioContext)();
-    masterGain = AC.createGain(); masterGain.gain.value = S.muted?0:0.5;
+    masterGain = AC.createGain(); masterGain.gain.value = S.muted?0:0.5*S.volume;
     masterGain.connect(AC.destination);
   }catch(e){}
   return AC;
@@ -585,7 +1356,7 @@ function buildSuitcase(){
   ];
   return {group:g, faces:faces, surface:col, name:"SUITCASE"};
 }
-function buildCrate(){
+function buildCrateSolid(){
   var g = new THREE.Group(); var W=2.2,H=1.8,D=1.5, col=0xf4a259, slat=0xbc6c25;
   var body = edges(box(W,H,D,col)); g.add(body);
   [-0.58,0,0.58].forEach(function(y){
@@ -605,6 +1376,35 @@ function buildCrate(){
   ];
   return {group:g, faces:faces, surface:col, name:"CRATE"};
 }
+function buildCrateOpen(){
+  var g = new THREE.Group(); var W=2.2,H=1.8,D=1.5, col=0xf4a259, slat=0xbc6c25, wall=0.1;
+  var th=1.5, cy=-0.15;
+  var t = buildTray(g, W,th,D, cy, wall, col, 0xffe6bf);
+  [-0.62,-0.1,0.4].forEach(function(y){
+    g.add(box(W+0.07,0.3,0.07,slat,0,y,D/2+0.02)); g.add(box(W+0.07,0.3,0.07,slat,0,y,-D/2-0.02));
+    g.add(box(0.07,0.3,D+0.07,slat,-W/2-0.02,y,0)); g.add(box(0.07,0.3,D+0.07,slat,W/2+0.02,y,0));
+  });
+  [-0.7,0.7].forEach(function(x){ g.add(box(0.24,th,0.07,slat,x,cy,D/2+0.04)); g.add(box(0.24,th,0.07,slat,x,cy,-D/2-0.04)); });
+  var lidH=0.3, pivot = new THREE.Group(); pivot.position.set(0, t.topY, -D/2); g.add(pivot);
+  pivot.add(edges(box(W+0.06,lidH,D+0.06,col,0,lidH/2,D/2)));
+  [-0.7,0.7].forEach(function(x){ pivot.add(box(0.24,0.06,D+0.1,slat,x,lidH+0.02,D/2)); });
+  var lidTop = face("lid-top",0,1,0,[P(0.4,t.topY+lidH+0.06,0.2),P(-0.55,t.topY+lidH+0.06,-0.2)]);
+  lidTop.parent = pivot;
+  var fy = t.floorY + 0.01;
+  var faces=[
+    face("front-slats",0,0,1,[P(-0.45,0.4,D/2+0.08),P(0.5,-0.1,D/2+0.08),P(-0.2,-0.62,D/2+0.08)]),
+    face("back-slats",0,0,-1,[P(0.45,-0.1,-D/2-0.08),P(-0.5,0.4,-D/2-0.08)]),
+    lidTop,
+    face("bottom",0,-1,0,[P(0.3,-0.9,0),P(-0.4,-0.9,0.2)]),
+    face("left-slats",-1,0,0,[P(-W/2-0.06,0.4,0.2),P(-W/2-0.06,-0.3,-0.3)]),
+    inside(face("inside-floor",0,1,0,[P(0.5,fy,0.2),P(-0.5,fy,-0.25),P(0,fy,0.35)])),
+    inside(face("inside-back",0,0,1,[P(0.5,0,-D/2+wall+0.02),P(-0.5,-0.3,-D/2+wall+0.02)])),
+    inside(face("inside-front",0,0,-1,[P(0.4,-0.2,D/2-wall-0.02)])),
+    inside(face("inside-side",1,0,0,[P(-W/2+wall+0.02,-0.2,0.1),P(-W/2+wall+0.02,0.1,-0.3)]))
+  ];
+  return {group:g, faces:faces, surface:col, name:"CRATE", open:{ lid:pivot, angle:-1.95, group:g }};
+}
+function buildCrate(){ return S.day >= 5 ? buildCrateOpen() : buildCrateSolid(); }
 function buildRobot(){
   var g = new THREE.Group(); var bodyCol=0xffafcc, headCol=0x4cc9f0;
   var body = edges(box(1.3,1.5,0.8,bodyCol,0,-0.1,0)); g.add(body);
@@ -657,28 +1457,52 @@ function buildHelmet(){
   ];
   return {group:g, faces:faces, surface:col, name:"HELMET"};
 }
+/* Hollow tray: floor and four walls with a lighter inside, so a lid can swing open on it. */
+function buildTray(g, W,H,D, cy, wall, colOut, colIn){
+  var bottom = cy - H/2, topY = cy + H/2;
+  g.add(edges(box(W,wall,D,colOut,0,bottom+wall/2,0)));
+  g.add(edges(box(W,H,wall,colOut,0,cy,D/2-wall/2)));
+  g.add(edges(box(W,H,wall,colOut,0,cy,-D/2+wall/2)));
+  g.add(edges(box(wall,H,D-2*wall,colOut,-W/2+wall/2,cy,0)));
+  g.add(edges(box(wall,H,D-2*wall,colOut,W/2-wall/2,cy,0)));
+  var iw = W-2*wall, id = D-2*wall, ih = H-wall, iy = bottom+wall+ih/2;
+  g.add(box(iw,0.02,id,colIn,0,bottom+wall+0.01,0));
+  g.add(box(iw,ih,0.02,colIn,0,iy,-D/2+wall+0.01));
+  g.add(box(iw,ih,0.02,colIn,0,iy,D/2-wall-0.01));
+  g.add(box(0.02,ih,id,colIn,-W/2+wall+0.01,iy,0));
+  g.add(box(0.02,ih,id,colIn,W/2-wall-0.01,iy,0));
+  return { floorY: bottom+wall+0.02, topY: topY };
+}
+function inside(f){ f.inside = true; return f; }
 function buildLunchbox(){
-  var g = new THREE.Group(); var W=2.2,H=1.35,D=1.0, col=0xff5d5d;
-  var body = edges(box(W,H,D,col,0,-0.12,0)); g.add(body);
-  var lid = edges(box(W+0.08,0.3,D+0.08,0xffd23f,0,0.62,0)); g.add(lid);
-  // handle on the lid
-  var hm = mat(0x141414);
-  [-0.4,0.4].forEach(function(x){ var post=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.2,0.09),hm); post.position.set(x,0.86,0); g.add(post); });
-  var bar = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.1,0.12), hm); bar.position.set(0,0.98,0); g.add(bar);
-  // clasp on the front
-  var clasp = box(0.34,0.42,0.1,0x141414,0,0.32,D/2+0.04); g.add(clasp);
-  var claspIn = box(0.2,0.26,0.05,0xffd23f,0,0.32,D/2+0.1); g.add(claspIn);
-  // corner guards
+  var g = new THREE.Group(); var W=2.2,H=1.35,D=1.0, col=0xff5d5d, cy=-0.12, wall=0.09;
+  var t = buildTray(g, W,H,D, cy, wall, col, 0xffe3d6);
+  // lid: hinged along the back top edge
+  var lidH=0.3, pivot = new THREE.Group(); pivot.position.set(0, t.topY, -D/2-0.04); g.add(pivot);
+  var lid = edges(box(W+0.08,lidH,D+0.08,0xffd23f,0,lidH/2,(D+0.08)/2)); pivot.add(lid);
+  var hm = mat(0x141414), lz = (D+0.08)/2;
+  [-0.4,0.4].forEach(function(x){ var post=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.2,0.09),hm); post.position.set(x,lidH+0.1,lz); pivot.add(post); });
+  var bar = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.1,0.12), hm); bar.position.set(0,lidH+0.25,lz); pivot.add(bar);
+  // clasp plate on the front of the tray
+  g.add(box(0.34,0.42,0.1,0x141414,0,0.32,D/2+0.04));
+  g.add(box(0.2,0.26,0.05,0xffd23f,0,0.32,D/2+0.1));
   [-1,1].forEach(function(sx){ [-1,1].forEach(function(sz){
-    var c=box(0.22,0.22,0.22,0x141414,sx*(W/2-0.02),-0.72,sz*(D/2-0.02)); g.add(c); }); });
+    g.add(box(0.22,0.22,0.22,0x141414,sx*(W/2-0.02),-0.72,sz*(D/2-0.02))); }); });
+  var lidTop = face("lid-top",0,1,0,[P(0.55,t.topY+lidH+0.01,0.15),P(-0.6,t.topY+lidH+0.01,-0.15),P(0.1,t.topY+lidH+0.31,0)]);
+  lidTop.parent = pivot;
+  var fy = t.floorY + 0.01;
   var faces=[
     face("clasp",0,0,1,[P(0.3,0.34,D/2+0.08),P(-0.28,0.3,D/2+0.08),P(0.75,-0.3,D/2)]),
     face("corners",0.3,-1,0.3,[P(0.95,-0.82,0.35),P(-0.95,-0.82,-0.3),P(-0.6,-0.82,0.42)]),
     face("back",0,0,-1,[P(0.6,0.1,-D/2),P(-0.55,-0.4,-D/2),P(0,-0.6,-D/2)]),
-    face("lid-top",0,1,0,[P(0.55,0.79,0.15),P(-0.6,0.79,-0.15),P(0.1,1.0,0)]),
-    face("side",1,0,0,[P(W/2,0.1,0.2),P(W/2,-0.45,-0.15)])
+    lidTop,
+    face("side",1,0,0,[P(W/2,0.1,0.2),P(W/2,-0.45,-0.15)]),
+    inside(face("inside-floor",0,1,0,[P(0.5,fy,0.1),P(-0.55,fy,-0.15),P(0,fy,0.2)])),
+    inside(face("inside-back",0,0,1,[P(0.6,-0.1,-D/2+wall+0.02),P(-0.5,0.2,-D/2+wall+0.02),P(0,-0.4,-D/2+wall+0.02)])),
+    inside(face("inside-front",0,0,-1,[P(0.5,-0.1,D/2-wall-0.02),P(-0.6,0.2,D/2-wall-0.02)])),
+    inside(face("inside-side",1,0,0,[P(-W/2+wall+0.02,0,0.1),P(-W/2+wall+0.02,-0.4,-0.15)]))
   ];
-  return {group:g, faces:faces, surface:col, name:"LUNCHBOX"};
+  return {group:g, faces:faces, surface:col, name:"LUNCHBOX", open:{ lid:pivot, angle:-1.95, group:g }};
 }
 function buildPlant(){
   var g = new THREE.Group(); var potCol=0xe4572e, leafCol=0x06d6a0;
@@ -809,7 +1633,9 @@ function spawnObject(force){
   else { vChip.style.display="block"; vChip.className = tier.css; vChip.id="variant-chip"; vChip.textContent = tier.label + " " + built.name; }
   var count;
   if(typeof forceCount === "number") count = forceCount;
-  else { var r=Math.random(); count = r<0.25?0 : r<0.55?1 : r<0.8?2 : 3; }
+  else { var r=Math.random(), k = S.day >= MILESTONE.ramp ? 0.1 : 0; count = r<0.25-k?0 : r<0.55-k?1 : r<0.8-k?2 : 3; }
+  var hazard = S.day >= MILESTONE.hazardFromDay && Math.random() < hazardChance(S.day);
+  if(hazard && count < 2) count = 2;
   var faces = shuffle(built.faces.slice());
   var types = ["mite","beetle","camo"];
   var bugs = [];
@@ -820,19 +1646,30 @@ function spawnObject(force){
     var type = forceType || types[Math.floor(Math.random()*types.length)];
     var bg = buildBug(type, built.surface, sc * (type==="mite"?1:1));
     var pos = pt.clone().add(f.normal.clone().multiplyScalar(0.02));
+    var parentObj = f.parent || null;
+    if(parentObj) pos.sub(parentObj.position);        // lid bugs ride the lid
     bg.position.copy(pos);
     bg.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), f.normal.clone());
-    spin.add(bg);
+    (parentObj || spin).add(bg);
+    var isHidden = !!(f.inside && built.open);
+    bg.visible = !isHidden;
     var tangent = new THREE.Vector3().crossVectors(f.normal, new THREE.Vector3(0,1,0));
     if(tangent.lengthSq()<0.01) tangent.set(1,0,0); tangent.normalize();
     var bug = { id:(++bugSeq), type:type, face:f.id, group:bg, hit:bg.userData.hit,
       normal:f.normal.clone(), basePos:pos.clone(), tangent:tangent,
-      phase:Math.random()*6.28, speed:0.5+Math.random()*0.5, alive:true, shimmer:bg.userData.shimmer };
+      phase:Math.random()*6.28, speed:0.5+Math.random()*0.5, alive:true, shimmer:bg.userData.shimmer, hidden:isHidden };
+    if(parentObj){
+      (function(baseN, po){ Object.defineProperty(bug, "normal", { configurable:true, get:function(){ return baseN.clone().applyQuaternion(po.quaternion); } }); })(f.normal.clone(), parentObj);
+    }
     bg.userData.bugRef = bug; bug.hit.userData.bugRef = bug;
+    bug.hit.scale.multiplyScalar(MAGNIFY[S.up.magnifier || 0]); bug.slow = (type==="beetle") ? BEETLE_SLOW[S.up.motion || 0] : 1;
     bugs.push(bug);
   }
-  S.current = { typeName:built.name, tier:tier, ringMat:variant.ringMat, sparkles:variant.sparkles, total:count, found:0, bugs:bugs };
+  S.current = { open: built.open ? { lid:built.open.lid, angle:built.open.angle, group:built.open.group, opened:false } : null, hazard:hazard, typeName:built.name, tier:tier, ringMat:variant.ringMat, sparkles:variant.sparkles, total:count, found:0, bugs:bugs };
+  S.sweepLeft = SWEEPS[S.up.sweep || 0]; refreshSweep();
   setSpin(0.6, -0.25);
+  var hintEl = $("drag-hint"); if(hintEl && S.tourStep < 0) hintEl.textContent = built.open ? ("TAP THE " + built.name + " TO OPEN IT") : "DRAG TO SPIN";
+  if(built.open && S.tourSeen && !S.tipsSeen.shut){ S.tipsSeen.shut = 1; tipQueue.push("This one arrives shut. Tap it to open it up, then look inside as well as outside."); }
   holder.position.x = -4.6; rollIn.active = true; rollIn.t = 0;
   S.busy = true;
   sndWhirr();
@@ -852,7 +1689,7 @@ function updateHUD(){
   pipsEl.innerHTML = "";
   for(var i=0;i<S.quota;i++){ var p=document.createElement("span"); p.className="pip"+(i<S.objectIndex?" done":""); pipsEl.appendChild(p); }
   for(var s2=1;s2<=3;s2++){ $("sp"+s2).className = "spip" + (S.strikes>=s2?" on":""); }
-  itemChip.textContent = S.current ? ("ITEM " + Math.min(S.objectIndex+1,S.quota) + "/" + S.quota + " · " + S.current.typeName) : ("ITEM " + Math.min(S.objectIndex+1,S.quota) + "/" + S.quota);
+  itemChip.textContent = S.current ? ("ITEM " + Math.min(S.objectIndex+1,S.quota) + "/" + S.quota + " · " + (S.current.hazard ? "HAZARD " : "") + S.current.typeName) : ("ITEM " + Math.min(S.objectIndex+1,S.quota) + "/" + S.quota);
   // Collection button joins the main screen only after the first completed inspection.
   var ct = collectionTotals();
   $("coll-btn").style.display = (ct.passed + ct.failed) > 0 ? "flex" : "none";
@@ -998,6 +1835,7 @@ function bindPointer(){
   var el = canvasEl();
   el.style.touchAction="none";
   el.addEventListener("pointerdown", function(e){
+    if(Cutscene && Cutscene.active) return;
     audio(); dragging=true; dragDist=0; downX=lastX=e.clientX; downY=lastY=e.clientY; downT=performance.now();
     velY=0; velX=0; el.setPointerCapture(e.pointerId);
   });
@@ -1022,19 +1860,45 @@ function bindPointer(){
 var raycaster = null, pointerV = null;
 function tryTap(e){
   if(!S.playing || S.busy || rollIn.active || S.tourStep===1) return;
+  if(glareBlocks(e.clientX, e.clientY)) return;
   if(!raycaster){ raycaster = new THREE.Raycaster(); pointerV = new THREE.Vector2(); }
   var rect = canvasEl().getBoundingClientRect();
   pointerV.x = ((e.clientX-rect.left)/rect.width)*2-1;
   pointerV.y = -((e.clientY-rect.top)/rect.height)*2+1;
   raycaster.setFromCamera(pointerV, camera);
   var hits = [];
-  aliveBugs().forEach(function(b){ hits.push(b.hit); });
+  aliveBugs().forEach(function(b){ if(!b.hidden) hits.push(b.hit); });
   var res = raycaster.intersectObjects(hits, false);
-  if(res.length){ collectBug(res[0].object.userData.bugRef, e.clientX, e.clientY); }
+  if(res.length){ collectBug(res[0].object.userData.bugRef, e.clientX, e.clientY); return; }
+  var cur = S.current;
+  if(cur && cur.open && !cur.open.opened){
+    var onItem = raycaster.intersectObject(cur.open.group, true);
+    if(onItem.length){ openItem(false); return; }
+  }
+  if(S.up.probe){ probeNear(e.clientX, e.clientY); }
+}
+function openItem(silentSpin){
+  var cur = S.current, o = cur && cur.open; if(!o || o.opened) return;
+  o.opened = true;
+  cur.bugs.forEach(function(b){ if(b.hidden){ b.hidden = false; b.group.visible = true; } });
+  if(!S.muted && audio()){ tone(240,380,0.14,"square",0.12); setTimeout(function(){ tone(380,520,0.1,"square",0.1); }, 110); }
+  var hintEl = $("drag-hint"); if(hintEl && S.tourStep < 0) hintEl.textContent = "DRAG TO SPIN";
+  if(!silentSpin){
+    guideSpin.target = new THREE.Vector3(0,0.9,0.45).normalize(); guideSpin.t = 0; guideSpin.active = true; guideSpin.onDone = null;
+  }
+}
+function probeNear(cx, cy){
+  var best = null, bd = 70;                           // within 70px of the tap
+  aliveBugs().forEach(function(b){
+    if(b.type !== "beetle") return;
+    var sp = bugScreenPos(b), d = Math.hypot(sp.x - cx, sp.y - cy);
+    if(d < bd){ bd = d; best = b; }
+  });
+  if(best){ best.pinUntil = performance.now()/1000 + PROBE_SECS[S.up.probe]; sndTick(); }
 }
 function collectBug(bug, cx, cy){
   if(!bug || !bug.alive) return;
-  bug.alive=false; spin.remove(bug.group);
+  bug.alive=false; if(bug.group.parent) bug.group.parent.remove(bug.group);
   S.current.found++; S.totalCaught++; S.dayCaught++;
   sndPop(); setTimeout(sndTick, 60);
   if(cx==null){ var sp = bugScreenPos(bug); cx=sp.x; cy=sp.y; }
@@ -1056,6 +1920,8 @@ function showReveal(html, bad){
 }
 function hideReveal(){ revealEl.style.display="none"; }
 function doStamp(){
+  if(Cutscene && Cutscene.active) return;
+  if(Dialogue && Dialogue.isOpen()) return;
   if(!S.playing || S.busy || !S.current) return;
   audio();
   if(S.tourStep>=0) endTour();
@@ -1063,6 +1929,7 @@ function doStamp(){
   S.busy = true;
   var remaining = aliveBugs();
   var missed = remaining.length;
+  settleItem(missed);
   var total = S.current.total, found = S.current.found;
   // Collection bookkeeping: every stamped object lands in its model x tier entry.
   var centry = collEntry(S.current.typeName, S.current.tier.id, true);
@@ -1075,9 +1942,11 @@ function doStamp(){
   stampEl.classList.add("slam");
   wrap.classList.remove("shake"); void wrap.offsetWidth; wrap.classList.add("shake");
   if(missed){
+    openItem(true);
     sndStamp(); setTimeout(sndBuzz, 130);
-    S.strikes++; S.totalMissed += missed; S.dayMissed += missed;
-    showReveal("MISSED " + missed + " BUG" + (missed>1?"S":"") + " — YOU FOUND " + found + " OF " + total + ". STRIKE " + S.strikes + " OF 3.", true);
+    S.totalMissed += missed; S.dayMissed += missed;
+    var shielded = S.shieldLeft > 0; if(shielded) S.shieldLeft--; else S.strikes++;
+    showReveal(shielded ? "MISSED " + missed + " BUG" + (missed>1?"S":"") + " — SHIELD HELD, NO STRIKE." : "MISSED " + missed + " BUG" + (missed>1?"S":"") + " — YOU FOUND " + found + " OF " + total + ". STRIKE " + S.strikes + " OF 3.", true);
     remaining.forEach(function(b){
       var ring = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.035, 8, 24),
         new THREE.MeshBasicMaterial({color:0xff2222}));
@@ -1102,6 +1971,7 @@ function afterStamp(){
   S.objectIndex++;
   save();
   if(S.strikes>=3){ fired(); return; }
+  if(S.objectIndex === Math.floor(S.quota/2) && S.objectIndex < S.quota){ playCheckins("half", null); }
   if(S.objectIndex>=S.quota){ dayComplete(); return; }
   S.busy=false;
   safeSpawn();
@@ -1115,12 +1985,14 @@ function forceNext(){
 /* ================= DAY FLOW ================= */
 function startDay(n, restore){
   S.day=n; S.quota=quotaFor(n); S.objectIndex=0; S.strikes=0;
-  S.dayCaught=0; S.dayMissed=0; S.dayShiny=0; S.timer=480; S.playing=true; S.started=true;
+  S.dayCaught=0; S.dayMissed=0; S.dayShiny=0; S.timer=480; S.playing=true; S.started=true; musicStart();
   if(restore){
     S.objectIndex=Math.min(restore.objectIndex||0, S.quota-1);
     S.strikes=restore.strikes||0; S.dayCaught=restore.dayCaught||0; S.dayMissed=restore.dayMissed||0;
     S.timer=restore.timer||480;
   }
+  if(!restore){ S.timer += RATION_TIME[S.up.ration || 0]; S.dayEarned = 0; S.streak = 0; }
+  S.shieldLeft = SHIELD_STRIKES[S.up.shield || 0];
   hideAllOverlays();
   var firstEver = (n===1 && S.objectIndex===0 && !S.tourSeen);
   // Guided first inspection: a suitcase with exactly one mite, taught step by step.
@@ -1138,7 +2010,7 @@ function startDay(n, restore){
   updateHUD(); save();
 }
 function dayComplete(){
-  S.playing=false; S.busy=false;
+  S.playing=false; S.busy=false; settleDay(true);
   S.chapters[S.day] = true; save();
   sndFanfare();
   $("done-title").textContent = "Day " + S.day + " cleared!";
@@ -1153,18 +2025,18 @@ function dayComplete(){
   showOverlay("done-overlay");
 }
 function fired(){
-  S.playing=false; S.busy=false; save();
+  S.playing=false; S.busy=false; settleDay(false);
   $("f-caught").textContent = S.totalCaught;
   $("f-missed").textContent = S.totalMissed;
   showOverlay("fired-overlay");
 }
 function shiftOver(){
-  S.playing=false; S.busy=false; save();
+  S.playing=false; S.busy=false; settleDay(false);
   showOverlay("over-overlay");
 }
 
 /* ================= OVERLAY MANAGER ================= */
-var overlayIds = ["story-overlay","chapter-overlay","done-overlay","fired-overlay","over-overlay"];
+var overlayIds = ["story-overlay","chapter-overlay","done-overlay","fired-overlay","over-overlay","shop-overlay","end-overlay","choice-overlay","menu-overlay","confirm-overlay"];
 function hideAllOverlays(){ overlayIds.forEach(function(id){ $(id).classList.remove("show"); }); }
 function showOverlay(id){ hideAllOverlays(); $(id).classList.add("show"); }
 function anyOverlayOpen(){ return overlayIds.some(function(id){ return $(id).classList.contains("show"); }); }
@@ -1185,6 +2057,8 @@ $("story-next").addEventListener("click", function(){
   audio();
   if(storyIdx < STORY.length-1){ storyIdx++; renderStory(); return; }
   hideAllOverlays();
+  var opening = !pendingRestore && !S.started && S.day === 1;   // the first ever start plays the opening once
+  if(opening && Cutscene.play(SCENES.intro, function(){ startDay(1); })){ pendingRestore = null; return; }
   startDay(pendingRestore ? pendingRestore.day||S.day : S.day, pendingRestore);
   pendingRestore = null;
 });
@@ -1193,19 +2067,20 @@ $("story-next").addEventListener("click", function(){
 passBtn.addEventListener("click", function(){ doStamp(); });
 $("next-day-btn").addEventListener("click", function(){
   audio(); hideAllOverlays();
+  if(S.day === FINAL_DAY && !S.story.flags.ended){ playEnding(); return; }
   var clearedDay = S.day;
   $("chapter-title").textContent = "After Day " + clearedDay;
   $("chapter-body").textContent = chapterFor(clearedDay);
   showOverlay("chapter-overlay");
 });
-$("chapter-next").addEventListener("click", function(){ audio(); startDay(S.day+1); });
+$("chapter-next").addEventListener("click", function(){ audio(); hideAllOverlays(); playCheckins("clear", function(){ maybeMidpoint(function(){ openShop(function(){ startDay(S.day+1); }); }); }); });
 $("retry-btn").addEventListener("click", function(){ audio(); startDay(S.day); });
 $("over-retry-btn").addEventListener("click", function(){ audio(); startDay(S.day); });
 
 /* ================= SETTINGS SHEET ================= */
 var sheetOpen=false;
 function showSec(id){
-  ["sec-main","sec-journal","sec-rules","sec-abandon","sec-collection"].forEach(function(s){ $(s).classList.toggle("show", s===id); });
+  ["sec-main","sec-journal","sec-rules","sec-abandon","sec-collection","sec-credits"].forEach(function(s){ $(s).classList.toggle("show", s===id); });
   if(id==="sec-journal") renderJournal();
   if(id==="sec-collection") renderCollection();
 }
@@ -1237,28 +2112,42 @@ function renderCollection(){
   // Entries stop glowing once they've been seen in the sheet.
   if(Object.keys(S.collNew).length){ S.collNew = {}; save(); }
 }
-function openSheet(){ sheetOpen=true; $("sheet").classList.add("show"); showSec("sec-main"); syncMute(); }
+function openSheet(){ sheetOpen=true; $("sheet-card").classList.toggle("menu-mode", $("menu-overlay").classList.contains("show")); $("sheet").classList.add("show"); showSec("sec-main"); syncMute(); syncVolume(); }
 function closeSheet(){ sheetOpen=false; $("sheet").classList.remove("show"); }
 $("settings-btn").addEventListener("click", function(){ audio(); openSheet(); });
 $("sheet-close").addEventListener("click", closeSheet);
 $("sheet").addEventListener("click", function(e){ if(e.target===$("sheet")) closeSheet(); });
 document.querySelectorAll("[data-back]").forEach(function(b){ b.addEventListener("click", function(){ showSec("sec-main"); }); });
+function syncVolume(){ var r=$("vol-range"); if(r) r.value = Math.round(S.volume*100); }
 function syncMute(){ var p=$("mute-pill"); p.textContent = S.muted?"OFF":"ON"; p.className="pill-toggle"+(S.muted?" off":""); }
 $("mute-btn").addEventListener("click", function(){
-  S.muted=!S.muted; if(masterGain) masterGain.gain.value = S.muted?0:0.5;
+  S.muted=!S.muted; if(masterGain) masterGain.gain.value = S.muted?0:0.5*S.volume;
   syncMute(); save(); if(!S.muted) sndTick();
+});
+$("vol-range").addEventListener("input", function(){
+  S.volume = Math.max(0, Math.min(1, (+this.value)/100));
+  if(masterGain) masterGain.gain.value = S.muted?0:0.5*S.volume;
+});
+$("vol-range").addEventListener("change", function(){ audio(); if(masterGain) masterGain.gain.value = S.muted?0:0.5*S.volume; save(); if(!S.muted) sndTick(); });
+$("credits-btn").addEventListener("click", function(){ showSec("sec-credits"); });
+$("menu-btn").addEventListener("click", function(){
+  save();
+  try{ sessionStorage.setItem("abi-skip-load","1"); }catch(e){}
+  location.reload();
 });
 $("collection-btn").addEventListener("click", function(){ showSec("sec-collection"); });
 $("coll-btn").addEventListener("click", function(){ audio(); openSheet(); showSec("sec-collection"); });
 $("journal-btn").addEventListener("click", function(){ showSec("sec-journal"); });
 $("rules-btn").addEventListener("click", function(){ showSec("sec-rules"); });
 $("abandon-btn").addEventListener("click", function(){ showSec("sec-abandon"); });
-$("abandon-confirm").addEventListener("click", function(){
-  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+function wipeRun(){
+  try{ localStorage.removeItem(SAVE_KEY); localStorage.removeItem(OLD_SAVE_KEY); }catch(e){}
   S.day=1; S.totalCaught=0; S.totalMissed=0; S.chapters={}; S.tipsSeen={}; S.tourSeen=false;
-  S.collection={}; S.collNew={}; S.announcedModels={}; S.dayShiny=0; forcedTier=null;
-  pendingRestore=null; closeSheet(); storyIdx=0; renderStory();
-  S.playing=false; S.started=false;
+  S.collection={}; S.collNew={}; S.announcedModels={}; S.dayShiny=0; forcedTier=null; S.story={seen:{}, flags:{}}; S.debt=DEBT_START; S.money=0; S.up=freshUp(); S.bought=0; S.dayEarned=0; S.itemsDone=0; S.bestStreak=0;
+  pendingRestore=null; S.playing=false; S.started=false;
+}
+$("abandon-confirm").addEventListener("click", function(){
+  wipeRun(); closeSheet(); storyIdx=0; renderStory();
   showOverlay("story-overlay");
 });
 function renderJournal(){
@@ -1315,6 +2204,10 @@ function animate(){
     holder.position.x = -4.6*(1-ease);
     if(k>=1){ rollIn.active=false; holder.position.x=0; if(S.playing) S.busy=false; }
   }
+  if(S.current && S.current.open){
+    var op = S.current.open, tgtA = op.opened ? op.angle : 0;
+    op.lid.rotation.x += (tgtA - op.lid.rotation.x) * Math.min(1, dt*7);
+  }
   if(S.current){
     if(S.current.ringMat){ S.current.ringMat.opacity = 0.6 + 0.35*(0.5+0.5*Math.sin(t*3)); }
     if(S.current.sparkles){
@@ -1327,22 +2220,26 @@ function animate(){
     S.current.bugs.forEach(function(b){
       if(!b.alive) return;
       if(b.type==="beetle"){
-        var off = Math.sin(t*b.speed*2 + b.phase)*0.17;
+        var sp2 = (b.slow||1)*b.speed*2, pinned = b.pinUntil && t < b.pinUntil;
+        var off = pinned ? 0 : Math.sin(t*sp2 + b.phase)*0.17;
         b.group.position.copy(b.basePos).add(b.tangent.clone().multiplyScalar(off));
-        b.group.rotation.z = Math.cos(t*b.speed*2 + b.phase)*0.15;
+        b.group.rotation.z = pinned ? 0 : Math.cos(t*sp2 + b.phase)*0.15;
       }
-      if(b.shimmer){ b.shimmer.material.opacity = 0.06 + 0.09*(0.5+0.5*Math.sin(t*3.2 + b.phase)); }
+      if(b.shimmer){ b.shimmer.material.opacity = (0.06 + 0.09*(0.5+0.5*Math.sin(t*3.2 + b.phase))) * UV_SHIMMER[S.up.uv || 0]; }
       if(b.revealRing){ var s = 1 + 0.25*Math.sin(t*10); b.revealRing.scale.set(s,s,s); }
       if(b.guideRing){ var gs = 1 + 0.3*Math.sin(t*7); b.guideRing.scale.set(gs,gs,gs); }
     });
   }
-  if(S.playing && !anyOverlayOpen() && !sheetOpen){
+  if(S.playing && !anyOverlayOpen() && !sheetOpen && !(Cutscene && Cutscene.active) && !(Dialogue && Dialogue.isOpen())){
     S.timer -= dt;
     if(S.timer<=0){ S.timer=0; updateHUD(); shiftOver(); }
   }
   hudTick += dt;
   if(hudTick>0.25){ hudTick=0; if(S.playing) { timerEl.textContent = fmtTime(S.timer); timerEl.className = S.timer<=60?"low":""; } }
+  if(Cutscene) Cutscene.tick(dt, t);
+  glareTick(dt);
   renderer.render(scene, camera);
+  if(Portrait) Portrait.tick(t);
 }
 
 /* ================= TEST HOOKS ================= */
@@ -1377,15 +2274,900 @@ window.__abi.bugs = function(){
 };
 window.__abi.stamp = function(){ doStamp(); };
 window.__abi.nextObject = function(){ if(S.playing && !S.busy) forceNext(); };
+window.__abi.finishDay = function(){ S.objectIndex = S.quota - 1; afterStamp(); };
+window.__abi.halfway = function(){ S.objectIndex = Math.floor(S.quota/2) - 1; afterStamp(); };
+window.__abi.money = function(){ return S.money; };
+window.__abi.debt = function(){ return S.debt; };
+window.__abi.up = function(){ return JSON.parse(JSON.stringify(S.up)); };
+window.__abi.grant = function(n){ S.money += n; };
+window.__abi.refreshShop = function(){ renderShop(); };
+window.__abi.hazardNow = function(){ return !!(S.current && S.current.hazard); };
+window.__abi.glareOn = function(){ return glare.on; };
+window.__abi.glitch = function(){ crtGlitch(); };
+window.__abi.spawnModel = function(model, count, type){ if(S.playing){ S.busy=false; safeSpawn({ model:model, count:count, type:type||null }); } };
+window.__abi.itemState = function(){ var c=S.current; if(!c) return null; return { open: c.open ? c.open.opened : null, lid: c.open ? +c.open.lid.rotation.x.toFixed(2) : null, hidden: c.bugs.filter(function(b){return b.hidden;}).length, alive: aliveBugs().length, name:c.typeName, busy:S.busy, rolling:rollIn.active }; };
+window.__abi.runMidpoint = function(){ S.story.flags.midpoint = false; maybeMidpoint(function(){}); };
+window.__abi.clearAll = function(){ aliveBugs().forEach(function(b){ collectBug(b); }); };
+window.__abi.story = function(){ return JSON.parse(JSON.stringify(S.story)); };
 window.__abi.setDay = function(n){ hideAllOverlays(); closeSheet(); startDay(Math.max(1, n|0)); };
+
+/* ================= PORTRAIT + DIALOGUE (task 3) ================= */
+/* Portrait: one bust that shows whoever is speaking. Busts are built on first use and kept, so switching is instant.
+   Dialogue: a box with a name tag, typed text, and tap-to-finish / tap-to-continue. Story code calls Dialogue.play(lines, done).
+   A line is { who:"vex"|"pip"|...|null, text:"...", mood:0..1 }. who:null is the narrator (no portrait, "SHIFT LOG" tag). */
+var PORTRAIT_W = 92, PORTRAIT_H = 118;
+var reducedMotion = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+var Portrait = null, Dialogue = null;
+function initPortrait(){
+  var host = $("portrait");
+  var SS = window.StationSpecies;
+  if(!host || !SS || !THREE) return;
+  try{
+    SS.configure({linear:false});                       // the game does no colour management: raw hex, like its own materials
+    var pr = new THREE.WebGLRenderer({antialias:true, alpha:true});
+    pr.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    pr.setSize(PORTRAIT_W, PORTRAIT_H, false);
+    host.insertBefore(pr.domElement, host.firstChild);
+    var ps = new THREE.Scene();
+    ps.add(new THREE.AmbientLight(0xffffff, 0.8));
+    var key = new THREE.DirectionalLight(0xffffff, 0.9); key.position.set(2, 4, 3); ps.add(key);
+    var pc = new THREE.PerspectiveCamera(36, PORTRAIT_W/PORTRAIT_H, 0.1, 20);
+    var rigs = {}, cur = null, mood = 0.2;
+    var caption = host.querySelector("span");
+    // the pose helper reads both species; a stand-in fills the side nobody is speaking with
+    var stand = { tarnak:new THREE.Object3D(), oolun:new THREE.Object3D() };
+    stand.tarnak.userData.head = new THREE.Object3D(); stand.oolun.userData.head = new THREE.Object3D();
+    function frame(sp){                                  // Tarnak sit higher; Oolun are narrower and taller
+      if(sp === "oolun") pc.position.set(0, 1.92, 2.8), pc.lookAt(0, 1.92, 0);   // head, tendrils and shoulders
+      else               pc.position.set(0, 1.65, 3.2), pc.lookAt(0, 1.65, 0);
+      pc.updateMatrixWorld(true);
+    }
+    Portrait = {
+      show: function(id, m){
+        if(!id){ host.classList.add("hidden"); if(cur) cur.visible = false; cur = null; return; }
+        var P = SS.CHARACTERS[id]; if(!P) return;
+        if(!rigs[id]){ rigs[id] = SS.buildCharacter(id); rigs[id].visible = false; ps.add(rigs[id]); }
+        if(cur !== rigs[id]){ if(cur) cur.visible = false; cur = rigs[id]; cur.visible = true; frame(P.species); }
+        host.classList.remove("hidden");
+        caption.textContent = P.name.split(" ").pop().toUpperCase();
+        mood = m == null ? 0.2 : m;
+      },
+      tick: function(t){
+        if(!cur || host.classList.contains("hidden")) return;
+        try{
+          var sp = cur.userData.character && SS.CHARACTERS[cur.userData.character].species;
+          var st = { S:{ stress:mood, mood:mood }, reduced:reducedMotion,
+                     tarnak: sp === "tarnak" ? cur : stand.tarnak, oolun: sp === "oolun" ? cur : stand.oolun };
+          SS.poseSpecies(t, st);
+          pr.render(ps, pc);
+        }catch(e){ console.error(e); Portrait = null; }
+      }
+    };
+  }catch(e){
+    console.error(e); host.style.display = "none"; Portrait = null;   // decoration only: never let it take the game down
+  }
+}
+(function(){
+  var box = $("dialogue"), nameEl = $("dlg-name"), textEl = $("dlg-text"), nextEl = $("dlg-next"), skipEl = $("dlg-skip");
+  var queue = [], full = "", shown = 0, typer = null, onDone = null, live = false, CPS = 42;
+  function speakerName(who){
+    if(!who) return "SHIFT LOG";
+    var c = window.StationSpecies && window.StationSpecies.CHARACTERS[who];
+    return c ? c.name.split(" ").pop().toUpperCase() : String(who).toUpperCase();
+  }
+  function stopTyper(){ if(typer){ clearInterval(typer); typer = null; } }
+  function finishLine(){                                  // show the whole line at once
+    stopTyper(); shown = full.length; textEl.textContent = full;
+    nextEl.textContent = queue.length ? "NEXT ▶" : "DONE ▶";
+  }
+  function showLine(line){
+    full = String(line.text || ""); shown = 0; textEl.textContent = "";
+    nameEl.textContent = line.tag || speakerName(line.who);
+    if(Portrait) Portrait.show(line.who || null, line.mood);
+    nextEl.textContent = "…";
+    if(reducedMotion){ finishLine(); return; }
+    typer = setInterval(function(){
+      shown = Math.min(full.length, shown + 1);
+      textEl.textContent = full.slice(0, shown);
+      if(shown >= full.length) finishLine();
+    }, 1000 / CPS);
+  }
+  function advance(){
+    if(typer){ finishLine(); return; }                   // a tap while typing shows the whole line
+    if(!queue.length){ close(true); return; }
+    showLine(queue.shift());
+  }
+  function close(fromEnd){
+    stopTyper(); queue = []; live = false;
+    box.classList.add("hidden"); stage.classList.remove("dlg-on");
+    if(Portrait) Portrait.show(null);
+    var cb = onDone; onDone = null;
+    if(cb && fromEnd !== "skip-silent") { try{ cb(); }catch(e){ console.error(e); } }
+  }
+  Dialogue = {
+    play: function(lines, done){
+      if(!lines || !lines.length){ if(done) done(); return; }
+      stopTyper(); queue = lines.slice(); onDone = done || null; live = true;
+      box.classList.remove("hidden"); stage.classList.add("dlg-on");
+      advance();
+    },
+    skip: function(){ if(live) close(false); },
+    isOpen: function(){ return live; }
+  };
+  window.Dialogue = Dialogue; window.Portrait = Portrait;   // story code and previews use these
+  box.addEventListener("click", function(e){ if(e.target === skipEl) return; advance(); });
+  skipEl.addEventListener("click", function(e){ e.stopPropagation(); if(window.Cutscene && Cutscene.active) Cutscene.skip(); else close(false); });
+})();
+
+/* ================= CUTSCENES (task 4) ================= */
+/* A cutscene is a list of beats run one after another in the 3D scene:
+     { cam:{pos,look,fov}, dur }      move the camera (dur 0 = cut)
+     { move:id, to:[x,y,z], yaw, dur } walk a cast member across the stage
+     { cast:id, at:[x,y,z], yaw }      place a character (instant)
+     { hide:id }                       take a character off stage
+     { wait:s }                        hold
+     { say:[lines] }                   dialogue; waits until the box is done
+     { letter:true|false, dur }        letterbox bars in or out
+     { shake:amount, dur }             camera trauma
+     { fn:function(){} }               any one-off (sound, state change)
+   Skip fast-forwards: timed beats finish at once, dialogue closes, and the end state is kept. */
+var Cutscene = { active:false };
+(function(){
+  var cast = {}, script = null, idx = 0, beat = null, t = 0, dur = 0, waiting = false, skipping = false, done = null;
+  var saved = null, camFrom = null, lookFrom = null, fovFrom = 42, lookNow = new THREE.Vector3(0,0,0), lbNow = 0, lbFrom = 0, lbTo = 0;
+  var shakeAmt = 0, moveFrom = null, moveTo = null, yawFrom = 0, yawTo = 0, stand = null, elTop = null, elBot = null, elSkip = null;
+  var BAR = 0.12;                                                    // a bar is 12% of the stage height
+  function ease(k){ return k < 0.5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2) / 2; }   // ease in and out
+  function setLetter(k){ lbNow = k; var h = (BAR * k * 100).toFixed(2) + "%"; elTop.style.height = h; elBot.style.height = h; }
+  function snapCam(){ return { pos: camera.position.clone(), look: lookNow.clone(), fov: camera.fov }; }
+  function castOf(id){ return cast[id]; }
+  function ensureCast(id){
+    if(!cast[id]){
+      var rig = window.StationSpecies.buildCharacter(id), w = new THREE.Group();
+      w.add(rig); w.scale.setScalar(0.6); w.visible = false; scene.add(w);
+      cast[id] = { group:w, rig:rig, mood:0.2 };
+    }
+    return cast[id];
+  }
+  function startBeat(){
+    beat = script.beats[idx]; t = 0; dur = 0; waiting = false;
+    if(!beat){ finish(); return; }
+    if(beat.cam){
+      var s = snapCam(); camFrom = s.pos; lookFrom = s.look; fovFrom = s.fov;
+      dur = skipping ? 0 : (beat.dur || 0);
+    } else if(beat.move){
+      var c = ensureCast(beat.move); moveFrom = c.group.position.clone(); yawFrom = c.group.rotation.y;
+      moveTo = new THREE.Vector3(beat.to[0], beat.to[1], beat.to[2]); yawTo = beat.yaw != null ? beat.yaw : yawFrom;
+      dur = skipping ? 0 : (beat.dur || 0);
+    } else if(beat.wait != null){ dur = skipping ? 0 : beat.wait; }
+    else if(beat.letter != null){ lbFrom = lbNow; lbTo = beat.letter ? 1 : 0; dur = skipping ? 0 : (beat.dur || 0.5); }
+    else if(beat.shake != null){ shakeAmt = beat.shake; dur = skipping ? 0 : (beat.dur || 0.4); }
+    else if(beat.cast){
+      var cc = ensureCast(beat.cast); cc.group.position.set(beat.at[0], beat.at[1], beat.at[2]);
+      cc.group.rotation.y = beat.yaw || 0; cc.group.visible = true; if(beat.mood != null) cc.mood = beat.mood;
+    }
+    else if(beat.hide){ if(cast[beat.hide]) cast[beat.hide].group.visible = false; }
+    else if(beat.fn){ try{ beat.fn(); }catch(e){ console.error(e); } }
+    else if(beat.choice){
+      var ch = beat.choice;
+      if(skipping){ runPick(ch.skip === "a" ? ch.a : ch.b); return; }
+      waiting = true;
+      $("choice-prompt").textContent = ch.prompt;
+      $("choice-a").textContent = ch.a.label; $("choice-b").textContent = ch.b.label;
+      $("choice-a").onclick = function(){ if(waiting){ waiting = false; hideAllOverlays(); runPick(ch.a); } };
+      $("choice-b").onclick = function(){ if(waiting){ waiting = false; hideAllOverlays(); runPick(ch.b); } };
+      showOverlay("choice-overlay");
+      return;
+    }
+    else if(beat.say){
+      if(skipping){ nextBeat(); return; }                             // a skipped scene does not open its dialogue
+      waiting = true;
+      Dialogue.play(beat.say, function(){ if(waiting){ waiting = false; nextBeat(); } });
+      return;                                                       // resumes from the dialogue's done callback
+    }
+    if(dur <= 0 && !beat.say) { /* instant beats finish in tick() */ }
+  }
+  function nextBeat(){ idx++; startBeat(); }
+  /* a choice's chosen option: run its effect, splice in any follow-on beats, carry on */
+  function runPick(opt){
+    if(opt.fn){ try{ opt.fn(); }catch(e){ console.error(e); } }
+    if(opt.then && opt.then.length) script.beats.splice(idx + 1, 0, ...opt.then);
+    nextBeat();
+  }
+  function finish(){
+    if(!Cutscene.active) return;
+    var cb = done; done = null; Cutscene.active = false; script = null;
+    if(saved){ camera.position.copy(saved.pos); camera.lookAt(0,0,0); camera.fov = saved.fov; camera.updateProjectionMatrix(); camera.updateMatrixWorld(true); }
+    Object.keys(cast).forEach(function(k){ cast[k].group.visible = false; });
+    setLetter(0); stage.classList.remove("cs-on"); if(elSkip) elSkip.classList.add("hidden");
+    if(cb){ try{ cb(); }catch(e){ console.error(e); } }
+  }
+  Cutscene.play = function(sc, onDone){
+    if(Cutscene.active) return false;
+    script = sc; idx = 0; done = onDone || null; skipping = false;
+    Cutscene.active = true;
+    saved = { pos: camera.position.clone(), fov: camera.fov };
+    lookNow.set(0,0,0); lbNow = 0;
+    stage.classList.add("cs-on"); if(elSkip) elSkip.classList.remove("hidden");
+    window.StationSpecies && window.StationSpecies.configure({linear:false});
+    if(!stand){ stand = { tarnak:new THREE.Object3D(), oolun:new THREE.Object3D() }; stand.tarnak.userData.head = new THREE.Object3D(); stand.oolun.userData.head = new THREE.Object3D(); }
+    startBeat();
+    return true;
+  };
+  Cutscene.skip = function(){
+    if(!Cutscene.active || skipping) return;
+    skipping = true;
+    if(waiting){ waiting = false; Dialogue.skip(); }             // close the box; the timeline carries on at speed
+    // finish the current beat and everything after it instantly
+    if(beat && beat.choice && waiting){ var sc = beat.choice; waiting = false; hideAllOverlays(); runPick(sc.skip === "a" ? sc.a : sc.b); return; }
+    if(beat && beat.say) nextBeat(); else { t = 1e9; }
+  };
+  Cutscene.tick = function(rdt, now){
+    if(!Cutscene.active) return;
+    var dt = Math.min(rdt, 0.05), T = now || 0;
+    // timed and instant beats. A skip lets several short beats finish in one frame, so the scene ends at once.
+    var passes = skipping ? 60 : 1, stepDt = dt;
+    while(passes-- > 0 && Cutscene.active && beat && !beat.say && !beat.choice){   // a choice waits for the player
+      t += stepDt; stepDt = 0;
+      var k = dur > 0 ? Math.min(1, t / dur) : 1, e = ease(k);
+      if(beat.cam){
+        var lookTo = new THREE.Vector3(beat.cam.look[0], beat.cam.look[1], beat.cam.look[2]);
+        camera.position.lerpVectors(camFrom, new THREE.Vector3(beat.cam.pos[0], beat.cam.pos[1], beat.cam.pos[2]), e);
+        lookNow.lerpVectors(lookFrom, lookTo, e);
+        camera.fov = fovFrom + (beat.cam.fov - fovFrom) * e;
+      } else if(beat.move){
+        var c = cast[beat.move];
+        if(c){ c.group.position.lerpVectors(moveFrom, moveTo, e); c.group.rotation.y = yawFrom + (yawTo - yawFrom) * e; }
+      } else if(beat.letter != null){
+        setLetter(lbFrom + (lbTo - lbFrom) * e);
+      } else if(beat.shake != null){
+        shakeAmt = beat.shake * (1 - k);
+      }
+      if(t >= dur){ nextBeat(); } else { break; }
+    }
+    // instant beats (cast, hide, fn) run as soon as they come up
+    var guard = 0;
+    while(Cutscene.active && beat && !beat.say && (beat.cast || beat.hide || beat.fn) && guard++ < 50){
+      nextBeat();
+    }
+    if(!Cutscene.active) return;
+    // camera, with a small shake
+    var sh = shakeAmt * shakeAmt * 0.25;
+    camera.position.x += (Math.random()*2-1) * sh;
+    camera.position.y += (Math.random()*2-1) * sh * 0.6;
+    camera.lookAt(lookNow);
+    camera.updateProjectionMatrix();
+    camera.updateMatrixWorld(true);
+    // characters on the stage breathe and blink like the portrait ones
+    Object.keys(cast).forEach(function(id){
+      var c = cast[id]; if(!c.group.visible) return;
+      var P = window.StationSpecies.CHARACTERS[id];
+      try{
+        window.StationSpecies.poseSpecies(T, { S:{ stress:c.mood, mood:c.mood }, reduced:reducedMotion,
+          tarnak: P.species === "tarnak" ? c.rig : stand.tarnak, oolun: P.species === "oolun" ? c.rig : stand.oolun });
+      }catch(e){ console.error(e); }
+    });
+  };
+  // the skip button, the letterbox bars, and their state classes
+  elTop = $("lb-top"); elBot = $("lb-bot"); elSkip = $("cs-skip");
+  if(elSkip) elSkip.addEventListener("click", function(e){ e.stopPropagation(); Cutscene.skip(); });
+  window.Cutscene = Cutscene;
+})();
+
+/* The opening, written from the intro script: Pip on comms, the note, Vex, Kael, the debt file, the alert. */
+var SCENES = {
+  intro: {
+    beats: [
+      { letter:true, dur:0.6 },
+      { cast:"vex",  at:[-1.8,-1.48,0.2], yaw:0.35 },
+      { cast:"kael", at:[ 1.8,-1.48,0.2], yaw:-0.35 },
+      { cam:{ pos:[0,1.4,8.6], look:[0,-0.3,0], fov:44 }, dur:0 },
+      { say:[ { who:"pip", text:"Booth seven, you're live. Orbit's rolling and the hold is backed up. Try not to be late." } ] },
+      { say:[ { who:null, text:"ORBITAL PORT 7." },
+              { who:null, text:"A note is taped to the booth glass: \u201CGood eyes. Don\u2019t get comfortable. \u2014 V.\u201D" } ] },
+      { cam:{ pos:[-1.1,0.4,4.0], look:[-1.8,-0.5,0.2], fov:38 }, dur:2.2 },
+      { say:[ { who:"vex", text:"You're the replacement. Don't look at me like that. I didn't pick you. The agency did." },
+              { who:"vex", text:"Your name's on a debt file. Pay it down a shift at a time, or Port Security takes it out of your hide.", mood:0.3 } ] },
+      { cam:{ pos:[1.1,0.4,4.0], look:[1.8,-0.5,0.2], fov:38 }, dur:1.8 },
+      { say:[ { who:"kael", text:"Three slipped lots and you're out. Out means the airlock. Don't make me walk you there.", mood:0.4 } ] },
+      { cam:{ pos:[0,1.2,7.6], look:[0,-0.2,0], fov:44 }, dur:1.6 },
+      { say:[ { who:null, text:"DEBT FILE 0417 \u2014 UNPAID." } ] },
+      { shake:0.6, dur:0.5, fn:function(){ if(!S.muted) sndWhirr(); } },
+      { say:[ { who:"pip", text:"Organism alert in four. Crate's humming, and humming means something's already awake in there. Stamp what you must.", mood:0.9 } ] },
+      { cam:{ pos:[0,0.7,5.4], look:[0,0,0], fov:42 }, dur:1.0 },
+      { letter:false, dur:0.6 }
+    ]
+  }
+};
+
+/* ================= CHECK-INS (task 5) ================= */
+/* Short comms messages from the people of the port. Each one plays once:
+     when:"clear"  after a day is cleared (before the next shift)
+     when:"half"   at the halfway point of a shift (short, the shift keeps running)
+   A message is a list of lines. who = a character id (portrait) or null (narrator); tag overrides the name tag.
+   if() decides whether it applies. Story state lives in S.story so it saves with the run. */
+var CHECKINS = [
+  { id:"d1-clear-pip",  day:1, when:"clear", who:"pip", lines:[
+      "First shift down. Your file's a little lighter than it was this morning. I checked.",
+      "Eat something, booth seven. You sound like a cargo lift running on fumes." ] },
+  { id:"d2-clear-vex",  day:2, when:"clear", who:"vex", lines:[
+      "Coffee ration's doubled. Don't thank me. The agency calls it a bonus.",
+      "You're the courier, aren't you. Don't answer. Nobody on this dock needs to hear it." ] },
+  { id:"d3-half-nyx",   day:3, when:"half",  who:"nyx", lines:[
+      "Halfway. Count the crates that came in unopened, then count the ones they signed off anyway.",
+      "I've been counting for a month. The numbers don't match." ] },
+  { id:"d3-clear-dagra", day:3, when:"clear", who:"dagra", tag:"INCOMING \u00B7 UNKNOWN", lines:[
+      "Inspector. You don't know me yet. I've been reading your file for two days.",
+      "Keep inspecting. Whatever Port Security tells you, it's the one thing in this port I'd trust." ] },
+  { id:"d4-clear-nyx",  day:4, when:"clear", who:"nyx", lines:[
+      "Somebody is signing off on lots nobody opened. I'll show you the log when we're off comms.",
+      "Orin's name is in it. Don't say it on this channel." ] },
+  { id:"d4-clear-orin", day:4, when:"clear", tag:"ORIN'S LOG", lines:[
+      "Last entry before the silence: the courier got out. I let them. Somebody has to remember what crate 0417 was." ] },
+  { id:"d5-half-pip",   day:5, when:"half",  who:"pip", mood:0.5, lines:[
+      "Half your quota, booth seven. You're doing fine. Eat when the lot clears." ] },
+  { id:"d5-clear-kael", day:5, when:"clear", who:"kael", mood:0.4, lines:[
+      "Port Security's watching your booth now. That's not a threat. It's a notice.",
+      "Pay the debt down a shift at a time, and stay away from the grey-coated one in the cargo bay." ] },
+  { id:"d6-clear-pip",  day:6, when:"clear", who:"pip", lines:[
+      "I checked your file again. There's a photo on it, and you look younger.",
+      "Don't be scary about it. I'm the one who keeps your booth open." ] },
+  { id:"d6-clear-juno", day:6, when:"clear", who:"juno", if:function(){ return S.story.flags.juno === "pass"; }, lines:[
+      "Your signature's on three lots now. Smart move.",
+      "Kael noticed. Kael notices everything. That's why I like him." ] },
+  { id:"d6-clear-dagra-thanks", day:6, when:"clear", who:"dagra", tag:"INCOMING \u00B7 UNKNOWN", if:function(){ return S.story.flags.juno === "refuse"; }, lines:[
+      "You didn't take their money. I noticed.",
+      "Keep your stamp. It's the only thing the port hasn't figured out how to buy." ] },
+  { id:"d6-clear-orin", day:6, when:"clear", tag:"ORIN'S LOG", lines:[
+      "Whoever reads this: the infestation starts in the outer holds, not in the port. I'm following the source. Don't come looking." ] },
+  { id:"d7-clear-kael", day:7, when:"clear", who:"kael", if:function(){ return S.dayMissed > 0; }, lines:[
+      "You slipped a lot today. Three and you're out. Don't make me count for you." ] },
+  { id:"d7-clear-vex",  day:7, when:"clear", who:"vex", if:function(){ return S.dayMissed === 0; }, lines:[
+      "Clean shift. Don't get comfortable. I'm still watching the coffee budget." ] },
+  { id:"d8-clear-pip",  day:8, when:"clear", who:"pip", lines:[
+      "Two more shifts after this one, if the agency keeps its word. It usually doesn't.",
+      "Stamp what you must, booth seven." ] },
+  { id:"d9-clear-vex",  day:9, when:"clear", who:"vex", lines:[
+      "Final stretch. The port's counting shipments like it's about to lose them.",
+      "Whatever you find down there, stamp it. Then decide what you do after." ] }
+];
+function checkinsFor(when){
+  return CHECKINS.filter(function(c){
+    return c.day === S.day && c.when === when && !S.story.seen[c.id] && (!c.if || c.if());
+  });
+}
+/* Plays every check-in for this day and moment. done runs when the last line is closed (or straight away if there are none). */
+function playCheckins(when, done){
+  var list = checkinsFor(when);
+  if(!list.length){ if(done) done(); return; }
+  var lines = [];
+  list.forEach(function(c){
+    S.story.seen[c.id] = 1;
+    c.lines.forEach(function(text){ lines.push({ who:c.who || null, tag:c.tag, text:text, mood:c.mood }); });
+  });
+  save();
+  Dialogue.play(lines, done || null);
+}
+
+/* ================= UPGRADES & ECONOMY (task 7) ================= */
+/* Money: every stamped item pays. Clean lots build a streak. Each cleared day the port takes a debt installment
+   (until the file is paid), and the rest is yours to spend in the shop after the shift. Tuning lives in these tables. */
+var DEBT_START = 1200, DEBT_INSTALMENT = 150, ITEM_PAY = 25, MISS_CUT = 0.25, STREAK_STEP = 0.1;
+var STREAK_CAP = [1.5, 2, 3, 4];          // Clean Streak tiers lift the ceiling
+var QUOTA_PAY = [1, 1.2, 1.4, 1.7];       // Quota Pay: item pay multiplier
+var TIP_DAY = [0, 50, 100, 200];          // Vex's Tip Jar: flat bonus for each cleared day
+var RATION_TIME = [0, 30, 60, 90];        // Extra Ration: extra seconds on the shift clock
+var SHIELD_STRIKES = [0, 1, 2, 2];        // Strike Shield: lots per shift that do not count as a strike
+var MAGNIFY = [1, 1.25, 1.5, 1.8];        // Magnifier Lens: multiplier on each bug's tap zone
+var BEETLE_SLOW = [1, 0.85, 0.7, 0.55];   // Motion Tracker: beetles crawl slower
+var UV_SHIMMER = [1, 1.8, 2.6, 3.5];      // UV Lamp: how strongly camouflage shows through
+var SWEEPS = [0, 1, 2];                   // Sweep Scanner: uses per item
+var PROBE_SECS = [0, 1, 2, 3];            // Stamp Probe: how long a missed tap pins the nearest beetle
+var UPGRADES = [
+  { id:"glare",     branch:"EYES",     name:"SIGNAL FILTER",   cost:[250,750,1800],
+    desc:["Static bar is half as tall","Static bar is a quarter as tall","No static: the bar never rolls"] },
+  { id:"motion",    branch:"EYES",     name:"MOTION TRACKER",  cost:[400,1100,2500],
+    desc:["Beetles crawl 15% slower","Beetles crawl 30% slower","Beetles crawl 45% slower"] },
+  { id:"uv",        branch:"TOOLS",    name:"UV LAMP",         cost:[350,1000,2400],
+    desc:["Camouflage shimmers brighter","Camouflage shimmers much brighter","Camouflage barely hides"] },
+  { id:"sweep",     branch:"TOOLS",    name:"SWEEP SCANNER",   cost:[500,1300], max:2,
+    desc:["One sweep per item: turns to the nearest bug","Two sweeps per item"] },
+  { id:"quota",     branch:"DESK",     name:"QUOTA PAY",       cost:[200,600,1500],
+    desc:["+20% on every item","+40% on every item","+70% on every item"] },
+  { id:"streak",    branch:"DESK",     name:"CLEAN STREAK",    cost:[400,1100,2600],
+    desc:["Streak can reach \u00D72","Streak can reach \u00D73","Streak can reach \u00D74"] },
+  { id:"ration",    branch:"SURVIVAL", name:"EXTRA RATION",    cost:[300,700,1600],
+    desc:["+30s on the shift clock","+60s on the shift clock","+90s on the shift clock"] },
+  { id:"shield",    branch:"SURVIVAL", name:"STRIKE SHIELD",   cost:[800,2000], max:2,
+    desc:["One slipped lot per shift is forgiven","Two slipped lots per shift are forgiven"] }
+];
+/* Retired upgrades. Anyone who bought them gets the base price back, once, when the save loads. */
+var REMOVED_UPS = { magnifier:[300,900,2000], probe:[300,800,1900], tip:[150,400,900], hazard:[500,1400,3200] };
+var BRANCHES = ["EYES","TOOLS","DESK","SURVIVAL"];
+function freshUp(){ var u = {}; UPGRADES.forEach(function(x){ u[x.id] = 0; }); return u; }
+function upDef(id){ for(var i=0;i<UPGRADES.length;i++) if(UPGRADES[i].id===id) return UPGRADES[i]; return null; }
+function upPrice(id){
+  var d = upDef(id), tier = S.up[id] || 0;
+  if(!d || tier >= (d.max || 3) || d.locked) return null;
+  return Math.round(d.cost[tier] * Math.pow(1.05, S.bought));   // each purchase makes the next one 5% dearer
+}
+function itemPay(missed){
+  var streakM = Math.min(STREAK_CAP[S.up.streak || 0], 1 + STREAK_STEP * S.streak);
+  var missCut = Math.max(0, 1 - MISS_CUT * missed);
+  return Math.round(ITEM_PAY * QUOTA_PAY[S.up.quota || 0] * streakM * missCut * hazardPayMult());
+}
+function settleItem(missed){
+  var pay = itemPay(missed);
+  S.dayEarned += pay;
+  S.streak = missed ? 0 : S.streak + 1;
+  S.itemsDone = (S.itemsDone||0) + 1; S.bestStreak = Math.max(S.bestStreak||0, S.streak);
+  var stage_ = $("stage"), f = document.createElement("div");
+  f.className = "floater"; f.textContent = "+$" + pay;
+  f.style.left = (stage_.clientWidth/2) + "px"; f.style.top = "34%";
+  stage_.appendChild(f); setTimeout(function(){ f.remove(); }, 850);
+}
+/* Each cleared day: the day's pay (plus the Tip Jar) is banked; the port takes its installment first.
+   A day you are fired from, or whose shift clock runs out, keeps its pay but takes no tip and no installment. */
+function settleDay(cleared){
+  var tip = cleared ? TIP_DAY[S.up.tip || 0] : 0;
+  var earn = S.dayEarned + tip, inst = 0;
+  if(cleared){ inst = Math.min(S.debt, DEBT_INSTALMENT, earn); S.debt -= inst; }
+  S.money += earn - inst;
+  S.lastEarn = earn; S.lastInstall = inst; S.lastTip = tip;
+  S.dayEarned = 0; save();
+}
+/* Sweep and probe use. */
+function refreshSweep(){
+  var b = $("btn-sweep"); if(!b) return;
+  var n = S.up.sweep || 0;
+  b.classList.toggle("hidden", !(n > 0 && S.playing));
+  b.textContent = "SWEEP \u00D7" + (S.sweepLeft || 0);
+  b.disabled = !S.sweepLeft;
+}
+function doSweep(){
+  if(!S.playing || S.busy || !S.current || !S.sweepLeft || (Cutscene && Cutscene.active) || (Dialogue && Dialogue.isOpen())) return;
+  var alive = aliveBugs().filter(function(b){ return !b.hidden; }); if(!alive.length) return;
+  var toCam = camera.position.clone(), best = null, bestDot = -2;
+  alive.forEach(function(b){
+    var wn = b.normal.clone().applyQuaternion(spin.quaternion);
+    var wp = new THREE.Vector3(); b.group.getWorldPosition(wp);
+    var d = wn.dot(toCam.clone().sub(wp).normalize());
+    if(d > bestDot){ bestDot = d; best = b; }
+  });
+  if(!best) return;
+  S.sweepLeft--; refreshSweep();
+  guideSpin.target = best.normal.clone(); guideSpin.t = 0; guideSpin.active = true; guideSpin.onDone = null;
+  if(best.guideRing){ best.group.remove(best.guideRing); }
+  var ring = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.04, 8, 24), new THREE.MeshBasicMaterial({ color:0x5a4fb0 }));
+  ring.position.y = 0.05; best.group.add(ring); best.guideRing = ring;
+  setTimeout(function(){ if(best.guideRing === ring){ best.group.remove(ring); best.guideRing = null; } }, 2000);
+  sndTick();
+}
+/* Shop: opens after the check-ins, before the next shift. */
+var shopDone = null;
+function renderShop(){
+  $("sh-earned").textContent = fmtMoney(S.lastEarn || 0);
+  $("sh-install").textContent = "\u2212" + fmtMoney(S.lastInstall || 0);
+  $("sh-tip").textContent = fmtMoney(S.lastTip || 0);
+  $("sh-debt").textContent = fmtMoney(S.debt);
+  $("sh-savings").textContent = fmtMoney(S.money);
+  $("sh-debt-bar").style.width = Math.max(0, Math.min(100, 100 * (1 - S.debt / DEBT_START))) + "%";
+  var list = $("shop-list"); list.innerHTML = "";
+  BRANCHES.forEach(function(br){
+    var h = document.createElement("div"); h.className = "shop-branch"; h.textContent = br; list.appendChild(h);
+    UPGRADES.filter(function(u){ return u.branch === br; }).forEach(function(u){
+      var tier = S.up[u.id] || 0, price = upPrice(u.id);
+      var row = document.createElement("div"); row.className = "shop-item" + (u.locked ? " locked" : "");
+      var pips = ""; for(var i=0;i<(u.max||3);i++) pips += "<i class=\"" + (i < tier ? "on" : "") + "\"></i>";
+      var effect = u.locked ? u.locked : (tier ? u.desc[tier-1] : "Not bought yet. " + u.desc[0]);
+      if(!u.locked && tier >= (u.max||3)) effect = u.desc[(u.max||3)-1];
+      row.innerHTML = "<div class=\"si-top\"><b></b><span class=\"si-pips\">" + pips + "</span></div><p></p>";
+      row.querySelector("b").textContent = u.name;
+      row.querySelector("p").textContent = effect;
+      var btn = document.createElement("button"); btn.className = "si-buy";
+      if(u.locked){ btn.textContent = "LOCKED"; btn.disabled = true; }
+      else if(price === null){ btn.textContent = "MAXED"; btn.disabled = true; }
+      else { btn.textContent = "BUY " + fmtMoney(price); btn.disabled = S.money < price; btn.addEventListener("click", function(){ buyUp(u.id); }); }
+      row.appendChild(btn); list.appendChild(row);
+    });
+  });
+}
+function fmtMoney(n){ return "$" + Math.max(0, Math.round(n)).toLocaleString("en-US"); }
+function buyUp(id){
+  var price = upPrice(id); if(price === null || S.money < price) return;
+  S.money -= price; S.up[id] = (S.up[id] || 0) + 1; S.bought++;
+  save(); renderShop(); sndTick();
+}
+function openShop(done){ shopDone = done || null; renderShop(); showOverlay("shop-overlay"); }
+$("shop-next").addEventListener("click", function(){
+  audio(); hideAllOverlays();
+  var d = shopDone; shopDone = null; if(d) d();
+});
+$("btn-sweep").addEventListener("click", function(e){ e.stopPropagation(); doSweep(); });
+
+/* ================= HAZARDS & THE RAMP (task 8) ================= */
+/* The milestone schedule: the day each mechanic first appears. Later days make the same mechanics more frequent. */
+var MILESTONE = {
+  glareFromDay: 3,     // glare bands start sweeping across the stage
+  hazardFromDay: 4,    // hazard crates start arriving (they pay double, before upgrades)
+  ramp: 5              // from this day on, more shifts carry three or more bugs
+};
+var GLARE_STRENGTH = [1, 0.5, 0.25, 0];   // Signal Filter tiers narrow the static bar; at tier 3 it is gone
+var GLARE_WIDTH = 0.7;                    // full band is 70% of the stage
+var HAZARD_BONUS = [0, 0.25, 0.5, 1.0];   // Hazard Pay tiers: extra on hazard crates
+function hazardChance(day){ return Math.min(0.5, 0.15 + 0.05 * (day - MILESTONE.hazardFromDay)); }
+var glare = { on:false, p:0, cool:7, H:0, top:0 };
+var STATIC_BAR_H = 0.3;                              // full static bar is 30% of the stage height
+var crtCool = 5 + Math.random()*4;
+/* Noise texture for the static, made once. */
+(function(){
+  try{
+    var c = document.createElement("canvas"); c.width = c.height = 96;
+    var x = c.getContext("2d"), im = x.createImageData(96,96);
+    for(var i=0;i<im.data.length;i+=4){ var v = Math.random()*255|0; im.data[i]=im.data[i+1]=im.data[i+2]=v; im.data[i+3]=Math.random()<0.5 ? 255 : 90; }
+    x.putImageData(im,0,0);
+    document.documentElement.style.setProperty("--noise", "url(" + c.toDataURL() + ")");
+  }catch(e){}
+})();
+/* A short screen glitch: colour split, jitter and a few torn strips of static. Purely visual. */
+function crtGlitch(){
+  try{
+    var cv = canvasEl(); cv.classList.remove("glitch"); void cv.offsetWidth; cv.classList.add("glitch");
+    setTimeout(function(){ cv.classList.remove("glitch"); }, 440);
+    var crt = $("crt"), n = 2 + Math.floor(Math.random()*3);
+    for(var i=0;i<n;i++){
+      var t = document.createElement("div"); t.className = "crt-tear";
+      t.style.top = (Math.random()*92) + "%"; t.style.height = (3 + Math.random()*12) + "px";
+      crt.appendChild(t); (function(el){ setTimeout(function(){ el.remove(); }, 160 + Math.random()*220); })(t);
+    }
+    if(!S.muted && audio()){ tone(150,45,0.28,"sawtooth",0.07); noiseBurst(0.22,0.06,2400); }
+  }catch(e){}
+}
+function crtTick(dt){
+  if(reducedMotion) return;
+  if(!(S.playing && !anyOverlayOpen() && !(Cutscene && Cutscene.active) && !(Dialogue && Dialogue.isOpen()))) return;
+  crtCool -= dt;
+  if(crtCool <= 0){ crtCool = 7 + Math.random()*9; crtGlitch(); }
+}
+function glareTick(dt){
+  crtTick(dt);
+  var el = $("glare"); if(!el) return;
+  var s = GLARE_STRENGTH[S.up.glare || 0];
+  var live = S.playing && S.day >= MILESTONE.glareFromDay && s > 0 && !(Cutscene && Cutscene.active)
+             && !(Dialogue && Dialogue.isOpen()) && !anyOverlayOpen();
+  if(!live){ if(glare.on){ glare.on = false; el.style.display = "none"; } return; }
+  if(!glare.on){
+    glare.cool -= dt;
+    if(glare.cool <= 0){
+      glare.on = true; glare.p = 0; glare.H = STATIC_BAR_H * s;
+      el.style.height = (glare.H * 100) + "%"; el.style.display = "block";
+      if(!S.tipsSeen.staticbar){ S.tipsSeen.staticbar = 1; queueToast("SIGNAL STATIC \u2014 taps inside the bar won't land. Wait for it to pass."); }
+      if(!reducedMotion) crtGlitch();
+    }
+    return;
+  }
+  glare.p += dt / 1.9;                                  // a roll takes 1.9 seconds
+  if(glare.p >= 1){ glare.on = false; el.style.display = "none"; glare.cool = 6 + Math.random() * 5; return; }
+  glare.top = -glare.H + (1 + glare.H) * glare.p;
+  el.style.top = (glare.top * 100) + "%";
+}
+/* A tap inside the static bar does not land: the bugs under it are hidden. */
+function glareBlocks(clientX, clientY){
+  if(!glare.on) return false;
+  var r = $("stage").getBoundingClientRect(), y = (clientY - r.top) / r.height;
+  return y >= glare.top && y <= glare.top + glare.H;
+}
+function hazardPayMult(){ return S.current && S.current.hazard ? 2 : 1; }
+
+/* ================= ENDINGS & ENDLESS (task 9) ================= */
+/* The story ends after the final shift: the run for the door and the capture. The ending has three readings,
+   chosen from how the run went. After the credits, the shifts go on with no story, the quota keeps rising. */
+var FINAL_DAY = 10;
+var ENDING_CAPTION = {
+  paid:  "THE DEBT IS PAID. THE PORT IS NOT.",
+  clean: "YOU RAN. THEY CAUGHT YOU ANYWAY.",
+  ran:   "THREE STRIKES. ONE RUN. CAUGHT."
+};
+function endingVariant(){
+  if(S.debt <= 0) return "paid";                 // the file was cleared, and the port still caught you
+  if(S.totalMissed === 0) return "clean";        // you never let a lot through, and they caught you anyway
+  return "ran";
+}
+function endingScene(v){
+  var kaelLine = v === "paid"
+    ? "The debt is paid. The port is not, and neither are you."
+    : "Port's been paying us to look the other way for three years. You knew that.";
+  return { beats:[
+    { letter:true, dur:0.6 },
+    { cast:"vex", at:[-1.8,-1.48,0.2], yaw:0.35 },
+    { cast:"nyx", at:[ 1.8,-1.48,0.2], yaw:-0.35 },
+    { cam:{ pos:[0,1.4,8.6], look:[0,-0.3,0], fov:44 }, dur:0 },
+    { say:[ { who:null, text:"FINAL LOT \u2014 OUTER HOLDS." },
+            { who:null, text:"The last crate on the belt. Someone has scratched a name into the lid." } ] },
+    { cam:{ pos:[-1.1,0.4,4.0], look:[-1.8,-0.5,0.2], fov:38 }, dur:1.6 },
+    { say:[ { who:"vex", text:"Don't open it. Stamp it and send it through.", mood:0.3 } ] },
+    { say:[ { who:null, text:"You open it anyway." } ] },
+    { say:[ { who:"pip", text:"Don't you dare...", mood:0.9 } ] },
+    { cam:{ pos:[1.1,0.4,4.0], look:[1.8,-0.5,0.2], fov:38 }, dur:1.2 },
+    { say:[ { who:"nyx", text:"Go on, then.", mood:0.2 } ] },
+    { cam:{ pos:[0,1.2,8.2], look:[0,-0.2,0], fov:44 }, dur:1.8 },
+    { shake:0.5, dur:0.5, fn:function(){ if(!S.muted) sndWhirr(); } },
+    { cast:"dagra", at:[4.4,-1.48,0.6], yaw:-0.5 },
+    { move:"dagra", to:[2.5,-1.48,0.6], yaw:-0.4, dur:1.4 },
+    { cam:{ pos:[1.6,0.7,5.4], look:[2.4,-0.4,0.6], fov:40 }, dur:1.2 },
+    { say:[ { who:"dagra", text:"You took the one thing I told them not to touch. Put it down." } ] },
+    { say:[ { who:null, text:"You don't. The casing splits. Dagra fires one restraining charge, and the crate seals itself in foam." } ] },
+    { say:[ { who:"dagra", text:"I'm not here for your debt. I'm here for every crew that opened a crate like this one and never came home." } ] },
+    { cast:"kael", at:[4.6,-1.48,0.2], yaw:-0.5 },
+    { move:"kael", to:[2.0,-1.48,0.2], yaw:-0.3, dur:1.8 },
+    { say:[ { who:"kael", text:kaelLine, mood:0.4 } ] },
+    { say:[ { who:"dagra", text:"I'm the one who wrote the report." } ] },
+    { cam:{ pos:[0,1.0,7.0], look:[0,-0.2,0], fov:44 }, dur:1.8 },
+    { wait:0.6 },
+    { say:[ { who:null, text:ENDING_CAPTION[v] } ] }
+  ]};
+}
+function showEndCard(v){
+  $("end-caption").textContent = ENDING_CAPTION[v];
+  var rows = [
+    ["SHIFTS CLEARED", FINAL_DAY],
+    ["ITEMS STAMPED", S.itemsDone || 0],
+    ["BUGS CAUGHT", S.totalCaught || 0],
+    ["BUGS MISSED", S.totalMissed || 0],
+    ["BEST STREAK", (S.bestStreak || 0) + "\u00D7"],
+    ["DEBT LEFT", fmtMoney(S.debt)]
+  ];
+  var grid = $("end-stats"); grid.innerHTML = "";
+  rows.forEach(function(r){
+    var d = document.createElement("div"), b = document.createElement("b"), s = document.createElement("span");
+    b.textContent = String(r[1]); s.textContent = r[0]; d.appendChild(b); d.appendChild(s); grid.appendChild(d);
+  });
+  showOverlay("end-overlay");
+}
+function playEnding(){
+  S.story.flags.ended = true; save();
+  var v = endingVariant();
+  Cutscene.play(endingScene(v), function(){ showEndCard(v); });
+}
+$("end-keep").addEventListener("click", function(){
+  audio(); hideAllOverlays(); S.story.flags.endless = true; save();
+  openShop(function(){ startDay(S.day + 1); });
+});
+$("end-new").addEventListener("click", function(){
+  audio(); hideAllOverlays(); $("abandon-confirm").click();
+});
+
+/* ================= SAVES, MUSIC, TEST HOOKS (task 10) ================= */
+/* Saves: version 2 lives under its own key. A version 1 save is read, cleaned up, and written back as version 2. */
+function clampInt(x, lo, hi, def){
+  x = Number(x); if(!isFinite(x)) return def;
+  return Math.max(lo, Math.min(hi, Math.floor(x)));
+}
+function migrateSave(d){
+  var fromV1 = !d.v || d.v < 2;
+  d.v = SAVE_VERSION;
+  d.day = clampInt(d.day, 1, 999, 1);
+  d.objectIndex = clampInt(d.objectIndex, 0, 999, 0);
+  d.strikes = clampInt(d.strikes, 0, 3, 0);
+  d.dayCaught = clampInt(d.dayCaught, 0, 999, 0);
+  d.dayMissed = clampInt(d.dayMissed, 0, 999, 0);
+  d.timer = clampInt(d.timer, 1, 3600, 480);
+  d.totalCaught = clampInt(d.totalCaught, 0, 1e9, 0);
+  d.totalMissed = clampInt(d.totalMissed, 0, 1e9, 0);
+  d.debt = clampInt(d.debt, 0, DEBT_START, DEBT_START);
+  d.money = clampInt(d.money, 0, 1e9, 0);
+  d.bought = clampInt(d.bought, 0, 1e6, 0);
+  d.itemsDone = clampInt(d.itemsDone, 0, 1e9, 0);
+  d.bestStreak = clampInt(d.bestStreak, 0, 1e6, 0);
+  if(!d.story || typeof d.story !== "object" || !d.story.seen) d.story = { seen:{}, flags:{} };
+  if(!d.up || typeof d.up !== "object") d.up = freshUp();
+  if(!d.chapters || typeof d.chapters !== "object") d.chapters = {};
+  if(!d.tipsSeen || typeof d.tipsSeen !== "object") d.tipsSeen = {};
+  d._fromV1 = fromV1;
+  return d;
+}
+function readSave(){
+  var raw = null;
+  try{ raw = localStorage.getItem(SAVE_KEY); if(raw == null) raw = localStorage.getItem(OLD_SAVE_KEY); }catch(e){ return null; }
+  if(raw == null) return null;
+  var d;
+  try{ d = JSON.parse(raw); }catch(e){
+    try{ localStorage.setItem("abi-save-corrupt", raw); }catch(_){}   // keep the damaged text for a look, start clean
+    return null;
+  }
+  if(!d || typeof d !== "object") return null;
+  return migrateSave(d);
+}
+/* Music: a small procedural loop (Am-F-G-Em) under the shift. It follows the game: full while a shift runs,
+   softer under a message or a scene, and quiet on the menus. SOUND off mutes it with everything else. */
+var music = { on:false, gain:null, nextT:0, step:0, timer:null };
+var MUSIC_STEP = 60 / 96 / 2;                                 // eighth notes at 96 bpm
+var MUSIC_CHORDS = [ [57,60,64], [53,57,60], [55,59,62], [52,55,59] ];
+var MUSIC_BASS   = [ 45, 41, 43, 40 ];
+function mhz(m){ return 440 * Math.pow(2, (m - 69) / 12); }
+function musicNote(freq, when, dur, type, vol){
+  var t = when, o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(music.gain); o.start(t); o.stop(t + dur + 0.05);
+}
+function musicPump(){
+  if(!music.on || !AC) return;
+  var target = S.playing ? ((Dialogue && Dialogue.isOpen()) || (Cutscene && Cutscene.active) ? 0.07 : 0.16) : 0.05;
+  music.gain.gain.setTargetAtTime(target, AC.currentTime, 0.4);
+  if(S.muted){ music.nextT = AC.currentTime + 0.1; return; }
+  while(music.nextT < AC.currentTime + 0.35){
+    var bar = Math.floor(music.step / 8) % 4, chord = MUSIC_CHORDS[bar], s = music.step % 8, t = music.nextT;
+    if(s === 0) musicNote(mhz(MUSIC_BASS[bar]), t, 0.9, "sine", 0.5);            // bass on the bar
+    if(s % 2 === 0) musicNote(mhz(chord[(s / 2) % 3] + 12), t, 0.35, "triangle", 0.08);   // arpeggio
+    if(s === 4) musicNote(mhz(MUSIC_BASS[bar]), t, 0.5, "sine", 0.35);           // half-bar bass
+    if(s === 0 && bar === 0) musicNote(mhz(chord[0] - 12), t, 2.4, "sine", 0.05); // soft pad under the loop
+    music.nextT += MUSIC_STEP; music.step++;
+  }
+}
+function musicStart(){
+  if(music.on || !audio()) return;
+  music.gain = AC.createGain(); music.gain.gain.value = 0.0001; music.gain.connect(masterGain);
+  music.on = true; music.nextT = AC.currentTime + 0.15; music.step = 0;
+  music.timer = setInterval(musicPump, 120);
+}
+/* Test hooks, for checking a build by hand or from a script. window.__abi.selfTest() returns the results of quick checks. */
+window.__abi = window.__abi || {};
+window.__abi.version = SAVE_VERSION;
+window.__abi.selfTest = function(){
+  var r = {};
+  r.saveRoundTrip = (function(){ save(); var d = readSave(); return !!d && d.v === SAVE_VERSION && d.day === S.day; })();
+  r.migratesV1 = (function(){ var m = migrateSave({ day:4, debt:900 }); return m.v === SAVE_VERSION && m.day === 4 && m.debt === 900 && m.strikes === 0 && m._fromV1 === true; })();
+  r.cleansBadValues = (function(){ var m = migrateSave({ day:"x", strikes:-4, debt:1e12 }); return m.day === 1 && m.strikes === 0 && m.debt === DEBT_START; })();
+  r.priceTiersPresent = UPGRADES.every(function(u){ var m = u.max || 3; return u.cost.length === m && u.desc.length === m; });
+  r.glareFilterClears = GLARE_STRENGTH[3] === 0;
+  r.musicReady = !!window.AudioContext || !!window.webkitAudioContext;
+  r.musicRunning = music.on;
+  r.allPassed = Object.keys(r).every(function(k){ return k === "musicRunning" || r[k] === true; });
+  return r;
+};
+
+/* ================= MIDPOINT: THE FILE (task 11) ================= */
+/* Plays once, after the check-ins that follow Day 5. Nyx finds the gap in the logs, Dagra reads the file, and Juno
+   makes the offer. The choice sets the Juno flag: "pass" takes $400 off the debt and marks you for Kael's watch;
+   "refuse" keeps your stamp, and Dagra thanks you in a later check-in. If the choice is skipped, you refuse. */
+var MIDPOINT_DAY = 5;
+function setFlag(k, v){ S.story.flags[k] = v; save(); }
+var SCENES_MIDPOINT_BEATS = [
+  { letter:true, dur:0.6 },
+  { cast:"nyx", at:[-1.8,-1.48,0.2], yaw:0.35 },
+  { cam:{ pos:[0,1.4,8.6], look:[0,-0.3,0], fov:44 }, dur:0 },
+  { say:[ { who:null, text:"NIGHT SHIFT. THE HOLD LIGHTS ARE LOW." } ] },
+  { say:[ { who:"nyx", text:"The port has logged more crates than it has ever inspected. Somebody's signing off on lots nobody opened.", mood:0.3 } ] },
+  { say:[ { who:null, tag:"PORT RECORDS \u00B7 ORIN", text:"Orin's name is on every unopened lot. Beside it, a scanned photo of a tired Oolun with the same crate number you have been stamping." } ] },
+  { say:[ { who:"nyx", text:"Orin was looking into the outer holds. Then Orin stopped filing reports." } ] },
+  { cast:"kael", at:[1.8,-1.48,0.2], yaw:-0.35 },
+  { cast:"dagra", at:[4.6,-1.48,0.6], yaw:-0.5 },
+  { move:"dagra", to:[3.0,-1.48,0.6], yaw:-0.4, dur:1.6 },
+  { cam:{ pos:[1.3,0.7,6.0], look:[2.2,-0.4,0.5], fov:40 }, dur:1.2 },
+  { say:[ { who:"dagra", text:"Inspector. I've been reading your file for two days now.", mood:0.4 } ] },
+  { say:[ { who:null, text:"She taps her slate and reads from a damaged record." } ] },
+  { say:[ { who:"dagra", text:"Crate 0417. Nine months ago a courier carried it through the outer holds. The courier got out. The crate didn't. Two crews went in after it, and only one came back. The courier's name is in the file.", mood:0.5 } ] },
+  { say:[ { who:null, text:"Your name is on the slate. It has been blacked out." } ] },
+  { say:[ { who:"dagra", text:"The courier is you.", mood:0.6 } ] },
+  { fn:function(){ setFlag("courier", true); } },
+  { cam:{ pos:[1.0,0.5,5.0], look:[1.8,-0.5,0.2], fov:38 }, dur:1.0 },
+  { say:[ { who:"kael", text:"That debt is what keeps this port running. You're not getting out from under it.", mood:0.5 } ] },
+  { cam:{ pos:[1.3,0.7,6.0], look:[2.2,-0.4,0.5], fov:40 }, dur:1.0 },
+  { say:[ { who:"dagra", text:"I'm not here to collect a debt. I'm here for the crate. The port is selling the infestation to buyers in the outer colonies, and you're the only one who's seen where it started." } ] },
+  { say:[ { who:null, text:"She sets a case on the booth counter and opens it. Inside, a sealed sample jar. A pale tendril curls against the glass." } ] },
+  { fn:function(){ if(!S.muted) sndWhirr(); } },
+  { say:[ { who:"dagra", text:"Help me find the source, and I'll put in a word that your debt gets written off. Or stay here, and when the next crate hatches, you'll be the one who opened it." } ] },
+  { fn:function(){ setFlag("dagraOffer", true); } },
+  { cam:{ pos:[0,1.4,9.4], look:[0,-0.3,0], fov:44 }, dur:1.4 },
+  { cast:"juno", at:[-4.6,-1.48,0.2], yaw:0.4 },
+  { move:"juno", to:[-2.5,-1.48,0.2], yaw:0.3, dur:1.6 },
+  { say:[ { who:"juno", text:"Relax, Courier. I don't want your debt. I want your signature on three lots.", mood:0.3 } ] },
+  { say:[ { who:"juno", text:"Pass them without a stamp and the port writes off four hundred credits of your file. Refuse, and Dagra keeps reading your name out loud." } ] },
+  { say:[ { who:"dagra", text:"Don't take it. Those crates are the source." } ] },
+  { say:[ { who:"juno", text:"Everybody's got a source. Mine pays." } ] },
+  { choice:{
+      prompt:"Pass the lots, or keep your stamp?",
+      a:{ label:"PASS THE LOTS", fn:function(){ setFlag("juno", "pass"); S.debt = Math.max(0, S.debt - 400); save(); },
+          then:[ { say:[ { who:"juno", text:"Smart move. Kael's already noticed, but Kael notices everything." } ] },
+                 { move:"juno", to:[-4.6,-1.48,0.2], yaw:0.4, dur:1.2 }, { hide:"juno" } ] },
+      b:{ label:"REFUSE", fn:function(){ setFlag("juno", "refuse"); },
+          then:[ { say:[ { who:"juno", text:"Your loss, Courier. Don't come crying when the port takes it out of your hide." } ] },
+                 { move:"juno", to:[-4.6,-1.48,0.2], yaw:0.4, dur:1.2 }, { hide:"juno" } ] },
+      skip:"b" } },
+  { say:[ { who:null, text:"MIDNIGHT SHIFT CHANGE. Somewhere in the outer holds, crate 0417 is still humming." } ] },
+  { letter:false, dur:0.6 }
+];
+SCENES.midpoint = { beats: SCENES_MIDPOINT_BEATS };
+function maybeMidpoint(done){
+  if(S.day !== MIDPOINT_DAY || S.story.flags.midpoint || !Cutscene.play(SCENES.midpoint, done)) { if(done) done(); return; }
+  setFlag("midpoint", true);
+}
+
+/* ================= BUG SPRITES (2D, light) ================= */
+function legsSVG(cx, spread, reach, w, col){
+  var out = "", xs = [cx-spread, cx, cx+spread];
+  xs.forEach(function(x, i){
+    var cls = (i%2===0) ? "la" : "lb", cls2 = (i%2===0) ? "lb" : "la";
+    out += '<g class="'+cls+'"><line x1="'+x+'" y1="20" x2="'+(x-3)+'" y2="'+(20-reach)+'" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"/></g>';
+    out += '<g class="'+cls2+'"><line x1="'+x+'" y1="20" x2="'+(x-3)+'" y2="'+(20+reach)+'" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"/></g>';
+  });
+  return out;
+}
+function bugSVG(type){
+  var ink = "#141414", body;
+  if(type === "mite"){
+    body = legsSVG(28, 5, 9, 2, ink) +
+      '<circle cx="28" cy="20" r="7" fill="#2b2d42" stroke="'+ink+'" stroke-width="2"/>' +
+      '<circle cx="37" cy="20" r="4.5" fill="#2b2d42" stroke="'+ink+'" stroke-width="2"/>';
+  } else if(type === "camo"){
+    body = legsSVG(28, 8, 14, 2.4, ink) +
+      '<ellipse cx="28" cy="20" rx="16" ry="10" fill="#9db4c8" stroke="'+ink+'" stroke-width="3"/>' +
+      '<ellipse class="shim" cx="26" cy="17" rx="9" ry="4" fill="#ffffff" opacity=".4"/>' +
+      '<circle cx="45" cy="20" r="5.5" fill="#7f97ad" stroke="'+ink+'" stroke-width="2.5"/>';
+  } else {
+    body = legsSVG(28, 8, 14, 2.6, ink) +
+      '<ellipse cx="28" cy="20" rx="18" ry="12" fill="#e4572e" stroke="'+ink+'" stroke-width="3"/>' +
+      '<line x1="14" y1="20" x2="42" y2="20" stroke="'+ink+'" stroke-width="2.4" stroke-linecap="round"/>' +
+      '<circle cx="48" cy="20" r="6.5" fill="'+ink+'"/>' +
+      '<line x1="52" y1="17" x2="58" y2="12" stroke="'+ink+'" stroke-width="2" stroke-linecap="round"/>' +
+      '<line x1="52" y1="23" x2="58" y2="28" stroke="'+ink+'" stroke-width="2" stroke-linecap="round"/>';
+  }
+  return '<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+body+'</svg>';
+}
+$("load-lead").innerHTML = bugSVG("beetle");
+$("lb-mite").innerHTML = bugSVG("mite");
+$("lb-camo").innerHTML = bugSVG("camo");
+$("lb-beetle2").innerHTML = bugSVG("beetle");
+$("mn-beetle").innerHTML = bugSVG("beetle");
+$("mn-mite").innerHTML = bugSVG("mite");
+
+/* ================= MAIN MENU ================= */
+function hasProgress(){
+  return !!pendingRestore || S.day > 1 || S.itemsDone > 0 || S.totalCaught > 0 || S.totalMissed > 0 || S.tourSeen;
+}
+function refreshMenu(){
+  var p = hasProgress();
+  $("menu-main").textContent = p ? "CONTINUE" : "START";
+  $("menu-new").style.display = p ? "block" : "none";
+  var pr = $("menu-progress");
+  if(p){
+    var day = (pendingRestore && pendingRestore.day) || S.day;
+    var txt = "DAY " + day;
+    if(pendingRestore) txt += " \u00B7 ITEM " + ((pendingRestore.objectIndex|0) + 1) + "/" + quotaFor(day);
+    pr.textContent = txt; pr.style.display = "block";
+  } else { pr.textContent = ""; pr.style.display = "none"; }
+}
+function showMenu(){ refreshMenu(); showOverlay("menu-overlay"); }
+function beginNewStory(){ storyIdx = 0; renderStory(); showOverlay("story-overlay"); }
+$("menu-main").addEventListener("click", function(){
+  audio();
+  if(hasProgress()){
+    hideAllOverlays();
+    var r = pendingRestore; pendingRestore = null;
+    startDay(r ? (r.day || S.day) : S.day, r);
+  } else beginNewStory();
+});
+$("menu-new").addEventListener("click", function(){ audio(); showOverlay("confirm-overlay"); });
+$("confirm-no").addEventListener("click", function(){ showMenu(); });
+$("confirm-yes").addEventListener("click", function(){ audio(); wipeRun(); beginNewStory(); });
+$("menu-settings").addEventListener("click", function(){ audio(); openSheet(); });
+
+/* Keep the save fresh: on a timer during a shift, and whenever the page is hidden or closed. */
+setInterval(function(){ if(S.started && S.playing && !anyOverlayOpen()) save(); }, 8000);
+document.addEventListener("visibilitychange", function(){ if(document.hidden && S.started) save(); });
+window.addEventListener("pagehide", function(){ if(S.started) save(); });
 
 /* ================= BOOT ================= */
 load();
 syncMute();
+syncVolume();
 renderStory();
 updateHUD();
 try{
   initThree();
+  initPortrait();
   bindPointer();
   animate();
   setTimeout(function(){ if(renderer) resize(); }, 60);
@@ -1393,7 +3175,55 @@ try{
   // 3D library unavailable (offline/blocked): keep the shell and story usable.
   $("drag-hint").textContent = "3D COULD NOT LOAD — CHECK CONNECTION";
 }
+/* ================= LOADING SCREEN ================= */
+(function(){
+  var loading = $("loading"), skip = false;
+  try{ skip = sessionStorage.getItem("abi-skip-load") === "1"; sessionStorage.removeItem("abi-skip-load"); }catch(e){}
+  var done = false;
+  function finish(){
+    if(done) return; done = true;
+    showMenu();
+    loading.classList.add("out");
+    setTimeout(function(){ loading.classList.add("gone"); }, 500);
+  }
+  if(skip){ finish(); loading.classList.add("gone"); return; }
+  var TIPS = ["Warming up the stamp\u2026", "Counting legs\u2026", "Shooing the beetles off the belt\u2026", "Checking the seams for mites\u2026", "Teaching camos to stop blending in\u2026"];
+  var MIN_MS = 2600, t0 = performance.now(), shown = 0, pageReady = false, fontsReady = false, tipI = 0;
+  function maybeReady(){ pageReady = (document.readyState === "complete"); }
+  if(document.readyState === "complete") pageReady = true; else window.addEventListener("load", function(){ pageReady = true; });
+  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(function(){ fontsReady = true; }, function(){ fontsReady = true; }); setTimeout(function(){ fontsReady = true; }, 3500); }
+  else fontsReady = true;
+  var tipTimer = setInterval(function(){ tipI = (tipI+1) % TIPS.length; $("load-tip").textContent = TIPS[tipI]; }, 900);
+  function step(){
+    if(done) return;
+    var ready = pageReady && fontsReady;
+    var target = Math.min(1, (performance.now()-t0)/MIN_MS);
+    if(!ready) target = Math.min(target, 0.9);
+    shown += (target - shown) * 0.12 + 0.002;
+    if(shown > target) shown = target;
+    var pct = Math.round(shown*100);
+    $("load-fill").style.width = pct + "%";
+    $("load-pct").textContent = "LOADING " + pct + "%";
+    $("load-lead").style.left = "calc(6px + (100% - 12px) * " + shown.toFixed(3) + ")";
+    if(shown >= 0.995 && ready){ clearInterval(tipTimer); setTimeout(finish, 250); return; }
+    requestAnimationFrame(step);
+  }
+  $("load-lead").style.left = "6px";
+  requestAnimationFrame(step);
+  setTimeout(function(){ clearInterval(tipTimer); finish(); }, 9000);   // never get stuck on the loading screen
 })();
+
+})();
+</script>
+<script>
+/* Safety net: if the game script failed to start (for example the 3D library was blocked), don't hang on the loading screen. */
+setTimeout(function(){
+  var l=document.getElementById("loading");
+  if(l && !l.classList.contains("gone") && !l.classList.contains("out")){
+    var t=document.getElementById("load-tip"); if(t) t.textContent="Couldn't start. Check your connection and reload.";
+    var f=document.getElementById("load-pct"); if(f) f.textContent="LOAD FAILED";
+  }
+}, 12000);
 </script>
 </body>
 </html>
