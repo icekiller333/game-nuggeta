@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Daily Roguelike — The Oven's Breath (2026-11-14)</title>
+    <style>
+      :root{
+        --ink:#14100c;
+        --paper:#fff6e3;
+        --bg:#f4a950;
+        --bg2:#e2703a;
+        --panel:#fff6e3;
+        --yellow:#ffd23f;
+        --green:#3ecf5a;
+        --green-dk:#1d7a35;
+        --red:#e63946;
+        --red-dk:#8f1d27;
+        --orange:#ff7b1c;
+        --blue:#57b8ff;
+        --pink:#ff8fab;
+        --shadow:5px 5px 0 var(--ink);
+        --shadow-s:3px 3px 0 var(--ink);
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#2a1440;
+          --bg2:#170b28;
+          --paper:#fff6e3;
+          --panel:#fff6e3;
+        }
+      }
+      *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+      html,body{ height:100%; }
+      body{
+        margin:0;
+        font-family:"Arial Black","Segoe UI",system-ui,-apple-system,sans-serif;
+        color:var(--ink);
+        background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);
+        overflow:hidden;
+      }
+      button{
+        font-family:inherit; color:var(--ink); cursor:pointer;
+        border:3px solid var(--ink); background:var(--paper);
+        min-height:2.25rem; touch-action:manipulation; user-select:none;
+        -webkit-user-select:none;
+      }
+      button:focus-visible{ outline:4px solid var(--ink); outline-offset:2px; }
+
+      #app{
+        height:100dvh; max-width:480px; margin:0 auto;
+        display:flex; flex-direction:column;
+        padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+        gap:7px; position:relative; overflow:hidden;
+      }
+      #app.shake{ animation:shake .45s linear; }
+      @keyframes shake{
+        0%,100%{ transform:translate(0,0); }
+        15%{ transform:translate(-8px,3px) rotate(-.6deg); }
+        30%{ transform:translate(8px,-3px) rotate(.6deg); }
+        45%{ transform:translate(-7px,-2px); }
+        60%{ transform:translate(7px,2px); }
+        75%{ transform:translate(-4px,1px); }
+      }
+      #flash{
+        position:fixed; inset:0; background:var(--red); opacity:0;
+        pointer-events:none; z-index:60;
+      }
+      #flash.on{ animation:flashA .5s ease-out; }
+      @keyframes flashA{ 0%{opacity:.55;} 100%{opacity:0;} }
+      #fx{ position:fixed; inset:0; pointer-events:none; z-index:55; }
+
+      /* ---------- HUD top row ---------- */
+      #hudTop{
+        flex:0 0 auto; display:flex; align-items:stretch; gap:6px;
+      }
+      .hudBox{
+        background:var(--panel); border:3px solid var(--ink);
+        box-shadow:var(--shadow-s); padding:4px 6px;
+        display:flex; align-items:center; gap:4px; overflow:hidden;
+      }
+      #heartsBox{ flex:0 0 auto; }
+      #loavesBox{ flex:1 1 auto; justify-content:center; }
+      .pipSvg{ display:block; flex:0 0 auto; }
+      .iconBtn{
+        flex:0 0 auto; width:44px; padding:0; display:flex;
+        align-items:center; justify-content:center;
+        background:var(--yellow); box-shadow:var(--shadow-s);
+      }
+      .iconBtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+
+      /* ---------- Dawn bar ---------- */
+      #dawnWrap{ flex:0 0 auto; }
+      .barLabel{
+        font-size:11px; letter-spacing:.14em; font-weight:900;
+        display:flex; justify-content:space-between; margin-bottom:3px;
+        color:var(--ink);
+      }
+      .barOuter{
+        height:16px; border:3px solid var(--ink); background:#3b2d5c;
+        position:relative; overflow:hidden; box-shadow:var(--shadow-s);
+      }
+      #dawnFill{
+        position:absolute; inset:0; width:100%;
+        background:linear-gradient(90deg,#ffd23f,#ff8fab);
+        transform-origin:left center;
+      }
+      .barOuter .moon{
+        position:absolute; right:3px; top:50%; transform:translateY(-50%);
+        font-size:0; z-index:2;
+      }
+
+      /* ---------- Scene ---------- */
+      #scene{
+        flex:1 1 auto; min-height:0; position:relative; overflow:hidden;
+        background:#241533; border:4px solid var(--ink); box-shadow:var(--shadow);
+      }
+      #scene svg{ position:absolute; inset:0; width:100%; height:100%; }
+      #burnTag{
+        position:absolute; top:8px; left:50%; transform:translateX(-50%);
+        background:var(--red); color:#fff; border:3px solid var(--ink);
+        padding:3px 10px; font-size:14px; font-weight:900; letter-spacing:.08em;
+        display:none; z-index:5; box-shadow:var(--shadow-s);
+      }
+      #burnTag.on{ display:block; animation:blink .18s steps(2) infinite; }
+      @keyframes blink{ 50%{ opacity:.35; } }
+      #loafPop{
+        position:absolute; top:8px; right:8px; z-index:5; display:none;
+        background:var(--green); border:3px solid var(--ink); color:var(--ink);
+        padding:3px 10px; font-size:14px; font-weight:900; box-shadow:var(--shadow-s);
+      }
+      #loafPop.on{ display:block; animation:pop .3s ease-out; }
+      @keyframes pop{ 0%{ transform:scale(.4) rotate(-8deg);} 100%{ transform:scale(1) rotate(0);} }
+
+      /* ---------- Gauge ---------- */
+      #gaugeWrap{ flex:0 0 auto; }
+      #gaugeOuter{
+        height:30px; border:4px solid var(--ink); position:relative;
+        overflow:hidden; box-shadow:var(--shadow-s); background:#574b3a;
+      }
+      .zone{ position:absolute; top:0; bottom:0; }
+      #zCold{ background:#4d7ea8; }
+      #zGreen{ background:var(--green); }
+      #zYel{ background:var(--yellow); }
+      #zRed{ background:var(--red); }
+      #flameFill{
+        position:absolute; left:0; top:0; bottom:0; width:0%;
+        background:repeating-linear-gradient(45deg,rgba(255,255,255,.85) 0 8px,rgba(255,255,255,.45) 8px 16px);
+        border-right:5px solid var(--ink);
+        mix-blend-mode:screen;
+      }
+      #gaugeTicks{ position:absolute; inset:0; pointer-events:none; }
+      #gaugeTicks .tick{
+        position:absolute; top:0; width:3px; height:9px; background:var(--ink);
+        transform:translateX(-50%);
+      }
+      #gaugeTicks .tlab{
+        position:absolute; bottom:1px; transform:translateX(-50%);
+        font-size:9px; font-weight:900; color:var(--ink);
+        background:rgba(255,246,227,.85); padding:0 2px; line-height:1.2;
+      }
+      #gaugeWrap.dark #gaugeTicks{ display:none; }
+      #burnOuter{ display:none; }
+      #burnFill{ display:none; }
+      #guideBanner{
+        position:absolute; top:8px; left:50%; transform:translateX(-50%);
+        width:min(330px, calc(100% - 16px)); z-index:6;
+        background:var(--paper); color:var(--ink);
+        border:3px solid var(--ink); box-shadow:var(--shadow-s);
+        padding:8px 10px; text-align:center;
+        font-size:15px; font-weight:900; line-height:1.35;
+        display:none;
+      }
+      #guideBanner.on{ display:block; }
+      #guideBanner .gTitle{
+        display:block; font-size:11px; letter-spacing:.14em; color:var(--green-dk); margin-bottom:2px;
+      }
+
+      /* ---------- Bake bar ---------- */
+      #bakeWrap{ flex:0 0 auto; }
+      #bakeOuter{
+        height:22px; border:4px solid var(--ink); background:var(--paper);
+        overflow:hidden; position:relative; box-shadow:var(--shadow-s);
+      }
+      #bakeFill{
+        height:100%; width:0%;
+        background:repeating-linear-gradient(-45deg,#e8a33d 0 12px,#d18a26 12px 24px);
+      }
+      #blackFill{
+        position:absolute; top:0; bottom:0; right:0; width:0%;
+        background:repeating-linear-gradient(45deg,#000000 0 9px,#2b2b2b 9px 18px);
+        border-left:4px solid #ffffff;
+        box-shadow:-2px 0 0 var(--ink);
+      }
+      #blackFill.zero{ border-left:none; box-shadow:none; }
+      #bakeOuter .crust{
+        position:absolute; right:4px; top:50%; transform:translateY(-50%);
+      }
+
+      /* ---------- Pump ---------- */
+      #pump{
+        flex:0 0 96px; width:100%;
+        background:var(--orange); color:var(--ink);
+        border:4px solid var(--ink); box-shadow:6px 6px 0 var(--ink);
+        font-size:34px; font-weight:900; letter-spacing:.12em;
+        display:flex; align-items:center; justify-content:center; gap:12px;
+        touch-action:none;
+      }
+      #pump small{ font-size:12px; letter-spacing:.1em; display:block; }
+      #pump .pumpInner{ text-align:center; line-height:1.05; }
+      #pump.down{
+        transform:translate(4px,4px); box-shadow:2px 2px 0 var(--ink);
+        background:#ff9435;
+      }
+      #pump.guided{ outline:5px solid var(--yellow); outline-offset:3px; animation:pumpPulse .8s ease-in-out infinite; }
+      @keyframes pumpPulse{ 50%{ filter:brightness(1.18);} }
+      #pump.jiggle{ animation:jig .3s ease-in-out; }
+      @keyframes jig{ 0%,100%{transform:rotate(0);} 25%{transform:rotate(-1.6deg) scale(1.02);} 75%{transform:rotate(1.6deg) scale(1.02);} }
+      #pump:disabled{ filter:grayscale(.6); opacity:.55; }
+
+      /* ---------- Overlay / cards ---------- */
+      #overlay{
+        position:fixed; inset:0; z-index:70; display:none;
+        align-items:center; justify-content:center; padding:18px;
+        background:rgba(20,10,30,.72);
+      }
+      #overlay.on{ display:flex; }
+      .card{
+        background:var(--paper); border:4px solid var(--ink);
+        box-shadow:8px 8px 0 var(--ink); max-width:400px; width:100%;
+        padding:22px 20px; text-align:center; max-height:92dvh; overflow:hidden;
+      }
+      .card h1{
+        margin:0 0 12px; font-size:26px; line-height:1.15; letter-spacing:.02em;
+      }
+      .card h1.red{ color:var(--red-dk); }
+      .card h1.green{ color:var(--green-dk); }
+      .card p{ margin:0 0 16px; font-size:17px; line-height:1.45; font-family:Georgia,serif; font-weight:700; }
+      .card p.howto{ font-family:inherit; font-size:18px; }
+      .card .bigBtn{
+        background:var(--yellow); border:4px solid var(--ink);
+        box-shadow:var(--shadow-s); font-size:20px; font-weight:900;
+        padding:12px 26px; letter-spacing:.06em; min-height:52px;
+      }
+      .card .bigBtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+      .card .bigBtn.green{ background:var(--green); }
+      .card .bigBtn.red{ background:var(--red); color:#fff; }
+      #lawsList{ text-align:left; margin:0 0 16px; padding:0; list-style:none; }
+      #lawsList li{
+        border:3px solid var(--ink); background:#fff; margin-bottom:8px;
+        padding:8px 10px; font-size:14px; font-weight:900; line-height:1.3;
+        box-shadow:var(--shadow-s);
+      }
+      #lawsList li .lawN{
+        display:inline-block; background:var(--ink); color:var(--yellow);
+        padding:1px 7px; margin-right:8px; font-size:12px;
+      }
+      .lawsEmpty{ font-family:Georgia,serif; font-weight:700; font-size:16px; margin:0 0 16px; }
+      .statPips{ display:flex; justify-content:center; gap:5px; margin:0 0 14px; flex-wrap:wrap; }
+      .card .art{ margin:0 auto 14px; display:block; }
+
+      /* ---------- Spotlight ---------- */
+      #spot{
+        position:fixed; inset:0; z-index:65; display:none; pointer-events:none;
+      }
+      #spot.on{ display:block; }
+      #spotBox{
+        position:absolute; border:5px solid var(--yellow);
+        box-shadow:0 0 0 9999px rgba(20,10,30,.72), var(--shadow-s);
+        pointer-events:none;
+      }
+      #spotCard{
+        position:absolute; left:50%; transform:translateX(-50%);
+        width:min(340px,calc(100vw - 32px));
+        background:var(--paper); border:4px solid var(--ink);
+        box-shadow:var(--shadow); padding:14px 16px; text-align:center;
+        pointer-events:auto;
+      }
+      #spotCard h2{ margin:0 0 6px; font-size:19px; }
+      #spotCard p{ margin:0 0 12px; font-size:15px; font-weight:700; line-height:1.4; }
+      #spotCard button{
+        background:var(--green); border:3px solid var(--ink);
+        box-shadow:var(--shadow-s); font-weight:900; font-size:16px;
+        padding:9px 22px; min-height:44px;
+      }
+      #spotCard button:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+
+      .flameFlash{ animation:fflash .16s steps(2) infinite; }
+      @keyframes fflash{ 50%{ opacity:.45; } }
+
+      @media (max-height:640px){
+        #pump{ flex-basis:78px; font-size:28px; }
+        .card h1{ font-size:22px; }
+        .card p{ font-size:15px; }
+      }
+      @media (prefers-reduced-motion: reduce){
+        #app.shake, #pump.jiggle, #burnTag.on, #loafPop.on{ animation:none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- HUD top: hearts / loaves / sound / laws -->
+      <div id="hudTop">
+        <div class="hudBox" id="heartsBox" aria-label="Hearts"></div>
+        <div class="hudBox" id="loavesBox" aria-label="Loaves baked"></div>
+        <button class="iconBtn" id="muteBtn" aria-label="Toggle sound"></button>
+        <button class="iconBtn" id="lawsBtn" aria-label="Open laws sheet"></button>
+      </div>
+
+      <!-- Dawn clock -->
+      <div id="dawnWrap">
+        <div class="barLabel"><span>NIGHT</span><span>DAWN</span></div>
+        <div class="barOuter">
+          <div id="dawnFill"></div>
+          <span class="moon" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24"><path d="M20 14.5A9 9 0 1 1 9.5 4 7 7 0 0 0 20 14.5Z" fill="#fff6e3" stroke="#14100c" stroke-width="2"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Oven scene -->
+      <div id="scene" aria-label="The oven">
+        <svg viewBox="0 0 360 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <!-- wall bricks -->
+          <rect x="0" y="0" width="360" height="300" fill="#3a2358"/>
+          <g stroke="#2a1844" stroke-width="4">
+            <path d="M0 40 H360 M0 90 H360 M0 250 H360"/>
+            <path d="M70 0 V40 M160 0 V40 M250 0 V40 M110 40 V90 M210 40 V90 M310 40 V90 M60 250 V300 M170 250 V300 M280 250 V300"/>
+          </g>
+          <!-- oven body -->
+          <path d="M50 285 V120 Q50 40 180 40 Q310 40 310 120 V285 Z" fill="#8a4b2a" stroke="#14100c" stroke-width="6"/>
+          <path d="M50 285 V120 Q50 40 180 40 Q310 40 310 120 V285 Z" fill="none" stroke="#5d3016" stroke-width="14" opacity=".35"/>
+          <!-- chimney -->
+          <rect x="160" y="4" width="40" height="42" fill="#5d3016" stroke="#14100c" stroke-width="5"/>
+          <!-- mouth -->
+          <path d="M95 285 V170 Q95 105 180 105 Q265 105 265 170 V285 Z" fill="#160a20" stroke="#14100c" stroke-width="6"/>
+          <!-- coals -->
+          <g>
+            <ellipse cx="135" cy="272" rx="20" ry="9" fill="#54260e"/>
+            <ellipse cx="180" cy="278" rx="24" ry="10" fill="#6b3211"/>
+            <ellipse cx="225" cy="272" rx="20" ry="9" fill="#54260e"/>
+            <circle cx="150" cy="268" r="4" fill="#ff7b1c"/>
+            <circle cx="200" cy="273" r="4" fill="#ffd23f"/>
+            <circle cx="222" cy="266" r="3" fill="#ff7b1c"/>
+          </g>
+          <!-- loaf on stone -->
+          <g id="loafG">
+            <ellipse cx="180" cy="238" rx="52" ry="10" fill="#0d0514"/>
+            <path id="loafBody" d="M132 236 Q132 208 180 206 Q228 208 228 236 Q228 244 180 244 Q132 244 132 236Z" fill="#f3e2b8" stroke="#14100c" stroke-width="4"/>
+            <path d="M155 216 Q165 222 175 217 M182 214 Q192 220 202 215" stroke="#14100c" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </g>
+          <!-- flame -->
+          <g id="flameG" transform="translate(180 278)">
+            <g id="flameFlashG">
+              <path id="flameOuter" d="M0 0 C -34 -18 -30 -58 -14 -84 C -10 -66 -4 -62 0 -78 C 3 -94 10 -104 16 -118 C 20 -92 38 -74 34 -44 C 31 -18 18 -4 0 0Z" fill="#ff7b1c" stroke="#14100c" stroke-width="4" stroke-linejoin="round"/>
+              <path id="flameMid" d="M0 -2 C -20 -14 -18 -42 -8 -60 C -4 -48 0 -46 2 -58 C 5 -70 9 -78 13 -88 C 16 -68 24 -54 21 -34 C 18 -14 10 -4 0 -2Z" fill="#ffd23f"/>
+              <path id="flameCore" d="M0 -3 C -9 -10 -8 -26 -3 -36 C 0 -29 3 -29 5 -38 C 8 -28 11 -20 9 -10 C 7 -3 3 -1 0 -3Z" fill="#fff3c4"/>
+            </g>
+          </g>
+          <!-- grate bars -->
+          <g stroke="#14100c" stroke-width="7">
+            <path d="M112 285 V196"/><path d="M146 285 V186"/><path d="M180 285 V182"/>
+            <path d="M214 285 V186"/><path d="M248 285 V196"/>
+          </g>
+          <!-- bellows hint at side -->
+          <g>
+            <path d="M316 210 L348 226 L348 258 L316 268 Z" fill="#c98a3d" stroke="#14100c" stroke-width="4"/>
+            <path d="M316 210 L316 268" stroke="#14100c" stroke-width="4"/>
+            <rect x="306" y="228" width="12" height="22" fill="#5d3016" stroke="#14100c" stroke-width="3"/>
+          </g>
+        </svg>
+        <div id="burnTag">GETTING BURNT!</div>
+        <div id="loafPop">LOAF DONE!</div>
+        <div id="guideBanner" role="status"></div>
+      </div>
+
+      <!-- Flame gauge -->
+      <div id="gaugeWrap">
+        <div class="barLabel"><span>FLAME</span><span id="gaugeState">COLD</span></div>
+        <div id="gaugeOuter">
+          <div class="zone" id="zCold"></div>
+          <div class="zone" id="zGreen"></div>
+          <div class="zone" id="zYel"></div>
+          <div class="zone" id="zRed"></div>
+          <div id="flameFill"></div>
+          <div id="gaugeTicks"></div>
+        </div>
+        <div id="burnOuter"><div id="burnFill"></div></div>
+      </div>
+
+      <!-- Bake bar -->
+      <div id="bakeWrap">
+        <div class="barLabel"><span>BAKE</span><span id="bakeState">DOUGH</span></div>
+        <div id="bakeOuter">
+          <div id="bakeFill"></div>
+          <div id="blackFill" class="zero"></div>
+          <span class="crust" aria-hidden="true">
+            <svg width="18" height="12" viewBox="0 0 36 24"><path d="M3 20 Q3 5 18 4 Q33 5 33 20 Q33 23 18 23 Q3 23 3 20Z" fill="#e8a33d" stroke="#14100c" stroke-width="3"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- The one big control -->
+      <button id="pump" aria-label="Hold to pump the bellows">
+        <span class="pumpInner">PUMP<small>HOLD TO FEED FLAME</small></span>
+      </button>
+    </div>
+
+    <div id="flash"></div>
+    <canvas id="fx"></canvas>
+
+    <!-- Spotlight (tour + break lessons) -->
+    <div id="spot" aria-live="polite">
+      <div id="spotBox"></div>
+      <div id="spotCard">
+        <h2 id="spotTitle"></h2>
+        <p id="spotText"></p>
+        <button id="spotBtn">GOT IT</button>
+      </div>
+    </div>
+
+    <!-- Full-screen card overlay -->
+    <div id="overlay"></div>
+
+    <script>
+      "use strict";
+      /* ================= State ================= */
+      var DAWN_TOTAL = 120, GREEN_LO = 40, GREEN_HI = 75;
+      var S;
+      function freshState(){
+        return {
+          phase: "story",        // story | howto | intro | play | over
+          flame: 30, bake: 0, black: 0, loaves: 0, hearts: 3,
+          dawn: DAWN_TOTAL, burn: 0,
+          pumping: false, muted: false,
+          pumpRate: 16, drift: -5, bakeMult: 1, redStart: 85,
+          breaksTaken: 0, tourStep: 0, introStep: -1, introTimer: 0,
+          elapsed: 0, paused: false
+        };
+      }
+      /* Faster bake: green 9–15%/s (was 3–6%/s). Over the band still bakes
+         at 11–15%/s but adds black. Black rate scales with how far over:
+         just over ≈3%/s, deep red ≈30%/s. Black at 100 = burnt loaf. */
+      function greenRate(f){
+        return 9 + ((f - GREEN_LO) / (GREEN_HI - GREEN_LO)) * 6;
+      }
+      function overBakeRate(f){
+        return 11 + Math.min(25, f - GREEN_HI) * 0.15;
+      }
+      function blackRate(f){
+        var over = f - GREEN_HI;
+        if (over <= 0) return 0;
+        return 2 + over * 1.1;
+      }
+      S = freshState();
+
+      var BREAKS = [
+        { name: "DARK GAUGE", law: "DARK GAUGE — no numbers",
+          lesson: "The gauge went dark. Judge the flame by its size and colour." },
+        { name: "STIFF PUMP", law: "STIFF PUMP — weaker pumps",
+          lesson: "The bellows stiffened. Each pump feeds less flame." },
+        { name: "FAST DRIFT", law: "FAST DRIFT — flame falls faster",
+          lesson: "A draft got in. The flame sinks faster when you rest." },
+        { name: "COLD DOUGH", law: "COLD DOUGH — slower bake",
+          lesson: "The dough is cold through. Baking runs slower now." },
+        { name: "OVEN HUNGER", law: "HUNGER — red starts lower",
+          lesson: "The oven is hungrier. Red starts sooner, flame falls fastest." }
+      ];
+      function applyBreak(i){
+        if (i === 0){ document.getElementById("gaugeWrap").classList.add("dark"); }
+        if (i === 1){ S.pumpRate = 11; }
+        if (i === 2){ S.drift = -8; }
+        if (i === 3){ S.bakeMult = 0.75; }
+        if (i === 4){ S.redStart = 80; S.drift = -10; layoutZones(); }
+      }
+
+      /* ================= DOM ================= */
+      function $(id){ return document.getElementById(id); }
+      var app=$("app"), pumpBtn=$("pump"), overlay=$("overlay"), spot=$("spot");
+
+      function heartSVG(full){
+        return '<svg class="pipSvg" width="20" height="18" viewBox="0 0 24 22" aria-hidden="true">' +
+          '<path d="M12 20 C4 14 2 10 2 6.5 C2 3.4 4.4 1.5 7 1.5 C9 1.5 11 2.8 12 4.6 C13 2.8 15 1.5 17 1.5 C19.6 1.5 22 3.4 22 6.5 C22 10 20 14 12 20Z" fill="' +
+          (full ? "#e63946" : "#cbbfa5") + '" stroke="#14100c" stroke-width="2.2"/></svg>';
+      }
+      function loafSVG(done){
+        return '<svg class="pipSvg" width="24" height="16" viewBox="0 0 36 24" aria-hidden="true">' +
+          '<path d="M3 20 Q3 5 18 4 Q33 5 33 20 Q33 23 18 23 Q3 23 3 20Z" fill="' +
+          (done ? "#e8a33d" : "#e6dbc2") + '" stroke="#14100c" stroke-width="2.4"/>' +
+          '<path d="M11 11 Q15 14 19 11.5 M20 10 Q24 12.5 27 11" stroke="#14100c" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+      }
+      function speakerSVG(){
+        return '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">' +
+          '<path d="M3 9v6h4l5 4V5L7 9H3Z" fill="#14100c"/>' +
+          (S.muted
+            ? '<path d="M16 9l6 6M22 9l-6 6" stroke="#e63946" stroke-width="2.6" fill="none"/>'
+            : '<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="#14100c" stroke-width="2.2" fill="none" stroke-linecap="round"/>') +
+          '</svg>';
+      }
+      function lawsSVG(){
+        return '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">' +
+          '<path d="M5 3h13a1 1 0 0 1 1 1v17l-3.5-2.4L12 21l-3.5-2.4L5 21V4a1 1 0 0 1 1-1Z" fill="#14100c"/>' +
+          '<path d="M8.5 8h7M8.5 11.5h7M8.5 15h4.5" stroke="#ffd23f" stroke-width="2" stroke-linecap="round"/></svg>';
+      }
+      function renderPips(){
+        var h="", i;
+        for (i=0;i<3;i++) h += heartSVG(i < S.hearts);
+        $("heartsBox").innerHTML = h;
+        var l="";
+        for (i=0;i<6;i++) l += loafSVG(i < S.loaves);
+        $("loavesBox").innerHTML = l;
+        $("muteBtn").innerHTML = speakerSVG();
+      }
+      $("lawsBtn").innerHTML = lawsSVG();
+
+      /* gauge zones */
+      function layoutZones(){
+        function set(id, from, to){
+          var el=$(id); el.style.left = from + "%"; el.style.width = (to-from) + "%";
+        }
+        set("zCold", 0, GREEN_LO);
+        set("zGreen", GREEN_LO, GREEN_HI);
+        set("zYel", GREEN_HI, S.redStart);
+        set("zRed", S.redStart, 100);
+      }
+      (function buildTicks(){
+        var t = $("gaugeTicks"), html = "";
+        [0,25,50,75,100].forEach(function(v){
+          var tx = v === 0 ? "0" : v === 100 ? "-100%" : "-50%";
+          html += '<span class="tick" style="left:'+v+'%"></span>' +
+                  '<span class="tlab" style="left:'+v+'%;transform:translateX('+tx+')">'+v+'</span>';
+        });
+        t.innerHTML = html;
+      })();
+      layoutZones();
+
+      /* ================= Audio ================= */
+      var AC = null;
+      function audio(){
+        if (S.muted) return null;
+        try {
+          if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+          if (AC.state === "suspended") AC.resume();
+          return AC;
+        } catch(e){ return null; }
+      }
+      function tone(freq, dur, type, vol, slideTo){
+        var ac = audio(); if (!ac) return;
+        try {
+          var o = ac.createOscillator(), g = ac.createGain();
+          o.type = type || "square"; o.frequency.value = freq;
+          if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ac.currentTime + dur);
+          g.gain.setValueAtTime(vol || 0.08, ac.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+          o.connect(g); g.connect(ac.destination);
+          o.start(); o.stop(ac.currentTime + dur);
+        } catch(e){}
+      }
+      function noiseBurst(dur, vol){
+        var ac = audio(); if (!ac) return;
+        try {
+          var len = Math.floor(ac.sampleRate * dur);
+          var buf = ac.createBuffer(1, len, ac.sampleRate);
+          var d = buf.getChannelData(0);
+          for (var i=0;i<len;i++) d[i] = (Math.random()*2-1) * (1 - i/len);
+          var src = ac.createBufferSource(); src.buffer = buf;
+          var f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 700;
+          var g = ac.createGain(); g.gain.value = vol || 0.12;
+          src.connect(f); f.connect(g); g.connect(ac.destination); src.start();
+        } catch(e){}
+      }
+      var sndPump = function(){ noiseBurst(0.12, 0.05); };
+      var sndLoaf = function(){ tone(523,.12,"square",.09); setTimeout(function(){tone(659,.12,"square",.09);},90); setTimeout(function(){tone(784,.22,"square",.1);},180); };
+      var sndBurn = function(){ tone(220,.4,"sawtooth",.12,55); noiseBurst(.3,.14); };
+      var sndWin  = function(){ [523,659,784,1046].forEach(function(f,i){ setTimeout(function(){tone(f,.25,"square",.1);}, i*130); }); };
+      var sndLose = function(){ tone(330,.7,"sawtooth",.1,82); };
+      var sndTick = function(){ tone(1100,.05,"square",.05); };
+
+      /* ================= FX (particles / confetti) ================= */
+      var fx = $("fx"), fctx = fx.getContext("2d"), parts = [];
+      function sizeFx(){ fx.width = window.innerWidth; fx.height = window.innerHeight; }
+      window.addEventListener("resize", sizeFx); sizeFx();
+      function spawn(x, y, n, colors, spread, up){
+        for (var i=0;i<n;i++){
+          parts.push({
+            x:x, y:y,
+            vx:(Math.random()-0.5)*spread,
+            vy:-(Math.random()*up + 20),
+            life:0, max:0.6 + Math.random()*0.7,
+            size:2 + Math.random()*4,
+            color:colors[Math.floor(Math.random()*colors.length)],
+            grav: up > 60 ? 160 : -30,
+            rect: Math.random() < 0.4,
+            rot: Math.random()*6.28, vr:(Math.random()-0.5)*8
+          });
+        }
+        if (parts.length > 420) parts.splice(0, parts.length - 420);
+      }
+      function scenePoint(fxFrac, fyFrac){
+        var r = $("scene").getBoundingClientRect();
+        return { x: r.left + r.width*fxFrac, y: r.top + r.height*fyFrac };
+      }
+      function confettiBurst(big){
+        var p = scenePoint(0.5, 0.55);
+        spawn(p.x, p.y, big ? 130 : 60,
+          ["#ffd23f","#3ecf5a","#ff8fab","#57b8ff","#ff7b1c"], 260, big ? 300 : 200);
+      }
+      function drawFx(dt){
+        fctx.clearRect(0,0,fx.width,fx.height);
+        for (var i=parts.length-1;i>=0;i--){
+          var p = parts[i]; p.life += dt;
+          if (p.life >= p.max){ parts.splice(i,1); continue; }
+          p.vy += p.grav*dt; p.x += p.vx*dt; p.y += p.vy*dt; p.rot += p.vr*dt;
+          var a = 1 - p.life/p.max;
+          fctx.save(); fctx.globalAlpha = a;
+          fctx.translate(p.x, p.y); fctx.rotate(p.rot);
+          fctx.fillStyle = p.color;
+          if (p.rect) fctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.7);
+          else { fctx.beginPath(); fctx.arc(0,0,p.size/2,0,6.29); fctx.fill(); }
+          fctx.restore();
+        }
+      }
+
+      /* ================= Overlay cards ================= */
+      function showCard(html){ overlay.innerHTML = '<div class="card">'+html+'</div>'; overlay.classList.add("on"); }
+      function hideCard(){ overlay.classList.remove("on"); overlay.innerHTML = ""; }
+
+      function storyCard1(){
+        S.phase = "story";
+        showCard(
+          '<svg class="art" width="72" height="56" viewBox="0 0 72 56" aria-hidden="true"><path d="M8 54 V26 Q8 6 36 6 Q64 6 64 26 V54Z" fill="#8a4b2a" stroke="#14100c" stroke-width="4"/><path d="M22 54 V34 Q22 22 36 22 Q50 22 50 34 V54Z" fill="#160a20" stroke="#14100c" stroke-width="3"/><path d="M36 50 C29 44 31 36 36 30 C41 36 43 44 36 50Z" fill="#ff7b1c"/><path d="M36 47 C33 44 34 39 36 36 C38 39 39 44 36 47Z" fill="#ffd23f"/></svg>' +
+          '<p>Night falls on the Black Crumb Bakery. The old oven has woken — and it is hungry.</p>' +
+          '<button class="bigBtn" id="nextBtn">NEXT</button>'
+        );
+        $("nextBtn").addEventListener("click", function(){ tone(440,.08,"square",.06); storyCard2(); });
+      }
+      function storyCard2(){
+        showCard(
+          '<svg class="art" width="120" height="34" viewBox="0 0 120 34" aria-hidden="true"><g><path d="M4 28 Q4 8 20 7 Q36 8 36 28 Q36 32 20 32 Q4 32 4 28Z" fill="#e8a33d" stroke="#14100c" stroke-width="3"/><path d="M44 28 Q44 8 60 7 Q76 8 76 28 Q76 32 60 32 Q44 32 44 28Z" fill="#e8a33d" stroke="#14100c" stroke-width="3"/><path d="M84 28 Q84 8 100 7 Q116 8 116 28 Q116 32 100 32 Q84 32 84 28Z" fill="#e8a33d" stroke="#14100c" stroke-width="3"/></g></svg>' +
+          '<p>Six loaves before dawn, or the oven eats the baker. Tonight, you are the baker.</p>' +
+          '<button class="bigBtn green" id="startBtn">START</button>'
+        );
+        $("startBtn").addEventListener("click", function(){ tone(523,.1,"square",.07); howtoCard(); });
+      }
+      function howtoCard(){
+        S.phase = "howto";
+        showCard(
+          '<p class="howto">Hold PUMP to feed the flame — keep it green to bake.</p>' +
+          '<button class="bigBtn" id="beginBtn">BEGIN</button>'
+        );
+        $("beginBtn").addEventListener("click", function(){
+          hideCard(); startIntroWatch();
+        });
+      }
+
+      /* ================= Spotlight (tour + break lessons) ================= */
+      var spotCleanup = null;
+      function showSpot(targetEl, title, text, btnLabel, onDone){
+        S.paused = true;
+        spot.classList.add("on");
+        $("spotTitle").textContent = title;
+        $("spotText").textContent = text;
+        $("spotBtn").textContent = btnLabel || "GOT IT";
+        function place(){
+          if (!targetEl) { /* centre card, no box */
+            $("spotBox").style.display = "none";
+            $("spotCard").style.top = "50%";
+            $("spotCard").style.transform = "translate(-50%,-50%)";
+            return;
+          }
+          $("spotBox").style.display = "block";
+          var r = targetEl.getBoundingClientRect();
+          var box = $("spotBox");
+          box.style.left = (r.left - 6) + "px"; box.style.top = (r.top - 6) + "px";
+          box.style.width = (r.width + 12) + "px"; box.style.height = (r.height + 12) + "px";
+          var card = $("spotCard"), ch = card.offsetHeight || 150;
+          var below = r.bottom + 18, above = r.top - ch - 18;
+          var top = (below + ch < window.innerHeight - 8) ? below
+                  : (above > 8 ? above : Math.max(8, window.innerHeight - ch - 8));
+          card.style.top = top + "px";
+          card.style.transform = "translateX(-50%)";
+        }
+        place();
+        requestAnimationFrame(place);
+        window.addEventListener("resize", place);
+        spotCleanup = function(){ window.removeEventListener("resize", place); };
+        $("spotBtn").onclick = function(){
+          tone(440,.07,"square",.06);
+          hideSpot();
+          if (onDone) onDone();
+        };
+      }
+      function hideSpot(){
+        spot.classList.remove("on");
+        if (spotCleanup) spotCleanup();
+        S.paused = false;
+      }
+      /* ---------- Guided intro: watch, one pump, one free bake ---------- */
+      function setGuide(title, text){
+        var g = $("guideBanner");
+        g.innerHTML = "";
+        var t = document.createElement("span"); t.className = "gTitle"; t.textContent = title;
+        var b = document.createElement("span"); b.textContent = text;
+        g.appendChild(t); g.appendChild(b);
+        g.classList.add("on");
+      }
+      function hideGuide(){ $("guideBanner").classList.remove("on"); pumpBtn.classList.remove("guided"); }
+      function startIntroWatch(){
+        S.phase = "intro"; S.introStep = 0; S.introTimer = 0;
+        S.flame = 57; S.bake = 0; S.black = 0; S.pumping = false;
+        pumpBtn.disabled = true; pumpBtn.classList.remove("down");
+        setGuide("1 · WATCH", "The flame sits in the green — and the bake fills on its own. No touching.");
+      }
+      function startIntroPump(){
+        S.introStep = 1; S.introTimer = 0;
+        S.flame = 34; S.pumping = false;
+        pumpBtn.disabled = false; pumpBtn.classList.add("guided");
+        setGuide("2 · ONE PUMP", "The flame is falling. Hold PUMP once — lift it back into the green.");
+      }
+      function startIntroFree(){
+        S.introStep = 2; S.introTimer = 0;
+        pumpBtn.disabled = false; pumpBtn.classList.add("guided");
+        tone(659,.12,"square",.08);
+        setGuide("3 · YOUR FIRST LOAF", "Keep the flame green and finish the bake. No burn risk yet — find the rhythm.");
+      }
+      function finishIntro(){
+        hideGuide();
+        S.phase = "introDone"; S.introStep = -1; S.pumping = false;
+        pumpBtn.disabled = false;
+        showCard(
+          "<h1>THE NIGHT BEGINS</h1>" +
+          "<p>That was the rhythm. Now for real: six loaves before dawn — over the green still bakes, but black creeps onto the bar, and a full black bar burns the loaf. After each loaf, the fuse-box blows one aid for good.</p>" +
+          '<button class="bigBtn green" id="nightBtn">START THE NIGHT</button>'
+        );
+        $("nightBtn").addEventListener("click", function(){
+          hideCard();
+          S.bake = 0; S.black = 0; S.flame = 30; S.dawn = DAWN_TOTAL; S.elapsed = 0;
+          S.loaves = 0; S.hearts = 3; renderPips();
+          S.phase = "play"; S.paused = false;
+        });
+      }
+      function tickIntro(dt){
+        S.introTimer += dt;
+        if (S.introStep === 0){
+          /* WATCH: flame held in the green, bake fills on its own */
+          S.flame = 57 + Math.sin(S.introTimer * 2) * 2;
+          S.bake += greenRate(S.flame) * dt;
+          if (S.bake >= 45){ S.bake = 45; startIntroPump(); }
+          return;
+        }
+        /* flame physics for the hands-on steps */
+        if (S.pumping) S.flame += S.pumpRate * dt;
+        else S.flame += S.drift * dt;
+        if (S.introStep === 2 && S.flame > GREEN_HI) S.flame = GREEN_HI; /* no burn risk yet */
+        if (S.flame > 100) S.flame = 100;
+        if (S.flame < 0) S.flame = 0;
+        if (S.introStep === 1){
+          if (S.flame >= GREEN_LO){ startIntroFree(); }
+          return;
+        }
+        if (S.introStep === 2){
+          if (S.flame >= GREEN_LO && S.flame <= GREEN_HI){
+            S.bake += greenRate(S.flame) * dt;
+          }
+          if (S.bake >= 100){
+            S.bake = 100; sndLoaf(); confettiBurst(false);
+            var lp = $("loafPop"); lp.classList.add("on");
+            setTimeout(function(){ lp.classList.remove("on"); }, 1200);
+            finishIntro();
+          }
+        }
+      }
+      function breakLesson(i){
+        var b = BREAKS[i];
+        showSpot(null, "BREAK " + (i+1) + " — " + b.name, b.lesson, "KEEP BAKING", null);
+      }
+
+      /* ================= Laws sheet ================= */
+      function lawsSheet(){
+        if (S.phase !== "play") return;
+        var wasPaused = S.paused; S.paused = true;
+        var html = '<h1>LAWS OF THE OVEN</h1>';
+        if (S.breaksTaken === 0){
+          html += '<p class="lawsEmpty">No breaks yet. The oven is whole — for now.</p>';
+        } else {
+          html += '<ul id="lawsList">';
+          for (var i = S.breaksTaken - 1; i >= 0; i--){
+            html += '<li><span class="lawN">' + (i+1) + '</span>' + BREAKS[i].law + '</li>';
+          }
+          html += '</ul>';
+        }
+        html += '<button class="bigBtn" id="lawsClose">CLOSE</button>';
+        showCard(html);
+        $("lawsClose").addEventListener("click", function(){
+          hideCard(); S.paused = wasPaused;
+        });
+      }
+      $("lawsBtn").addEventListener("click", function(){ tone(440,.06,"square",.05); lawsSheet(); });
+      $("muteBtn").addEventListener("click", function(){
+        S.muted = !S.muted; renderPips();
+        if (!S.muted) tone(660,.07,"square",.06);
+      });
+
+      /* ================= End screens ================= */
+      function statBlock(){
+        var l = "";
+        for (var i=0;i<6;i++) l += loafSVG(i < S.loaves);
+        var secs = Math.max(0, Math.round(S.elapsed));
+        var mins = Math.floor(secs/60), rem = secs % 60;
+        return '<div class="statPips">' + l + '</div>' +
+          '<p class="howto">Loaves: ' + S.loaves + ' of 6 &nbsp;·&nbsp; Time: ' +
+          mins + ':' + (rem < 10 ? "0" : "") + rem + '</p>';
+      }
+      function endScreen(kind){
+        S.phase = "over"; S.pumping = false; pumpBtn.classList.remove("down");
+        var html;
+        if (kind === "win"){
+          html = '<h1 class="green">DAWN BREAKS — SIX LOAVES</h1>' + statBlock() +
+            '<p>The oven sighs, full at last, and sleeps.</p>' +
+            '<button class="bigBtn green" id="retryBtn">RETRY</button>';
+          sndWin(); confettiBurst(true);
+          setTimeout(function(){ confettiBurst(true); }, 350);
+        } else if (kind === "hearts"){
+          html = '<h1 class="red">THE OVEN EATS YOU</h1>' + statBlock() +
+            '<p>Three loaves burned. The mouth opens wide.</p>' +
+            '<button class="bigBtn red" id="retryBtn">RETRY</button>';
+          sndLose();
+        } else {
+          html = '<h1 class="red">DAWN FINDS YOU SHORT</h1>' + statBlock() +
+            '<p>Light spills in. The loaves are not ready.</p>' +
+            '<button class="bigBtn red" id="retryBtn">RETRY</button>';
+          sndLose();
+        }
+        showCard(html);
+        $("retryBtn").addEventListener("click", function(){ resetGame(); });
+      }
+      function resetGame(){
+        var keepMuted = S.muted;
+        S = freshState(); S.muted = keepMuted;
+        $("gaugeWrap").classList.remove("dark");
+        layoutZones(); renderPips(); hideCard(); hideSpot(); hideGuide();
+        pumpBtn.disabled = false;
+        storyCard1();
+      }
+
+      /* ================= Input: PUMP ================= */
+      function pumpOn(e){
+        if (e) e.preventDefault();
+        if (S.paused) return;
+        if (S.phase === "intro"){ if (S.introStep < 1) return; }
+        else if (S.phase !== "play") return;
+        if (!S.pumping){
+          S.pumping = true; pumpBtn.classList.add("down");
+          sndPump();
+          pumpBtn.classList.remove("jiggle"); void pumpBtn.offsetWidth; pumpBtn.classList.add("jiggle");
+        }
+      }
+      function pumpOff(){
+        S.pumping = false; pumpBtn.classList.remove("down");
+      }
+      pumpBtn.addEventListener("pointerdown", function(e){
+        try { pumpBtn.setPointerCapture(e.pointerId); } catch(err){}
+        pumpOn(e);
+      });
+      pumpBtn.addEventListener("pointerup", pumpOff);
+      pumpBtn.addEventListener("pointercancel", pumpOff);
+      pumpBtn.addEventListener("lostpointercapture", pumpOff);
+      pumpBtn.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+      window.addEventListener("keydown", function(e){
+        if (e.code === "Space"){ e.preventDefault(); if (!e.repeat) pumpOn(e); }
+      });
+      window.addEventListener("keyup", function(e){
+        if (e.code === "Space"){ e.preventDefault(); pumpOff(); }
+      });
+      window.addEventListener("blur", pumpOff);
+
+      /* ================= Simulation ================= */
+      var tickAcc = 0;
+      function zoneOf(f){
+        if (f >= S.redStart) return "red";
+        if (f > GREEN_HI) return "yellow";
+        if (f >= GREEN_LO) return "green";
+        return "cold";
+      }
+      function tick(dt){
+        S.elapsed += dt;
+        S.dawn -= dt;
+        if (S.dawn <= 0){
+          S.dawn = 0;
+          if (S.loaves >= 6) endScreen("win"); else endScreen("time");
+          return;
+        }
+        /* flame */
+        if (S.pumping) S.flame += S.pumpRate * dt;
+        else S.flame += S.drift * dt;
+        if (S.flame > 100) S.flame = 100;
+        if (S.flame < 0) S.flame = 0;
+
+        var z = zoneOf(S.flame);
+        /* Bake: green bakes clean. Over the green (yellow/red) the loaf
+           KEEPS baking — but black fills the bar too, faster the further
+           over. Back in the green (or cold) the black stops growing; it
+           never heals. Black at 100 = the loaf burns. */
+        var bakingNow = false;
+        if (z === "green"){
+          S.bake += greenRate(S.flame) * S.bakeMult * dt; bakingNow = true;
+        } else if (z === "yellow" || z === "red"){
+          S.bake += overBakeRate(S.flame) * S.bakeMult * dt; bakingNow = true;
+          S.black += blackRate(S.flame) * dt;
+          tickAcc += dt;
+          if (tickAcc > 0.25){ tickAcc = 0; sndTick(); }
+        } else {
+          tickAcc = 0;
+        }
+        /* Burn check first: a loaf that fills black burns even if it
+           would also have finished this frame. */
+        if (S.black >= 100){
+          S.black = 0; S.bake = 0; S.hearts--; renderPips();
+          sndBurn();
+          app.classList.remove("shake"); void app.offsetWidth; app.classList.add("shake");
+          var fl = $("flash"); fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
+          if (S.hearts <= 0){ endScreen("hearts"); return; }
+        } else if (bakingNow && S.bake >= 100){
+          S.bake = 0; S.black = 0; S.loaves++; renderPips();
+          sndLoaf(); confettiBurst(false);
+          var lp = $("loafPop"); lp.classList.add("on");
+          setTimeout(function(){ lp.classList.remove("on"); }, 1400);
+          if (S.loaves >= 6){ endScreen("win"); return; }
+          var bi = S.loaves - 1;
+          if (bi < BREAKS.length){
+            applyBreak(bi); S.breaksTaken = S.loaves;
+            breakLesson(bi);
+          }
+        }
+        /* ambient embers */
+        if (Math.random() < dt * (S.pumping ? 26 : 8)){
+          var p = scenePoint(0.5, 0.9);
+          spawn(p.x + (Math.random()-0.5)*60, p.y, 1,
+            ["#ff7b1c","#ffd23f","#e63946"], 30, 90);
+        }
+      }
+
+      /* ================= Render ================= */
+      var loafEl = $("loafBody"), flameG = $("flameG"), flashG = $("flameFlashG");
+      var outerEl = $("flameOuter"), midEl = $("flameMid"), coreEl = $("flameCore");
+      function lerpColor(a, b, t){
+        var r = Math.round(a[0] + (b[0]-a[0])*t),
+            g = Math.round(a[1] + (b[1]-a[1])*t),
+            bl = Math.round(a[2] + (b[2]-a[2])*t);
+        return "rgb(" + r + "," + g + "," + bl + ")";
+      }
+      function render(now){
+        /* flame size + colour by value/zone */
+        var f = S.flame, z = zoneOf(f);
+        var sc = 0.25 + (f/100) * 1.05;
+        var wob = 1 + Math.sin(now/90) * 0.04 + (S.pumping ? Math.sin(now/40)*0.05 : 0);
+        flameG.setAttribute("transform",
+          "translate(180 280) scale(" + (sc*(2-wob)).toFixed(3) + " " + (sc*wob).toFixed(3) + ")");
+        var oc, mc;
+        if (z === "cold"){ oc = "#57b8ff"; mc = "#aee3ff"; }
+        else if (z === "green"){ oc = "#ff7b1c"; mc = "#ffd23f"; }
+        else if (z === "yellow"){ oc = "#ff5e1c"; mc = "#ff9f1c"; }
+        else { oc = "#e63946"; mc = "#ff7b1c"; }
+        outerEl.setAttribute("fill", oc); midEl.setAttribute("fill", mc);
+        coreEl.setAttribute("fill", z === "cold" ? "#eaf7ff" : "#fff3c4");
+        if (z === "red") flashG.classList.add("flameFlash"); else flashG.classList.remove("flameFlash");
+
+        /* loaf browning, then blackening as black grows */
+        var bt = Math.min(1, S.bake/100);
+        var loafCol = lerpColor([243,226,184],[168,94,26], bt);
+        if (S.black > 0){
+          var bk = Math.min(1, S.black/100);
+          /* blend the browned colour toward charcoal by black amount */
+          var m = loafCol.match(/\d+/g);
+          var r2 = Math.round(Number(m[0]) * (1 - bk*0.85)),
+              g2 = Math.round(Number(m[1]) * (1 - bk*0.85)),
+              b2 = Math.round(Number(m[2]) * (1 - bk*0.85));
+          loafCol = "rgb(" + r2 + "," + g2 + "," + b2 + ")";
+        }
+        loafEl.setAttribute("fill", loafCol);
+
+        /* gauge + bars */
+        $("flameFill").style.width = f + "%";
+        $("gaugeState").textContent =
+          z === "cold" ? "COLD" : z === "green" ? "BAKING" : z === "yellow" ? "HOT — BURNING" : "TOO HOT — BURNING!";
+        $("gaugeState").style.color = (z === "yellow" || z === "red") ? "#8f1d27" : "";
+        $("bakeFill").style.width = Math.min(100, S.bake) + "%";
+        var bf = $("blackFill");
+        bf.style.width = Math.min(100, S.black) + "%";
+        bf.classList.toggle("zero", S.black <= 0);
+        $("bakeState").textContent =
+          S.black > 0 ? ("BURNT " + Math.floor(S.black) + "%") :
+          bt >= 1 ? "DONE" : bt > 0.66 ? "GOLDEN" : bt > 0.3 ? "RISING" : "DOUGH";
+        $("bakeState").style.color = S.black > 0 ? "#14100c" : "";
+        $("dawnFill").style.width = (S.dawn / DAWN_TOTAL * 100) + "%";
+        $("burnTag").classList.toggle("on", (z === "yellow" || z === "red") && S.phase === "play");
+      }
+
+      /* ================= Main loop ================= */
+      var last = performance.now();
+      function loop(now){
+        var dt = Math.min(0.05, (now - last) / 1000); last = now;
+        if (!S.paused){
+          if (S.phase === "play") tick(dt);
+          else if (S.phase === "intro") tickIntro(dt);
+        }
+        render(now);
+        drawFx(dt);
+        requestAnimationFrame(loop);
+      }
+      renderPips();
+      pumpBtn.disabled = false;
+      storyCard1();
+      requestAnimationFrame(loop);
+    </script>
+  </body>
+</html>

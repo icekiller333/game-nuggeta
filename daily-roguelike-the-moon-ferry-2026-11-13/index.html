@@ -92,6 +92,15 @@
     position:absolute; left:-3px; right:-3px; height:0;
     border-top:4px solid var(--pink); bottom:50%; z-index:2;
   }
+  #gaugeGhost{
+    position:absolute; left:0; right:0; height:0;
+    border-top:3px dashed var(--gold); bottom:50%; z-index:2;
+  }
+  #lagTag{
+    flex:0 0 auto; font-size:10px; font-weight:900; letter-spacing:.06em;
+    color:var(--gold); line-height:1.15; text-align:center;
+    font-variant-numeric:tabular-nums;
+  }
   #gaugeNum{
     position:absolute; top:2px; left:0; right:0; text-align:center;
     font-weight:900; font-size:14px; color:var(--ink);
@@ -149,6 +158,16 @@
   .lawItem b{ display:block; font-size:15px; letter-spacing:.05em; color:var(--orange); }
   .lawItem span{ font-size:14px; color:var(--ink); line-height:1.35; display:block; margin-top:2px; }
   .lawEmpty{ font-size:15px; color:var(--ink); margin:0 0 6px; line-height:1.4; }
+  .upBtn{
+    display:block; width:100%; text-align:left; min-height:56px; margin-top:12px;
+    font:inherit; color:var(--ink); background:var(--panel2);
+    border:3px solid var(--line); box-shadow:4px 4px 0 var(--line);
+    cursor:pointer; border-radius:0; padding:10px 12px;
+  }
+  .upBtn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--line); }
+  .upBtn b{ display:block; font-size:17px; font-weight:900; letter-spacing:.05em; color:var(--gold); }
+  .upBtn span{ display:block; font-size:14px; line-height:1.35; color:var(--ink); margin-top:2px; }
+  .upBtn .own{ color:var(--teal); font-weight:900; }
   /* ---------- Spotlight ---------- */
   #spot{ position:absolute; inset:0; z-index:15; display:none; }
   #spot.show{ display:block; }
@@ -182,6 +201,7 @@
       <div id="glowLabel"><span>GLOW</span><span id="glowNum">0/40</span></div>
       <div id="glowBar"><div id="glowFill"></div></div>
     </div>
+    <div id="lagTag" title="Seconds before the water answers the moon">LAG<br>0.6s</div>
     <div class="pipGroup">
       <div class="pipLabel">HULL</div>
       <div class="pips" id="hullPips">
@@ -207,6 +227,7 @@
     <div id="gauge" aria-hidden="true">
       <div id="gaugeFill"></div>
       <div id="gaugeLow"></div>
+      <div id="gaugeGhost"></div>
       <div id="gaugeTick"></div>
       <div id="gaugeNum">50</div>
       <div id="surgeArrow">▲</div>
@@ -241,12 +262,16 @@ var LAWS = {
   5: { name: "STORM SURGE", desc: "The tide drifts ±10 on its own. Watch the gauge arrow." },
   6: { name: "FULL GALE", desc: "Every curse at once — and 15% faster again." }
 };
+var BASE_LAG = 0.6;        // seconds before the water even starts to answer
+var BASE_CATCH = 0.045;    // per-frame ease toward the delayed pull (@60fps)
 var S = null;
 function freshState() {
   return {
     phase: "story", storyIdx: 0,
     reach: 1, glow: 0, hull: 3,
     tide: 50, moonTarget: 50,
+    targetHist: [], delayedTarget: 50, pullTarget: 50,
+    swiftCount: 0, shortCount: 0, upgradeSeen: false, pendingReach: 0,
     camU: 0, reefs: [], wrecks: [],
     surgeT: 0, surge: 0,
     shake: 0, flash: 0, time: 0,
@@ -429,7 +454,7 @@ function showStory() {
 function showHowto() {
   S.phase = "howto";
   showSheet(
-    "<h2>HOW TO SAIL</h2><p>Drag the moon to raise or lower the tide — clear the reefs, dip low to haul glow from the wrecks.</p>" +
+    "<h2>HOW TO SAIL</h2><p>Drag the moon to raise or lower the tide — but the water trails behind it, so move early: clear the reefs, dip low to haul glow from the wrecks.</p>" +
     "<button class='bigBtn' id='cardBtn'>BEGIN</button>"
   );
   $("cardBtn").addEventListener("click", function () {
@@ -440,7 +465,7 @@ function showHowto() {
     S.spotReturn = "spot";
     showSpot("moon", "THE MOON", "Drag anywhere on the sea to pull the moon up or down.");
     S.spotDone = function () {
-      showSpot("gauge", "TIDE GAUGE", "The pink tick is where the moon pulls. The water follows, a breath behind.");
+      showSpot("gauge", "TIDE GAUGE", "Pink tick: the moon's pull. Gold dash: the pull the water is answering now — it always trails behind. The gold line on the sea shows where the water is headed.");
       S.spotDone = function () { S.phase = "play"; };
     };
   });
@@ -485,6 +510,7 @@ function showLaws() {
 
 /* ================= HUD ================= */
 function syncHUD() {
+  syncLagTag();
   $("glowNum").textContent = S.glow + "/40";
   $("glowFill").style.width = Math.min(100, S.glow / GOAL * 100) + "%";
   var hp = $("hullPips").children;
@@ -522,8 +548,41 @@ function updateStrip() {
 }
 
 /* ================= RUN FLOW ================= */
+// Upgrades stack multiplicatively and last the whole run.
+function lagDelay() { return BASE_LAG * Math.pow(0.65, S.shortCount); }
+function catchRate() { return Math.min(0.22, BASE_CATCH * Math.pow(1.35, S.swiftCount)); }
+function syncLagTag() {
+  $("lagTag").innerHTML = "LAG<br>" + lagDelay().toFixed(1) + "s";
+}
+function showUpgrade(next) {
+  S.phase = "upgrade";
+  S.pendingReach = next;
+  var first = !S.upgradeSeen; S.upgradeSeen = true;
+  showSheet(
+    "<h2>REACH " + (next - 1) + " CROSSED</h2>" +
+    "<p>" + (first
+      ? "The strait offers one gift. Pick one — it lasts the whole crossing, and gifts stack."
+      : "The strait offers again. Pick one — gifts stack.") + "</p>" +
+    "<button class='upBtn' id='upSwift'><b>SWIFT TIDE" + (S.swiftCount ? " <span class='own'>×" + S.swiftCount + "</span>" : "") + "</b>" +
+    "<span>Once the water starts moving, it catches up 35% faster.</span></button>" +
+    "<button class='upBtn' id='upShort'><b>SHORT LAG" + (S.shortCount ? " <span class='own'>×" + S.shortCount + "</span>" : "") + "</b>" +
+    "<span>The water starts answering sooner — the wait before it moves drops by 35% (now " + lagDelay().toFixed(1) + "s).</span></button>"
+  );
+  var pick = function (which) {
+    audio();
+    if (which === "swift") { S.swiftCount++; tone(660, 990, 0.16, "triangle", 0.18); }
+    else { S.shortCount++; tone(520, 880, 0.16, "triangle", 0.18); }
+    syncLagTag();
+    sheet.classList.remove("show");
+    S.phase = "play";
+    beginReach(S.pendingReach);
+  };
+  $("upSwift").addEventListener("click", function () { pick("swift"); });
+  $("upShort").addEventListener("click", function () { pick("short"); });
+}
 function startRun() {
   S.reach = 1; S.glow = 0; S.hull = 3; S.tide = 50; S.moonTarget = 50;
+  S.targetHist = []; S.delayedTarget = 50; S.pullTarget = 50;
   genReach(1); syncHUD();
   setStrip("REACH 1 OF 6", "", 2.2);
 }
@@ -603,10 +662,20 @@ function update(dt) {
     S.surgeT += dt;
     S.surge = Math.sin(S.surgeT * 0.85) * 10;
   } else S.surge = 0;
-  // tide eases toward moon + surge (lag ~0.08/frame @60fps)
+  // The pull is real, but the WATER IS LATE — in two stages:
+  // 1) the pull enters a delay buffer and nothing moves for lagDelay() seconds;
+  // 2) then the tide eases toward that delayed pull at catchRate().
+  // Move the moon EARLY: the gold ghost line is where the water is headed.
   var target = Math.max(0, Math.min(100, S.moonTarget + S.surge));
-  var f = 1 - Math.pow(1 - 0.08, dt * 60);
-  S.tide += (target - S.tide) * f;
+  S.pullTarget = target;
+  S.targetHist.push({ t: S.time, v: target });
+  var cutoff = S.time - lagDelay();
+  var delayed = S.targetHist[0].v;
+  while (S.targetHist.length > 1 && S.targetHist[1].t <= cutoff) S.targetHist.shift();
+  if (S.targetHist[0].t <= cutoff) delayed = S.targetHist[0].v;
+  S.delayedTarget = delayed;
+  var f = 1 - Math.pow(1 - catchRate(), dt * 60);
+  S.tide += (delayed - S.tide) * f;
   // sail
   S.camU += dt * SPEEDS[S.reach - 1] / 35;
   var sx = shipX(), i, o, x;
@@ -640,10 +709,11 @@ function update(dt) {
       }
     }
   }
-  // reach end
+  // reach end — between reaches the strait offers an upgrade (pick 1 of 2, free)
   if (S.camU >= 1.02) {
     if (S.reach >= 6) { endRun(S.glow >= GOAL ? "win" : "kept"); return; }
-    beginReach(S.reach + 1);
+    showUpgrade(S.reach + 1);
+    return;
   }
   // queued spotlights pause the run, one at a time, in the order queued
   if (S.spotQueue.length && S.phase === "play") {
@@ -783,8 +853,26 @@ function draw() {
   ctx.beginPath(); ctx.arc(m.x + m.r * 0.42, m.y - m.r * 0.38, m.r * 0.09, 0, 6.29); ctx.fill();
   // wrecks (behind water line glow reads through)
   for (i = 0; i < S.wrecks.length; i++) drawWreck(S.wrecks[i]);
-  // water
+  // GHOST PULL — where the moon is dragging the water TO.
+  // The gold dashed line + the shaded gap make the lag readable:
+  // the gap is the distance the real water still has to travel.
   var sy = surfY(S.tide);
+  var gy = surfY(S.pullTarget);
+  if (Math.abs(gy - sy) > 3) {
+    ctx.fillStyle = "rgba(255,210,63,0.13)";
+    ctx.fillRect(-20, Math.min(gy, sy), W + 40, Math.abs(gy - sy));
+  }
+  ctx.strokeStyle = "#ffd23f"; ctx.lineWidth = 2.5; ctx.setLineDash([9, 6]);
+  ctx.beginPath(); ctx.moveTo(-20, gy); ctx.lineTo(W + 20, gy); ctx.stroke(); ctx.setLineDash([]);
+  ctx.font = "900 11px system-ui, sans-serif";
+  var glabel = "MOON PULL";
+  var gw = ctx.measureText(glabel).width + 10;
+  ctx.fillStyle = "#05081a"; ctx.fillRect(6, gy - 19, gw, 16);
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.strokeRect(6, gy - 19, gw, 16);
+  ctx.fillStyle = "#ffd23f"; ctx.textBaseline = "middle";
+  ctx.fillText(glabel, 11, gy - 10.5);
+  ctx.textBaseline = "alphabetic";
+  // water
   ctx.fillStyle = "rgba(10,38,56,0.88)";
   ctx.beginPath(); ctx.moveTo(-20, H + 20); ctx.lineTo(-20, sy);
   for (var wx = -20; wx <= W + 20; wx += 14) ctx.lineTo(wx, sy + Math.sin(wx * 0.045 + S.time * 2.2) * 2.2);
@@ -822,6 +910,7 @@ function draw() {
   // gauge DOM sync
   $("gaugeFill").style.height = S.tide + "%";
   $("gaugeTick").style.bottom = "calc(" + S.moonTarget + "% - 2px)";
+  $("gaugeGhost").style.bottom = "calc(" + S.delayedTarget + "% - 1px)";
   $("gaugeNum").textContent = Math.round(S.tide);
   var sa = $("surgeArrow");
   if (S.reach >= 5 && S.phase !== "story") {

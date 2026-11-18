@@ -1,0 +1,1011 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Daily Roguelike — The Tin Shop's Masks (2026-11-16)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Archivo+Black&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        --ink:#1b1226;
+        --bg:#ffd9ec;
+        --bg2:#cdeffd;
+        --panel:#fff8ec;
+        --panel2:#d8f5e3;
+        --yellow:#ffd23f;
+        --coral:#ff6b81;
+        --teal:#2ec4b6;
+        --violet:#9b5de5;
+        --rust:#c1502e;
+        --gold:#f4a91f;
+        --shadow:5px 5px 0 var(--ink);
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#241631;
+          --bg2:#17293d;
+          color-scheme: dark;
+        }
+      }
+      *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+      html,body{ height:100%; }
+      body{
+        margin:0;
+        font-family:"Archivo", system-ui, sans-serif;
+        color:var(--ink);
+        background:linear-gradient(160deg, var(--bg) 0%, var(--bg2) 100%);
+        overflow:hidden;
+      }
+      button{ font-family:inherit; color:inherit; }
+      #app{
+        height:100dvh;
+        display:flex; flex-direction:column;
+        overflow:hidden;
+        max-width:640px; margin:0 auto;
+        padding:6px 8px 8px;
+        gap:6px;
+      }
+      /* ---------- header ---------- */
+      header{
+        flex:0 0 auto;
+        display:flex; align-items:center; gap:8px;
+        background:var(--panel);
+        border:3px solid var(--ink);
+        box-shadow:var(--shadow);
+        padding:5px 8px;
+        min-height:52px;
+      }
+      .htitle{
+        font-family:"Archivo Black", "Archivo", sans-serif;
+        font-size:17px; letter-spacing:.5px; line-height:1;
+        white-space:nowrap;
+      }
+      .hgroup{ display:flex; align-items:center; gap:5px; }
+      .hlabel{ font-size:10px; font-weight:900; letter-spacing:.08em; }
+      #hearts{ display:flex; gap:3px; align-items:center; }
+      .heart{ width:19px; height:18px; display:block; }
+      .heart path{ fill:var(--coral); stroke:var(--ink); stroke-width:14; }
+      .heart.off path{ fill:#cdc4d6; }
+      #stagePips{ display:flex; gap:4px; align-items:center; }
+      .spip{
+        width:13px; height:13px; border:2.5px solid var(--ink); background:#fff;
+      }
+      .spip.done{ background:var(--teal); }
+      .spip.now{ background:var(--yellow); }
+      .hbtn{
+        margin-left:auto;
+        min-width:42px; min-height:40px;
+        border:3px solid var(--ink); background:var(--yellow);
+        font-weight:900; font-size:12px; letter-spacing:.04em;
+        box-shadow:3px 3px 0 var(--ink);
+        cursor:pointer; padding:4px 8px;
+        display:inline-flex; align-items:center; justify-content:center;
+      }
+      .hbtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+      .hbtn.sound{ background:var(--panel2); margin-left:0; }
+      .hbtn svg{ width:20px; height:20px; display:block; }
+      .spacer{ flex:1 1 auto; }
+      /* ---------- scene ---------- */
+      #scene{
+        flex:1 1 auto; min-height:0;
+        position:relative; overflow:hidden;
+        background:var(--panel2);
+        border:3px solid var(--ink);
+        box-shadow:var(--shadow);
+        display:flex; align-items:center; justify-content:center;
+        padding:8px 6px;
+      }
+      #sceneInner{
+        display:flex; align-items:stretch; gap:6px;
+        max-width:100%;
+      }
+      #sceneInner.shake{ animation:shake .45s linear; }
+      @keyframes shake{
+        0%,100%{ transform:translateX(0); }
+        15%{ transform:translateX(-9px) rotate(-.6deg); }
+        35%{ transform:translateX(8px) rotate(.6deg); }
+        55%{ transform:translateX(-6px); }
+        75%{ transform:translateX(5px); }
+      }
+      .side{ position:relative; flex:0 0 auto; }
+      .side.crankSide{ width:46px; }
+      .side.toySide{ width:70px; }
+      .port{
+        position:absolute; left:50%;
+        transform:translate(-50%,-50%);
+        display:flex; flex-direction:column; align-items:center; gap:2px;
+        width:100%;
+      }
+      .port .plabel{ font-size:9px; font-weight:900; letter-spacing:.06em; text-align:center; line-height:1.05; }
+      .port svg{ display:block; }
+      #crankSvg{ width:44px; height:44px; }
+      #crankSvg .crankArm{ transition:filter .2s; }
+      #scene.lit #crankSvg .crankArm{ filter:drop-shadow(0 0 5px var(--gold)); }
+      #toySvg{ width:66px; height:82px; }
+      #toyWrap{ transition:filter .25s; }
+      #toyWrap.awake{ animation:toyBounce .6s ease; filter:drop-shadow(0 0 7px var(--gold)); }
+      @keyframes toyBounce{
+        0%{ transform:translateY(0) scale(1); }
+        30%{ transform:translateY(-10px) scale(1.07) rotate(-2deg); }
+        60%{ transform:translateY(2px) scale(.98); }
+        100%{ transform:translateY(0) scale(1); }
+      }
+      /* ---------- board ---------- */
+      #board{
+        position:relative;
+        width:min(60vw, 47dvh, 430px);
+        aspect-ratio:1/1;
+        display:grid;
+        grid-template-columns:repeat(4,1fr);
+        grid-template-rows:repeat(4,1fr);
+        gap:6px;
+        flex:0 0 auto;
+      }
+      .cell{
+        position:relative;
+        border:3px solid var(--ink);
+        background:#fff3d6;
+        padding:0; cursor:pointer;
+        box-shadow:3px 3px 0 var(--ink);
+        min-height:44px;
+        overflow:hidden;
+      }
+      .cell:nth-child(odd){ background:#ffe9f2; }
+      .cell:active{ transform:translate(1px,1px); box-shadow:2px 2px 0 var(--ink); }
+      .cell.cursor{ outline:4px solid var(--ink); outline-offset:-4px; }
+      .cell svg.gear{ width:100%; height:100%; display:block; }
+      .rotor{
+        transition:transform .24s cubic-bezier(.34,1.45,.64,1);
+        transform-box:fill-box; transform-origin:center;
+      }
+      .pipe{ fill:#8a5a22; stroke:var(--ink); stroke-width:2.5; }
+      .cell.powered{ background:#fff0b3; }
+      .cell.powered .pipe{ fill:var(--gold); }
+      .cell.powered svg.gear{ filter:drop-shadow(0 0 6px rgba(244,169,31,.95)); }
+      .cell.flash{ animation:cellFlash .55s ease; }
+      @keyframes cellFlash{
+        0%{ background:#ff9d5c; } 40%{ background:#ffb27a; } 100%{ }
+      }
+      .badge{
+        position:absolute; z-index:3;
+        display:flex; align-items:center; justify-content:center;
+        border:2.5px solid var(--ink); font-weight:900; line-height:1;
+        pointer-events:none;
+      }
+      .badge.wild{
+        top:2px; right:2px; width:20px; height:20px;
+        background:var(--violet); color:#fff; font-size:13px;
+      }
+      .badge.rust{
+        top:2px; right:2px; width:20px; height:20px;
+        background:var(--rust); color:#fff; font-size:11px;
+      }
+      .badge.pair{
+        top:2px; left:2px; width:16px; height:16px; font-size:10px; color:var(--ink);
+      }
+      /* ---------- fx layer ---------- */
+      #fx{ position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:5; }
+      .confetti{
+        position:absolute; top:-14px; border:2px solid var(--ink);
+        animation-name:cfall; animation-timing-function:linear; animation-fill-mode:forwards;
+      }
+      @keyframes cfall{
+        to{ transform:translateY(112dvh) rotate(560deg); }
+      }
+      .spark{
+        position:absolute; border:2px solid var(--ink); border-radius:50%;
+        animation-name:sparkFly; animation-timing-function:ease-out; animation-fill-mode:forwards;
+      }
+      @keyframes sparkFly{
+        to{ transform:translate(var(--dx), var(--dy)) scale(.3); opacity:0; }
+      }
+      /* ---------- footer ---------- */
+      footer{
+        flex:0 0 auto;
+        background:var(--panel);
+        border:3px solid var(--ink);
+        box-shadow:var(--shadow);
+        padding:6px 9px 7px;
+        display:flex; flex-direction:column; gap:5px;
+      }
+      .movesRow{ display:flex; align-items:center; gap:7px; min-height:16px; }
+      .flabel{ font-size:11px; font-weight:900; letter-spacing:.08em; white-space:nowrap; }
+      #movePips{ display:flex; gap:3px; flex-wrap:nowrap; }
+      .mpip{ width:11px; height:11px; border:2px solid var(--ink); background:var(--teal); flex:0 0 auto; }
+      .mpip.spent{ background:#cdc4d6; }
+      .mpip.low{ background:var(--coral); }
+      .footRow{ display:flex; align-items:center; gap:8px; min-height:26px; }
+      #maskChip{
+        border:3px solid var(--ink); background:var(--ink); color:#fff;
+        font-weight:900; font-size:12px; letter-spacing:.05em;
+        padding:4px 8px; white-space:nowrap;
+      }
+      #decide{ font-size:15px; font-weight:700; line-height:1.15; }
+      /* ---------- overlay cards ---------- */
+      #overlay, #rulesSheet{
+        position:fixed; inset:0; z-index:40;
+        background:rgba(27,18,38,.62);
+        display:none; align-items:center; justify-content:center;
+        padding:18px;
+      }
+      #overlay.open, #rulesSheet.open{ display:flex; }
+      .card{
+        background:var(--panel);
+        border:4px solid var(--ink);
+        box-shadow:8px 8px 0 var(--ink);
+        max-width:350px; width:100%;
+        padding:20px 18px 16px;
+        text-align:center;
+        max-height:calc(100dvh - 40px);
+        overflow:hidden;
+      }
+      .card .kick{
+        display:inline-block; background:var(--yellow); border:3px solid var(--ink);
+        font-weight:900; font-size:11px; letter-spacing:.1em; padding:3px 8px; margin-bottom:10px;
+      }
+      .card h2{
+        font-family:"Archivo Black","Archivo",sans-serif;
+        font-size:25px; margin:0 0 10px; line-height:1.08;
+      }
+      .card p{ font-size:16.5px; line-height:1.45; margin:0 0 16px; font-weight:500; }
+      .cardBtn{
+        min-height:48px; min-width:150px;
+        background:var(--ink); color:#fff;
+        border:3px solid var(--ink);
+        font-weight:900; font-size:16px; letter-spacing:.04em;
+        padding:10px 22px; cursor:pointer;
+        box-shadow:4px 4px 0 rgba(27,18,38,.35);
+      }
+      .cardBtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 rgba(27,18,38,.35); }
+      .ruleRow{
+        display:flex; gap:9px; align-items:flex-start; text-align:left;
+        border:3px solid var(--ink); padding:8px 10px; margin-bottom:8px; background:#fff;
+      }
+      .ruleRow .rname{
+        font-weight:900; font-size:13px; white-space:nowrap; background:var(--yellow);
+        border:2.5px solid var(--ink); padding:2px 6px;
+      }
+      .ruleRow .rdesc{ font-size:13.5px; line-height:1.35; font-weight:500; }
+      .ruleRow.clown{ background:#ffe3f1; } .ruleRow.mouse{ background:#ffe9d9; }
+      .ruleRow.ballerina{ background:#e5f4ff; } .ruleRow.jack{ background:#efe6ff; }
+      .ruleRow.soldier{ background:#e2f7e9; }
+      @media (prefers-reduced-motion: reduce){
+        .rotor{ transition:none; }
+        #sceneInner.shake, #toyWrap.awake, .cell.flash{ animation:none; }
+        .confetti, .spark{ display:none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <div class="htitle">TIN SHOP</div>
+        <div class="hgroup" aria-label="Hearts">
+          <div id="hearts"></div>
+        </div>
+        <div class="hgroup" aria-label="Stages">
+          <div id="stagePips"></div>
+        </div>
+        <button class="hbtn" id="rulesBtn" aria-label="Open rules sheet">RULES</button>
+        <button class="hbtn sound" id="soundBtn" aria-label="Toggle sound"></button>
+      </header>
+
+      <main id="scene">
+        <div id="sceneInner">
+          <div class="side crankSide">
+            <div class="port" id="crankPort">
+              <svg id="crankSvg" viewBox="0 0 100 100" aria-hidden="true">
+                <rect x="6" y="30" width="16" height="40" fill="#8a5a22" stroke="#1b1226" stroke-width="5"/>
+                <g class="crankArm">
+                  <rect x="18" y="43" width="34" height="14" fill="#f4a91f" stroke="#1b1226" stroke-width="5"/>
+                  <circle cx="34" cy="50" r="17" fill="#d9a441" stroke="#1b1226" stroke-width="5"/>
+                  <circle cx="34" cy="50" r="6" fill="#1b1226"/>
+                  <rect x="46" y="20" width="11" height="24" fill="#ff6b81" stroke="#1b1226" stroke-width="4"/>
+                  <circle cx="51.5" cy="18" r="8" fill="#ffd23f" stroke="#1b1226" stroke-width="4"/>
+                </g>
+              </svg>
+              <div class="plabel">CRANK</div>
+            </div>
+          </div>
+          <div id="board" role="group" aria-label="Gear grid"></div>
+          <div class="side toySide">
+            <div class="port" id="toyPort">
+              <div id="toyWrap"></div>
+              <div class="plabel" id="toyLabel">ASLEEP</div>
+            </div>
+          </div>
+        </div>
+        <div id="fx"></div>
+      </main>
+
+      <footer>
+        <div class="movesRow">
+          <span class="flabel">MOVES</span>
+          <div id="movePips"></div>
+        </div>
+        <div class="footRow">
+          <span id="maskChip">MASK · SOLDIER</span>
+          <span id="decide">Wake the tin soldier.</span>
+        </div>
+      </footer>
+    </div>
+
+    <div id="overlay" role="dialog" aria-modal="true">
+      <div class="card">
+        <div class="kick" id="cardKick">STORY</div>
+        <h2 id="cardTitle"></h2>
+        <p id="cardBody"></p>
+        <button class="cardBtn" id="cardBtn">NEXT</button>
+      </div>
+    </div>
+
+    <div id="rulesSheet" role="dialog" aria-modal="true">
+      <div class="card">
+        <div class="kick">RULES</div>
+        <h2>The Masks</h2>
+        <div id="rulesList"></div>
+        <button class="cardBtn" id="rulesClose">CLOSE</button>
+      </div>
+    </div>
+
+    <script>
+    "use strict";
+    /* ================= data ================= */
+    var DIRS = [{r:-1,c:0},{r:0,c:1},{r:1,c:0},{r:0,c:-1}]; // N E S W
+    var OPP = [2,3,0,1];
+    var BASE_ARMS = {
+      straight:[1,3],      // E W
+      elbow:[0,1],         // N E
+      tee:[0,1,3],         // N E W
+      cross:[0,1,2,3],
+      dead:[1]             // E
+    };
+    var TYPE_TEETH = { straight:8, elbow:7, tee:9, cross:10, dead:6 };
+    var TYPES = ["straight","elbow","tee","cross","dead"];
+
+    var STAGES = [
+      { toy:"TIN SOLDIER", mask:"SOLDIER", n:5, budget:14, wild:false, mirror:false, rust:false,
+        decide:"Wake the tin soldier." },
+      { toy:"JACK-IN-THE-BOX", mask:"JACK", n:6, budget:16, wild:true, mirror:false, rust:false,
+        decide:"Wake the jack." },
+      { toy:"BALLERINA", mask:"BALLERINA", n:6, budget:16, wild:false, mirror:true, rust:false,
+        decide:"Wake the ballerina." },
+      { toy:"WIND-UP MOUSE", mask:"MOUSE", n:7, budget:18, wild:false, mirror:false, rust:true,
+        decide:"Wake the wind-up mouse." },
+      { toy:"CLOWN", mask:"CLOWN", n:8, budget:20, wild:true, mirror:true, rust:true,
+        decide:"Wake the clown." }
+    ];
+    var BETWEEN = [
+      "The soldier clicks to attention. Somewhere upstairs, a music box starts playing itself.",
+      "The jack pops up, grinning. From inside the walls comes a tiny, scurrying sound.",
+      "The ballerina bows to an empty room. Every mirror in the shop turns to watch.",
+      "The mouse squeaks once, smug. One mask still hangs on its hook."
+    ];
+    var MASK_CARDS = [
+      null,
+      { kick:"NEW MASK", title:"MASK: JACK", body:"The wild gear — starred — spins 180° per tap.", btn:"WEAR IT" },
+      { kick:"NEW MASK", title:"MASK: BALLERINA", body:"Tapping a gear also turns its mirror twin. Twins share a mark.", btn:"WEAR IT" },
+      { kick:"NEW MASK", title:"MASK: MOUSE", body:"The rust gear rattles — every tap spins one random gear. Watch for the flash.", btn:"WEAR IT" },
+      { kick:"NEW MASK", title:"MASK: CLOWN", body:"Every twist at once: wild gear, mirror twins, and the rust rattle.", btn:"WEAR IT" }
+    ];
+    var RULES = [
+      { cls:"clown", name:"CLOWN", desc:"Every twist at once: wild gear, mirror twins, rust rattle." },
+      { cls:"mouse", name:"MOUSE", desc:"The rust gear rattles — every tap spins one random gear 90°." },
+      { cls:"ballerina", name:"BALLERINA", desc:"Tapping a gear also rotates its mirror twin across the centre line." },
+      { cls:"jack", name:"JACK", desc:"The starred wild gear spins 180° per tap instead of 90°." },
+      { cls:"soldier", name:"SOLDIER", desc:"Tap a gear to rotate it 90° clockwise. Connect the crank to the toy." }
+    ];
+    var PAIR_STYLE = [
+      { g:"●", bg:"#ffd23f" }, { g:"▲", bg:"#7bf1a8" }, { g:"■", bg:"#6ecbff" }, { g:"◆", bg:"#ff9de2" },
+      { g:"●", bg:"#ffa26b" }, { g:"▲", bg:"#c3a6ff" }, { g:"■", bg:"#8ef0e0" }, { g:"◆", bg:"#ffe98a" }
+    ];
+
+    /* ================= state ================= */
+    var S = {
+      stage:0, hearts:3, cells:[], rots:[], disp:[],
+      pathRow:1, wild:-1, rust:-1, movesLeft:0, budget:0,
+      cursor:0, playing:false, sound:true, over:false
+    };
+
+    /* ================= dom ================= */
+    function $(id){ return document.getElementById(id); }
+    var boardEl=$("board"), heartsEl=$("hearts"), stagePipsEl=$("stagePips"),
+        movePipsEl=$("movePips"), maskChipEl=$("maskChip"), decideEl=$("decide"),
+        sceneEl=$("scene"), sceneInner=$("sceneInner"), fxEl=$("fx"),
+        toyWrap=$("toyWrap"), toyLabel=$("toyLabel"),
+        crankPort=$("crankPort"), toyPort=$("toyPort"),
+        overlay=$("overlay"), rulesSheet=$("rulesSheet");
+
+    /* ================= audio ================= */
+    var AC=null;
+    function ac(){
+      try{
+        if(!AC){ var Ctx = window.AudioContext || window.webkitAudioContext; if(!Ctx) return null; AC = new Ctx(); }
+        if(AC.state==="suspended"){ AC.resume(); }
+        return AC;
+      }catch(e){ return null; }
+    }
+    function beep(freq, dur, type, vol, delay){
+      if(!S.sound) return;
+      try{
+        var ctx=ac(); if(!ctx) return;
+        var t=ctx.currentTime+(delay||0);
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type=type||"square"; o.frequency.setValueAtTime(freq,t);
+        g.gain.setValueAtTime(vol||0.045,t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(t); o.stop(t+dur+0.02);
+      }catch(e){}
+    }
+    function sfxClick(){ beep(210+Math.random()*50, 0.06, "square", 0.04); }
+    function sfxRattle(){ beep(120,0.05,"sawtooth",0.05); beep(95,0.05,"sawtooth",0.05,0.06); beep(140,0.06,"sawtooth",0.045,0.12); }
+    function sfxWin(){ var n=[523,659,784,1047]; for(var i=0;i<n.length;i++) beep(n[i],0.16,"triangle",0.06,i*0.09); }
+    function sfxFail(){ beep(160,0.32,"sawtooth",0.06); beep(82,0.4,"sawtooth",0.06,0.1); }
+
+    /* ================= gear model ================= */
+    function armsOf(type, rot){
+      var base=BASE_ARMS[type], out=[];
+      for(var i=0;i<base.length;i++) out.push((base[i]+rot)%4);
+      return out;
+    }
+    function hasArm(type, rot, dir){
+      var base=BASE_ARMS[type];
+      for(var i=0;i<base.length;i++) if((base[i]+rot)%4===dir) return true;
+      return false;
+    }
+    function mirrorOf(i){ var r=(i/4)|0, c=i%4; return r*4+(3-c); }
+    function pairId(i){ var r=(i/4)|0, c=i%4; return r*2+Math.min(c,3-c); }
+
+    function applyTapRules(rots, i, cfg, wildIdx){
+      // returns list of [idx, stepsOf90]
+      var out=[];
+      var steps = (cfg.wild && i===wildIdx) ? 2 : 1;
+      rots[i]=(rots[i]+steps)%4; out.push([i,steps]);
+      if(cfg.mirror){
+        var m=mirrorOf(i);
+        if(m!==i){ rots[m]=(rots[m]+1)%4; out.push([m,1]); }
+      }
+      return out;
+    }
+
+    function computePower(cells, rots, pathRow){
+      var powered={}, start=pathRow*4+0, toyHit=false;
+      if(!hasArm(cells[start].type, rots[start], 3)) return { powered:powered, toy:false };
+      var queue=[start]; powered[start]=true;
+      while(queue.length){
+        var i=queue.pop(), r=(i/4)|0, c=i%4;
+        var arms=armsOf(cells[i].type, rots[i]);
+        for(var k=0;k<arms.length;k++){
+          var d=arms[k], nr=r+DIRS[d].r, nc=c+DIRS[d].c;
+          if(d===1 && c===3 && r===pathRow){ toyHit=true; continue; }
+          if(nr<0||nr>3||nc<0||nc>3) continue;
+          var j=nr*4+nc;
+          if(powered[j]) continue;
+          if(hasArm(cells[j].type, rots[j], OPP[d])){ powered[j]=true; queue.push(j); }
+        }
+      }
+      return { powered:powered, toy:toyHit };
+    }
+
+    /* ---------- generation: solved path + filler, then scramble ---------- */
+    function randomPath(pathRow){
+      for(var attempt=0; attempt<300; attempt++){
+        var visited={}, path=[[pathRow,0]];
+        visited[pathRow*4+0]=true;
+        var ok=(function dfs(r,c){
+          if(r===pathRow && c===3) return true;
+          var order=[0,1,2,3];
+          for(var a=order.length-1;a>0;a--){ var b=(Math.random()*(a+1))|0, t=order[a]; order[a]=order[b]; order[b]=t; }
+          for(var k=0;k<4;k++){
+            var d=order[k], nr=r+DIRS[d].r, nc=c+DIRS[d].c;
+            if(nr<0||nr>3||nc<0||nc>3||visited[nr*4+nc]) continue;
+            visited[nr*4+nc]=true; path.push([nr,nc]);
+            if(dfs(nr,nc)) return true;
+            path.pop(); delete visited[nr*4+nc];
+          }
+          return false;
+        })(pathRow,0);
+        if(ok && path.length>=4 && path.length<=7) return path;
+      }
+      return [[pathRow,0],[pathRow,1],[pathRow,2],[pathRow,3]];
+    }
+    function dirBetween(a, b){ // dir from cell a to adjacent cell b
+      var dr=b[0]-a[0], dc=b[1]-a[1];
+      for(var d=0;d<4;d++) if(DIRS[d].r===dr && DIRS[d].c===dc) return d;
+      return 1;
+    }
+    function validRots(type, needA, needB){
+      var out=[];
+      for(var rot=0; rot<4; rot++) if(hasArm(type,rot,needA) && hasArm(type,rot,needB)) out.push(rot);
+      return out;
+    }
+    function bfsMinMoves(rots, pathCells, cfg, wildIdx){
+      // state: rotations of path cells only; actions: tap any cell whose tap touches a path cell
+      var idxOf={}; pathCells.forEach(function(i,k){ idxOf[i]=k; });
+      var actionCells={};
+      pathCells.forEach(function(i){
+        actionCells[i]=true;
+        if(cfg.mirror) actionCells[mirrorOf(i)]=true;
+      });
+      var actions=Object.keys(actionCells).map(Number);
+      var start=pathCells.map(function(i){ return rots[i]; });
+      function isGoal(st){
+        for(var k=0;k<pathCells.length;k++){
+          var cell=S.genCells[pathCells[k]];
+          if(validRots(cell.type, cell.needA, cell.needB).indexOf(st[k])<0) return false;
+        }
+        return true;
+      }
+      if(isGoal(start)) return 0;
+      var seen={}; seen[start.join(",")]=true;
+      var frontier=[start], dist=0;
+      while(frontier.length){
+        dist++;
+        var next=[];
+        for(var f=0; f<frontier.length; f++){
+          var st=frontier[f];
+          for(var a=0; a<actions.length; a++){
+            var tmp=rots.slice();
+            pathCells.forEach(function(i,k){ tmp[i]=st[k]; });
+            applyTapRules(tmp, actions[a], cfg, wildIdx);
+            var ns=pathCells.map(function(i){ return tmp[i]; });
+            var key=ns.join(",");
+            if(seen[key]) continue;
+            seen[key]=true;
+            if(isGoal(ns)) return dist;
+            next.push(ns);
+          }
+        }
+        frontier=next;
+        if(dist>40) return 999;
+      }
+      return 999;
+    }
+
+    function genStage(stageIdx){
+      var cfg=STAGES[stageIdx];
+      for(var boardTry=0; boardTry<60; boardTry++){
+        var pathRow = 1 + ((Math.random()*2)|0);
+        var path = randomPath(pathRow);
+        var cells=[], i, r, c;
+        for(i=0;i<16;i++){
+          cells.push({ type:TYPES[(Math.random()*TYPES.length)|0], teeth:6+((Math.random()*7)|0),
+                       rad:34+((Math.random()*7)|0), mat:(Math.random()<0.5?"brass":"iron"),
+                       needA:-1, needB:-1 });
+        }
+        var pathCells=[];
+        for(var p=0;p<path.length;p++){
+          r=path[p][0]; c=path[p][1]; i=r*4+c; pathCells.push(i);
+          var entry = (p===0) ? 3 : dirBetween(path[p], path[p-1]);
+          var exit  = (p===path.length-1) ? 1 : dirBetween(path[p], path[p+1]);
+          var opp = (entry===OPP[exit]);
+          var choices = opp ? ["straight","tee","cross"] : ["elbow","tee","cross"];
+          var type = choices[(Math.random()*choices.length)|0];
+          var vr = validRots(type, entry, exit);
+          cells[i].type=type; cells[i].needA=entry; cells[i].needB=exit;
+          cells[i].solvedRot = vr[(Math.random()*vr.length)|0];
+        }
+        var solved=[];
+        for(i=0;i<16;i++) solved.push(cells[i].solvedRot!==undefined ? cells[i].solvedRot : ((Math.random()*4)|0));
+        var wildIdx = cfg.wild ? (Math.random()*16)|0 : -1;
+        var rustIdx = -1;
+        if(cfg.rust){ do{ rustIdx=(Math.random()*16)|0; }while(rustIdx===wildIdx); }
+        S.genCells=cells;
+        // scramble attempts from the solved state
+        for(var sTry=0; sTry<50; sTry++){
+          var rots=solved.slice();
+          for(var k=0;k<cfg.n;k++){
+            applyTapRules(rots, (Math.random()*16)|0, cfg, wildIdx);
+          }
+          var pw=computePower(cells, rots, pathRow);
+          if(pw.toy) continue;
+          var min=bfsMinMoves(rots, pathCells, cfg, wildIdx);
+          var limit = cfg.budget - (cfg.rust ? 3 : 0);
+          if(min>=3 && min<=limit){
+            return { cells:cells, rots:rots, pathRow:pathRow, wild:wildIdx, rust:rustIdx };
+          }
+        }
+      }
+      // fallback (practically unreachable): solved board scrambled by 3 plain taps
+      var fb=genStageFallback(stageIdx);
+      return fb;
+    }
+    function genStageFallback(stageIdx){
+      var cfg=STAGES[stageIdx];
+      var pathRow=1, cells=[], i;
+      for(i=0;i<16;i++) cells.push({ type:"dead", teeth:7, rad:36, mat:"iron", needA:-1, needB:-1 });
+      var rots=[]; for(i=0;i<16;i++) rots.push(0);
+      for(var c=0;c<4;c++){ var idx=pathRow*4+c; cells[idx].type="straight"; cells[idx].needA=3; cells[idx].needB=1; rots[idx]=0; }
+      var wildIdx = cfg.wild ? 5 : -1, rustIdx = cfg.rust ? 10 : -1;
+      rots[pathRow*4+1]=1;
+      return { cells:cells, rots:rots, pathRow:pathRow, wild:wildIdx, rust:rustIdx };
+    }
+
+    /* ================= toy illustrations ================= */
+    var INK="#1b1226";
+    function toySVG(stage){
+      var s="";
+      if(stage===0){ // tin soldier
+        s='<rect x="32" y="4" width="36" height="24" fill="#3a6bd8" stroke="'+INK+'" stroke-width="4"/>'
+         +'<rect x="26" y="26" width="48" height="7" fill="#ffd23f" stroke="'+INK+'" stroke-width="3.5"/>'
+         +'<circle cx="50" cy="42" r="12" fill="#ffd9b3" stroke="'+INK+'" stroke-width="4"/>'
+         +'<circle cx="45.5" cy="41" r="1.9" fill="'+INK+'"/><circle cx="54.5" cy="41" r="1.9" fill="'+INK+'"/>'
+         +'<path d="M45 48 Q50 51 55 48" fill="none" stroke="'+INK+'" stroke-width="2.5" stroke-linecap="round"/>'
+         +'<rect x="34" y="54" width="32" height="30" fill="#e63950" stroke="'+INK+'" stroke-width="4"/>'
+         +'<rect x="46" y="54" width="8" height="30" fill="#ffd23f"/>'
+         +'<circle cx="50" cy="62" r="2.4" fill="#fff" stroke="'+INK+'" stroke-width="1.8"/>'
+         +'<circle cx="50" cy="72" r="2.4" fill="#fff" stroke="'+INK+'" stroke-width="1.8"/>'
+         +'<rect x="36" y="84" width="11" height="16" fill="#2b3a67" stroke="'+INK+'" stroke-width="3.5"/>'
+         +'<rect x="53" y="84" width="11" height="16" fill="#2b3a67" stroke="'+INK+'" stroke-width="3.5"/>'
+         +'<rect x="33" y="98" width="15" height="6" fill="'+INK+'"/><rect x="52" y="98" width="15" height="6" fill="'+INK+'"/>';
+      } else if(stage===1){ // jack-in-the-box
+        s='<path d="M38 44 l4 6 M50 46 v7 M62 44 l-4 6" stroke="#8d99ae" stroke-width="4" fill="none"/>'
+         +'<circle cx="50" cy="30" r="16" fill="#ffe066" stroke="'+INK+'" stroke-width="4"/>'
+         +'<path d="M34 26 l-7 -8 M42 17 l-3 -10 M58 17 l3 -10 M66 26 l7 -8" stroke="#e63950" stroke-width="5" stroke-linecap="round" fill="none"/>'
+         +'<circle cx="27" cy="17" r="4" fill="#2ec4b6" stroke="'+INK+'" stroke-width="2.5"/>'
+         +'<circle cx="39" cy="6" r="4" fill="#ff6b81" stroke="'+INK+'" stroke-width="2.5"/>'
+         +'<circle cx="61" cy="6" r="4" fill="#ff6b81" stroke="'+INK+'" stroke-width="2.5"/>'
+         +'<circle cx="73" cy="17" r="4" fill="#2ec4b6" stroke="'+INK+'" stroke-width="2.5"/>'
+         +'<circle cx="44" cy="29" r="2.2" fill="'+INK+'"/><circle cx="56" cy="29" r="2.2" fill="'+INK+'"/>'
+         +'<circle cx="50" cy="34" r="3.4" fill="#e63950" stroke="'+INK+'" stroke-width="2"/>'
+         +'<path d="M43 39 Q50 45 57 39" fill="none" stroke="'+INK+'" stroke-width="2.5" stroke-linecap="round"/>'
+         +'<path d="M28 56 h44 l-5 40 h-34 Z" fill="#9b5de5" stroke="'+INK+'" stroke-width="4"/>'
+         +'<rect x="24" y="50" width="52" height="9" fill="#ffd23f" stroke="'+INK+'" stroke-width="3.5"/>'
+         +'<path d="M50 66 l3.5 7 7.5 1 -5.5 5.5 1.5 7.5 -7 -4 -7 4 1.5 -7.5 -5.5 -5.5 7.5 -1 Z" fill="#ffd23f" stroke="'+INK+'" stroke-width="2.2"/>';
+      } else if(stage===2){ // ballerina
+        s='<circle cx="50" cy="10" r="6.5" fill="#5b3a29" stroke="'+INK+'" stroke-width="3.5"/>'
+         +'<circle cx="50" cy="26" r="12" fill="#ffd9b3" stroke="'+INK+'" stroke-width="4"/>'
+         +'<circle cx="45.5" cy="25" r="1.8" fill="'+INK+'"/><circle cx="54.5" cy="25" r="1.8" fill="'+INK+'"/>'
+         +'<path d="M45 31 Q50 34 55 31" fill="none" stroke="'+INK+'" stroke-width="2.4" stroke-linecap="round"/>'
+         +'<path d="M38 22 a12 12 0 0 1 24 0 l0 -3 a12 8 0 0 0 -24 0 Z" fill="#5b3a29"/>'
+         +'<path d="M42 38 h16 l4 14 h-24 Z" fill="#ff8fab" stroke="'+INK+'" stroke-width="3.5"/>'
+         +'<path d="M62 42 q14 -6 16 -16" fill="none" stroke="'+INK+'" stroke-width="4" stroke-linecap="round"/>'
+         +'<path d="M38 42 q-13 -4 -15 -14" fill="none" stroke="'+INK+'" stroke-width="4" stroke-linecap="round"/>'
+         +'<path d="M24 52 h52 l8 14 h-68 Z" fill="#ffc2d4" stroke="'+INK+'" stroke-width="4"/>'
+         +'<path d="M46 66 l-3 26 M54 66 l6 24" stroke="'+INK+'" stroke-width="4.5" stroke-linecap="round" fill="none"/>'
+         +'<path d="M38 92 h10 M56 90 l10 2" stroke="#e63950" stroke-width="5" stroke-linecap="round"/>';
+      } else if(stage===3){ // wind-up mouse
+        s='<path d="M20 84 q-16 4 -14 -10 q1 -9 10 -8" fill="none" stroke="#ff8fab" stroke-width="5" stroke-linecap="round"/>'
+         +'<rect x="66" y="18" width="6" height="20" fill="#8a5a22" stroke="'+INK+'" stroke-width="3"/>'
+         +'<path d="M58 16 a10 8 0 1 1 20 0 a10 8 0 1 1 -20 0" fill="#ffd23f" stroke="'+INK+'" stroke-width="3.5" transform="rotate(90 69 28)"/>'
+         +'<ellipse cx="46" cy="72" rx="28" ry="20" fill="#a8b2c1" stroke="'+INK+'" stroke-width="4"/>'
+         +'<circle cx="24" cy="48" r="11" fill="#a8b2c1" stroke="'+INK+'" stroke-width="4"/>'
+         +'<circle cx="24" cy="48" r="5.5" fill="#ffc2d4"/>'
+         +'<circle cx="46" cy="42" r="12" fill="#a8b2c1" stroke="'+INK+'" stroke-width="4"/>'
+         +'<circle cx="46" cy="42" r="6" fill="#ffc2d4"/>'
+         +'<circle cx="26" cy="62" r="13" fill="#c3ccd9" stroke="'+INK+'" stroke-width="4"/>'
+         +'<circle cx="22" cy="60" r="2" fill="'+INK+'"/>'
+         +'<circle cx="14" cy="66" r="3.6" fill="#e63950" stroke="'+INK+'" stroke-width="2"/>'
+         +'<path d="M20 70 l-8 3 M21 73 l-7 5" stroke="'+INK+'" stroke-width="1.8" stroke-linecap="round"/>'
+         +'<ellipse cx="40" cy="90" rx="7" ry="4" fill="#8d99ae" stroke="'+INK+'" stroke-width="2.5"/>'
+         +'<ellipse cx="60" cy="90" rx="7" ry="4" fill="#8d99ae" stroke="'+INK+'" stroke-width="2.5"/>';
+      } else { // clown
+        s='<path d="M50 4 l10 16 h-20 Z" fill="#2ec4b6" stroke="'+INK+'" stroke-width="4"/>'
+         +'<circle cx="50" cy="4" r="5" fill="#ffd23f" stroke="'+INK+'" stroke-width="3"/>'
+         +'<path d="M28 34 q-6 14 4 20 M72 34 q6 14 -4 20" fill="none" stroke="#e63950" stroke-width="7" stroke-linecap="round"/>'
+         +'<circle cx="50" cy="42" r="21" fill="#fff3e0" stroke="'+INK+'" stroke-width="4"/>'
+         +'<path d="M36 32 a8 6 0 0 1 10 -2 M54 30 a8 6 0 0 1 10 2" fill="none" stroke="#3a6bd8" stroke-width="3.5" stroke-linecap="round"/>'
+         +'<circle cx="42" cy="40" r="2.4" fill="'+INK+'"/><circle cx="58" cy="40" r="2.4" fill="'+INK+'"/>'
+         +'<circle cx="50" cy="47" r="6" fill="#e63950" stroke="'+INK+'" stroke-width="3"/>'
+         +'<path d="M39 56 Q50 66 61 56" fill="none" stroke="'+INK+'" stroke-width="3" stroke-linecap="round"/>'
+         +'<path d="M30 68 l7 8 -9 3 8 6 -6 7 10 -1 3 8 7 -6 7 6 3 -8 10 1 -6 -7 8 -6 -9 -3 7 -8 -11 2 -4 -8 -5 7 -5 -7 -4 8 Z" fill="#ffd23f" stroke="'+INK+'" stroke-width="3"/>'
+         +'<circle cx="50" cy="80" r="4.5" fill="#e63950" stroke="'+INK+'" stroke-width="2.5"/>';
+      }
+      return '<svg id="toySvg" viewBox="0 0 100 104" aria-hidden="true">'+s+'</svg>';
+    }
+
+    /* ================= gear svg ================= */
+    function gearSVG(cell, isRust){
+      var t=cell.teeth, R=cell.rad, r2=R*0.8, pts=[], i, a;
+      var step=Math.PI*2/t;
+      for(i=0;i<t;i++){
+        a=i*step;
+        var angs=[a, a+step*0.3, a+step*0.52, a+step*0.8], rads=[r2,R,R,r2];
+        for(var k=0;k<4;k++) pts.push((50+Math.cos(angs[k])*rads[k]).toFixed(1)+" "+(50+Math.sin(angs[k])*rads[k]).toFixed(1));
+      }
+      var fill = isRust ? "#c1502e" : (cell.mat==="brass" ? "#d9a441" : "#8d99ae");
+      var arms="";
+      var base=BASE_ARMS[cell.type];
+      for(i=0;i<base.length;i++){
+        arms+='<rect class="pipe" x="42.5" y="4" width="15" height="46" rx="4" transform="rotate('+(base[i]*90)+' 50 50)"/>';
+      }
+      var speck="";
+      if(isRust){
+        speck='<circle cx="38" cy="34" r="3.4" fill="#7a2d15"/><circle cx="62" cy="60" r="2.8" fill="#7a2d15"/><circle cx="58" cy="30" r="2.2" fill="#8a3a1a"/><circle cx="34" cy="62" r="2.4" fill="#8a3a1a"/>';
+      }
+      return '<svg class="gear" viewBox="0 0 100 100" aria-hidden="true">'
+        + '<g class="rotor">'
+        + '<rect x="0" y="0" width="100" height="100" fill="rgba(0,0,0,0)"/>'
+        + '<path d="M'+pts.join("L")+'Z" fill="'+fill+'" stroke="'+INK+'" stroke-width="4" stroke-linejoin="round"/>'
+        + speck + arms
+        + '<circle cx="50" cy="50" r="11" fill="'+(isRust?"#8a3a1a":(cell.mat==="brass"?"#a8742a":"#5d6b82"))+'" stroke="'+INK+'" stroke-width="3.5"/>'
+        + '<circle cx="50" cy="50" r="3.6" fill="'+INK+'"/>'
+        + '</g></svg>';
+    }
+
+    /* ================= rendering ================= */
+    var cellEls=[], rotorEls=[];
+    function renderHearts(){
+      var h="";
+      for(var i=0;i<3;i++){
+        h+='<svg class="heart'+(i<S.hearts?"":" off")+'" viewBox="0 0 100 90" aria-hidden="true"><path d="M50 84 L14 50 Q2 38 8 24 Q14 9 30 10 Q44 11 50 24 Q56 11 70 10 Q86 9 92 24 Q98 38 86 50 Z"/></svg>';
+      }
+      heartsEl.innerHTML=h;
+    }
+    function renderStagePips(){
+      var h="";
+      for(var i=0;i<5;i++){
+        h+='<div class="spip'+(i<S.stage?" done":(i===S.stage?" now":""))+'"></div>';
+      }
+      stagePipsEl.innerHTML=h;
+    }
+    function renderMoves(){
+      var h="";
+      for(var i=0;i<S.budget;i++){
+        var cls = i<S.movesLeft ? (S.movesLeft<=3 ? "mpip low" : "mpip") : "mpip spent";
+        h+='<div class="'+cls+'"></div>';
+      }
+      movePipsEl.innerHTML=h;
+    }
+    function renderBoard(){
+      var cfg=STAGES[S.stage], h="";
+      cellEls=[]; rotorEls=[];
+      for(var i=0;i<16;i++){
+        var badges="";
+        if(cfg.mirror){
+          var ps=PAIR_STYLE[pairId(i)];
+          badges+='<span class="badge pair" style="background:'+ps.bg+'">'+ps.g+'</span>';
+        }
+        if(i===S.wild) badges+='<span class="badge wild" title="Wild gear">★</span>';
+        if(i===S.rust) badges+='<span class="badge rust" title="Rust gear">R</span>';
+        h+='<button class="cell" data-i="'+i+'" aria-label="Gear '+(i+1)+'">'
+          + gearSVG(S.cells[i], i===S.rust) + badges + '</button>';
+      }
+      boardEl.innerHTML=h;
+      var btns=boardEl.querySelectorAll(".cell");
+      for(var b=0;b<btns.length;b++){
+        cellEls.push(btns[b]);
+        rotorEls.push(btns[b].querySelector(".rotor"));
+        (function(idx){
+          btns[b].addEventListener("click", function(){ tap(idx); });
+        })(b);
+      }
+      for(var j=0;j<16;j++) setRotor(j);
+      updateCursor();
+    }
+    function setRotor(i){
+      rotorEls[i].style.transform="rotate("+S.disp[i]+"deg)";
+    }
+    function updateCursor(){
+      for(var i=0;i<cellEls.length;i++) cellEls[i].classList.toggle("cursor", i===S.cursor);
+    }
+    function renderPower(){
+      var res=computePower(S.cells, S.rots, S.pathRow);
+      for(var i=0;i<16;i++) cellEls[i].classList.toggle("powered", !!res.powered[i]);
+      sceneEl.classList.toggle("lit", !!res.powered[S.pathRow*4]);
+      return res;
+    }
+    function positionPorts(){
+      var top=((S.pathRow+0.5)*25)+"%";
+      crankPort.style.top=top; toyPort.style.top=top;
+    }
+
+    /* ================= fx ================= */
+    function confetti(){
+      var colors=["#ffd23f","#ff6b81","#2ec4b6","#9b5de5","#6ecbff","#ffa26b"];
+      for(var i=0;i<30;i++){
+        var d=document.createElement("div");
+        d.className="confetti";
+        var sz=6+Math.random()*8;
+        d.style.left=(Math.random()*100)+"%";
+        d.style.width=sz+"px"; d.style.height=(sz*0.6)+"px";
+        d.style.background=colors[(Math.random()*colors.length)|0];
+        d.style.animationDuration=(0.9+Math.random()*0.8)+"s";
+        d.style.animationDelay=(Math.random()*0.25)+"s";
+        fxEl.appendChild(d);
+        (function(el){ setTimeout(function(){ el.remove(); }, 2200); })(d);
+      }
+    }
+    function sparks(){
+      var rect=toyPort.getBoundingClientRect(), srect=sceneEl.getBoundingClientRect();
+      var cx=rect.left-srect.left+rect.width/2, cy=rect.top-srect.top+rect.height/2;
+      var colors=["#ffd23f","#ff6b81","#2ec4b6","#fff"];
+      for(var i=0;i<14;i++){
+        var d=document.createElement("div");
+        d.className="spark";
+        var ang=Math.random()*Math.PI*2, dist=36+Math.random()*55;
+        d.style.left=cx+"px"; d.style.top=cy+"px";
+        d.style.width="9px"; d.style.height="9px";
+        d.style.background=colors[(Math.random()*colors.length)|0];
+        d.style.setProperty("--dx", Math.cos(ang)*dist+"px");
+        d.style.setProperty("--dy", Math.sin(ang)*dist+"px");
+        d.style.animationDuration="0.65s";
+        fxEl.appendChild(d);
+        (function(el){ setTimeout(function(){ el.remove(); }, 800); })(d);
+      }
+    }
+    function shake(){
+      sceneInner.classList.remove("shake");
+      void sceneInner.offsetWidth;
+      sceneInner.classList.add("shake");
+      setTimeout(function(){ sceneInner.classList.remove("shake"); }, 500);
+    }
+
+    /* ================= card queue (one message at a time) ================= */
+    var cardQueue=[], cardOpen=false;
+    function queueCard(card){ cardQueue.push(card); pumpCards(); }
+    function pumpCards(){
+      if(cardOpen || !cardQueue.length) return;
+      var card=cardQueue.shift();
+      cardOpen=true;
+      $("cardKick").textContent=card.kick||"STORY";
+      $("cardTitle").textContent=card.title||"";
+      $("cardTitle").style.display=card.title?"":"none";
+      $("cardBody").textContent=card.body||"";
+      var btn=$("cardBtn");
+      btn.textContent=card.btn||"NEXT";
+      overlay.classList.add("open");
+      btn.onclick=function(){
+        overlay.classList.remove("open");
+        cardOpen=false;
+        if(card.onDone) card.onDone();
+        pumpCards();
+      };
+      btn.focus();
+    }
+    function anyOverlayOpen(){ return cardOpen || rulesSheet.classList.contains("open"); }
+
+    /* ================= game flow ================= */
+    function startStage(stageIdx){
+      S.stage=stageIdx;
+      var g=genStage(stageIdx);
+      S.cells=g.cells; S.rots=g.rots.slice(); S.pathRow=g.pathRow;
+      S.wild=g.wild; S.rust=g.rust;
+      S.budget=STAGES[stageIdx].budget; S.movesLeft=S.budget;
+      S.disp=S.rots.map(function(r){ return r*90; });
+      S.cursor=S.pathRow*4;
+      S.playing=true; S.over=false;
+      toyWrap.innerHTML=toySVG(stageIdx);
+      toyWrap.classList.remove("awake");
+      toyLabel.textContent="ASLEEP";
+      maskChipEl.textContent="MASK · "+STAGES[stageIdx].mask;
+      decideEl.textContent=STAGES[stageIdx].decide;
+      renderHearts(); renderStagePips(); renderMoves(); renderBoard(); positionPorts(); renderPower();
+    }
+    function resetRun(){
+      S.hearts=3;
+      startStage(0);
+    }
+    function winStage(){
+      S.playing=false;
+      var res=renderPower();
+      toyWrap.classList.add("awake");
+      toyLabel.textContent="AWAKE!";
+      sfxWin(); confetti(); sparks();
+      var finished=S.stage;
+      setTimeout(function(){
+        if(finished>=4){
+          var ps=stagePipsEl.children;
+          for(var pi=0; pi<ps.length; pi++) ps[pi].className="spip done";
+          queueCard({ kick:"DAWN", title:"DAWN BREAKS",
+            body:"All five toys are awake and winding down the lane to wave you home. The shop door unlocks. You are not a toy.",
+            btn:"PLAY AGAIN", onDone:function(){ resetRun(); } });
+        } else {
+          queueCard({ kick:"STORY", title:"", body:BETWEEN[finished], btn:"NEXT" });
+          var mc=MASK_CARDS[finished+1];
+          queueCard({ kick:mc.kick, title:mc.title, body:mc.body, btn:mc.btn,
+            onDone:function(){ startStage(finished+1); } });
+        }
+      }, 950);
+    }
+    function failStage(){
+      S.playing=false;
+      S.hearts--;
+      renderHearts();
+      sfxFail(); shake();
+      var stageNow=S.stage, heartsNow=S.hearts;
+      setTimeout(function(){
+        if(heartsNow<=0){
+          S.over=true;
+          queueCard({ kick:"RUN OVER", title:"THE SHOP KEEPS YOU",
+            body:"The last heart winds down. By morning there is a new toy on the shelf — small, tin, and very quiet.",
+            btn:"RETRY", onDone:function(){ resetRun(); } });
+        } else {
+          queueCard({ kick:"JAMMED", title:"OUT OF TURNS",
+            body:"The gears jam and go dark. The stage rewinds itself — and the shop takes a heart.",
+            btn:"REWIND", onDone:function(){ startStage(stageNow); } });
+        }
+      }, 650);
+    }
+
+    /* ================= the tap (all state resolves synchronously) ================= */
+    function tap(i){
+      if(!S.playing || anyOverlayOpen()) return;
+      ac();
+      var cfg=STAGES[S.stage];
+      S.cursor=i; updateCursor();
+      var changed=applyTapRules(S.rots, i, cfg, S.wild);
+      for(var k=0;k<changed.length;k++){
+        S.disp[changed[k][0]] += changed[k][1]*90;
+        setRotor(changed[k][0]);
+      }
+      S.movesLeft--;
+      sfxClick();
+      var res=renderPower();
+      if(res.toy){ renderMoves(); winStage(); return; }
+      // rust rattle: after every non-winning tap
+      if(cfg.rust){
+        var pick=-1, guard=0;
+        do{ pick=(Math.random()*16)|0; guard++; }while((pick===i || pick===S.rust) && guard<40);
+        if(pick>=0 && pick!==i && pick!==S.rust){
+          S.rots[pick]=(S.rots[pick]+1)%4;
+          S.disp[pick]+=90;
+          setRotor(pick);
+          cellEls[pick].classList.remove("flash");
+          void cellEls[pick].offsetWidth;
+          cellEls[pick].classList.add("flash");
+          sfxRattle();
+          res=renderPower();
+          if(res.toy){ renderMoves(); winStage(); return; }
+        }
+      }
+      renderMoves();
+      if(S.movesLeft<=0){ failStage(); }
+    }
+
+    /* ================= keyboard ================= */
+    document.addEventListener("keydown", function(e){
+      if(!S.playing || anyOverlayOpen()) return;
+      var r=(S.cursor/4)|0, c=S.cursor%4, handled=true;
+      if(e.key==="ArrowUp") r=Math.max(0,r-1);
+      else if(e.key==="ArrowDown") r=Math.min(3,r+1);
+      else if(e.key==="ArrowLeft") c=Math.max(0,c-1);
+      else if(e.key==="ArrowRight") c=Math.min(3,c+1);
+      else if(e.key===" " || e.key==="Enter"){ tap(S.cursor); return; }
+      else handled=false;
+      if(handled){ e.preventDefault(); S.cursor=r*4+c; updateCursor(); }
+    });
+
+    /* ================= header controls ================= */
+    function soundIcon(){
+      $("soundBtn").innerHTML = S.sound
+        ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="#1b1226"/><path d="M15 9q3 3 0 6 M17.5 6.5q5 5.5 0 11" fill="none" stroke="#1b1226" stroke-width="2.2" stroke-linecap="round"/></svg>'
+        : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="#1b1226"/><path d="M15 9l6 6 M21 9l-6 6" stroke="#c0392b" stroke-width="2.4" stroke-linecap="round"/></svg>';
+    }
+    $("soundBtn").addEventListener("click", function(){
+      S.sound=!S.sound; soundIcon();
+      if(S.sound) sfxClick();
+    });
+    $("rulesBtn").addEventListener("click", function(){
+      var h="";
+      RULES.forEach(function(rl){
+        h+='<div class="ruleRow '+rl.cls+'"><span class="rname">'+rl.name+'</span><span class="rdesc">'+rl.desc+'</span></div>';
+      });
+      $("rulesList").innerHTML=h;
+      rulesSheet.classList.add("open");
+      $("rulesClose").focus();
+    });
+    $("rulesClose").addEventListener("click", function(){ rulesSheet.classList.remove("open"); });
+
+    /* ================= boot ================= */
+    soundIcon();
+    renderHearts(); renderStagePips();
+    S.budget=STAGES[0].budget; S.movesLeft=S.budget; renderMoves();
+    queueCard({ kick:"STORY", title:"THE TIN SHOP",
+      body:"The toy shop on Crooked Lane never closes. Its wind-up toys stopped at midnight — and the Toymaker says only the apprentice who wears their masks can wake them.",
+      btn:"NEXT" });
+    queueCard({ kick:"STORY", title:"ONE NIGHT",
+      body:"Five toys. Five masks. One night each. Wake them all before dawn, or the shop keeps you too.",
+      btn:"NEXT" });
+    queueCard({ kick:"HOW TO", title:"WAKE THE TOYS",
+      body:"Tap a gear to turn it — connect the power line from the crank to the toy.",
+      btn:"START", onDone:function(){ startStage(0); } });
+</script>
+  </body>
+</html>
