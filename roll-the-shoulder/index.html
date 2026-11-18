@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Roll the shoulder: sidewalk roller game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+
+:root{
+  --sky:#D6DFE6; --panel:#F7F9FA; --panel-2:#EBF0F3; --ink:#15222C; --mute:#566673; --line:#C3CDD5;
+  --sign:#0F5E9C; --sign-ink:#FFFFFF; --warn:#F2B90F; --warn-ink:#1C1A0C; --shadow:rgba(21,34,44,.18);
+  --display:"Barlow Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  --body:"Barlow","Helvetica Neue",Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --sky:#111B23; --panel:#18252F; --panel-2:#21313D; --ink:#E6EDF2; --mute:#93A5B2; --line:#30424F;
+    --sign:#1D74BC; --sign-ink:#FFFFFF; --warn:#F2B90F; --warn-ink:#1C1A0C; --shadow:rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --sky:#111B23; --panel:#18252F; --panel-2:#21313D; --ink:#E6EDF2; --mute:#93A5B2; --line:#30424F;
+  --sign:#1D74BC; --sign-ink:#FFFFFF; --warn:#F2B90F; --warn-ink:#1C1A0C; --shadow:rgba(0,0,0,.45);
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{height:100%;margin:0;display:flex;flex-direction:column;overflow:hidden;background:var(--sky);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--sign);outline-offset:2px}
+
+#app{position:relative;flex:1;min-height:0;display:flex}
+#stage{position:relative;flex:1;min-width:0;overflow:hidden;user-select:none;-webkit-user-select:none}
+#gl{display:block;width:100%;height:100%;touch-action:none}
+#head{position:absolute;left:14px;top:12px;right:14px;pointer-events:none}
+#head h1{margin:0;font-family:var(--display);font-weight:700;font-size:1.75rem;line-height:1;letter-spacing:.005em}
+#head h1,#head p{text-shadow:0 0 8px var(--sky),0 0 3px var(--sky),0 0 2px var(--sky)}
+#head p{margin:.3rem 0 0;color:var(--ink);font-size:.9rem;max-width:34ch}
+.touch-only{display:none}
+@media (hover:none){.touch-only{display:inline}.mouse-only{display:none}}
+
+#hud{position:absolute;left:14px;top:96px;display:flex;gap:.5rem;pointer-events:none}
+.stat{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--sign);border-radius:8px;padding:.25rem .6rem .3rem .55rem;min-width:4.6rem;box-shadow:0 3px 10px var(--shadow)}
+.stat span{display:block;font-size:.74rem;color:var(--mute);line-height:1.1}
+.stat b{font-family:var(--display);font-weight:700;font-size:1.45rem;line-height:1.05;font-variant-numeric:tabular-nums}
+
+/* steering pad, bottom left */
+#steer{position:absolute;left:12px;bottom:14px;display:flex;gap:.6rem}
+.pad{width:76px;height:76px;border-radius:14px;border:2px solid var(--line);background:var(--panel);box-shadow:0 4px 12px var(--shadow);font-size:2rem;line-height:1;display:grid;place-items:center;touch-action:none;padding:0;-webkit-tap-highlight-color:transparent}
+.pad.down{background:var(--sign);border-color:var(--sign);color:var(--sign-ink)}
+.pad small{display:block;font-size:.7rem;font-family:var(--body);margin-top:.1rem;color:inherit;opacity:.8}
+.pad span{display:block;text-align:center}
+
+/* speed lever, bottom right, like a cab console */
+#cockpit{position:absolute;right:12px;bottom:14px;width:92px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:.45rem .3rem .5rem;box-shadow:0 4px 12px var(--shadow);text-align:center}
+.lv-label{font-family:var(--display);font-weight:600;font-size:1rem;line-height:1;color:var(--mute)}
+#lever{--v:0;position:relative;height:clamp(120px,26vh,190px);width:100%;margin:.35rem 0;touch-action:none;cursor:grab;outline-offset:3px}
+#lever .slot{position:absolute;left:50%;top:17px;bottom:17px;width:12px;margin-left:-6px;border-radius:6px;background:var(--ink);opacity:.88}
+#lever .ticks{position:absolute;left:8px;right:8px;top:17px;bottom:17px;background:repeating-linear-gradient(180deg,var(--line) 0 2px,transparent 2px 25%);background-size:100% 100%;opacity:.9;border-top:2px solid var(--line);border-bottom:2px solid var(--line)}
+#lever .grip{position:absolute;left:50%;width:62px;height:34px;margin-left:-31px;top:calc((1 - var(--v)) * (100% - 34px));border-radius:9px;background:var(--warn);border:2px solid var(--warn-ink);box-shadow:0 3px 6px var(--shadow);background-image:repeating-linear-gradient(180deg,transparent 0 6px,rgba(28,26,12,.35) 6px 8px)}
+#lever:active{cursor:grabbing}
+#kmh{font-family:var(--display);font-weight:700;font-size:1.3rem;line-height:1}
+#kmh small{font-family:var(--body);font-weight:500;font-size:.7rem;color:var(--mute);margin-left:.15rem}
+
+/* start and result cards */
+#overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(17,27,35,.22);z-index:4}
+#overlay[hidden]{display:none}
+.card{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--sign);border-radius:10px;padding:.9rem 1rem 1rem 1.05rem;max-width:25rem;box-shadow:0 10px 30px var(--shadow)}
+.card h2{margin:0 0 .35rem;font-family:var(--display);font-weight:700;font-size:1.65rem;line-height:1.05}
+.card p{margin:0 0 .55rem;font-size:.97rem}
+.card p.small{color:var(--mute);font-size:.88rem}
+.btn{min-height:44px;padding:.45rem .9rem;border:1.5px solid var(--line);background:var(--panel);border-radius:8px;font-weight:600;font-size:.95rem}
+.btn:active{background:var(--panel-2)}
+.btn.primary{background:var(--warn);border-color:var(--warn-ink);color:var(--warn-ink);font-family:var(--display);font-size:1.25rem;letter-spacing:.01em;padding-inline:1.2rem}
+.btn[aria-pressed="true"]{background:var(--sign);border-color:var(--sign);color:var(--sign-ink)}
+
+#dock{background:var(--panel);border-top:1px solid var(--line);padding:.55rem .7rem .7rem;display:grid;gap:.45rem;z-index:6}
+#status{font-size:.9rem;color:var(--mute);min-height:1.3em;overflow:hidden;text-overflow:ellipsis}
+#status b{color:var(--ink);font-weight:600}
+.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+#fail{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:2rem;text-align:center}
+#fail p{max-width:34ch}
+@media (min-width:860px){
+  #head{left:22px;top:18px}
+  #head h1{font-size:2.3rem}
+  #head p{font-size:1rem;max-width:46ch}
+  #hud{left:auto;right:22px;top:18px}
+  #steer{left:22px;bottom:20px}
+  #cockpit{right:22px;bottom:20px}
+  #dock{grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:1rem;padding:.7rem 1.2rem .8rem}
+}
+@media (max-height:560px){#hud{top:70px}.pad{width:64px;height:64px}#lever{height:100px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main id="app">
+  <section id="stage" aria-label="3D driving game: roll the cement shoulder">
+    <canvas id="gl"></canvas>
+    <div id="head">
+      <h1>Roll the shoulder</h1>
+      <p><span class="touch-only">Hold the arrow buttons to steer. Drag the lever up to go.</span><span class="mouse-only">Steer with the left and right arrow keys. Raise the lever with the up arrow, lower it with the down arrow.</span></p>
+    </div>
+    <div id="hud" aria-label="Progress">
+      <div class="stat"><span>Rolled</span><b id="cov">0%</b></div>
+      <div class="stat"><span>Time</span><b id="tm">0:00</b></div>
+    </div>
+    <div id="steer">
+      <button class="pad" id="bl" aria-label="Steer left"><span>◀<small>Left</small></span></button>
+      <button class="pad" id="br" aria-label="Steer right"><span>▶<small>Right</small></span></button>
+    </div>
+    <div id="cockpit">
+      <div class="lv-label">Fast</div>
+      <div id="lever" role="slider" tabindex="0" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Speed lever"><div class="ticks"></div><div class="slot"></div><div class="grip"></div></div>
+      <div class="lv-label">Stop</div>
+      <div id="kmh">0.0<small>km/h</small></div>
+    </div>
+    <div id="overlay">
+      <div class="card" id="card" role="dialog" aria-labelledby="cTitle">
+        <h2 id="cTitle">Roll the shoulder</h2>
+        <p id="cText">A strip of cement beside the road needs rolling. The strip is a little narrower than your machine, so you have only a few centimetres of room on each side, and it bends left and right.</p>
+        <p class="small" id="cSmall">Raise the lever to go, steer to keep the drum over the strip. Every rough patch you leave behind counts against you.</p>
+        <button class="btn primary" id="startBtn">Start rolling</button>
+      </div>
+    </div>
+    <div id="fail"><p>This 3D game needs WebGL, which didn’t start. Open the page in a current browser with graphics acceleration turned on.</p></div>
+  </section>
+</main>
+<footer id="dock">
+  <div id="status" aria-live="polite">Press Start rolling to begin.</div>
+  <div class="row">
+    <button class="btn" id="restart">Restart</button>
+    <button class="btn" id="viewBtn" aria-pressed="false">View: behind</button>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script id="model-src">
+/* Builds every part of the sidewalk roller from primitives. Units are metres.
+   +X is the front of the roller, +Y is up, +Z is the passenger side.
+   The drum axes sit at x = +1.0 (front) and x = -1.0 (rear), 0.36 m above the ground. */
+function buildRoller(THREE){
+  'use strict';
+  var d2r=Math.PI/180;
+  function V(x,y,z){return new THREE.Vector3(x,y,z);}
+  function std(o){return new THREE.MeshStandardMaterial(o);}
+  function phys(o){return new THREE.MeshPhysicalMaterial(o);}
+  var base={
+    paint:function(){return phys({color:0xeeae0c,metalness:0.15,roughness:0.45,clearcoat:0.7,clearcoatRoughness:0.3});},
+    frame:function(){return std({color:0x2b3036,metalness:0.5,roughness:0.55});},
+    drum:function(){return std({color:0xa3abb1,metalness:0.82,roughness:0.42,side:THREE.DoubleSide});},
+    black:function(){return std({color:0x1c1f23,metalness:0.55,roughness:0.5});},
+    steel:function(){return std({color:0x8d959c,metalness:0.9,roughness:0.38});},
+    chrome:function(){return std({color:0xe6ebef,metalness:1,roughness:0.12});},
+    iron:function(){return std({color:0x41464b,metalness:0.6,roughness:0.7});},
+    rust:function(){return std({color:0x6a4a3a,metalness:0.5,roughness:0.8});},
+    alu:function(){return std({color:0xaab1b6,metalness:0.85,roughness:0.45});},
+    engine:function(){return std({color:0x4f6475,metalness:0.4,roughness:0.55});},
+    rubber:function(){return std({color:0x141414,metalness:0,roughness:0.92});},
+    dark:function(){return std({color:0x23272b,metalness:0.1,roughness:0.7});},
+    seat:function(){return std({color:0x343a42,metalness:0,roughness:1});},
+    glass:function(){return phys({color:0x9dbfce,metalness:0,roughness:0.05,transparent:true,opacity:0.34,depthWrite:false});},
+    poly:function(){return phys({color:0xe6ecef,metalness:0,roughness:0.35,transparent:true,opacity:0.42,depthWrite:false});},
+    water:function(){return std({color:0x3f9ad3,metalness:0,roughness:0.2,transparent:true,opacity:0.7,depthWrite:false});},
+    lens:function(){return std({color:0xf4f6f2,emissive:0xfff3d0,emissiveIntensity:0.5,roughness:0.2});},
+    amber:function(){return std({color:0xff9a14,emissive:0xff7a00,emissiveIntensity:0.45,roughness:0.3});},
+    red:function(){return std({color:0xc8201c,emissive:0x8a0500,emissiveIntensity:0.4,roughness:0.3});},
+    green:function(){return std({color:0x2fa84f,emissive:0x0e6a26,emissiveIntensity:0.4,roughness:0.3});},
+    orange:function(){return std({color:0xe8651a,roughness:0.75});},
+    white:function(){return std({color:0xeef0f0,roughness:0.5});},
+    fan:function(){return std({color:0xd9d5c8,roughness:0.6});},
+    brass:function(){return std({color:0xc9a24a,metalness:0.85,roughness:0.35});}
+  };
+  var cache=null, G=null, parts=[];
+  function m(k){return cache[k]||(cache[k]=base[k]());}
+
+  /* ---------- geometry helpers ---------- */
+  function add(geo,mat,x,y,z){var me=new THREE.Mesh(geo,mat);me.position.set(x||0,y||0,z||0);G.add(me);return me;}
+  function box(w,h,d,mat,x,y,z){return add(new THREE.BoxGeometry(w,h,d),mat,x,y,z);}
+  function bx(x0,x1,y0,y1,z0,z1,mat){return box(Math.abs(x1-x0),Math.abs(y1-y0),Math.abs(z1-z0),mat,(x0+x1)/2,(y0+y1)/2,(z0+z1)/2);}
+  function rod(a,b,r,mat,seg,r2){
+    var A=V(a[0],a[1],a[2]),B=V(b[0],b[1],b[2]),d=B.clone().sub(A),len=d.length();
+    var me=add(new THREE.CylinderGeometry(r2===undefined?r:r2,r,len,seg||16),mat);
+    me.position.copy(A).add(B).multiplyScalar(0.5);
+    me.quaternion.setFromUnitVectors(V(0,1,0),d.normalize());
+    return me;
+  }
+  function beam(a,b,w,h,mat){
+    var A=V(a[0],a[1],a[2]),B=V(b[0],b[1],b[2]);
+    var me=add(new THREE.BoxGeometry(w,h,A.distanceTo(B)),mat);
+    me.position.copy(A).add(B).multiplyScalar(0.5);
+    me.lookAt(B);
+    return me;
+  }
+  function shape(pts){var s=new THREE.Shape();pts.forEach(function(p,i){if(i)s.lineTo(p[0],p[1]);else s.moveTo(p[0],p[1]);});s.closePath();return s;}
+  function exGeo(pts,depth,holes,bevel){
+    var s=shape(pts);(holes||[]).forEach(function(h){s.holes.push(shape(h));});
+    var b=bevel||0;
+    return new THREE.ExtrudeGeometry(s,{depth:depth-2*b,bevelEnabled:b>0,bevelThickness:b,bevelSize:b,bevelOffset:-b,bevelSegments:2,curveSegments:6});
+  }
+  function exZ(pts,z0,z1,mat,holes,bevel){
+    var lo=Math.min(z0,z1),hi=Math.max(z0,z1),g=exGeo(pts,hi-lo,holes,bevel);
+    g.translate(0,0,lo+(bevel||0));return add(g,mat);
+  }
+  function exX(ptsZY,x0,x1,mat,holes,bevel){
+    var f=function(a){return a.map(function(p){return [-p[0],p[1]];});};
+    var g=exGeo(f(ptsZY),x1-x0,(holes||[]).map(f),bevel);
+    g.translate(0,0,bevel||0);g.rotateY(Math.PI/2);g.translate(x0,0,0);return add(g,mat);
+  }
+  function exY(ptsXZ,y0,y1,mat){
+    var g=exGeo(ptsXZ,y1-y0);g.rotateX(Math.PI/2);g.translate(0,y1,0);return add(g,mat);
+  }
+  function rbox(x0,x1,y0,y1,z0,z1,mat,r){
+    r=r||0.02;var pts=[];
+    [[x1-r,y0+r,-90],[x1-r,y1-r,0],[x0+r,y1-r,90],[x0+r,y0+r,180]].forEach(function(c){
+      for(var i=0;i<=4;i++){var a=(c[2]+i*22.5)*d2r;pts.push([c[0]+r*Math.cos(a),c[1]+r*Math.sin(a)]);}
+    });
+    return exZ(pts,z0,z1,mat,null,Math.min(r*0.7,Math.abs(z1-z0)/3));
+  }
+  function lathe(pts,mat,seg){
+    return new THREE.Mesh(new THREE.LatheGeometry(pts.map(function(p){return new THREE.Vector2(p[0],p[1]);}),seg||40),mat);
+  }
+  function helix(a,b,R,turns,tr,mat){
+    var A=V(a[0],a[1],a[2]),B=V(b[0],b[1],b[2]),axis=B.clone().sub(A),len=axis.length();axis.normalize();
+    var u=new THREE.Vector3().crossVectors(axis,Math.abs(axis.y)<0.9?V(0,1,0):V(1,0,0)).normalize();
+    var w=new THREE.Vector3().crossVectors(axis,u);
+    var c=new THREE.Curve();
+    c.getPoint=function(t,target){
+      var ang=t*turns*Math.PI*2;target=target||new THREE.Vector3();
+      return target.copy(A).addScaledVector(axis,len*t).addScaledVector(u,Math.cos(ang)*R).addScaledVector(w,Math.sin(ang)*R);
+    };
+    return add(new THREE.TubeGeometry(c,Math.round(turns*14),tr,6,false),mat);
+  }
+  function torus(R,t,mat,x,y,z,axis){
+    var me=add(new THREE.TorusGeometry(R,t,8,28),mat,x,y,z);
+    if(axis==='x')me.rotation.y=Math.PI/2;else if(axis==='y')me.rotation.x=Math.PI/2;
+    return me;
+  }
+  function hyd(a,b,rb,eye){
+    var A=V(a[0],a[1],a[2]),B=V(b[0],b[1],b[2]);
+    function P(t){return A.clone().lerp(B,t).toArray();}
+    rod(P(0.04),P(0.6),rb,m('black'),20);
+    rod(P(0.6),P(0.64),rb*1.14,m('steel'),20);
+    rod(P(0.6),P(0.97),rb*0.5,m('chrome'),16);
+    var d=eye==='z'?[0,0,1]:[0,1,0],k=rb*0.95;
+    [a,b].forEach(function(e){
+      rod([e[0]-d[0]*k,e[1]-d[1]*k,e[2]-d[2]*k],[e[0]+d[0]*k,e[1]+d[1]*k,e[2]+d[2]*k],rb*0.8,m('steel'),14);
+    });
+  }
+  function part(id,name,group,rank,off,desc,fn){
+    G=new THREE.Group();G.name=id;cache={};fn();
+    parts.push({id:id,name:name,group:group,rank:rank,off:V(off[0],off[1],off[2]),desc:desc,obj:G});
+  }
+
+  /* ---------- extra helpers ---------- */
+  function tube(pts,r,mat,seg){
+    var c=new THREE.CatmullRomCurve3(pts.map(function(p){return V(p[0],p[1],p[2]);}),false,'catmullrom',0.35);
+    return add(new THREE.TubeGeometry(c,seg||48,r,8,false),mat);
+  }
+  function cylZ(x,y,z0,z1,r,mat,seg,r2){return rod([x,y,z0],[x,y,z1],r,mat,seg||24,r2);}
+  var AY=0.36,DR=0.36,FX=1.0,RX=-1.0,JX=0.30;
+  var OPS='Operator station',WAT='Water spray system',ENG='Engine and hydraulics',DRM='Drums and vibration',FRM='Frame and steering';
+
+  /* side plates: z from 0.56 to 0.59 outside the drums */
+  var FP=[[0.46,0.80],[1.33,0.80],[1.41,0.72],[1.41,0.34],[1.33,0.34],[1.33,0.64],[1.14,0.64],[1.10,0.20],[0.90,0.20],[0.86,0.64],[0.62,0.64],[0.62,0.34],[0.46,0.34]];
+  var RP=[[0.20,0.80],[-1.33,0.80],[-1.41,0.72],[-1.41,0.34],[-1.33,0.34],[-1.33,0.64],[-1.14,0.64],[-1.10,0.20],[-0.90,0.20],[-0.86,0.64],[-0.62,0.64],[-0.62,0.28],[0.20,0.28]];
+  var HOOD=[[-0.42,0.80],[-0.42,1.20],[-0.50,1.25],[-1.06,1.25],[-1.14,1.16],[-1.14,0.80]];
+
+  /* =================== OPERATOR STATION =================== */
+  part('beacon','Warning beacon',OPS,1,[0,1.25,0],
+    'Amber flashing light on the roof. A roller works at walking pace, close to the ground and often beside foot traffic or a lane of cars, so the beacon is how people notice it from a distance.',function(){
+    rod([-0.3,2.36,0],[-0.3,2.395,0],0.06,m('black'),20);
+    var d=lathe([[0.001,0],[0.055,0],[0.057,0.015],[0.05,0.055],[0.03,0.085],[0.001,0.095]],m('amber'),28);
+    d.position.set(-0.3,2.395,0);G.add(d);
+  });
+  part('canopy','Canopy roof',OPS,2,[0,0.95,0],
+    'The roof panel on top of the ROPS frame. It shades the operator through a long day of hot asphalt and keeps rain off. The frame under it is what protects the operator in a rollover.',function(){
+    rbox(-0.56,0.56,2.31,2.36,-0.64,0.64,m('paint'),0.02);
+    [-1,1].forEach(function(s){bx(-0.52,0.52,2.29,2.31,s*0.5-0.02,s*0.5+0.02,m('frame'));});
+  });
+  part('rops','ROPS frame',OPS,3,[0,0.6,0],
+    'Roll-over protective structure, the steel frame around the operator. If the roller tips at the edge of a path or on a slope, it keeps the operator’s space intact. Many sidewalk rollers have one that folds down for transport. It only protects when it is upright and locked and the seat belt is fastened.',function(){
+    [-1,1].forEach(function(s){
+      var z=s*0.52;
+      [-0.36,0.36].forEach(function(x){bx(x-0.03,x+0.03,0.9,2.3,z-0.03,z+0.03,m('frame'));});
+      bx(-0.39,0.39,2.25,2.31,z-0.03,z+0.03,m('frame'));
+      bx(-0.42,-0.30,0.89,0.93,z-0.06,z+0.06,m('frame'));
+      bx(0.30,0.42,0.89,0.93,z-0.06,z+0.06,m('frame'));
+      rod([-0.36,0.95,z-0.07],[-0.36,0.95,z+0.07],0.018,m('steel'),12);
+      rod([0.36,0.95,z-0.07],[0.36,0.95,z+0.07],0.016,m('steel'),12);
+      [[-0.4,z-0.045],[-0.4,z+0.045],[0.4,z-0.045],[0.4,z+0.045]].forEach(function(p){rod([p[0],0.93,p[1]],[p[0],0.95,p[1]],0.012,m('steel'),6);});
+    });
+    bx(-0.39,-0.33,2.25,2.31,-0.52,0.52,m('frame'));
+    bx(0.33,0.39,2.25,2.31,-0.52,0.52,m('frame'));
+    bx(-0.34,-0.32,1.5,1.62,0.55,0.6,m('white'));
+  });
+  part('handrails','Hand rails',OPS,4,[0,0.5,0],
+    'Grab handles beside the platform entry. The platform is about waist height, so these give the operator something solid to hold while stepping up and down.',function(){
+    [-1,1].forEach(function(s){
+      var z=s*0.665;
+      rod([0.36,0.9,z],[0.36,1.28,z],0.016,m('steel'),12);
+      rod([0.36,0.9,z],[0.36,0.9,s*0.59],0.014,m('steel'),10);
+      rod([0.36,1.28,z],[0.36,1.28,s*0.545],0.014,m('steel'),10);
+      rod([0.36,0.98,z],[0.36,1.2,z],0.022,m('rubber'),14);
+    });
+  });
+  part('alarm','Backup alarm',OPS,5,[-0.9,0.5,0],
+    'A horn that sounds whenever the roller is in reverse. Rolling means going forward and back over the same strip, so the roller spends a lot of time backing up, often near people, and the operator cannot see straight behind.',function(){
+    bx(-1.41,-1.47,0.62,0.7,-0.06,0.06,m('black'));
+    rod([-1.47,0.66,0],[-1.545,0.66,0],0.032,m('dark'),18,0.058);
+    rod([-1.545,0.66,0],[-1.552,0.66,0],0.05,m('steel'),18);
+  });
+  part('seat','Operator seat',OPS,6,[-0.45,0.7,0],
+    'Seat with a lap belt, mounted on a suspension base to soften the ride. On many rollers a seat switch is wired in, so the brakes apply if the operator leaves the seat while the roller is in gear.',function(){
+    bx(-0.32,-0.02,0.89,0.91,-0.22,0.22,m('frame'));
+    bx(-0.26,-0.08,0.91,0.99,-0.17,0.17,m('dark'));
+    [-1,1].forEach(function(s){bx(-0.3,-0.04,0.915,0.935,s*0.2-0.012,s*0.2+0.012,m('steel'));});
+    rbox(-0.34,0.0,0.99,1.09,-0.23,0.23,m('seat'),0.035);
+    var bk=rbox(-0.04,0.04,0,0.54,-0.22,0.22,m('seat'),0.03);
+    bk.position.set(-0.31,1.08,0);bk.rotation.z=0.12;
+    [-1,1].forEach(function(s){
+      beam([-0.27,1.045,s*0.235],[-0.08,1.115,s*0.035],0.05,0.012,m('orange'));
+    });
+    box(0.05,0.02,0.07,m('chrome'),-0.065,1.12,0);
+  });
+  part('wheel','Steering wheel',OPS,7,[0.55,0.65,0],
+    'Turns a hydraulic steering valve rather than a mechanical linkage. The valve sends oil to the steering cylinder at the middle of the roller, which is why a small roller steers with very little effort at the wheel.',function(){
+    var A=V(0.38,1.08,0),B=V(0.18,1.32,0),d=B.clone().sub(A).normalize();
+    rod([A.x,A.y,0],[B.x,B.y,0],0.022,m('dark'),14);
+    var g=new THREE.Group();g.position.copy(B).addScaledVector(d,0.02);
+    g.quaternion.setFromUnitVectors(V(0,0,1),d);G.add(g);
+    g.add(new THREE.Mesh(new THREE.TorusGeometry(0.17,0.018,8,36),m('rubber')));
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(0.34,0.024,0.014),m('dark')));
+    var s2=new THREE.Mesh(new THREE.BoxGeometry(0.024,0.17,0.014),m('dark'));s2.position.y=-0.085;g.add(s2);
+    var hub=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.05,0.03,20),m('dark'));hub.rotation.x=Math.PI/2;g.add(hub);
+    var kn=new THREE.Mesh(new THREE.SphereGeometry(0.022,12,10),m('black'));kn.position.set(0.12,0.12,0.03);g.add(kn);
+  });
+  part('lever','Travel lever',OPS,8,[0,0.6,0.75],
+    'The forward and reverse lever. Push it ahead to go forward, pull it back for reverse; the farther it moves, the faster the roller goes. It sets the flow from the drive pump, so passing through the middle reverses the oil and the roller changes direction smoothly.',function(){
+    var b=lathe([[0.001,0],[0.04,0],[0.025,0.045],[0.014,0.075]],m('rubber'),20);b.position.set(0.08,1.07,0.35);G.add(b);
+    rod([0.08,1.07,0.35],[0.05,1.34,0.35],0.011,m('steel'),12);
+    add(new THREE.SphereGeometry(0.032,16,12),m('rubber'),0.047,1.375,0.35);
+    cylZ(0.047,1.4,0.34,0.36,0.01,m('red'),10);
+  });
+  part('console','Control console',OPS,9,[0.25,0.45,0],
+    'The dash and side controls: ignition key, throttle, vibration on and off, water spray on and off, parking brake, and an hour meter that tells you when service is due. Warning lights cover engine oil, coolant temperature and hydraulic oil.',function(){
+    exZ([[0.26,0.89],[0.5,0.89],[0.5,1.1],[0.44,1.14],[0.3,1.08],[0.26,1.0]],-0.26,0.26,m('dark'));
+    box(0.14,0.012,0.4,m('black'),0.37,1.113,0).rotation.z=0.4;
+    var row=[[-0.2,'white'],[-0.12,'amber'],[-0.04,'green'],[0.04,'white'],[0.12,'amber']];
+    row.forEach(function(r){var me=box(0.022,0.012,0.032,m(r[1]),0.39,1.12,r[0]);me.rotation.z=0.4;});
+    add(new THREE.CylinderGeometry(0.014,0.014,0.02,14),m('chrome'),0.35,1.105,0.2);
+    box(0.04,0.01,0.07,m('lens'),0.41,1.128,0.2).rotation.z=0.4;
+    [-0.2,-0.12].forEach(function(z){add(new THREE.SphereGeometry(0.009,10,8),m('red'),0.42,1.132,z+0.02);});
+    rod([0.5,0.97,-0.15],[0.52,0.97,-0.15],0.02,m('red'),14);
+    rbox(-0.12,0.34,0.89,1.04,0.26,0.44,m('dark'),0.02);
+    rbox(-0.1,0.22,1.04,1.07,0.27,0.43,m('seat'),0.015);
+  });
+  part('platform','Operator platform',OPS,10,[0,0.4,0],
+    'The floor the operator stands on, mounted on four rubber blocks. The blocks stop drum vibration from travelling up into the operator, and the open sides give a clear view of both drum edges.',function(){
+    bx(-0.4,0.42,0.84,0.88,-0.6,0.6,m('frame'));
+    bx(-0.38,0.4,0.88,0.895,-0.54,0.54,m('rubber'));
+    for(var i=0;i<7;i++)bx(-0.34+i*0.11,-0.3+i*0.11,0.895,0.903,-0.5,0.5,m('rubber'));
+    [-0.3,0.12].forEach(function(x){[-1,1].forEach(function(s){rod([x,0.8,s*0.575],[x,0.84,s*0.575],0.045,m('rubber'),16);});});
+  });
+
+  /* =================== WATER SPRAY SYSTEM =================== */
+  part('tank','Water tank',WAT,11,[0.45,0.95,0],
+    'Holds the water that is sprayed onto the drums to keep hot asphalt from sticking to the steel. Tanks on rollers this size usually hold between about 70 and 200 litres, which lasts a good part of a shift.',function(){
+    rbox(0.52,1.14,0.81,1.06,-0.58,0.58,m('poly'),0.05);
+    box(0.56,0.12,1.12,m('water'),0.83,0.88,0);
+    rod([0.75,1.06,0.25],[0.75,1.11,0.25],0.055,m('black'),20);
+    rod([0.75,1.11,0.25],[0.75,1.125,0.25],0.068,m('dark'),20);
+    rod([1.145,0.86,0.3],[1.145,1.0,0.3],0.011,m('glass'),10);
+    rod([1.145,0.86,0.3],[1.145,0.9,0.3],0.011,m('water'),10);
+    rod([0.58,0.79,0.4],[0.58,0.81,0.4],0.03,m('steel'),12);
+  });
+  part('filter','Water filter',WAT,12,[0.2,0.8,0.6],
+    'A strainer between the tank and the pump. Spray nozzles are tiny and clog from sediment and scale, so most rollers filter the water more than once on its way to the drum.',function(){
+    rod([0.58,0.53,0.4],[0.58,0.76,0.4],0.04,m('glass'),20);
+    rod([0.58,0.76,0.4],[0.58,0.79,0.4],0.05,m('steel'),20);
+    rod([0.58,0.5,0.4],[0.58,0.53,0.4],0.05,m('black'),20);
+    rod([0.58,0.56,0.4],[0.58,0.7,0.4],0.022,m('steel'),12);
+    rod([0.58,0.5,0.4],[0.58,0.5,0.3],0.012,m('steel'),8);
+  });
+  part('wpump','Spray pump',WAT,13,[0.2,0.8,-0.6],
+    'A small electric pump that pushes water from the tank out to the spray bars at both drums. The spray switch on the console turns it on. Some smaller rollers skip the pump and let water run down from a tank mounted above the bars.',function(){
+    cylZ(0.58,0.64,-0.5,-0.3,0.045,m('black'),20);
+    rod([0.58,0.64,-0.5],[0.58,0.64,-0.495],0.05,m('steel'),20);
+    box(0.09,0.08,0.09,m('steel'),0.58,0.64,-0.28);
+    tube([[0.58,0.77,-0.4],[0.58,0.72,-0.4],[0.58,0.68,-0.38]],0.012,m('rubber'),12);
+    tube([[0.58,0.55,0.4],[0.58,0.5,0.3],[0.58,0.5,-0.15],[0.58,0.6,-0.3]],0.012,m('rubber'),30);
+  });
+  function bar(sx){
+    var x=sx*1.25,y=0.76;
+    cylZ(x,y,-0.47,0.47,0.013,m('brass'),12);
+    [-1,1].forEach(function(s){
+      cylZ(x,y,s*0.47,s*0.475,0.02,m('steel'),12);
+      cylZ(x,y,s*0.47,s*0.56,0.009,m('steel'),8);
+    });
+    for(var i=0;i<6;i++){
+      var z=-0.4+i*0.16,dx=-0.62*sx*0.045,dy=-0.78*0.045;
+      rod([x,y,z],[x+dx,y+dy,z],0.011,m('brass'),10);
+      var t=box(0.012,0.01,0.03,m('steel'),x+dx*1.12,y+dy*1.12,z);t.rotation.z=sx>0?0.67:-0.67;
+    }
+  }
+  part('fbar','Front spray bar',WAT,14,[0.8,0.55,0],
+    'A pipe across the front drum with a row of replaceable nozzles that wet the steel just before it meets the hot asphalt. When asphalt starts sticking to a drum, the nozzles are the first thing to check.',function(){
+    bar(1);
+    tube([[0.58,0.64,-0.4],[0.62,0.68,-0.47],[0.7,0.72,-0.545],[1.0,0.725,-0.545],[1.2,0.74,-0.545],[1.25,0.76,-0.49]],0.012,m('rubber'),50);
+  });
+  part('rbar','Rear spray bar',WAT,15,[-0.8,0.4,0],
+    'The same job for the rear drum. Both drums are wetted because the roller works the same strip going forward and back, and either drum can be the one meeting fresh asphalt.',function(){
+    bar(-1);
+    tube([[0.58,0.64,-0.4],[0.5,0.67,-0.5],[0.34,0.7,-0.545],[0.0,0.725,-0.545],[-0.8,0.725,-0.545],[-1.2,0.74,-0.545],[-1.25,0.76,-0.49]],0.012,m('rubber'),80);
+  });
+
+  /* =================== ENGINE AND HYDRAULICS =================== */
+  part('hood','Engine hood',ENG,16,[-1.1,0.9,0],
+    'Covers the engine, pumps and tanks. It lifts or tilts open for the daily checks of oil, coolant and hydraulic fluid, and a rear grille lets hot air out. Latches on each side hold it shut.',function(){
+    var wall=[[-0.42,0.80],[-0.42,1.20],[-0.50,1.25],[-1.06,1.25],[-1.14,1.16],[-1.14,0.80],[-1.115,0.80],[-1.115,1.155],[-1.055,1.225],[-0.505,1.225],[-0.445,1.195],[-0.445,0.80]];
+    exZ(wall,-0.52,0.52,m('paint'));
+    exZ(HOOD,0.5,0.52,m('paint'));exZ(HOOD,-0.52,-0.5,m('paint'));
+    for(var i=0;i<8;i++)box(0.006,0.014,0.64,m('dark'),-1.143,0.87+i*0.036,0);
+    [-1,1].forEach(function(s){
+      box(0.9,0.05,0.004,m('frame'),-0.78,1.03,s*0.522);
+      box(0.03,0.08,0.014,m('rubber'),-0.58,0.88,s*0.527);
+      box(0.03,0.08,0.014,m('rubber'),-0.98,0.88,s*0.527);
+    });
+    bx(-0.46,-0.52,1.245,1.256,-0.1,0.1,m('black'));
+  });
+  part('airfilter','Air cleaner',ENG,17,[-0.55,1.1,-0.5],
+    'Filters the air before it reaches the engine. Asphalt work kicks up a lot of dust, and a clogged cleaner makes a diesel lose power and smoke, so it is on the daily check list. A red indicator shows when the element needs changing.',function(){
+    bx(-1.09,-0.97,0.84,0.86,-0.45,-0.35,m('frame'));
+    rod([-1.03,0.86,-0.4],[-1.03,1.08,-0.4],0.055,m('dark'),24);
+    rod([-1.03,1.08,-0.4],[-1.03,1.105,-0.4],0.06,m('steel'),24);
+    rod([-1.03,0.83,-0.4],[-1.03,0.86,-0.4],0.02,m('rubber'),10);
+    cylZ(-1.03,1.0,-0.455,-0.47,0.012,m('red'),8);
+    tube([[-1.03,1.1,-0.4],[-1.03,1.18,-0.36],[-0.95,1.18,-0.25],[-0.9,1.13,-0.18]],0.02,m('rubber'),24);
+  });
+  part('muffler','Muffler and exhaust',ENG,18,[-0.35,0.9,0.55],
+    'Quiets the engine and carries the exhaust up through the hood, behind and above the operator.',function(){
+    bx(-1.05,-0.95,0.84,0.86,0.33,0.43,m('frame'));
+    rod([-1.0,0.86,0.38],[-1.0,1.16,0.38],0.055,m('steel'),24);
+    rod([-1.0,1.16,0.38],[-1.0,1.52,0.38],0.025,m('steel'),16);
+    rod([-1.0,1.52,0.38],[-1.0,1.54,0.38],0.036,m('iron'),16);
+    tube([[-0.78,1.06,0.2],[-0.86,1.04,0.28],[-0.94,1.0,0.34]],0.022,m('rust'),20);
+  });
+  part('radiator','Radiator and fan',ENG,19,[-0.9,0.35,0],
+    'Cools the engine. The fan pulls air through the grille at the back of the hood and across the radiator. Dust and grass clippings pack into the fins on a sidewalk job, so they need cleaning out.',function(){
+    bx(-1.1,-1.05,0.88,1.18,-0.3,0.3,m('alu'));
+    for(var i=0;i<10;i++)box(0.004,0.006,0.6,m('black'),-1.103,0.9+i*0.028,0);
+    bx(-1.105,-1.045,1.18,1.21,-0.3,0.3,m('black'));
+    bx(-1.105,-1.045,0.85,0.88,-0.3,0.3,m('black'));
+    rod([-1.075,1.21,0.2],[-1.075,1.24,0.2],0.02,m('steel'),12);
+    torus(0.17,0.012,m('black'),-1.025,1.03,0,'x');
+    rod([-1.04,1.03,0],[-1.0,1.03,0],0.03,m('steel'),16);
+    for(var k=0;k<5;k++){
+      var g=new THREE.BoxGeometry(0.012,0.13,0.07);g.rotateY(0.4);g.translate(0,0.1,0);
+      var b=add(g,m('fan'),-1.025,1.03,0);b.rotation.x=k*Math.PI*2/5;
+    }
+    tube([[-1.075,1.2,-0.18],[-1.0,1.2,-0.17],[-0.95,1.12,-0.13]],0.018,m('rubber'),20);
+    tube([[-1.075,0.86,0.2],[-1.0,0.86,0.2],[-0.95,0.95,0.14]],0.018,m('rubber'),20);
+  });
+  part('engine','Diesel engine',ENG,20,[-0.3,0.75,0],
+    'A small water-cooled diesel, roughly 25 horsepower on a roller this size. It turns the hydraulic pump and the alternator, and nothing else: no gearbox or chain reaches the drums. Everything the roller does, driving, vibrating and steering, runs on hydraulic oil.',function(){
+    bx(-0.94,-0.66,0.84,0.89,-0.16,0.16,m('iron'));
+    rbox(-0.98,-0.62,0.89,1.1,-0.18,0.18,m('engine'),0.02);
+    bx(-0.92,-0.68,1.1,1.15,-0.12,0.12,m('alu'));
+    for(var i=0;i<3;i++)[-1,1].forEach(function(s){rod([-0.88+i*0.1,1.15,s*0.08],[-0.88+i*0.1,1.165,s*0.08],0.012,m('black'),6);});
+    bx(-0.94,-0.68,0.98,1.06,-0.23,-0.18,m('iron'));
+    bx(-0.94,-0.7,0.98,1.05,0.18,0.22,m('rust'));
+    rod([-0.62,0.99,0],[-0.56,0.99,0],0.15,m('iron'),28);
+    rod([-0.98,0.99,0],[-1.01,0.99,0],0.05,m('black'),20);
+    cylZ(-0.97,0.94,-0.3,-0.2,0.04,m('alu'),20);
+    rod([-0.64,0.9,0.1],[-0.72,0.9,0.1],0.04,m('black'),14);
+    [[-0.92,-0.12],[-0.92,0.12],[-0.68,-0.12],[-0.68,0.12]].forEach(function(p){bx(p[0]-0.03,p[0]+0.03,0.8,0.84,p[1]-0.03,p[1]+0.03,m('rubber'));});
+    rod([-0.8,1.15,0.1],[-0.82,1.23,0.08],0.005,m('steel'),6);
+  });
+  part('hpump','Hydrostatic pump',ENG,21,[0.35,0.55,0],
+    'Bolted to the back of the engine. The oil it pumps is what drives the drums. A control on the pump sets how much oil flows and in which direction, which is how the travel lever sets speed and direction. A smaller pump on the same unit usually feeds steering and vibration.',function(){
+    rod([-0.56,0.99,0],[-0.485,0.99,0],0.085,m('iron'),28);
+    rod([-0.485,0.99,0],[-0.455,0.99,0],0.055,m('steel'),20);
+    bx(-0.545,-0.485,0.88,0.915,-0.07,0.07,m('steel'));
+    [-0.06,-0.02,0.02,0.06].forEach(function(z){rod([-0.515,0.87,z],[-0.515,0.88,z],0.014,m('chrome'),8);});
+    bx(-0.54,-0.49,0.95,1.03,0.085,0.12,m('black'));
+    rod([-0.515,0.99,0.105],[-0.515,1.08,0.105],0.007,m('steel'),6);
+  });
+  part('hydfilter','Return oil filter',ENG,22,[0.2,0.7,0.6],
+    'Cleans the oil coming back from the drum motors before it returns to the tank. It catches wear particles, which is why the roller’s hydraulics stay healthy as long as the filter is changed on schedule.',function(){
+    rod([-0.54,0.89,0.3],[-0.54,1.02,0.3],0.04,m('dark'),20);
+    bx(-0.58,-0.5,1.02,1.06,0.26,0.34,m('steel'));
+    tube([[-0.58,1.04,0.3],[-0.6,1.1,0.3],[-0.66,1.12,0.34]],0.014,m('rubber'),12);
+  });
+  part('fuel','Fuel tank',ENG,23,[-0.2,0.5,-0.8],
+    'Holds diesel. A roller burns very little fuel, so one fill of the 30 to 45 litre tank often lasts a full shift.',function(){
+    rbox(-0.92,-0.64,0.84,1.08,-0.46,-0.22,m('iron'),0.02);
+    rod([-0.78,1.08,-0.34],[-0.78,1.16,-0.34],0.032,m('iron'),16);
+    rod([-0.78,1.16,-0.34],[-0.78,1.18,-0.34],0.045,m('black'),16);
+    bx(-0.93,-0.9,0.84,1.08,-0.47,-0.21,m('frame'));
+    bx(-0.66,-0.63,0.84,1.08,-0.47,-0.21,m('frame'));
+  });
+  part('hydtank','Hydraulic oil tank',ENG,24,[-0.2,0.5,0.8],
+    'Stores the oil for driving, vibration and steering. Its breather cap and sight glass are on the daily check, because a low oil level is the quickest way to damage the pump.',function(){
+    rbox(-0.92,-0.64,0.84,1.08,0.22,0.46,m('alu'),0.02);
+    rod([-0.78,1.08,0.34],[-0.78,1.13,0.34],0.035,m('black'),16);
+    cylZ(-0.78,0.96,0.46,0.47,0.03,m('glass'),16);
+    torus(0.034,0.006,m('steel'),-0.78,0.96,0.47,'z');
+  });
+  part('battery','Battery',ENG,25,[0.2,0.45,-0.8],
+    'A 12-volt battery that starts the engine and powers the console, spray pump, beacon and backup alarm. Diesels need a lot of cranking current, especially on a cold spring morning.',function(){
+    bx(-0.62,-0.44,0.84,0.86,-0.46,-0.22,m('frame'));
+    bx(-0.6,-0.46,0.86,1.02,-0.44,-0.24,m('black'));
+    bx(-0.6,-0.46,1.0,1.02,-0.44,-0.24,m('iron'));
+    rod([-0.56,1.02,-0.28],[-0.56,1.045,-0.28],0.012,m('chrome'),8);
+    rod([-0.5,1.02,-0.28],[-0.5,1.045,-0.28],0.012,m('chrome'),8);
+    tube([[-0.5,1.04,-0.28],[-0.5,1.1,-0.2],[-0.6,0.96,-0.12]],0.01,m('red'),16);
+  });
+  part('hoses','Hydraulic hoses',ENG,26,[0,0.8,0],
+    'Carry pressurised oil from the pump to the four drum motors, in pairs: one hose supplies, one returns. They loop around the middle joint with some slack so the roller can steer. Never check a hose for leaks with your hand, because oil under pressure can pierce skin.',function(){
+    var A=[[-0.515,0.87,-0.04],[-0.515,0.76,-0.07],[-0.4,0.68,-0.2],[0,0.66,-0.38],[0.33,0.66,-0.52],[0.4,0.68,-0.645],[0.7,0.7,-0.645],[0.95,0.7,-0.645],[1.0,0.58,-0.645],[1.0,0.49,-0.645]];
+    var B=[[-0.515,0.87,-0.04],[-0.515,0.76,-0.07],[-0.4,0.7,-0.2],[0,0.7,-0.38],[0.31,0.7,-0.52],[0.3,0.71,-0.645],[0,0.72,-0.645],[-0.8,0.72,-0.645],[-0.97,0.62,-0.645],[-1.0,0.49,-0.645]];
+    function mir(P){return P.map(function(p,i){var q=[p[0],p[1],-p[2]];if(i>=P.length-2)q[1]-=0.03;return q;});}
+    [A,B,mir(A),mir(B)].forEach(function(P){
+      [-0.02,0.02].forEach(function(o){
+        tube(P.map(function(p){return [p[0],p[1],p[2]+o];}),0.013,m('rubber'),70);
+      });
+    });
+  });
+
+  /* =================== DRUMS AND VIBRATION =================== */
+  function scraper(cx,degC,degQ){
+    var c=Math.cos(degC*d2r),s=Math.sin(degC*d2r);
+    var P=[cx+DR*c,AY+DR*s],Q=[cx+0.4*Math.cos(degQ*d2r),AY+0.4*Math.sin(degQ*d2r)],H=[P[0]+0.03*c,P[1]+0.03*s];
+    box(0.012,0.075,0.98,m('rubber'),P[0]+0.006*c,P[1]+0.006*s,0).rotation.z=degC*d2r;
+    box(0.02,0.05,0.98,m('steel'),P[0]+0.022*c,P[1]+0.022*s,0).rotation.z=degC*d2r;
+    [-1,1].forEach(function(sg){
+      beam([H[0],H[1],sg*0.51],[Q[0],Q[1],sg*0.545],0.024,0.02,m('steel'));
+      cylZ(Q[0],Q[1],sg*0.535,sg*0.575,0.03,m('iron'),14);
+    });
+  }
+  part('fscr','Front drum scrapers',DRM,27,[0,0.7,0],
+    'Two spring-loaded blades press lightly on the front drum, one on each side. They wipe off any asphalt that sticks, and having one on each side means the drum is cleaned whichever way the roller is moving. Flexible blades like these are a wear item.',function(){
+    scraper(FX,-30,15);scraper(FX,210,165);
+  });
+  part('rscr','Rear drum scrapers',DRM,28,[0,0.7,0],
+    'The same pair of blades for the rear drum. Check them with the nozzles at the start of each shift: a worn or bent blade leaves a thin film of asphalt on the steel, and that film shows up as marks in the mat.',function(){
+    scraper(RX,-30,15);scraper(RX,210,165);
+  });
+  function drumShell(cx){
+    var g=new THREE.Group();g.position.set(cx,AY,0);g.rotation.x=Math.PI/2;G.add(g);
+    g.add(lathe([[DR-0.03,-0.5],[DR-0.012,-0.5],[DR,-0.482],[DR,0.482],[DR-0.012,0.5],[DR-0.03,0.5],[DR-0.03,-0.5]],m('drum'),72));
+    [-1,1].forEach(function(s){
+      g.add(lathe([[0.1,s*0.47],[DR-0.03,s*0.47],[DR-0.03,s*0.44],[0.1,s*0.44],[0.1,s*0.47]],m('drum'),48));
+      g.add(lathe([[0.05,s*0.44],[0.13,s*0.44],[0.13,s*0.5],[0.05,s*0.5],[0.05,s*0.44]],m('steel'),32));
+      for(var i=0;i<8;i++){
+        var a=i*Math.PI/4,b=new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.01,0.02,6),m('iron'));
+        b.position.set(Math.cos(a)*0.095,s*0.505,Math.sin(a)*0.095);g.add(b);
+      }
+      for(var k=0;k<6;k++){
+        var a2=k*Math.PI/3,rib=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.025,0.012),m('drum'));
+        rib.position.set(Math.cos(a2)*0.2,s*0.455,Math.sin(a2)*0.2);rib.rotation.y=-a2;g.add(rib);
+      }
+    });
+  }
+  part('fdrum','Front drum',DRM,29,[1.7,0.25,0],
+    'The smooth steel cylinder that does the compacting. Its weight presses the asphalt flat and vibration adds to it. The edges are chamfered so the drum does not leave a hard line at the edge of a pass. On a sidewalk roller the drum is about a metre wide, which fits a path and lets the operator work right up to a curb.',function(){
+    drumShell(FX);
+  });
+  part('rdrum','Rear drum',DRM,30,[-1.7,0.25,0],
+    'Identical to the front drum. Both drums are driven and both vibrate, which gives the roller traction on fresh asphalt and stops a bow wave of mix from building up ahead of a drum.',function(){
+    drumShell(RX);
+  });
+  function exciter(cx){
+    rod([cx,AY,-0.5],[cx,AY,0.5],0.045,m('steel'),20);
+    var g=new THREE.CylinderGeometry(0.15,0.15,0.6,28,1,false,0,Math.PI);g.rotateX(Math.PI/2);
+    add(g,m('iron'),cx,AY,0);
+    [-1,1].forEach(function(s){cylZ(cx,AY,s*0.38,s*0.44,0.075,m('steel'),20);cylZ(cx,AY,s*0.3,s*0.31,0.1,m('iron'),20);});
+  }
+  part('fexc','Front exciter shaft',DRM,31,[0,0.9,0],
+    'A shaft inside the drum with a weight fixed to one side. When it spins, the lopsided weight shakes the drum thousands of times a minute, and the drum presses harder on the asphalt with each beat. The shake is under half a millimetre, small enough that the mat is not marked.',function(){
+    exciter(FX);
+  });
+  part('rexc','Rear exciter shaft',DRM,32,[0,0.9,0],
+    'The same arrangement in the rear drum. Vibration is normally switched off before the roller stops or changes direction. A drum that vibrates while standing still sinks into the asphalt.',function(){
+    exciter(RX);
+  });
+  function motor(cx,sz,r,len){
+    var z0=sz*0.59,z1=sz*(0.59+len);
+    cylZ(cx,AY,z0,z0+sz*0.02,r+0.03,m('iron'),24);
+    cylZ(cx,AY,z0+sz*0.02,z1,r,m('engine'),28);
+    cylZ(cx,AY,z1,z1+sz*0.015,r*0.88,m('black'),24);
+    cylZ(cx,AY,z0,sz*0.5,r*0.55,m('steel'),16);
+    [0.625,0.665].forEach(function(z){rod([cx,AY+r-0.01,sz*z],[cx,AY+r+0.03,sz*z],0.014,m('chrome'),10);});
+    for(var i=0;i<4;i++){var a=i*Math.PI/2+Math.PI/4;cylZ(cx+Math.cos(a)*(r+0.018),AY+Math.sin(a)*(r+0.018),z0,z0+sz*0.03,0.008,m('steel'),6);}
+  }
+  part('fvm','Front vibration motor',DRM,33,[0,0.2,0.9],
+    'A small hydraulic motor at the passenger-side end of the drum that spins the exciter shaft. It runs separately from the motor that turns the drum, so vibration can be switched on and off while the roller keeps moving.',function(){
+    motor(FX,1,0.075,0.1);
+  });
+  part('rvm','Rear vibration motor',DRM,34,[0,0.2,0.9],
+    'The vibration motor for the rear drum. Each drum can be set to vibrate or not, so thin or sensitive spots can be rolled with only the static weight of one drum.',function(){
+    motor(RX,1,0.075,0.1);
+  });
+  part('fdm','Front drum drive motor',DRM,35,[0,0.2,-0.9],
+    'A hydraulic motor at the driver-side end of the drum that turns it directly, with no gearbox or chain in between. Oil from the hydrostatic pump spins it, and it also acts as the brake when the travel lever returns to the middle.',function(){
+    motor(FX,-1,0.105,0.12);
+  });
+  part('rdm','Rear drum drive motor',DRM,36,[0,0.2,-0.9],
+    'The drive motor for the rear drum. With a motor on each drum the roller pushes and brakes with both, which helps on a slope or when the roller has to stop on a freshly laid mat.',function(){
+    motor(RX,-1,0.105,0.12);
+  });
+  var ISO='A ring of rubber between the end of the drum and its frame. It lets the drum shake without shaking the machine, so the frame, platform and operator stay calm. The rubber hardens and cracks with age and is one of the first things to wear out.';
+  function iso(cx,sz){
+    var g=new THREE.Group();g.position.set(cx,AY,sz>0?0.5:-0.56);g.rotation.x=Math.PI/2;G.add(g);
+    g.add(lathe([[0.06,0],[0.14,0],[0.14,0.06],[0.06,0.06],[0.06,0]],m('rubber'),32));
+    [0,0.054].forEach(function(y){g.add(lathe([[0.06,y],[0.15,y],[0.15,y+0.006],[0.06,y+0.006],[0.06,y]],m('steel'),32));});
+    for(var i=0;i<6;i++){var a=i*Math.PI/3,b=new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.01,0.075,6),m('steel'));b.position.set(Math.cos(a)*0.105,0.03,Math.sin(a)*0.105);g.add(b);}
+  }
+  part('isoFL','Front drum mount, driver side',DRM,37,[0,0,-0.5],ISO,function(){iso(FX,-1);});
+  part('isoFR','Front drum mount, passenger side',DRM,38,[0,0,0.5],ISO,function(){iso(FX,1);});
+  part('isoRL','Rear drum mount, driver side',DRM,39,[0,0,-0.5],ISO,function(){iso(RX,-1);});
+  part('isoRR','Rear drum mount, passenger side',DRM,40,[0,0,0.5],ISO,function(){iso(RX,1);});
+
+  /* =================== FRAME AND STEERING =================== */
+  part('joint','Articulation joint',FRM,41,[0,0.8,0],
+    'The hinge in the middle of the roller. Steering bends the machine here: the front half turns on a vertical pin against the rear half, so both drums stay in contact with the ground through the turn. On many rollers the joint can also rock sideways slightly, which keeps both drums down on a crowned or uneven path.',function(){
+    bx(0.16,0.44,0.44,0.48,-0.2,0.2,m('frame'));
+    bx(0.16,0.44,0.64,0.68,-0.2,0.2,m('frame'));
+    rod([0.3,0.42,0],[0.3,0.7,0],0.03,m('steel'),20);
+    rod([0.3,0.68,0],[0.3,0.705,0],0.05,m('steel'),20);
+    rod([0.3,0.415,0],[0.3,0.44,0],0.045,m('steel'),20);
+    add(new THREE.SphereGeometry(0.055,20,14),m('iron'),0.3,0.56,0);
+    [[0.2,-0.14],[0.2,0.14],[0.4,-0.14],[0.4,0.14]].forEach(function(p){
+      rod([p[0],0.68,p[1]],[p[0],0.695,p[1]],0.014,m('steel'),6);
+      rod([p[0],0.465,p[1]],[p[0],0.48,p[1]],0.014,m('steel'),6);
+    });
+  });
+  part('steercyl','Steering cylinder',FRM,42,[0,0.4,0.8],
+    'A hydraulic ram that spans the joint. Extending it pushes the front half one way, retracting it pulls the other way. Oil reaches it from the steering valve behind the wheel.',function(){
+    hyd([0.12,0.56,0.34],[0.5,0.56,0.22],0.04,'y');
+  });
+  part('fframe','Front frame',FRM,43,[0.8,0,0],
+    'The steel yoke that holds the front drum between two side plates. It carries the water tank, the spray pump and the front scrapers, and its tongue is what pins into the articulation joint. A rubber-faced guard bar across the front protects the drum edge and spray bar from bumps.',function(){
+    exZ(FP,0.56,0.59,m('frame'));exZ(FP,-0.59,-0.56,m('frame'));
+    bx(0.46,0.58,0.34,0.5,-0.56,0.56,m('frame'));
+    bx(0.3,0.52,0.5,0.62,-0.22,0.22,m('frame'));
+    bx(0.46,0.56,0.5,0.62,0.2,0.3,m('frame'));
+    bx(0.5,0.54,0.75,0.8,-0.56,0.56,m('frame'));
+    bx(1.1,1.14,0.75,0.8,-0.56,0.56,m('frame'));
+    rbox(1.41,1.49,0.44,0.6,-0.62,0.62,m('rubber'),0.02);
+    [-1,1].forEach(function(s){bx(1.38,1.42,0.48,0.56,s*0.56,s*0.6,m('frame'));});
+  });
+  part('rframe','Rear frame',FRM,44,[-0.8,0,0],
+    'The steel frame that carries the rear drum, the engine, the operator platform and the ROPS. Its two side plates also form the sides of the platform. The rear guard bar protects the rear drum edge and the backup alarm.',function(){
+    exZ(RP,0.56,0.59,m('frame'));exZ(RP,-0.59,-0.56,m('frame'));
+    bx(0.14,0.22,0.4,0.6,-0.56,0.56,m('frame'));
+    bx(0.08,0.16,0.5,0.62,0.26,0.42,m('frame'));
+    bx(-0.34,-0.28,0.4,0.6,-0.56,0.56,m('frame'));
+    bx(-1.14,-0.4,0.78,0.8,-0.56,0.56,m('frame'));
+    rbox(-1.49,-1.41,0.44,0.6,-0.62,0.62,m('rubber'),0.02);
+    [-1,1].forEach(function(s){bx(-1.42,-1.38,0.48,0.56,s*0.56,s*0.6,m('frame'));});
+  });
+
+  parts.forEach(function(p){p.obj.traverse(function(o){if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});});
+  return parts;
+}
+</script>
+<script>
+(function(){
+  'use strict';
+  var $=function(id){return document.getElementById(id);};
+  var stage=$('stage'),canvas=$('gl');
+  function fail(){canvas.style.display='none';$('fail').style.display='flex';$('overlay').hidden=true;}
+  if(!window.THREE){fail();return;}
+  var renderer;
+  try{renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,powerPreference:'high-performance'});}catch(e){fail();return;}
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  var scene=new THREE.Scene();
+  var camera=new THREE.PerspectiveCamera(42,1,0.2,400);
+  scene.fog=new THREE.Fog(0xd6dfe6,30,120);
+
+  (function(){
+    var c=document.createElement('canvas');c.width=16;c.height=256;
+    var x=c.getContext('2d'),g=x.createLinearGradient(0,0,0,256);
+    g.addColorStop(0,'#8fb0cc');g.addColorStop(0.42,'#e9eff3');g.addColorStop(0.5,'#ffffff');g.addColorStop(0.56,'#aeb6bb');g.addColorStop(1,'#6f777c');
+    x.fillStyle=g;x.fillRect(0,0,16,256);
+    var t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;
+    var es=new THREE.Scene();
+    es.add(new THREE.Mesh(new THREE.SphereGeometry(50,32,16),new THREE.MeshBasicMaterial({map:t,side:THREE.BackSide})));
+    var lamp=new THREE.Mesh(new THREE.BoxGeometry(22,2,22),new THREE.MeshBasicMaterial({color:0xffffff}));lamp.position.set(12,34,10);lamp.lookAt(0,0,0);es.add(lamp);
+    var pm=new THREE.PMREMGenerator(renderer);
+    scene.environment=pm.fromScene(es,0.03).texture;pm.dispose();
+  })();
+  var hemi=new THREE.HemisphereLight(0xffffff,0x8d98a0,0.45);scene.add(hemi);
+  var sun=new THREE.DirectionalLight(0xfff6ea,1.25);
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+  var sc=sun.shadow.camera;sc.left=-7;sc.right=7;sc.top=7;sc.bottom=-7;sc.near=2;sc.far=70;
+  sun.shadow.bias=-0.0004;sun.shadow.normalBias=0.02;
+  scene.add(sun);scene.add(sun.target);
+
+  var ground=new THREE.Mesh(new THREE.CircleGeometry(400,48),new THREE.MeshStandardMaterial({color:0xbcc7b0,roughness:0.97,metalness:0}));
+  ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+
+  /* ---------- the roller: rear half is the root, front half bends at the pin ---------- */
+  var parts=buildRoller(THREE),byId={};
+  var machine=new THREE.Group(),front=new THREE.Group();
+  scene.add(machine);machine.add(front);front.position.set(0.3,0,0);
+  var FRONT=['tank','filter','wpump','fbar','fscr','fdrum','fexc','fvm','fdm','isoFL','isoFR','fframe'];
+  parts.forEach(function(p){
+    byId[p.id]=p;
+    if(FRONT.indexOf(p.id)>=0){p.obj.position.x=-0.3;front.add(p.obj);}else machine.add(p.obj);
+  });
+  byId.hoses.obj.visible=false;byId.steercyl.obj.visible=false;
+  byId.canopy.obj.traverse(function(o){if(o.isMesh){o.material.transparent=true;o.material.opacity=0.18;o.material.depthWrite=false;o.castShadow=false;}});
+  var beaconMat=byId.beacon.obj.children.filter(function(o){return o.isMesh;}).map(function(o){return o.material;});
+  var drumF=byId.fdrum.obj.children[0],drumR=byId.rdrum.obj.children[0];
+  var WET=new THREE.Color(0x6f8795);
+  [byId.fdrum,byId.rdrum].forEach(function(p){
+    var mt=p.obj.children[0].children[0].material;
+    mt.userData.c0=mt.color.clone();mt.userData.r0=mt.roughness;p.wet=mt;
+  });
+  function setWet(on){[byId.fdrum,byId.rdrum].forEach(function(p){p.wet.color.copy(on?WET:p.wet.userData.c0);p.wet.roughness=on?0.22:p.wet.userData.r0;});}
+
+  /* ---------- the course ---------- */
+  function sstep(a,b,x){var t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t);}
+  var AMP=1.5,LAM=20;
+  function pathW(x){return AMP*Math.sin(2*Math.PI*(x-8)/LAM)*sstep(8,15,x)*(1-sstep(33,43,x));}
+  function pathD(x){return (pathW(x+0.01)-pathW(x-0.01))/0.02;}
+  var DX=0.1,NROW=501,NJ=19,STRIPW=0.9,END=50,NV=NROW*NJ;
+
+  function ribbon(xa,xb,step,oa,ob,y,mat){
+    var n=Math.round((xb-xa)/step)+1,pos=new Float32Array(n*2*3),idx=[];
+    for(var i=0;i<n;i++){
+      var x=xa+i*step,w=pathW(x),s=pathD(x),inv=1/Math.sqrt(1+s*s);
+      [oa,ob].forEach(function(off,k){
+        var X=x-s*inv*off,W=w+inv*off,o=(i*2+k)*3;pos[o]=X;pos[o+1]=y;pos[o+2]=-W;
+      });
+      if(i<n-1){var a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3);}
+    }
+    var g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
+    var me=new THREE.Mesh(g,mat);me.receiveShadow=true;me.frustumCulled=false;scene.add(me);return me;
+  }
+  var gravelMat=new THREE.MeshStandardMaterial({color:0x7a7468,roughness:0.97,side:THREE.DoubleSide});
+  var laneMat=new THREE.MeshStandardMaterial({color:0x3b4045,roughness:0.88,side:THREE.DoubleSide});
+  var lineMat=new THREE.MeshStandardMaterial({color:0xf2f2ee,roughness:0.7,side:THREE.DoubleSide});
+  var course=new THREE.Group();scene.add(course);
+  var gravel=ribbon(-4,56,0.25,-0.62,0.62,0.012,gravelMat);
+  var lane=ribbon(-4,56,0.25,0.62,3.9,0.013,laneMat);
+  var edge=ribbon(-4,56,0.25,0.7,0.82,0.016,lineMat);
+  [gravel,lane,edge].forEach(function(m){scene.remove(m);course.add(m);});
+  var cl=document.createElement('canvas');cl.width=64;cl.height=16;
+  (function(){var x=cl.getContext('2d');for(var i=0;i<8;i++)for(var j=0;j<2;j++){x.fillStyle=(i+j)%2?'#f4f4f0':'#1c1f23';x.fillRect(i*8,j*8,8,8);}})();
+  var ct=new THREE.CanvasTexture(cl);ct.encoding=THREE.sRGBEncoding;ct.magFilter=THREE.NearestFilter;
+  function lineAt(x,mat,len){
+    var m=new THREE.Mesh(new THREE.PlaneGeometry(0.3,len||1.7),mat);m.rotation.x=-Math.PI/2;m.position.set(x,0.04,-pathW(x));
+    m.receiveShadow=true;course.add(m);
+  }
+  lineAt(0,lineMat);
+  var fin=new THREE.Mesh(new THREE.PlaneGeometry(0.4,1.7),new THREE.MeshStandardMaterial({map:ct,roughness:0.8}));
+  fin.rotation.x=-Math.PI/2;fin.position.set(END,0.04,-pathW(END));fin.rotation.z=0;course.add(fin);
+  /* cones at the start */
+  var coneMat=new THREE.MeshStandardMaterial({color:0xff5a1f,roughness:0.6});
+  [[-1,-0.85],[-1,0.85],[END+1,-0.85],[END+1,0.85]].forEach(function(c){
+    var cn=new THREE.Mesh(new THREE.ConeGeometry(0.1,0.32,14),coneMat);cn.position.set(c[0],0.17,c[1]);cn.castShadow=true;course.add(cn);
+  });
+  course.visible=false;
+
+  /* the cement strip: one vertex grid, rough until a drum passes over it */
+  var vX=new Float32Array(NV),vW=new Float32Array(NV),pos=new Float32Array(NV*3),col=new Float32Array(NV*3),noise=new Float32Array(NV),jit=new Float32Array(NV),cov=new Uint8Array(NV);
+  var seed=11;function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647;}
+  for(var i=0;i<NROW;i++){
+    var x=i*DX,w=pathW(x),sl=pathD(x),inv=1/Math.sqrt(1+sl*sl);
+    for(var j=0;j<NJ;j++){
+      var k=i*NJ+j,off=-STRIPW/2+j*STRIPW/(NJ-1);
+      vX[k]=x-sl*inv*off;vW[k]=w+inv*off;pos[k*3]=vX[k];pos[k*3+2]=-vW[k];
+      noise[k]=0.016+rnd()*0.05+0.012*Math.sin(x*4.7+j*1.9);jit[k]=0.82+rnd()*0.36;
+    }
+  }
+  var idx=[];
+  for(var r=0;r<NROW-1;r++)for(var c=0;c<NJ-1;c++){var a=r*NJ+c,b=a+1,cc=a+NJ,d=cc+1;idx.push(a,cc,b,b,cc,d);}
+  var sGeo=new THREE.BufferGeometry();
+  sGeo.setAttribute('position',new THREE.BufferAttribute(pos,3));sGeo.setAttribute('color',new THREE.BufferAttribute(col,3));sGeo.setIndex(idx);
+  var strip=new THREE.Mesh(sGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.92,metalness:0,flatShading:true,side:THREE.DoubleSide}));
+  strip.receiveShadow=true;strip.frustumCulled=false;strip.visible=false;scene.add(strip);
+  var CC=[[0.46,0.43,0.38],[0.2,0.2,0.205],[0.11,0.115,0.12]]; /* loose, front drum, rear drum (linear) */
+  function paint(k,st){
+    var q=CC[st],j=st===0?jit[k]:1;
+    pos[k*3+1]=st===0?0.03+noise[k]:0.03;
+    col[k*3]=q[0]*j;col[k*3+1]=q[1]*j;col[k*3+2]=q[2]*j;
+  }
+  var covered=0;
+  function resetStrip(){for(var k=0;k<NV;k++){cov[k]=0;paint(k,0);}covered=0;sGeo.attributes.position.needsUpdate=true;sGeo.attributes.color.needsUpdate=true;}
+  var dirty=false;
+  function cover(Dx,Dw,phi,bit){
+    var cp=Math.cos(phi),sp=Math.sin(phi);
+    var r0=Math.max(0,Math.floor((Dx-0.45)/DX)),r1=Math.min(NROW-1,Math.ceil((Dx+0.45)/DX));
+    for(var r=r0;r<=r1;r++)for(var j=0;j<NJ;j++){
+      var k=r*NJ+j,ex=vX[k]-Dx,ew=vW[k]-Dw;
+      var along=ex*cp+ew*sp,lat=-ex*sp+ew*cp;
+      if(along>0.13||along<-0.13||lat>0.5||lat<-0.5)continue;
+      if(cov[k]&bit)continue;
+      if(!cov[k])covered++;
+      cov[k]|=bit;paint(k,(cov[k]&2)?2:1);dirty=true;
+    }
+  }
+
+  /* ---------- the machine's motion ---------- */
+  var A_=1.3,B_=0.7,VMAX=2.0,GMAX=0.55;
+  var S={x:-3.2,w:0,th:0,g:0,v:0,lever:0,t:0,moving:false};
+  var state='ready',view='behind';
+  function resetSim(){S.x=-3.2;S.w=0;S.th=0;S.g=0;S.v=0;S.lever=0;S.t=0;S.moving=false;placeMachine();setLever(0);}
+  function placeMachine(){
+    machine.position.set(S.x+Math.cos(S.th),0,-(S.w+Math.sin(S.th)));
+    machine.rotation.y=S.th;front.rotation.y=S.g;
+  }
+  var keys={l:0,r:0,u:0,d:0},btn={l:0,r:0},auto=null;
+  var leverEl=$('lever'),kmhEl=$('kmh');
+  function setLever(v){
+    S.lever=Math.min(1,Math.max(0,v));
+    leverEl.style.setProperty('--v',S.lever.toFixed(3));
+    leverEl.setAttribute('aria-valuenow',String(Math.round(S.lever*100)));
+  }
+  function update(dt){
+    var play=state==='play';
+    if(play){
+      var rate=0;
+      if(keys.u)rate+=0.8;if(keys.d)rate-=0.8;
+      if(rate)setLever(S.lever+rate*dt);
+    }
+    var inp=play?(((keys.l||btn.l)?1:0)-((keys.r||btn.r)?1:0)):0;
+    if(auto&&play)inp=auto(S);
+    var gr;
+    if(inp)gr=inp*1.15;else gr=-Math.sign(S.g)*Math.min(Math.abs(S.g)/Math.max(dt,1e-3),0.8);
+    S.g=Math.min(GMAX,Math.max(-GMAX,S.g+gr*dt));
+    var vt=play?S.lever*VMAX:0;
+    var acc=vt>S.v?1.3:2.6;
+    S.v+=Math.min(Math.abs(vt-S.v),acc*dt)*Math.sign(vt-S.v);
+    var dth=(S.v*Math.sin(S.g)-B_*gr)/(A_*Math.cos(S.g)+B_)*dt;
+    S.th+=dth;S.x+=S.v*Math.cos(S.th)*dt;S.w+=S.v*Math.sin(S.th)*dt;
+    if(play&&S.v>0.02&&!S.moving){S.moving=true;setStatus('Rolling. Keep the drum centred on the strip, and ease the lever back if you are drifting.');}
+    if(play&&S.moving)S.t+=dt;
+    placeMachine();
+    machine.position.y=S.v>0.05?(Math.random()-0.5)*0.004:0;
+    var dd=S.v*dt/0.36;drumF.rotateY(-dd);drumR.rotateY(-dd);
+    if(state==='play'){
+      var px=S.x+A_*Math.cos(S.th),pw=S.w+A_*Math.sin(S.th);
+      var ph=S.th+S.g,fx=px+B_*Math.cos(ph),fw=pw+B_*Math.sin(ph);
+      cover(S.x,S.w,S.th,2);cover(fx,fw,ph,1);
+      if(dirty){sGeo.attributes.position.needsUpdate=true;sGeo.attributes.color.needsUpdate=true;dirty=false;}
+      if(S.x>END+0.5)finish();
+    }
+  }
+
+  /* ---------- camera ---------- */
+  var camHead=0,camPos=new THREE.Vector3(),camInit=false,camTarget=new THREE.Vector3();
+  function angDiff(a,b){var d=a-b;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return d;}
+  function updateCamera(dt){
+    var px=S.x+A_*Math.cos(S.th),pw=S.w+A_*Math.sin(S.th);
+    var H=S.th+S.g*0.5;
+    camHead+=angDiff(H,camHead)*(camInit?1-Math.exp(-dt*3):1);
+    var fx=Math.cos(camHead),fw=Math.sin(camHead),want=new THREE.Vector3(),tg=new THREE.Vector3(px+fx*(view==='behind'?3.6:2.4),0.1,-(pw+fw*(view==='behind'?3.6:2.4)));
+    if(view==='behind'){want.set(px-fx*4.6,7.6,-(pw-fw*4.6));camera.up.set(0,1,0);}
+    else{want.set(px-fx*1.0,11.5,-(pw-fw*1.0));camera.up.set(fx,0,-fw);}
+    var k=camInit?1-Math.exp(-dt*6):1;
+    camPos.lerp(want,k);camTarget.lerp(tg,k);camInit=true;
+    camera.position.copy(camPos);camera.lookAt(camTarget);
+    sun.position.set(machine.position.x+12,26,machine.position.z+11);sun.target.position.set(machine.position.x,0,machine.position.z);
+  }
+
+  /* ---------- sizes and theme ---------- */
+  function resize(){
+    var w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;
+    renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<0.8?58:42;camera.updateProjectionMatrix();
+  }
+  if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);
+  window.addEventListener('resize',resize);resize();
+  function isDark(){
+    var a=document.documentElement.getAttribute('data-theme');
+    return a==='dark'||(a!=='light'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function applyTheme(){
+    var d=isDark(),bg=d?0x111b23:0xd6dfe6;
+    scene.background=new THREE.Color(bg);scene.fog.color.set(bg);
+    ground.material.color.set(d?0x27332b:0xbcc7b0);gravelMat.color.set(d?0x4a463e:0x7a7468);laneMat.color.set(d?0x15191d:0x3b4045);
+    hemi.intensity=d?0.3:0.45;sun.intensity=d?1.05:1.25;renderer.toneMappingExposure=d?0.82:1.0;
+  }
+  applyTheme();
+  if(window.matchMedia){var mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',applyTheme);}
+  new MutationObserver(applyTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+  /* ---------- game flow ---------- */
+  var overlay=$('overlay'),statusEl=$('status'),covEl=$('cov'),tmEl=$('tm'),startBtn=$('startBtn');
+  function setStatus(h){statusEl.innerHTML=h;}
+  function startGame(){
+    resetSim();resetStrip();course.visible=true;strip.visible=true;setWet(true);
+    state='play';overlay.hidden=true;camInit=false;
+    setStatus('Raise the <b>speed lever</b> to start rolling. Keep the drum centred on the strip.');
+    $('lever').focus({preventScroll:true});
+  }
+  function fmt(t){var m=Math.floor(t/60),s=Math.floor(t%60);return m+':'+(s<10?'0':'')+s;}
+  function finish(){
+    state='done';setLever(0);
+    var total=NV,pct=Math.round(covered/total*100),lm=0,rm=0,mid=(NJ-1)/2;
+    for(var k=0;k<NV;k++)if(!cov[k]){var j=k%NJ;if(j>mid)lm++;else if(j<mid)rm++;}
+    var title=pct>=96?'Smooth all the way':pct>=88?'Nicely rolled':pct>=72?'A few rough patches':'Mostly still rough';
+    var hint=pct>=99?'Not a spot missed.':(lm>1.6*rm?'Most of what you missed was on the left edge.':rm>1.6*lm?'Most of what you missed was on the right edge.':'You missed spots on both edges.');
+    $('cTitle').textContent=title;
+    $('cText').innerHTML='<b>'+pct+'%</b> of the shoulder rolled, in <b>'+fmt(S.t)+'</b>.';
+    $('cSmall').textContent=hint+' Slower speed gives you more time to correct.';
+    startBtn.textContent='Roll again';overlay.hidden=false;
+    setStatus('Finished. <b>'+pct+'%</b> rolled in <b>'+fmt(S.t)+'</b>.');
+    startBtn.focus({preventScroll:true});
+  }
+  startBtn.addEventListener('click',startGame);
+  $('restart').addEventListener('click',function(){if(state==='ready'){startGame();return;}startGame();});
+  $('viewBtn').addEventListener('click',function(){
+    view=view==='behind'?'above':'behind';
+    this.textContent='View: '+view;this.setAttribute('aria-pressed',view==='above'?'true':'false');camInit=false;
+  });
+
+  /* ---------- input ---------- */
+  function key(e,v){
+    var k=e.key,hit=true;
+    if(k==='ArrowLeft'||k==='a'||k==='A')keys.l=v;
+    else if(k==='ArrowRight'||k==='d'||k==='D')keys.r=v;
+    else if(k==='ArrowUp'||k==='w'||k==='W')keys.u=v;
+    else if(k==='ArrowDown'||k==='s'||k==='S')keys.d=v;
+    else hit=false;
+    if(hit&&state==='play')e.preventDefault();
+  }
+  document.addEventListener('keydown',function(e){key(e,1);});
+  document.addEventListener('keyup',function(e){key(e,0);});
+  window.addEventListener('blur',function(){keys.l=keys.r=keys.u=keys.d=0;btn.l=btn.r=0;$('bl').classList.remove('down');$('br').classList.remove('down');});
+  function hold(id,name){
+    var el=$(id);
+    el.addEventListener('pointerdown',function(e){e.preventDefault();try{el.setPointerCapture(e.pointerId);}catch(_){}btn[name]=1;el.classList.add('down');});
+    function up(){btn[name]=0;el.classList.remove('down');}
+    el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up);
+    el.addEventListener('contextmenu',function(e){e.preventDefault();});
+  }
+  hold('bl','l');hold('br','r');
+  var leverDrag=false;
+  function leverFrom(e){
+    var r=leverEl.getBoundingClientRect(),v=1-(e.clientY-r.top-17)/(r.height-34);
+    if(state==='play')setLever(v);
+  }
+  leverEl.addEventListener('pointerdown',function(e){e.preventDefault();leverDrag=true;try{leverEl.setPointerCapture(e.pointerId);}catch(_){}leverFrom(e);});
+  leverEl.addEventListener('pointermove',function(e){if(leverDrag)leverFrom(e);});
+  function lend(){leverDrag=false;}
+  leverEl.addEventListener('pointerup',lend);leverEl.addEventListener('pointercancel',lend);
+
+  /* ---------- loop ---------- */
+  var last=performance.now(),clock=0,lastCov='',lastKmh='',lastTm='';
+  function tick(dt){
+    clock+=dt;update(dt);updateCamera(dt);
+    var bi=0.35+0.5*(Math.sin(clock*6)>0?1:0.1);
+    beaconMat.forEach(function(m){if(m.emissive&&m.color.r>0.9)m.emissiveIntensity=bi;});
+    var c=Math.round(covered/NV*100)+'%';if(c!==lastCov){covEl.textContent=c;lastCov=c;}
+    var kk=(S.v*3.6).toFixed(1);if(kk!==lastKmh){kmhEl.firstChild.nodeValue=kk;lastKmh=kk;}
+    var tt=fmt(S.t);if(tt!==lastTm){tmEl.textContent=tt;lastTm=tt;}
+  }
+  function frame(now){
+    requestAnimationFrame(frame);
+    var dt=Math.min(0.05,(now-last)/1000);last=now;
+    tick(dt);renderer.render(scene,camera);
+  }
+  resetSim();update(0.016);updateCamera(0.016);
+  requestAnimationFrame(frame);
+  window.__game={S:S,start:startGame,tick:tick,setLever:setLever,pathW:pathW,pathD:pathD,setAuto:function(f){auto=f;},cov:function(){return covered/NV;},state:function(){return state;},render:function(){renderer.render(scene,camera);}};
+})();
+</script>
+
+</body>
+</html>
