@@ -47,7 +47,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 @media (hover:none){.touch-only{display:inline}.mouse-only{display:none}}
 
 #hud{position:absolute;left:14px;top:96px;display:flex;gap:.5rem;pointer-events:none}
-.stat{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--sign);border-radius:8px;padding:.25rem .6rem .3rem .55rem;min-width:4.6rem;box-shadow:0 3px 10px var(--shadow)}
+.stat{background:var(--panel);max-width:9rem;border:1px solid var(--line);border-left:5px solid var(--sign);border-radius:8px;padding:.25rem .6rem .3rem .55rem;min-width:4.6rem;box-shadow:0 3px 10px var(--shadow)}
 .stat span{display:block;font-size:.74rem;color:var(--mute);line-height:1.1}
 .stat b{font-family:var(--display);font-weight:700;font-size:1.45rem;line-height:1.05;font-variant-numeric:tabular-nums}
 
@@ -65,10 +65,25 @@ button{font:inherit;color:inherit;cursor:pointer}
 #lever .slot{position:absolute;left:50%;top:17px;bottom:17px;width:12px;margin-left:-6px;border-radius:6px;background:var(--ink);opacity:.88}
 #lever .ticks{position:absolute;left:8px;right:8px;top:17px;bottom:17px;background:repeating-linear-gradient(180deg,var(--line) 0 2px,transparent 2px 25%);background-size:100% 100%;opacity:.9;border-top:2px solid var(--line);border-bottom:2px solid var(--line)}
 #lever .grip{position:absolute;left:50%;width:62px;height:34px;margin-left:-31px;top:calc((1 - var(--v)) * (100% - 34px));border-radius:9px;background:var(--warn);border:2px solid var(--warn-ink);box-shadow:0 3px 6px var(--shadow);background-image:repeating-linear-gradient(180deg,transparent 0 6px,rgba(28,26,12,.35) 6px 8px)}
+#lever .neutral{position:absolute;left:3px;right:3px;top:50%;margin-top:-2px;border-top:4px solid var(--sign);border-radius:2px;pointer-events:none}
+#lever .neutral::before{content:"N";position:absolute;left:0;top:-1.25rem;font-family:var(--display);font-weight:700;font-size:.9rem;color:var(--sign);line-height:1}
 #lever:active{cursor:grabbing}
-#kmh{font-family:var(--display);font-weight:700;font-size:1.3rem;line-height:1}
-#kmh small{font-family:var(--body);font-weight:500;font-size:.7rem;color:var(--mute);margin-left:.15rem}
+#kmh{font-family:var(--display);font-weight:700;font-size:1.5rem;line-height:1;margin-bottom:.35rem;padding-bottom:.3rem;border-bottom:1px solid var(--line)}
+#kmh small{display:block;font-family:var(--body);font-weight:500;font-size:.7rem;color:var(--mute);margin-top:.1rem}
+#kmh.rev{color:#c8201c}
 
+#toast{position:absolute;left:50%;top:38%;transform:translateX(-50%);z-index:5;background:var(--panel);border:1px solid var(--line);border-left:6px solid #c8201c;border-radius:8px;padding:.55rem .9rem;font-family:var(--display);font-weight:700;font-size:1.35rem;box-shadow:0 8px 24px var(--shadow);white-space:nowrap;max-width:94%}
+#toast[hidden]{display:none}
+.stat.late{border-left-color:#c8201c}.stat.late b{color:#c8201c}
+.award{margin:.1rem 0 .6rem;padding:.5rem .6rem .55rem;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)}
+.award[hidden]{display:none}
+.award>b{display:block;font-family:var(--display);font-weight:700;font-size:1.35rem;line-height:1.05;margin-bottom:.35rem}
+.stars{display:flex;gap:.5rem}
+.st{flex:1;text-align:center;font-size:.82rem;color:var(--mute);line-height:1.15}
+.st svg{display:block;margin:0 auto .15rem;fill:none;stroke:var(--mute);opacity:.7}
+.st span{display:block}
+.st.on{color:var(--ink);font-weight:600}
+.st.on svg{fill:#f2b90f;stroke:#7a5a00;opacity:1}
 /* start and result cards */
 #overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(17,27,35,.22);z-index:4}
 #overlay[hidden]{display:none}
@@ -106,27 +121,29 @@ button{font:inherit;color:inherit;cursor:pointer}
     <canvas id="gl"></canvas>
     <div id="head">
       <h1>Roll the shoulder</h1>
-      <p><span class="touch-only">Hold the arrow buttons to steer. Drag the lever up to go.</span><span class="mouse-only">Steer with the left and right arrow keys. Raise the lever with the up arrow, lower it with the down arrow.</span></p>
+      <p><span class="touch-only">Hold the arrow buttons to steer. Drag the lever up to go, below the middle to reverse.</span><span class="mouse-only">Steer with the left and right arrow keys. Move the lever up with the up arrow and down with the down arrow. Centre is neutral, below it is reverse.</span></p>
     </div>
     <div id="hud" aria-label="Progress">
       <div class="stat"><span>Rolled</span><b id="cov">0%</b></div>
-      <div class="stat"><span>Time</span><b id="tm">0:00</b></div>
+      <div class="stat"><span>Time (goal 0:45)</span><b id="tm">0:00</b></div>
     </div>
     <div id="steer">
       <button class="pad" id="bl" aria-label="Steer left"><span>◀<small>Left</small></span></button>
       <button class="pad" id="br" aria-label="Steer right"><span>▶<small>Right</small></span></button>
     </div>
     <div id="cockpit">
+      <div id="kmh"><span id="kmhN">0.0</span><small id="kmhU">km/h, stopped</small></div>
       <div class="lv-label">Fast</div>
-      <div id="lever" role="slider" tabindex="0" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Speed lever"><div class="ticks"></div><div class="slot"></div><div class="grip"></div></div>
-      <div class="lv-label">Stop</div>
-      <div id="kmh">0.0<small>km/h</small></div>
+      <div id="lever" role="slider" tabindex="0" aria-orientation="vertical" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" aria-label="Travel lever, centre is neutral, up is forward, down is reverse"><div class="ticks"></div><div class="neutral" aria-hidden="true"></div><div class="slot"></div><div class="grip"></div></div>
+      <div class="lv-label">Reverse</div>
     </div>
+    <div id="toast" role="status" hidden></div>
     <div id="overlay">
       <div class="card" id="card" role="dialog" aria-labelledby="cTitle">
         <h2 id="cTitle">Roll the shoulder</h2>
-        <p id="cText">A strip of cement beside the road needs rolling. The strip is a little narrower than your machine, so you have only a few centimetres of room on each side, and it bends left and right.</p>
-        <p class="small" id="cSmall">Raise the lever to go, steer to keep the drum over the strip. Every rough patch you leave behind counts against you.</p>
+        <p id="cText">A strip of cement beside the road needs rolling. The strip is a good bit narrower than your machine, so the drum has only about 17 cm of room on each side, and the strip bends left and right.</p>
+        <div class="award" id="award" hidden><b id="awardName"></b><div class="stars"><div class="st" id="st1" role="img" data-name="90% rolled"><svg viewBox="0 0 24 24" width="46" height="46" aria-hidden="true"><path d="M12 2.4l2.9 6 6.6.9-4.8 4.6 1.2 6.6L12 17.4l-5.9 3.1 1.2-6.6L2.5 9.3l6.6-.9z" stroke-width="1.2" stroke-linejoin="round"/></svg><span>90% rolled</span></div><div class="st" id="st2" role="img" data-name="95% rolled"><svg viewBox="0 0 24 24" width="46" height="46" aria-hidden="true"><path d="M12 2.4l2.9 6 6.6.9-4.8 4.6 1.2 6.6L12 17.4l-5.9 3.1 1.2-6.6L2.5 9.3l6.6-.9z" stroke-width="1.2" stroke-linejoin="round"/></svg><span>95% rolled</span></div><div class="st" id="st3" role="img" data-name="Under 0:45"><svg viewBox="0 0 24 24" width="46" height="46" aria-hidden="true"><path d="M12 2.4l2.9 6 6.6.9-4.8 4.6 1.2 6.6L12 17.4l-5.9 3.1 1.2-6.6L2.5 9.3l6.6-.9z" stroke-width="1.2" stroke-linejoin="round"/></svg><span>Under 0:45</span></div></div></div>
+        <p class="small" id="cSmall">Raise the lever to go forward, and lower it below the middle to reverse. Steer to keep the drum over the strip. If the whole machine ends up a full machine width clear of it, the run restarts. There are three stars to earn: one for 90% rolled, one for 95% rolled, and one for finishing in under 45 seconds.</p>
         <button class="btn primary" id="startBtn">Start rolling</button>
       </div>
     </div>
@@ -721,6 +738,8 @@ function buildRoller(THREE){
     byId[p.id]=p;
     if(FRONT.indexOf(p.id)>=0){p.obj.position.x=-0.3;front.add(p.obj);}else machine.add(p.obj);
   });
+  var WIDEN=1.15;
+  parts.forEach(function(p){if(p.id!=='wheel'&&p.id!=='beacon')p.obj.scale.z=WIDEN;});
   byId.hoses.obj.visible=false;byId.steercyl.obj.visible=false;
   byId.canopy.obj.traverse(function(o){if(o.isMesh){o.material.transparent=true;o.material.opacity=0.18;o.material.depthWrite=false;o.castShadow=false;}});
   var beaconMat=byId.beacon.obj.children.filter(function(o){return o.isMesh;}).map(function(o){return o.material;});
@@ -737,7 +756,7 @@ function buildRoller(THREE){
   var AMP=1.5,LAM=20;
   function pathW(x){return AMP*Math.sin(2*Math.PI*(x-8)/LAM)*sstep(8,15,x)*(1-sstep(33,43,x));}
   function pathD(x){return (pathW(x+0.01)-pathW(x-0.01))/0.02;}
-  var DX=0.1,NROW=501,NJ=19,STRIPW=0.9,END=50,NV=NROW*NJ;
+  var DX=0.1,NROW=501,NJ=19,STRIPW=0.8,END=50,NV=NROW*NJ;
 
   function ribbon(xa,xb,step,oa,ob,y,mat){
     var n=Math.round((xb-xa)/step)+1,pos=new Float32Array(n*2*3),idx=[];
@@ -804,11 +823,11 @@ function buildRoller(THREE){
   var dirty=false;
   function cover(Dx,Dw,phi,bit){
     var cp=Math.cos(phi),sp=Math.sin(phi);
-    var r0=Math.max(0,Math.floor((Dx-0.45)/DX)),r1=Math.min(NROW-1,Math.ceil((Dx+0.45)/DX));
+    var r0=Math.max(0,Math.floor((Dx-0.5)/DX)),r1=Math.min(NROW-1,Math.ceil((Dx+0.5)/DX));
     for(var r=r0;r<=r1;r++)for(var j=0;j<NJ;j++){
       var k=r*NJ+j,ex=vX[k]-Dx,ew=vW[k]-Dw;
       var along=ex*cp+ew*sp,lat=-ex*sp+ew*cp;
-      if(along>0.13||along<-0.13||lat>0.5||lat<-0.5)continue;
+      if(along>0.13||along<-0.13||lat>DRUMW/2||lat<-DRUMW/2)continue;
       if(cov[k]&bit)continue;
       if(!cov[k])covered++;
       cov[k]|=bit;paint(k,(cov[k]&2)?2:1);dirty=true;
@@ -816,7 +835,7 @@ function buildRoller(THREE){
   }
 
   /* ---------- the machine's motion ---------- */
-  var A_=1.3,B_=0.7,VMAX=2.0,GMAX=0.55;
+  var A_=1.3,B_=0.7,VMAX=2.0,VREV=1.2,GMAX=0.6,DRUMW=1.0*WIDEN,MACHW=1.18*WIDEN,LIMIT=45,resets=0;
   var S={x:-3.2,w:0,th:0,g:0,v:0,lever:0,t:0,moving:false};
   var state='ready',view='behind';
   function resetSim(){S.x=-3.2;S.w=0;S.th=0;S.g=0;S.v=0;S.lever=0;S.t=0;S.moving=false;placeMachine();setLever(0);}
@@ -824,31 +843,36 @@ function buildRoller(THREE){
     machine.position.set(S.x+Math.cos(S.th),0,-(S.w+Math.sin(S.th)));
     machine.rotation.y=S.th;front.rotation.y=S.g;
   }
-  var keys={l:0,r:0,u:0,d:0},btn={l:0,r:0},auto=null;
+  var keys={l:0,r:0,u:0,d:0},btn={l:0,r:0},auto=null,neutralT=0;
   var leverEl=$('lever'),kmhEl=$('kmh');
   function setLever(v){
-    S.lever=Math.min(1,Math.max(0,v));
-    leverEl.style.setProperty('--v',S.lever.toFixed(3));
+    S.lever=Math.min(1,Math.max(-1,v));
+    leverEl.style.setProperty('--v',((S.lever+1)/2).toFixed(3));
     leverEl.setAttribute('aria-valuenow',String(Math.round(S.lever*100)));
   }
   function update(dt){
     var play=state==='play';
     if(play){
       var rate=0;
-      if(keys.u)rate+=0.8;if(keys.d)rate-=0.8;
-      if(rate)setLever(S.lever+rate*dt);
+      if(keys.u)rate+=1.2;if(keys.d)rate-=1.2;
+      if(rate){
+        var prev=S.lever,nv=prev+rate*dt;
+        if(neutralT>0){neutralT-=dt;nv=0;}
+        else if(prev!==0&&prev*nv<=0){nv=0;neutralT=0.35;}
+        setLever(nv);
+      }else neutralT=0;
     }
     var inp=play?(((keys.l||btn.l)?1:0)-((keys.r||btn.r)?1:0)):0;
     if(auto&&play)inp=auto(S);
     var gr;
-    if(inp)gr=inp*1.15;else gr=-Math.sign(S.g)*Math.min(Math.abs(S.g)/Math.max(dt,1e-3),0.8);
+    if(inp)gr=inp*1.6;else gr=-Math.sign(S.g)*Math.min(Math.abs(S.g)/Math.max(dt,1e-3),1.2);
     S.g=Math.min(GMAX,Math.max(-GMAX,S.g+gr*dt));
-    var vt=play?S.lever*VMAX:0;
-    var acc=vt>S.v?1.3:2.6;
+    var vt=play?(S.lever>=0?S.lever*VMAX:S.lever*VREV):0;
+    var acc=Math.abs(vt)>Math.abs(S.v)&&vt*S.v>=0?1.3:2.6;
     S.v+=Math.min(Math.abs(vt-S.v),acc*dt)*Math.sign(vt-S.v);
-    var dth=(S.v*Math.sin(S.g)-B_*gr)/(A_*Math.cos(S.g)+B_)*dt;
+    var dth=(S.v*Math.sin(S.g))/(A_*Math.cos(S.g)+B_)*dt;
     S.th+=dth;S.x+=S.v*Math.cos(S.th)*dt;S.w+=S.v*Math.sin(S.th)*dt;
-    if(play&&S.v>0.02&&!S.moving){S.moving=true;setStatus('Rolling. Keep the drum centred on the strip, and ease the lever back if you are drifting.');}
+    if(play&&Math.abs(S.v)>0.02&&!S.moving){S.moving=true;setStatus('Rolling. Keep the drum centred on the strip, and ease the lever back if you are drifting.');}
     if(play&&S.moving)S.t+=dt;
     placeMachine();
     machine.position.y=S.v>0.05?(Math.random()-0.5)*0.004:0;
@@ -858,8 +882,18 @@ function buildRoller(THREE){
       var ph=S.th+S.g,fx=px+B_*Math.cos(ph),fw=pw+B_*Math.sin(ph);
       cover(S.x,S.w,S.th,2);cover(fx,fw,ph,1);
       if(dirty){sGeo.attributes.position.needsUpdate=true;sGeo.attributes.color.needsUpdate=true;dirty=false;}
+      if(Math.min(lat(fx,fw),lat(S.x,S.w))>STRIPW/2+MACHW/2+MACHW){offTrack();return;}
       if(S.x>END+0.5)finish();
     }
+  }
+
+  function lat(x,w){var s=pathD(x);return Math.abs(w-pathW(x))/Math.sqrt(1+s*s);}
+  var toastEl=$('toast'),toastT=0;
+  function showToast(msg){toastEl.textContent=msg;toastEl.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){toastEl.hidden=true;},2400);}
+  function offTrack(){
+    resets++;resetSim();resetStrip();camInit=false;
+    showToast('Off the track. Back to the start.');
+    setStatus('The whole machine got a full machine width clear of the strip, so the run restarted. Raise the <b>lever</b> to try again.');
   }
 
   /* ---------- camera ---------- */
@@ -869,9 +903,9 @@ function buildRoller(THREE){
     var px=S.x+A_*Math.cos(S.th),pw=S.w+A_*Math.sin(S.th);
     var H=S.th+S.g*0.5;
     camHead+=angDiff(H,camHead)*(camInit?1-Math.exp(-dt*3):1);
-    var fx=Math.cos(camHead),fw=Math.sin(camHead),want=new THREE.Vector3(),tg=new THREE.Vector3(px+fx*(view==='behind'?3.6:2.4),0.1,-(pw+fw*(view==='behind'?3.6:2.4)));
-    if(view==='behind'){want.set(px-fx*4.6,7.6,-(pw-fw*4.6));camera.up.set(0,1,0);}
-    else{want.set(px-fx*1.0,11.5,-(pw-fw*1.0));camera.up.set(fx,0,-fw);}
+    var fx=Math.cos(camHead),fw=Math.sin(camHead),want=new THREE.Vector3(),tg=new THREE.Vector3(px+fx*(view==='behind'?1.0:0.8),0.1,-(pw+fw*(view==='behind'?1.0:0.8)));
+    if(view==='behind'){want.set(px-fx*5.0,9.0,-(pw-fw*5.0));camera.up.set(0,1,0);}
+    else{want.set(px-fx*0.4,11.5,-(pw-fw*0.4));camera.up.set(fx,0,-fw);}
     var k=camInit?1-Math.exp(-dt*6):1;
     camPos.lerp(want,k);camTarget.lerp(tg,k);camInit=true;
     camera.position.copy(camPos);camera.lookAt(camTarget);
@@ -903,23 +937,27 @@ function buildRoller(THREE){
   var overlay=$('overlay'),statusEl=$('status'),covEl=$('cov'),tmEl=$('tm'),startBtn=$('startBtn');
   function setStatus(h){statusEl.innerHTML=h;}
   function startGame(){
-    resetSim();resetStrip();course.visible=true;strip.visible=true;setWet(true);
-    state='play';overlay.hidden=true;camInit=false;
-    setStatus('Raise the <b>speed lever</b> to start rolling. Keep the drum centred on the strip.');
+    resets=0;toastEl.hidden=true;resetSim();resetStrip();course.visible=true;strip.visible=true;setWet(true);
+    state='play';overlay.hidden=true;camInit=false;$('award').hidden=true;
+    setStatus('Raise the <b>lever</b> to go forward, lower it below the middle to reverse. Three stars to earn: 90% rolled, 95% rolled, under <b>0:45</b>.');
     $('lever').focus({preventScroll:true});
   }
   function fmt(t){var m=Math.floor(t/60),s=Math.floor(t%60);return m+':'+(s<10?'0':'')+s;}
+  var NEED1=90;
   function finish(){
     state='done';setLever(0);
-    var total=NV,pct=Math.round(covered/total*100),lm=0,rm=0,mid=(NJ-1)/2;
+    var pct=Math.round(covered/NV*100),lm=0,rm=0,mid=(NJ-1)/2;
     for(var k=0;k<NV;k++)if(!cov[k]){var j=k%NJ;if(j>mid)lm++;else if(j<mid)rm++;}
-    var title=pct>=96?'Smooth all the way':pct>=88?'Nicely rolled':pct>=72?'A few rough patches':'Mostly still rough';
-    var hint=pct>=99?'Not a spot missed.':(lm>1.6*rm?'Most of what you missed was on the left edge.':rm>1.6*lm?'Most of what you missed was on the right edge.':'You missed spots on both edges.');
+    var earned=[pct>=NEED1,pct>=95,S.t<LIMIT],n=earned.filter(Boolean).length;
+    var title=n===3?'Three stars':pct>=96?'Smooth all the way':pct>=88?'Nicely rolled':pct>=72?'A few rough patches':'Mostly still rough';
+    var hint=pct>=100?'Not a spot missed.':(lm>1.6*rm?'Most of what you missed was on the left edge.':rm>1.6*lm?'Most of what you missed was on the right edge.':'You missed spots on both edges.');
     $('cTitle').textContent=title;
-    $('cText').innerHTML='<b>'+pct+'%</b> of the shoulder rolled, in <b>'+fmt(S.t)+'</b>.';
-    $('cSmall').textContent=hint+' Slower speed gives you more time to correct.';
+    $('cText').innerHTML='<b>'+pct+'%</b> of the shoulder rolled, in <b>'+fmt(S.t)+'</b>'+(resets?', after <b>'+resets+'</b> restart'+(resets>1?'s':''):'')+'.';
+    $('award').hidden=false;$('awardName').textContent=n+' of 3 stars';
+    for(var i=0;i<3;i++){var el=$('st'+(i+1));el.classList.toggle('on',earned[i]);el.setAttribute('aria-label',el.getAttribute('data-name')+(earned[i]?': earned':': not earned'));}
+    $('cSmall').textContent=hint+(earned[2]?'':' You took '+fmt(S.t)+'; the time star needs under '+fmt(LIMIT)+'.');
     startBtn.textContent='Roll again';overlay.hidden=false;
-    setStatus('Finished. <b>'+pct+'%</b> rolled in <b>'+fmt(S.t)+'</b>.');
+    setStatus('Finished. <b>'+pct+'%</b> rolled in <b>'+fmt(S.t)+'</b>. <b>'+n+' of 3</b> stars.');
     startBtn.focus({preventScroll:true});
   }
   startBtn.addEventListener('click',startGame);
@@ -952,7 +990,8 @@ function buildRoller(THREE){
   hold('bl','l');hold('br','r');
   var leverDrag=false;
   function leverFrom(e){
-    var r=leverEl.getBoundingClientRect(),v=1-(e.clientY-r.top-17)/(r.height-34);
+    var r=leverEl.getBoundingClientRect(),v=(1-(e.clientY-r.top-17)/(r.height-34))*2-1;
+    if(Math.abs(v)<0.07)v=0;
     if(state==='play')setLever(v);
   }
   leverEl.addEventListener('pointerdown',function(e){e.preventDefault();leverDrag=true;try{leverEl.setPointerCapture(e.pointerId);}catch(_){}leverFrom(e);});
@@ -967,8 +1006,8 @@ function buildRoller(THREE){
     var bi=0.35+0.5*(Math.sin(clock*6)>0?1:0.1);
     beaconMat.forEach(function(m){if(m.emissive&&m.color.r>0.9)m.emissiveIntensity=bi;});
     var c=Math.round(covered/NV*100)+'%';if(c!==lastCov){covEl.textContent=c;lastCov=c;}
-    var kk=(S.v*3.6).toFixed(1);if(kk!==lastKmh){kmhEl.firstChild.nodeValue=kk;lastKmh=kk;}
-    var tt=fmt(S.t);if(tt!==lastTm){tmEl.textContent=tt;lastTm=tt;}
+    var kk=Math.abs(S.v*3.6).toFixed(1)+(S.v>0.03?'f':S.v<-0.03?'r':'s');if(kk!==lastKmh){$('kmhN').textContent=kk.slice(0,-1);$('kmhU').textContent='km/h, '+(S.v>0.03?'forward':S.v<-0.03?'reverse':'stopped');kmhEl.classList.toggle('rev',S.v<-0.03);lastKmh=kk;}
+    var tt=fmt(S.t);if(tt!==lastTm){tmEl.textContent=tt;lastTm=tt;tmEl.parentNode.classList.toggle('late',S.t>=LIMIT);}
   }
   function frame(now){
     requestAnimationFrame(frame);
@@ -977,7 +1016,7 @@ function buildRoller(THREE){
   }
   resetSim();update(0.016);updateCamera(0.016);
   requestAnimationFrame(frame);
-  window.__game={S:S,start:startGame,tick:tick,setLever:setLever,pathW:pathW,pathD:pathD,setAuto:function(f){auto=f;},cov:function(){return covered/NV;},state:function(){return state;},render:function(){renderer.render(scene,camera);}};
+  window.__game={S:S,miss:function(){var rows={},cols={};for(var k=0;k<NV;k++)if(!cov[k]){var r=Math.floor(k/NJ*1),c=k%NJ;var rb=Math.floor(Math.floor(k/NJ)*DX/5)*5;rows[rb]=(rows[rb]||0)+1;cols[c]=(cols[c]||0)+1;}return {rows:rows,cols:cols};},resets:function(){return resets;},start:startGame,tick:tick,setLever:setLever,pathW:pathW,pathD:pathD,setAuto:function(f){auto=f;},cov:function(){return covered/NV;},state:function(){return state;},render:function(){renderer.render(scene,camera);}};
 })();
 </script>
 

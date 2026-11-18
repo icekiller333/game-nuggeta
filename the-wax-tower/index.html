@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Daily Roguelike — The Wax Tower (2026-11-18)</title>
+    <style>
+      :root{
+        --bg:#EFE7FF;
+        --panel:#FFFFFF;
+        --ink:#171225;
+        --ink-soft:#3A2F57;
+        --accent:#FFC61A;
+        --accent-ink:#171225;
+        --pip:#FF9F1C;
+        --good:#0B7A43;
+        --bad:#B3122E;
+        --chip-bg:#171225;
+        --chip-ink:#FFE9A8;
+        --shadow:#171225;
+        --overlay-bg:rgba(16,9,36,.62);
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#150E2E;
+          --panel:#2A2145;
+          --ink:#FFF6E3;
+          --ink-soft:#D9CDF5;
+          --accent:#FFC61A;
+          --accent-ink:#171225;
+          --pip:#FFB03A;
+          --good:#5CE8A0;
+          --bad:#FF7A90;
+          --chip-bg:#0D0820;
+          --chip-ink:#FFE9A8;
+          --shadow:#000000;
+          --overlay-bg:rgba(4,2,12,.72);
+        }
+      }
+      *{ box-sizing:border-box; }
+      html,body{ height:100%; }
+      body{
+        margin:0;
+        height:100dvh;
+        display:flex;
+        flex-direction:column;
+        overflow:hidden;
+        background:var(--bg);
+        color:var(--ink);
+        font-family:"Avenir Next","Trebuchet MS","Segoe UI",Verdana,system-ui,sans-serif;
+        -webkit-user-select:none;
+        user-select:none;
+        -webkit-tap-highlight-color:transparent;
+      }
+      button{ font-family:inherit; cursor:pointer; }
+
+      /* ---------- HUD ---------- */
+      #hud{
+        flex:0 0 auto;
+        display:flex;
+        align-items:center;
+        gap:6px;
+        padding:8px 10px 6px;
+      }
+      #pips{ display:flex; gap:2px; align-items:center; }
+      .pip{
+        width:13px; height:20px;
+        border:2.5px solid var(--ink);
+        background:transparent;
+        position:relative;
+      }
+      .pip::before{
+        content:""; position:absolute; left:50%; top:-7px;
+        width:2.5px; height:5px; background:var(--ink);
+        transform:translateX(-50%);
+      }
+      .pip.filled{ background:var(--pip); }
+      .pip.half{ background:linear-gradient(90deg, var(--pip) 50%, transparent 50%); }
+      #wicks{ display:flex; gap:4px; align-items:center; margin-left:2px; }
+      .wickIcon{ width:15px; height:21px; display:block; }
+      .wickIcon.lost{ opacity:.22; filter:grayscale(1); }
+      #roundLabel{
+        margin-left:auto;
+        font-weight:800; font-size:14px; letter-spacing:.03em;
+        white-space:nowrap;
+      }
+      #muteBtn{
+        flex:0 0 auto;
+        width:38px; height:38px; min-height:38px;
+        display:flex; align-items:center; justify-content:center;
+        background:var(--panel);
+        border:3px solid var(--ink);
+        box-shadow:3px 3px 0 var(--shadow);
+        padding:0;
+      }
+      #muteBtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadow); }
+      #muteBtn svg{ width:20px; height:20px; display:block; }
+
+      /* ---------- Scene ---------- */
+      #sceneWrap{
+        flex:1 1 auto;
+        min-height:0;
+        position:relative;
+        margin:2px 10px 0;
+        border:3px solid #171225;
+        box-shadow:6px 6px 0 var(--shadow);
+        overflow:hidden;
+        background:#241A45;
+      }
+      #sceneWrap.shake{ animation:shake .45s linear; }
+      @keyframes shake{
+        0%,100%{ transform:translate(0,0); }
+        15%{ transform:translate(-7px,3px); }
+        30%{ transform:translate(6px,-4px); }
+        45%{ transform:translate(-6px,-3px); }
+        60%{ transform:translate(5px,4px); }
+        75%{ transform:translate(-4px,2px); }
+      }
+      #scene{ width:100%; height:100%; display:block; }
+      #fx{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+      .particle{
+        position:absolute; width:9px; height:9px;
+        border:2px solid #171225;
+        pointer-events:none;
+        animation:burst .7s ease-out forwards;
+      }
+      @keyframes burst{
+        from{ transform:translate(0,0) rotate(0deg); opacity:1; }
+        to{ transform:translate(var(--dx),var(--dy)) rotate(160deg); opacity:0; }
+      }
+      .confetti{
+        position:absolute; width:8px; height:13px;
+        border:2px solid #171225;
+        pointer-events:none;
+        animation:fall 1s ease-in forwards;
+      }
+      @keyframes fall{
+        from{ transform:translate(0,0) rotate(0deg); opacity:1; }
+        to{ transform:translate(var(--dx),150px) rotate(320deg); opacity:0; }
+      }
+
+      /* result banner */
+      #banner{
+        position:absolute; left:50%; top:12px;
+        transform:translateX(-50%);
+        background:var(--panel);
+        border:3px solid #171225;
+        box-shadow:4px 4px 0 var(--shadow);
+        padding:7px 14px;
+        text-align:center;
+        display:none;
+        z-index:5;
+        min-width:150px;
+      }
+      #banner.show{ display:block; }
+      #bannerTitle{ font-weight:900; font-size:22px; letter-spacing:.03em; line-height:1.1; }
+      #bannerSub{ font-weight:700; font-size:13px; color:var(--ink-soft); margin-top:2px; }
+      #banner.good #bannerTitle{ color:var(--good); }
+      #banner.bad #bannerTitle{ color:var(--bad); }
+
+      /* ---------- Gates strip ---------- */
+      #gates{
+        flex:0 0 auto;
+        height:36px;
+        display:flex; align-items:center; gap:6px;
+        padding:4px 10px 0;
+        overflow:hidden; white-space:nowrap;
+      }
+      #gatesLabel{ font-weight:900; font-size:13px; letter-spacing:.08em; }
+      .gateChip{
+        background:var(--chip-bg); color:var(--chip-ink);
+        border:2.5px solid var(--ink);
+        font-weight:800; font-size:12px;
+        padding:3px 7px;
+        letter-spacing:.03em;
+      }
+      #gatesNone{ font-weight:700; font-size:12px; color:var(--ink-soft); }
+
+      /* ---------- DIP ---------- */
+      #dipWrap{ flex:0 0 auto; padding:8px 10px 12px; }
+      #dip{
+        width:100%; height:66px; min-height:66px;
+        font-size:27px; font-weight:900; letter-spacing:.14em;
+        background:var(--accent); color:var(--accent-ink);
+        border:3.5px solid #171225;
+        box-shadow:6px 6px 0 var(--shadow);
+        transition:transform .05s, box-shadow .05s, opacity .15s, filter .15s;
+      }
+      #dip:active{ transform:translate(4px,4px); box-shadow:2px 2px 0 var(--shadow); }
+      #dip:disabled{ opacity:.38; filter:grayscale(.6); cursor:default; }
+      #dip.armed{ animation:pulse 1s ease-in-out infinite; }
+      @keyframes pulse{
+        0%,100%{ filter:brightness(1); }
+        50%{ filter:brightness(1.13); }
+      }
+
+      /* ---------- Overlay (one message at a time) ---------- */
+      #overlay{
+        position:fixed; inset:0;
+        background:var(--overlay-bg);
+        display:none;
+        align-items:center; justify-content:center;
+        padding:18px;
+        z-index:20;
+      }
+      #overlay.show{ display:flex; }
+      #card{
+        background:var(--panel); color:var(--ink);
+        border:3.5px solid #171225;
+        box-shadow:8px 8px 0 var(--shadow);
+        max-width:330px; width:100%;
+        padding:22px 20px 18px;
+        text-align:center;
+      }
+      #cardTitle{
+        font-weight:900; font-size:21px; line-height:1.2;
+        letter-spacing:.02em; margin:0 0 10px;
+      }
+      #cardText{
+        font-size:16.5px; line-height:1.45; font-weight:600;
+        margin:0 0 18px; color:var(--ink);
+      }
+      #cardBtn{
+        min-height:52px; width:100%;
+        font-size:18px; font-weight:900; letter-spacing:.1em;
+        background:var(--accent); color:var(--accent-ink);
+        border:3px solid #171225;
+        box-shadow:4px 4px 0 var(--shadow);
+        padding:10px 16px;
+      }
+      #cardBtn:active{ transform:translate(3px,3px); box-shadow:1px 1px 0 var(--shadow); }
+      #cardArt{ margin:0 auto 12px; display:block; }
+
+      .fogCloud{ animation:drift 5s ease-in-out infinite alternate; }
+      @keyframes drift{ from{ transform:translateX(-9px); } to{ transform:translateX(9px); } }
+      #batGroup{ will-change:transform; }
+      .wingFlap{ transform-origin:0 0; animation:flap .28s ease-in-out infinite alternate; }
+      @keyframes flap{ from{ transform:scaleY(.72); } to{ transform:scaleY(1.08); } }
+      #ripple{ opacity:0; }
+      #ripple.go{ animation:rip .6s ease-out; }
+      @keyframes rip{
+        0%{ opacity:.9; transform:scale(.25); }
+        100%{ opacity:0; transform:scale(1.9); }
+      }
+      @media (prefers-reduced-motion: reduce){
+        #sceneWrap.shake, #dip.armed, .fogCloud, .wingFlap{ animation:none; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- HUD -->
+    <div id="hud">
+      <div id="pips" aria-label="Candles made"></div>
+      <div id="wicks" aria-label="Wicks left"></div>
+      <div id="roundLabel">ROUND 1 / 12</div>
+      <button id="muteBtn" type="button" aria-label="Toggle sound"></button>
+    </div>
+
+    <!-- Scene -->
+    <div id="sceneWrap">
+      <svg id="scene" viewBox="0 0 360 430" preserveAspectRatio="xMidYMid meet" aria-label="Clock tower interior with wax vat">
+        <!-- stone wall -->
+        <rect x="0" y="0" width="360" height="430" fill="#2E2154"/>
+        <g stroke="#1D1438" stroke-width="3" opacity=".55">
+          <path d="M0 60 H360 M0 130 H360 M0 205 H360 M0 285 H360 M0 360 H360"/>
+          <path d="M70 0 V60 M160 0 V60 M250 0 V60 M40 60 V130 M130 60 V130 M220 60 V130 M310 60 V130 M90 130 V205 M190 130 V205 M285 130 V205 M55 205 V285 M150 205 V285 M245 205 V285 M320 205 V285"/>
+        </g>
+
+        <!-- arched window with moon -->
+        <g>
+          <path d="M28 218 V128 Q28 92 58 92 Q88 92 88 128 V218 Z" fill="#0F2A4A" stroke="#171225" stroke-width="4"/>
+          <circle cx="66" cy="122" r="13" fill="#FFE9A8" stroke="#171225" stroke-width="3"/>
+          <circle cx="42" cy="160" r="2.6" fill="#FFF6E3"/>
+          <circle cx="76" cy="182" r="2.2" fill="#FFF6E3"/>
+          <circle cx="52" cy="196" r="1.8" fill="#FFF6E3"/>
+          <path d="M58 96 V214 M30 150 H86" stroke="#171225" stroke-width="3.5"/>
+        </g>
+
+        <!-- clock -->
+        <g>
+          <circle cx="180" cy="58" r="42" fill="#FFF3D6" stroke="#171225" stroke-width="5"/>
+          <circle cx="180" cy="58" r="34" fill="none" stroke="#171225" stroke-width="2" stroke-dasharray="3 6.9"/>
+          <line x1="180" y1="58" x2="180" y2="34" stroke="#171225" stroke-width="5" stroke-linecap="square"/>
+          <line id="clockHand" x1="180" y1="58" x2="200" y2="68" stroke="#B3122E" stroke-width="4" stroke-linecap="square"/>
+          <circle cx="180" cy="58" r="5" fill="#171225"/>
+          <path d="M138 44 L126 30 M222 44 L234 30" stroke="#FFC61A" stroke-width="6"/>
+          <circle cx="124" cy="27" r="6" fill="#FFC61A" stroke="#171225" stroke-width="2.5"/>
+          <circle cx="236" cy="27" r="6" fill="#FFC61A" stroke="#171225" stroke-width="2.5"/>
+        </g>
+
+        <!-- hanging beam -->
+        <rect x="96" y="140" width="168" height="13" fill="#8A5A2B" stroke="#171225" stroke-width="3.5"/>
+        <rect x="110" y="126" width="10" height="16" fill="#5C3A17" stroke="#171225" stroke-width="2.5"/>
+        <rect x="240" y="126" width="10" height="16" fill="#5C3A17" stroke="#171225" stroke-width="2.5"/>
+
+        <!-- shelf candles (made candles appear here) -->
+        <g id="shelfCandles"></g>
+        <rect x="12" y="252" width="68" height="9" fill="#8A5A2B" stroke="#171225" stroke-width="3"/>
+
+        <!-- fog (GATE VIII) -->
+        <g id="fogGroup" opacity="0">
+          <ellipse class="fogCloud" cx="130" cy="300" rx="86" ry="24" fill="#E9E4F7" opacity=".5"/>
+          <ellipse class="fogCloud" cx="235" cy="330" rx="95" ry="27" fill="#E9E4F7" opacity=".45"/>
+          <ellipse class="fogCloud" cx="180" cy="272" rx="70" ry="18" fill="#E9E4F7" opacity=".4"/>
+        </g>
+
+        <!-- vat -->
+        <g>
+          <path d="M96 302 L110 402 Q111 410 120 410 H228 Q237 410 238 402 L252 302 Z" fill="#7A4A21" stroke="#171225" stroke-width="4"/>
+          <path d="M96 302 L110 402 Q111 410 120 410 H150 L138 302 Z" fill="#96602E" opacity=".8"/>
+          <!-- wax body (level set by JS) -->
+          <clipPath id="vatClip"><path d="M101 306 L113 398 Q114 404 120 404 H228 Q234 404 235 398 L247 306 Z"/></clipPath>
+          <g clip-path="url(#vatClip)">
+            <rect id="waxBody" x="98" y="327" width="152" height="90" fill="#FFC61A"/>
+            <rect x="98" y="327" width="152" height="90" fill="#FF9F1C" opacity=".35" id="waxShade"/>
+            <ellipse id="waxSurface" cx="174" cy="327" rx="76" ry="9" fill="#FFE066" stroke="#171225" stroke-width="3"/>
+          </g>
+          <ellipse cx="174" cy="302" rx="78" ry="11" fill="none" stroke="#171225" stroke-width="4"/>
+          <path d="M96 318 Q60 322 62 348 Q63 366 92 366" fill="none" stroke="#171225" stroke-width="6"/>
+          <path d="M252 318 Q288 322 286 348 Q285 366 256 366" fill="none" stroke="#171225" stroke-width="6"/>
+          <!-- fire under vat -->
+          <g id="fire">
+            <path d="M140 428 Q150 408 160 424 Q168 404 178 422 Q186 406 196 424 Q204 410 210 428 Z" fill="#FF6B1A" stroke="#171225" stroke-width="3"/>
+            <path d="M158 428 Q166 416 174 426 Q182 414 190 428 Z" fill="#FFC61A"/>
+          </g>
+        </g>
+
+        <!-- ripple -->
+        <ellipse id="ripple" cx="174" cy="327" rx="26" ry="6" fill="none" stroke="#FFF6E3" stroke-width="3" style="transform-origin:174px 327px;"/>
+
+        <!-- wick on string (sway + descend set by JS) -->
+        <g id="wickGroup">
+          <line x1="180" y1="153" x2="180" y2="272" stroke="#FFF6E3" stroke-width="2.5" stroke-dasharray="5 4"/>
+          <rect x="171" y="272" width="18" height="50" fill="#FFF6E3" stroke="#171225" stroke-width="3.5"/>
+          <rect x="171" y="272" width="18" height="12" fill="#FF9F1C" opacity=".55"/>
+          <line x1="180" y1="264" x2="180" y2="274" stroke="#171225" stroke-width="4"/>
+          <path id="wickFlame" d="M180 248 Q188 258 180 266 Q172 258 180 248 Z" fill="#FFC61A" stroke="#171225" stroke-width="2.5" opacity="0"/>
+        </g>
+
+        <!-- gauge -->
+        <g id="gaugeGroup">
+          <rect x="288" y="238" width="34" height="164" fill="#FFF6E3" stroke="#171225" stroke-width="4"/>
+          <rect id="bandRect" x="292" y="299" width="26" height="42" fill="#2BE080" stroke="#0B7A43" stroke-width="2.5"/>
+          <g stroke="#171225" stroke-width="2" opacity=".6">
+            <path d="M288 272 H300 M288 306 H300 M288 340 H300 M288 374 H300"/>
+          </g>
+          <path id="gaugeMarker" d="M284 320 L296 313 L296 327 Z" fill="#B3122E" stroke="#171225" stroke-width="2"/>
+          <text x="305" y="230" text-anchor="middle" font-size="13" font-weight="900" fill="#FFF6E3" stroke="#171225" stroke-width=".4">WAX</text>
+        </g>
+        <!-- bat cover over gauge -->
+        <g id="gaugeCover" opacity="0">
+          <rect x="282" y="232" width="48" height="178" fill="#120B26"/>
+          <path d="M290 300 Q298 288 306 298 Q314 288 322 300 Q314 306 306 303 Q298 306 290 300 Z" fill="#000"/>
+        </g>
+
+        <!-- bat (GATE IV) -->
+        <g id="batGroup" transform="translate(-90,120)" opacity="0">
+          <g class="wingFlap">
+            <path d="M0 0 Q-16 -14 -30 -4 Q-24 2 -28 10 Q-16 8 -10 4 Q-4 10 0 4 Q4 10 10 4 Q16 8 28 10 Q24 2 30 -4 Q16 -14 0 0 Z" fill="#120B26" stroke="#000" stroke-width="2"/>
+            <circle cx="-4" cy="1" r="1.8" fill="#FF5C5C"/>
+            <circle cx="4" cy="1" r="1.8" fill="#FF5C5C"/>
+          </g>
+        </g>
+      </svg>
+      <div id="fx"></div>
+      <div id="banner"><div id="bannerTitle">PERFECT!</div><div id="bannerSub">+1 CANDLE</div></div>
+    </div>
+
+    <!-- Gates -->
+    <div id="gates">
+      <span id="gatesLabel">GATES</span>
+      <span id="gatesNone">NONE OPEN</span>
+      <span id="gateChips" style="display:contents"></span>
+    </div>
+
+    <!-- DIP -->
+    <div id="dipWrap">
+      <button id="dip" type="button" disabled>DIP</button>
+    </div>
+
+    <!-- Overlay: exactly one message at a time -->
+    <div id="overlay">
+      <div id="card">
+        <svg id="cardArt" width="72" height="72" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="28" y="30" width="16" height="30" fill="#FFF6E3" stroke="#171225" stroke-width="3.5"/>
+          <path d="M36 12 Q44 22 36 29 Q28 22 36 12 Z" fill="#FFC61A" stroke="#171225" stroke-width="3"/>
+          <line x1="36" y1="29" x2="36" y2="33" stroke="#171225" stroke-width="3.5"/>
+          <path d="M10 62 H62" stroke="#171225" stroke-width="4"/>
+        </svg>
+        <h2 id="cardTitle"></h2>
+        <p id="cardText"></p>
+        <button id="cardBtn" type="button">NEXT</button>
+      </div>
+    </div>
+
+    <script>
+      "use strict";
+      /* ================= State (single object, session-only) ================= */
+      var S = {
+        phase: "story",        // story | howto | gate | descend | aim | result | end
+        storyIdx: 0,
+        round: 1,
+        candles: 0,
+        thin: 0,               // pending thin halves (0 or 1)
+        wicks: 3,
+        waxPhase: Math.random() * Math.PI * 2,
+        gates: [],             // short chip labels, newest first
+        howtoShown: false,
+        muted: false,
+        descendT: 0,
+        aimStart: 0,
+        batState: 0,           // 0 idle, 1 flying, 2 done this round
+        batX: -90,
+        endKind: null,
+        lastTs: 0
+      };
+
+      var STORY = [
+        "The clock tower's bells ring at dawn. Until then, the wax must become candles — ten perfect ones — or the tower goes dark forever.",
+        "You are the last chandler. Dip each wick into the vat. Too deep and it drowns. Too shallow and it comes back thin."
+      ];
+      var GATE_INFO = {
+        2:  { chip: "II · DRAFT", title: "GATE II — DRAFT",  text: "Wick sways. Band narrows." },
+        4:  { chip: "IV · BATS",  title: "GATE IV — BATS",  text: "A bat hides the gauge." },
+        6:  { chip: "VI · DRIP",  title: "GATE VI — DRIP",  text: "The wax surges faster." },
+        8:  { chip: "VIII · FOG", title: "GATE VIII — FOG", text: "The band flickers." },
+        10: { chip: "X · BELL",   title: "GATE X — FINAL BELL", text: "Fastest wax. Hold steady." }
+      };
+
+      /* ================= DOM ================= */
+      function $(id){ return document.getElementById(id); }
+      var el = {
+        pips: $("pips"), wicks: $("wicks"), round: $("roundLabel"),
+        mute: $("muteBtn"), sceneWrap: $("sceneWrap"), fx: $("fx"),
+        waxBody: $("waxBody"), waxShade: $("waxShade"), waxSurface: $("waxSurface"),
+        ripple: $("ripple"), wick: $("wickGroup"), wickFlame: $("wickFlame"),
+        band: $("bandRect"), marker: $("gaugeMarker"),
+        gaugeCover: $("gaugeCover"), bat: $("batGroup"), fog: $("fogGroup"),
+        shelf: $("shelfCandles"), clockHand: $("clockHand"),
+        banner: $("banner"), bannerTitle: $("bannerTitle"), bannerSub: $("bannerSub"),
+        gatesNone: $("gatesNone"), gateChips: $("gateChips"),
+        dip: $("dip"),
+        overlay: $("overlay"), cardTitle: $("cardTitle"), cardText: $("cardText"), cardBtn: $("cardBtn")
+      };
+
+      var WICK_SVG = '<svg class="wickIcon" viewBox="0 0 17 24" aria-hidden="true"><path d="M8.5 1 Q12 5.5 8.5 9 Q5 5.5 8.5 1Z" fill="#FFC61A" stroke="#171225" stroke-width="1.6"/><rect x="5" y="10" width="7" height="12" fill="#FFF6E3" stroke="#171225" stroke-width="1.8"/></svg>';
+      var SOUND_ON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l6 5V4L7 9H3z" fill="#171225"/><path d="M16 8q3 4 0 8M18.5 5.5q5 6.5 0 13" stroke="#171225" stroke-width="2.2" fill="none"/></svg>';
+      var SOUND_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l6 5V4L7 9H3z" fill="#171225"/><path d="M16 9l6 6M22 9l-6 6" stroke="#B3122E" stroke-width="2.4" fill="none"/></svg>';
+      el.mute.innerHTML = SOUND_ON;
+
+      /* ================= Audio (try/catch, mutable) ================= */
+      var AC = null;
+      function tone(freq, dur, type, vol, delay, slideTo){
+        if (S.muted) return;
+        try {
+          if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+          if (AC.state === "suspended") AC.resume();
+          var t = AC.currentTime + (delay || 0);
+          var o = AC.createOscillator(), g = AC.createGain();
+          o.type = type || "sine";
+          o.frequency.setValueAtTime(freq, t);
+          if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+          g.gain.setValueAtTime(vol || 0.14, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+          o.connect(g); g.connect(AC.destination);
+          o.start(t); o.stop(t + dur + 0.02);
+        } catch (e) { /* audio is decoration only */ }
+      }
+      function sndPerfect(){ tone(659, .16, "square", .10); tone(880, .28, "square", .10, .09); }
+      function sndThin(){ tone(330, .14, "triangle", .14); }
+      function sndDrown(){ tone(160, .45, "sawtooth", .13, 0, 55); }
+      function sndBell(){ tone(196, 1.3, "sine", .22); tone(147, 1.6, "sine", .16, .05); tone(392, .9, "sine", .06, .02); }
+      function sndDip(){ tone(440, .07, "sine", .08); }
+
+      /* ================= Helpers ================= */
+      function gatesActive(){
+        return {
+          draft: S.round >= 2,
+          bats:  S.round >= 4,
+          drip:  S.round >= 6,
+          fog:   S.round >= 8,
+          final: S.round >= 10
+        };
+      }
+      function speedMult(){ var g = gatesActive(); return g.final ? 1.75 : (g.drip ? 1.35 : 1); }
+      function bandHalf(){ return gatesActive().draft ? 0.105 : 0.15; }
+      function depthNow(){ return (Math.sin(S.waxPhase) + 1) / 2; } // 0 shallow … 1 deep
+
+      function renderHUD(){
+        var html = "";
+        for (var i = 0; i < 10; i++){
+          var cls = "pip";
+          if (i < S.candles) cls += " filled";
+          else if (i === S.candles && S.thin === 1) cls += " half";
+          html += '<span class="' + cls + '"></span>';
+        }
+        el.pips.innerHTML = html;
+        var w = "";
+        for (var j = 0; j < 3; j++) w += WICK_SVG.replace('class="wickIcon"', 'class="wickIcon' + (j < S.wicks ? '' : ' lost') + '"');
+        el.wicks.innerHTML = w;
+        el.round.textContent = "ROUND " + S.round + " / 12";
+        el.gatesNone.style.display = S.gates.length ? "none" : "";
+        el.gateChips.innerHTML = S.gates.map(function(g){ return '<span class="gateChip">' + g + '</span>'; }).join("");
+        // shelf candles mirror progress
+        var sh = "";
+        for (var k = 0; k < S.candles && k < 5; k++){
+          var x = 18 + (k % 5) * 13;
+          sh += '<g><rect x="' + x + '" y="230" width="9" height="22" fill="#FFF6E3" stroke="#171225" stroke-width="2.2"/><path d="M' + (x + 4.5) + ' 218 Q' + (x + 8.5) + ' 225 ' + (x + 4.5) + ' 229 Q' + (x + 0.5) + ' 225 ' + (x + 4.5) + ' 218Z" fill="#FFC61A" stroke="#171225" stroke-width="1.8"/></g>';
+        }
+        el.shelf.innerHTML = sh;
+      }
+
+      function setDipArmed(armed){
+        el.dip.disabled = !armed;
+        el.dip.classList.toggle("armed", armed);
+      }
+
+      /* ================= Overlay (single message) ================= */
+      function showCard(title, text, btnLabel){
+        el.cardTitle.textContent = title;
+        el.cardText.textContent = text;
+        el.cardText.style.display = text ? "" : "none";
+        el.cardBtn.textContent = btnLabel;
+        el.overlay.classList.add("show");
+      }
+      function hideCard(){ el.overlay.classList.remove("show"); }
+
+      function showStory(){
+        S.phase = "story";
+        showCard(S.storyIdx === 0 ? "THE WAX TOWER" : "THE LAST CHANDLER",
+                 STORY[S.storyIdx],
+                 S.storyIdx === 0 ? "NEXT" : "START");
+      }
+
+      function cardAdvance(){
+        if (S.phase === "story"){
+          if (S.storyIdx === 0){ S.storyIdx = 1; showStory(); }
+          else { hideCard(); startRound(); }
+        } else if (S.phase === "howto"){
+          hideCard(); S.howtoShown = true; beginDescend();
+        } else if (S.phase === "gate"){
+          hideCard(); beginDescend();
+        } else if (S.phase === "end"){
+          hideCard(); resetRun(); startRound();
+        }
+      }
+
+      /* ================= Round flow ================= */
+      function resetRun(){
+        S.round = 1; S.candles = 0; S.thin = 0; S.wicks = 3;
+        S.gates = []; S.endKind = null;
+        S.waxPhase = Math.random() * Math.PI * 2;
+        renderHUD();
+      }
+
+      function startRound(){
+        el.banner.classList.remove("show");
+        var info = GATE_INFO[S.round];
+        if (info){
+          S.gates.unshift(info.chip);
+          renderHUD();
+          S.phase = "gate";
+          sndBell();
+          showCard(info.title, info.text, "CONTINUE");
+          return;
+        }
+        if (S.round === 1 && !S.howtoShown){
+          S.phase = "howto";
+          showCard("FIRST DIP", "Tap DIP when the wick is inside the glowing band.", "GOT IT");
+          return;
+        }
+        beginDescend();
+      }
+
+      function beginDescend(){
+        S.phase = "descend";
+        S.descendT = 0;
+        S.batState = 0; S.batX = -90;
+        setDipArmed(false);
+        renderHUD();
+      }
+
+      function endGame(kind){
+        S.phase = "end";
+        S.endKind = kind;
+        setDipArmed(false);
+        el.banner.classList.remove("show");
+        if (kind === "win"){
+          sndBell(); sndPerfect();
+          showCard("DAWN — THE TOWER BURNS BRIGHT",
+                   "You lit " + S.candles + " of 10 candles.", "RETRY");
+        } else if (kind === "wicks"){
+          showCard("THE WICKS ARE GONE",
+                   "You lit " + S.candles + " of 10 candles.", "RETRY");
+        } else {
+          showCard("DAWN CAME — TOO FEW CANDLES",
+                   "You lit " + S.candles + " of 10 candles.", "RETRY");
+        }
+      }
+
+      function afterResult(){
+        if (S.candles >= 10) return endGame("win");
+        if (S.wicks <= 0) return endGame("wicks");
+        if (S.round >= 12) return endGame("dawn");
+        S.round++;
+        startRound();
+      }
+
+      /* ================= Juice ================= */
+      function burst(xPct, yPct, colors, n, confetti){
+        var rect = el.sceneWrap.getBoundingClientRect();
+        for (var i = 0; i < n; i++){
+          var p = document.createElement("span");
+          p.className = confetti ? "confetti" : "particle";
+          var ang = Math.random() * Math.PI * 2;
+          var dist = 34 + Math.random() * 66;
+          p.style.left = (xPct * rect.width) + "px";
+          p.style.top = (yPct * rect.height) + "px";
+          p.style.background = colors[i % colors.length];
+          p.style.setProperty("--dx", (Math.cos(ang) * dist) + "px");
+          p.style.setProperty("--dy", confetti ? (40 + Math.random() * 60) + "px" : (Math.sin(ang) * dist - 18) + "px");
+          el.fx.appendChild(p);
+          (function(node){ setTimeout(function(){ node.remove(); }, 1100); })(p);
+        }
+      }
+      function doRipple(surfaceY){
+        el.ripple.setAttribute("cy", surfaceY);
+        el.ripple.style.transformOrigin = "174px " + surfaceY + "px";
+        el.ripple.classList.remove("go");
+        void el.ripple.getBoundingClientRect();
+        el.ripple.classList.add("go");
+      }
+
+      /* ================= DIP — resolves synchronously ================= */
+      function dip(){
+        if (S.phase !== "aim") return;
+        var depth = depthNow();
+        var d = depth - 0.5;
+        var half = bandHalf();
+        var outcome;
+        if (Math.abs(d) <= half) outcome = "perfect";
+        else if (d < 0) outcome = "thin";
+        else outcome = "drown";
+
+        /* state changes happen NOW, in this handler */
+        if (outcome === "perfect"){
+          S.candles++;
+        } else if (outcome === "thin"){
+          S.thin++;
+          if (S.thin >= 2){ S.thin -= 2; S.candles++; }
+        } else {
+          S.wicks--;
+        }
+        S.phase = "result";
+        setDipArmed(false);
+        renderHUD();
+
+        /* juice + feedback */
+        var surfaceY = 327 - Math.sin(S.waxPhase) * 21;
+        doRipple(surfaceY);
+        sndDip();
+        el.banner.classList.remove("good", "bad");
+        if (outcome === "perfect"){
+          el.bannerTitle.textContent = "PERFECT!";
+          el.bannerSub.textContent = "+1 CANDLE";
+          el.banner.classList.add("good");
+          sndPerfect();
+          burst(0.48, 0.68, ["#FFC61A", "#2BE080", "#FF9F1C", "#FFF6E3"], 12, false);
+          burst(0.48, 0.3, ["#FF5C8A", "#2BE080", "#FFC61A", "#5CC8FF"], 12, true);
+        } else if (outcome === "thin"){
+          el.bannerTitle.textContent = "THIN";
+          el.bannerSub.textContent = S.thin === 1 ? "ONE MORE MAKES ONE" : "+1 CANDLE";
+          sndThin();
+          burst(0.48, 0.68, ["#FFF6E3", "#FFC61A"], 6, false);
+        } else {
+          el.bannerTitle.textContent = "DROWNED!";
+          el.bannerSub.textContent = "WICK LOST";
+          el.banner.classList.add("bad");
+          sndDrown();
+          el.sceneWrap.classList.remove("shake");
+          void el.sceneWrap.offsetWidth;
+          el.sceneWrap.classList.add("shake");
+          burst(0.48, 0.72, ["#5CC8FF", "#2E6BFF"], 8, false);
+        }
+        el.banner.classList.add("show");
+        setTimeout(afterResult, 1250);
+      }
+
+      /* ================= Main loop ================= */
+      function frame(ts){
+        requestAnimationFrame(frame);
+        if (!S.lastTs) S.lastTs = ts;
+        var dt = Math.min(0.05, (ts - S.lastTs) / 1000);
+        S.lastTs = ts;
+        var g = gatesActive();
+
+        if (S.phase === "descend" || S.phase === "aim" || S.phase === "result"){
+          S.waxPhase += dt * (Math.PI * 2 / 2.6) * speedMult();
+        }
+
+        if (S.phase === "descend"){
+          S.descendT += dt / 0.75;
+          if (S.descendT >= 1){
+            S.descendT = 1;
+            S.phase = "aim";
+            S.aimStart = ts;
+            setDipArmed(true);
+          }
+        }
+
+        /* bat: crosses once per round while aiming */
+        if (g.bats && S.phase === "aim"){
+          if (S.batState === 0 && ts - S.aimStart > 800){
+            S.batState = 1; S.batX = -90;
+          }
+          if (S.batState === 1){
+            S.batX += dt * 300;
+            if (S.batX > 470) { S.batState = 2; }
+          }
+        } else if (S.phase !== "aim" && S.batState === 1){
+          S.batX += dt * 300;
+          if (S.batX > 470) S.batState = 2;
+        }
+        var batVisible = S.batState === 1;
+        el.bat.setAttribute("opacity", batVisible ? "1" : "0");
+        if (batVisible) el.bat.setAttribute("transform", "translate(" + S.batX + ",118)");
+        var gaugeHidden = batVisible && S.batX > 225 && S.batX < 415;
+        el.gaugeCover.setAttribute("opacity", gaugeHidden ? "1" : "0");
+
+        /* wax + gauge render */
+        var s = Math.sin(S.waxPhase);
+        var surfaceY = 327 - s * 21;
+        el.waxBody.setAttribute("y", surfaceY);
+        el.waxBody.setAttribute("height", 417 - surfaceY);
+        el.waxShade.setAttribute("y", surfaceY);
+        el.waxShade.setAttribute("height", 417 - surfaceY);
+        el.waxSurface.setAttribute("cy", surfaceY);
+
+        var depth = (s + 1) / 2;
+        var half = bandHalf();
+        var bandTop = 240 + (0.5 - half) * 160;
+        var bandH = half * 2 * 160;
+        var flickerOff = false;
+        if (g.fog) flickerOff = Math.sin(ts * 0.006) < -0.25;
+        el.band.setAttribute("y", bandTop);
+        el.band.setAttribute("height", bandH);
+        el.band.setAttribute("opacity", flickerOff ? 0.06 : 1);
+        el.fog.setAttribute("opacity", g.fog ? 1 : 0);
+
+        var markerY = 240 + depth * 160;
+        el.marker.setAttribute("transform", "translate(0," + (markerY - 320) + ")");
+        var inBand = Math.abs(depth - 0.5) <= half;
+        el.marker.setAttribute("fill", inBand ? "#0B7A43" : "#B3122E");
+        el.wickFlame.setAttribute("opacity", inBand && S.phase === "aim" ? 1 : 0);
+
+        /* wick: descend + sway (rotate about beam pivot 180,146) */
+        var drop = S.phase === "descend" ? (1 - S.descendT) * -150
+                 : (S.phase === "aim" || S.phase === "result") ? 0 : -150;
+        if (S.phase === "story" || S.phase === "howto" || S.phase === "gate" || S.phase === "end") drop = -150;
+        var sway = g.draft ? Math.sin(ts * 0.0026) * 7 : 0;
+        el.wick.setAttribute("transform", "translate(0," + drop + ") rotate(" + sway + " 180 146)");
+
+        /* clock minute hand creeps toward dawn */
+        var ang = -90 + (S.round - 1) / 12 * 300 + (ts * 0.002 % 12);
+        el.clockHand.setAttribute("transform", "rotate(" + ((S.round - 1) * 26) + " 180 58)");
+      }
+
+      /* ================= Input ================= */
+      el.dip.addEventListener("pointerdown", function(e){ e.preventDefault(); dip(); });
+      el.cardBtn.addEventListener("pointerdown", function(e){ e.preventDefault(); cardAdvance(); });
+      el.mute.addEventListener("click", function(){
+        S.muted = !S.muted;
+        el.mute.innerHTML = S.muted ? SOUND_OFF : SOUND_ON;
+        if (!S.muted) sndDip();
+      });
+      document.addEventListener("keydown", function(e){
+        if (e.code !== "Space" && e.key !== " ") return;
+        e.preventDefault();
+        if (e.repeat) return;
+        if (S.phase === "aim") dip();
+        else if (S.phase === "story" || S.phase === "howto" || S.phase === "gate" || S.phase === "end") cardAdvance();
+      });
+
+      /* expose for headless verification */
+      window.__wax = S;
+      window.__dip = dip;
+
+      renderHUD();
+      showStory();
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

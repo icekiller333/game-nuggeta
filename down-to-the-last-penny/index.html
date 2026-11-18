@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<link rel="icon" href="data:," />
+<title>Down to the Last Penny</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; height: 100dvh; overflow: hidden;
+    display: flex; flex-direction: column;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #B8F1FF; color: #111;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  .brutal { border: 3px solid #000; box-shadow: 4px 4px 0 #000; border-radius: 0; }
+  .btn {
+    border: 3px solid #000; box-shadow: 3px 3px 0 #000; border-radius: 0;
+    font-weight: 900; text-transform: uppercase; letter-spacing: .02em;
+    min-height: 44px; padding: 6px 12px; background: #fff; color: #111;
+    user-select: none; touch-action: manipulation;
+  }
+  .btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #000; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* ---------- HUD ---------- */
+  #hud {
+    flex: 0 0 auto; background: #fff; border-bottom: 3px solid #000;
+    padding: 6px 4px; display: flex; flex-direction: column; gap: 5px; z-index: 5;
+  }
+  #hudTop { display: flex; align-items: center; gap: 4px; }
+  #pennyCount { font-size: 16px; font-weight: 900; white-space: nowrap; }
+  #multPill { background: #111; color: #FFD23F; border: 3px solid #000; font-size: 13px; font-weight: 900; padding: 3px 5px; white-space: nowrap; flex: 0 0 auto; }
+  #pennyCount small { font-size: 11px; font-weight: 800; }
+  #stats { font-size: 11px; font-weight: 800; white-space: nowrap; line-height: 1.3; }
+  #hudBtns { margin-left: auto; display: flex; gap: 4px; align-items: center; flex: 0 0 auto; }
+  #hudBtns .btn { padding: 4px 5px; min-height: 40px; font-size: 13px; white-space: nowrap; }
+  #shopBtn { background: #FFD23F; }
+  #tagBtn { background: #4CC9F0; }
+  #tagBtn.on { background: #FF70A6; color: #111; outline: 3px solid #000; outline-offset: 2px; }
+  #detWrap { display: flex; align-items: center; gap: 2px; font-size: 11px; font-weight: 900; }
+  #detDot { width: 13px; height: 13px; border: 3px solid #000; background: #fff; border-radius: 50%; flex: 0 0 auto; }
+  #detDot.hot { background: #FF2E4D; animation: pulse .45s infinite alternate; }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.35); } }
+  #progOuter { height: 16px; border: 3px solid #000; background: #fff; position: relative; }
+  #progFill { height: 100%; width: 0%; background: #06D6A0; transition: width .25s; }
+  #progLabel { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; }
+
+  /* ---------- Play field ---------- */
+  #fieldWrap { flex: 1 1 auto; position: relative; overflow: hidden; background: #9BE15D; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  /* ---------- Tour box ---------- */
+  #tourBox {
+    position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 6;
+    background: #FFF200; border: 3px solid #000; box-shadow: 5px 5px 0 #000;
+    padding: 10px 12px; font-weight: 800; font-size: 15px; display: none;
+  }
+  #tourBox .tTitle { font-weight: 900; text-transform: uppercase; font-size: 12px; margin-bottom: 2px; }
+  #tourBox button { margin-top: 8px; background: #111; color: #fff; }
+  .spotlight { outline: 4px solid #FF2E4D !important; outline-offset: 3px; animation: pulse .4s infinite alternate; }
+
+  /* ---------- Tag picker ---------- */
+  #tagPicker {
+    flex: 0 0 auto; display: none; align-items: center; gap: 8px;
+    background: #111; color: #fff; padding: 6px 10px; font-weight: 900; font-size: 13px;
+  }
+  #tagPicker .sw { width: 40px; height: 40px; border: 3px solid #fff; box-shadow: 2px 2px 0 #000; padding: 0; }
+  #tagPicker .sw.sel { outline: 3px solid #FFF200; outline-offset: 2px; }
+  .sw[data-c="green"] { background: #2BD96B; } .sw[data-c="yellow"] { background: #FFD23F; } .sw[data-c="blue"] { background: #3FA7FF; }
+
+  /* ---------- Controls ---------- */
+  #controls {
+    flex: 0 0 auto; background: #fff; border-top: 3px solid #000;
+    display: flex; align-items: center; gap: 10px; padding: 10px; min-height: 92px;
+  }
+  #moveHint { font-size: 12px; font-weight: 800; line-height: 1.3; max-width: 130px; }
+  #lootBtn { background: #06D6A0; font-size: 18px; display: none; flex: 1; height: 64px; }
+  #attackBtn {
+    margin-left: auto; background: #D62828; color: #fff;
+    font-size: 24px; width: 168px; height: 64px; flex: 0 0 auto;
+  }
+
+  /* ---------- Overlays / sheets ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 20; display: none;
+    align-items: center; justify-content: center; padding: 14px;
+    background: rgba(17,17,17,.55);
+  }
+  .overlay.open { display: flex; }
+  .card {
+    background: #fff; border: 3px solid #000; box-shadow: 7px 7px 0 #000;
+    padding: 20px; max-width: 430px; width: 100%; max-height: 92dvh; overflow-y: auto;
+  }
+  .card h1 { margin: 0 0 10px; font-size: 30px; font-weight: 900; text-transform: uppercase; line-height: 1.05; }
+  .card h2 { margin: 0 0 8px; font-size: 22px; font-weight: 900; text-transform: uppercase; }
+  .card p { font-size: 17px; font-weight: 600; line-height: 1.45; margin: 0 0 14px; }
+  .card .big { width: 100%; font-size: 19px; padding: 12px; background: #FFD23F; }
+  #storyCard { background: #FFF200; }
+  #winCard { background: #06D6A0; text-align: center; }
+  #winCard .big { background: #111; color: #fff; }
+  #loseCard { background: #fff; text-align: center; }
+  #loseCard .big { background: #111; color: #fff; }
+
+  #shopSheet { align-items: flex-end; padding: 0; }
+  #shopPanel {
+    background: #F1FA8C; border-top: 3px solid #000; width: 100%; max-width: 560px;
+    margin: 0 auto; max-height: 94dvh; overflow-y: auto; padding: 14px;
+  }
+  #shopPanel h2 { margin: 0; font-size: 24px; font-weight: 900; text-transform: uppercase; }
+  #shopIntro { font-size: 13px; font-weight: 700; line-height: 1.4; margin: 6px 0 4px; }
+  #shopWallet { font-size: 16px; font-weight: 900; margin: 6px 0 10px; }
+  .upg {
+    background: #fff; border: 3px solid #000; box-shadow: 4px 4px 0 #000;
+    padding: 10px; margin-bottom: 12px;
+  }
+  .upg .uTop { display: flex; align-items: baseline; gap: 8px; }
+  .upg .uName { font-weight: 900; font-size: 17px; text-transform: uppercase; }
+  .upg .uLvl { font-size: 12px; font-weight: 900; background: #111; color: #fff; padding: 2px 7px; }
+  .upg .uDesc { font-size: 13px; font-weight: 600; line-height: 1.4; margin: 6px 0 8px; }
+  .upg .uState { font-size: 13px; font-weight: 900; margin-bottom: 8px; }
+  .upg .buy { width: 100%; background: #FFD23F; font-size: 16px; }
+  .upg .buy.owned { background: #06D6A0; }
+  .pips { display: inline-flex; gap: 3px; vertical-align: middle; }
+  .pip { width: 13px; height: 13px; border: 2px solid #000; background: #fff; }
+  .pip.f { background: #FF2E4D; }
+  #shopTags { display: none; gap: 8px; margin-top: 4px; }
+  .sectHead { font-weight: 900; text-transform: uppercase; font-size: 15px; margin: 16px 0 8px; border-top: 3px solid #000; padding-top: 12px; }
+  #muteBtn, #abandonBtn { width: 100%; margin-bottom: 8px; font-size: 15px; }
+  #abandonBtn { background: #FF5964; color: #fff; }
+  #closeShop { width: 100%; background: #111; color: #fff; font-size: 17px; margin-top: 4px; }
+  /* ---------- Penny stack (HUD) ---------- */
+  #pennyWrap { display: flex; align-items: center; gap: 3px; min-width: 0; }
+  #pennyStack { width: 38px; height: 38px; flex: 0 0 auto; }
+  #pennyStack svg { display: block; width: 38px; height: 38px; }
+  /* ---------- Pocket panel ---------- */
+  #pocketCard { background: #FFF200; text-align: center; }
+  #pocketSub { font-size: 15px; }
+  #pocketTake { background: none; border: 0; padding: 4px; margin: 0 auto; display: block; }
+  #pocketTake:active { transform: scale(.96); }
+  #pocketCoins { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 300px; margin: 0 auto; }
+  .pocketCoin {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: #FFD23F; border: 3px solid #000; color: #111;
+    font-size: 20px; font-weight: 900; box-shadow: 2px 2px 0 #000;
+  }
+  #pocketAmt { font-size: 18px; font-weight: 900; margin: 8px 0 2px; }
+  #pocketHint { font-size: 13px; font-weight: 700; margin: 0 0 10px; }
+  #pocketClose { width: 100%; background: #111; color: #fff; font-size: 17px; }
+  .flyCoin {
+    position: fixed; z-index: 60; width: 22px; height: 22px; border-radius: 50%;
+    background: #FFD23F; border: 2px solid #000; color: #111;
+    font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center;
+    pointer-events: none; box-shadow: 1px 1px 0 #000;
+  }
+  @media (prefers-reduced-motion: reduce) { #detDot.hot, .spotlight { animation: none; } }
+</style>
+</head>
+<body>
+
+<div id="hud">
+  <div id="hudTop">
+    <div id="pennyWrap"><div id="pennyStack" role="img" aria-label="Penny stack"></div><div id="pennyCount">0 <small>/ 10,000</small></div></div>
+    <span id="multPill" title="Penny multiplier">×1</span>
+    <div id="stats">⏱ 0:00<br>0 ¢/min</div>
+    <div id="hudBtns">
+      <div id="detWrap" title="Penny detector"><span id="detDot"></span>DET</div>
+      <button class="btn" id="tagBtn" aria-label="Toggle tag mode">🏷 Tag</button>
+      <button class="btn" id="shopBtn" aria-label="Open shop">Shop</button>
+    </div>
+  </div>
+  <div id="progOuter"><div id="progFill"></div><div id="progLabel">0 / 10,000 PENNIES</div></div>
+</div>
+
+<div id="fieldWrap">
+  <canvas id="game"></canvas>
+  <div id="tourBox"><div class="tTitle" id="tourTitle"></div><div id="tourText"></div><button class="btn" id="tourBtn" style="display:none">Got it</button></div>
+</div>
+
+<div id="tagPicker">
+  <span>TAG:</span>
+  <button class="sw sel" data-c="green" aria-label="Green tag"></button>
+  <button class="sw" data-c="yellow" aria-label="Yellow tag"></button>
+  <button class="sw" data-c="blue" aria-label="Blue tag"></button>
+  <span style="font-size:12px">Tap a person to tag. Tap again to cycle.</span>
+</div>
+
+<div id="controls">
+  <div id="moveHint">Drag on the field to move.<br>Desktop: WASD / arrows.</div>
+  <button class="btn" id="lootBtn">💰 Loot</button>
+  <button class="btn" id="attackBtn">👊 Attack</button>
+</div>
+
+<!-- Story / start -->
+<div class="overlay open" id="storyOverlay">
+  <div class="card" id="storyCard">
+    <h1 id="storyTitle">Down to the Last Penny</h1>
+    <p id="storyText">The penny is dead. The government melted the last one yesterday.</p>
+    <button class="btn big" id="storyBtn">Next</button>
+  </div>
+</div>
+
+<!-- Shop -->
+<div class="overlay" id="shopSheet">
+  <div id="shopPanel">
+    <h2>🪙 Penny Shop</h2>
+    <p id="shopIntro">Everyone pays once — a looted pocket stays empty forever, and nobody new is coming. Unlooted people are worth more later, once your multiplier grows. Save the rich ones for a bigger multiplier.</p>
+    <div id="shopWallet">Wallet: 0¢</div>
+    <div id="shopList"></div>
+    <div class="sectHead">Settings</div>
+    <button class="btn" id="muteBtn">🔊 Sound: ON</button>
+    <button class="btn" id="abandonBtn">Abandon run</button>
+    <button class="btn" id="closeShop">Back to the hunt</button>
+  </div>
+</div>
+
+<!-- Pocket inventory -->
+<div class="overlay" id="pocketSheet">
+  <div class="card" id="pocketCard">
+    <h2 id="pocketTitle">Pockets</h2>
+    <p id="pocketSub">You check their pockets…</p>
+    <button id="pocketTake" aria-label="Take the pennies"><span id="pocketCoins"></span></button>
+    <div id="pocketAmt"></div>
+    <p id="pocketHint">Tap the pennies to take them.</p>
+    <button class="btn big" id="pocketClose" style="display:none">Close — empty pockets</button>
+  </div>
+</div>
+
+<!-- Win -->
+<div class="overlay" id="winOverlay">
+  <div class="card" id="winCard">
+    <h1>The Last Penny</h1>
+    <p id="winStats">You collected all 10,000 pennies.</p>
+    <button class="btn big" id="againBtn">Play again</button>
+  </div>
+</div>
+
+<!-- Defeat: everyone looted, still short of 10,000 -->
+<div class="overlay" id="loseOverlay">
+  <div class="card" id="loseCard">
+    <h1>Run Over</h1>
+    <p>Everyone feels defeated and heads home. Looks like you somehow didn't manage to make it — maybe you should focus more on upgrades and less on beating up the unfortunate.</p>
+    <button class="btn big" id="loseAgainBtn">Play again</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= DOWN TO THE LAST PENNY ================= */
+var WORLD_W = 2000, WORLD_H = 1600, GOAL = 10000;
+var SPAWN = { x: 655, y: 535 };
+var MULTS = [1, 1.25, 1.5, 2, 4, 10];
+var MULT_COSTS = [25, 60, 150, 350, 700];
+var SAVE_KEY = "downToLastPennySaveV1";
+var SLOGANS = ["SAVE THE PENNY", "1¢ FOREVER", "COPPER LIVES", "NO PENNY NO PEACE"];
+var TAG_COLORS = { green: "#2BD96B", yellow: "#FFD23F", blue: "#3FA7FF" };
+var TAG_ORDER = ["green", "yellow", "blue"];
+
+/* City blocks: buildings are solid; the gaps are streets/sidewalks. Last block = park. */
+var BLOCKS = [];
+(function buildCity() {
+  var cols = [40, 710, 1380], rows = [40, 570, 1100], BW = 580, BH = 460;
+  var palette = ["#FF8FAB", "#FFC971", "#8AC926", "#6A4C93", "#1982C4", "#FF595E", "#B8F1FF", "#F1FA8C"];
+  var pi = 0;
+  for (var r = 0; r < rows.length; r++) for (var c = 0; c < cols.length; c++) {
+    var bx = cols[c], by = rows[r], park = (r === 2 && c === 2);
+    var b = { x: bx, y: by, w: BW, h: BH, park: park, buildings: [], trees: [] };
+    if (park) {
+      for (var t = 0; t < 9; t++) b.trees.push({ x: bx + 60 + Math.random() * (BW - 120), y: by + 50 + Math.random() * (BH - 100), r: 16 + Math.random() * 12 });
+    } else {
+      var gw = 26, gh = 24, iw = (BW - gw) / 2 - 14, ih = (BH - gh) / 2 - 12;
+      var offs = [[7, 6], [7 + iw + gw, 6], [7, 6 + ih + gh], [7 + iw + gw, 6 + ih + gh]];
+      for (var i = 0; i < 4; i++) b.buildings.push({ x: bx + offs[i][0], y: by + offs[i][1], w: iw, h: ih, color: palette[pi++ % palette.length] });
+    }
+    BLOCKS.push(b);
+  }
+})();
+var SOLIDS = [];
+BLOCKS.forEach(function (b) { b.buildings.forEach(function (bd) { SOLIDS.push(bd); }); });
+function hitsSolid(x, y, r) {
+  for (var i = 0; i < SOLIDS.length; i++) { var s = SOLIDS[i]; if (x + r > s.x && x - r < s.x + s.w && y + r > s.y && y - r < s.y + s.h) return true; }
+  return false;
+}
+function walkable(x, y) { return x > 16 && x < WORLD_W - 16 && y > 16 && y < WORLD_H - 16 && !hitsSolid(x, y, 14); }
+
+/* ---------- State ---------- */
+var S = null;
+function freshState() {
+  return {
+    started: false, won: false, lost: false, paused: false,
+    pennies: 0, totalEarned: 0, elapsed: 0,
+    player: { x: SPAWN.x, y: SPAWN.y, face: 1 },
+    dmgLevel: 0, detLevel: 0, tagsOwned: false, downLevel: 0, multLevel: 0,
+    muted: false, tourStep: 0, tourDone: false, movedDist: 0,
+    protesters: [], particles: [], floats: [],
+    tagMode: false, tagColor: "green",
+    shake: 0, beepTimer: 0, saveTimer: 0, attackCd: 0,
+    statsHits: 0, statsLooted: 0
+  };
+}
+function damage() { return 1 + S.dmgLevel; }
+function downDuration() { return 60 + 60 * S.downLevel; }
+function detRadius() { return [0, 150, 230, 330][S.detLevel] || 0; }
+function multiplier() { return MULTS[S.multLevel] || 1; }
+function multStr() { return String(multiplier()); }
+
+/* Fixed crowd distribution: 90 regulars at 2-15, 4 hoarders at 60, 4 at 100, 2 jackpots at 250-350. Base pool ~2,000. */
+function crowdStashes() {
+  var a = [];
+  for (var i = 0; i < 90; i++) a.push(2 + Math.floor(Math.random() * 14)); /* 2-15 */
+  for (var j = 0; j < 4; j++) a.push(60);
+  for (var k = 0; k < 4; k++) a.push(100);
+  for (var m = 0; m < 2; m++) a.push(250 + Math.floor(Math.random() * 101)); /* 250-350 */
+  for (var s = a.length - 1; s > 0; s--) { var r = Math.floor(Math.random() * (s + 1)), tmp = a[s]; a[s] = a[r]; a[r] = tmp; }
+  return a;
+}
+function makeProtester(x, y, pennies) {
+  return {
+    x: x, y: y, tx: x, ty: y, hp: 3, maxHp: 3, down: false, downT: 0,
+    pennies: pennies | 0, looted: false, tag: null, slogan: SLOGANS[Math.floor(Math.random() * SLOGANS.length)],
+    phase: Math.random() * 6.28, speed: 50 + Math.random() * 35, flash: 0, waitT: Math.random() * 2,
+    hue: ["#FF5964", "#FFD23F", "#4CC9F0", "#06D6A0", "#FF8FAB", "#B388FF"][Math.floor(Math.random() * 6)]
+  };
+}
+function randomWalkPoint() {
+  for (var i = 0; i < 40; i++) { var x = 40 + Math.random() * (WORLD_W - 80), y = 40 + Math.random() * (WORLD_H - 80); if (walkable(x, y)) return { x: x, y: y }; }
+  return { x: SPAWN.x, y: SPAWN.y };
+}
+function spawnInitial() {
+  /* The whole crowd is here from the start: exactly 100, fixed stashes, nobody new ever arrives. */
+  S.protesters = [];
+  var stashes = crowdStashes();
+  for (var i = 0; i < stashes.length; i++) { var p = randomWalkPoint(); S.protesters.push(makeProtester(p.x, p.y, stashes[i])); }
+}
+
+/* ---------- Save ---------- */
+function save() {
+  try {
+    var d = {
+      ecoV: 2,
+      started: S.started, pennies: S.pennies, totalEarned: S.totalEarned, elapsed: S.elapsed,
+      player: S.player, dmgLevel: S.dmgLevel, detLevel: S.detLevel, tagsOwned: S.tagsOwned,
+      downLevel: S.downLevel, multLevel: S.multLevel, muted: S.muted, tourStep: S.tourStep, tourDone: S.tourDone,
+      lost: !!S.lost,
+      protesters: S.protesters.map(function (p) { return { x: p.x, y: p.y, hp: p.hp, down: p.down, downT: p.downT, pennies: p.pennies, looted: !!p.looted, tag: p.tag, slogan: p.slogan, hue: p.hue }; })
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(d));
+  } catch (e) {}
+}
+function load() {
+  try {
+    var raw = localStorage.getItem(SAVE_KEY); if (!raw) return false;
+    var d = JSON.parse(raw); if (!d || !d.started) return false;
+    S = freshState();
+    S.started = true; S.lost = !!d.lost; S.pennies = d.pennies | 0; S.totalEarned = d.totalEarned | 0; S.elapsed = d.elapsed || 0;
+    S.player = d.player || S.player;
+    if (!walkable(S.player.x, S.player.y)) { S.player.x = SPAWN.x; S.player.y = SPAWN.y; } /* rescue saves stuck inside a building */
+    S.dmgLevel = d.dmgLevel | 0; S.detLevel = d.detLevel | 0;
+    S.tagsOwned = !!d.tagsOwned; S.downLevel = d.downLevel | 0; S.muted = !!d.muted;
+    S.multLevel = Math.max(0, Math.min(5, d.multLevel | 0)); /* old saves default to level 0 */
+    S.tourStep = d.tourStep | 0; S.tourDone = !!d.tourDone;
+    if (d.ecoV === 2 && Array.isArray(d.protesters) && d.protesters.length === 100) {
+      S.protesters = d.protesters.map(function (q) {
+        var p = makeProtester(q.x, q.y, q.pennies | 0);
+        p.hp = q.hp; p.down = !!q.down; p.downT = q.downT || 0; p.tag = q.tag || null; p.slogan = q.slogan || p.slogan; p.hue = q.hue || p.hue;
+        p.looted = (q.looted !== undefined) ? !!q.looted : ((q.pennies | 0) === 0);
+        return p;
+      });
+    } else {
+      /* Old-economy save: crowd doesn't match the fixed distribution — rebuild it fresh
+         (nothing looted), keeping the player's pennies and shop upgrades. */
+      spawnInitial();
+    }
+    return true;
+  } catch (e) { return false; }
+}
+function wipeSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+/* ---------- Audio (WebAudio, guarded) ---------- */
+var AC = null;
+function beep(freq, dur, type, vol) {
+  if (S.muted) return;
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === "suspended") AC.resume();
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || "square"; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.06, AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + dur);
+    o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + dur);
+  } catch (e) {}
+}
+
+/* ---------- DOM ---------- */
+var cv = document.getElementById("game"), ctx = cv.getContext("2d");
+var fieldWrap = document.getElementById("fieldWrap");
+var pennyEl = document.getElementById("pennyCount"), statsEl = document.getElementById("stats");
+var progFill = document.getElementById("progFill"), progLabel = document.getElementById("progLabel");
+var lootBtn = document.getElementById("lootBtn"), attackBtn = document.getElementById("attackBtn");
+var shopBtn = document.getElementById("shopBtn"), tagBtn = document.getElementById("tagBtn");
+var detDot = document.getElementById("detDot"), tagPicker = document.getElementById("tagPicker");
+var tourBox = document.getElementById("tourBox"), tourTitle = document.getElementById("tourTitle"), tourText = document.getElementById("tourText"), tourBtn = document.getElementById("tourBtn");
+function resize() {
+  var r = fieldWrap.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr));
+}
+window.addEventListener("resize", resize);
+
+/* ---------- Input ---------- */
+var keys = {}, joy = null;
+window.addEventListener("keydown", function (e) {
+  if (e.code === "Space") { e.preventDefault(); doAttack(); }
+  keys[e.code] = true;
+});
+window.addEventListener("keyup", function (e) { keys[e.code] = false; });
+function canvasPos(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+cv.addEventListener("pointerdown", function (e) {
+  if (!S.started || S.paused || S.won || S.lost) return;
+  var p = canvasPos(e);
+  if (S.tagMode && S.tagsOwned) { tagAt(p); return; }
+  joy = { sx: p.x, sy: p.y, dx: 0, dy: 0, id: e.pointerId };
+  cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener("pointermove", function (e) {
+  if (!joy || e.pointerId !== joy.id) return;
+  var p = canvasPos(e), dx = p.x - joy.sx, dy = p.y - joy.sy, m = Math.hypot(dx, dy);
+  if (m > 8) { joy.dx = dx / m; joy.dy = dy / m; } else { joy.dx = 0; joy.dy = 0; }
+});
+function joyEnd(e) { if (joy && e.pointerId === joy.id) joy = null; }
+cv.addEventListener("pointerup", joyEnd); cv.addEventListener("pointercancel", joyEnd);
+
+function camPos() {
+  var r = fieldWrap.getBoundingClientRect();
+  return {
+    x: Math.max(0, Math.min(WORLD_W - r.width, S.player.x - r.width / 2)),
+    y: Math.max(0, Math.min(WORLD_H - r.height, S.player.y - r.height / 2)),
+    w: r.width, h: r.height
+  };
+}
+function tagAt(screenP) {
+  var cam = camPos(), wx = screenP.x + cam.x, wy = screenP.y + cam.y, best = null, bd = 46;
+  S.protesters.forEach(function (p) { var d = Math.hypot(p.x - wx, p.y - wy); if (d < bd) { bd = d; best = p; } });
+  if (!best) return;
+  if (!best.tag) best.tag = S.tagColor;
+  else {
+    var i = TAG_ORDER.indexOf(best.tag);
+    best.tag = i >= 2 ? null : TAG_ORDER[i + 1];
+  }
+  beep(best.tag ? 660 : 330, 0.08, "square", 0.05);
+  addFloat(best.x, best.y - 34, best.tag ? "TAGGED" : "TAG OFF", "#111");
+  save();
+}
+
+/* ---------- Combat / loot ---------- */
+function nearest(filter, maxD) {
+  var best = null, bd = maxD;
+  S.protesters.forEach(function (p) { if (!filter(p)) return; var d = Math.hypot(p.x - S.player.x, p.y - S.player.y); if (d < bd) { bd = d; best = p; } });
+  return best;
+}
+function doAttack() {
+  if (!S || !S.started || S.paused || S.won || S.lost || S.attackCd > 0) return;
+  S.attackCd = 0.28;
+  var t = nearest(function (p) { return !p.down; }, 78);
+  beep(160, 0.06, "sawtooth", 0.05);
+  if (!t) return;
+  S.player.face = t.x >= S.player.x ? 1 : -1;
+  t.hp -= damage(); t.flash = 0.18; S.statsHits++;
+  t.x += (t.x - S.player.x) * 0.12; t.y += (t.y - S.player.y) * 0.12;
+  burst(t.x, t.y - 10, 5, "#FFF200");
+  if (t.hp <= 0) {
+    t.down = true; t.downT = downDuration(); t.hp = 0;
+    S.shake = 9; burst(t.x, t.y - 14, 14, "#FF2E4D");
+    addFloat(t.x, t.y - 44, "KO!", "#D62828");
+    beep(90, 0.25, "sawtooth", 0.09);
+  } else addFloat(t.x, t.y - 44, "-" + damage(), "#111");
+  if (S.tourStep === 1) advanceTour(2);
+  save();
+}
+function doLoot() {
+  if (!S.started || S.paused || S.won || S.lost) return;
+  var t = nearest(function (p) { return p.down; }, 76);
+  if (!t) return;
+  openPocket(t);
+}
+
+/* ---------- Pocket inventory ---------- */
+var pocketTarget = null;
+var pocketSheet = document.getElementById("pocketSheet");
+function openPocket(p) {
+  pocketTarget = p;
+  S.paused = true; /* pauses the field, like the shop */
+  var take = document.getElementById("pocketTake"), closeBtn = document.getElementById("pocketClose");
+  var coinsEl = document.getElementById("pocketCoins"), amt = document.getElementById("pocketAmt"), hint = document.getElementById("pocketHint");
+  document.getElementById("pocketTitle").textContent = "Pockets";
+  if (p.pennies > 0) {
+    var got = Math.round(p.pennies * multiplier());
+    /* Representative pile: a handful of visible coins standing for the amount — never 300 coins. */
+    var shown = Math.max(3, Math.min(12, Math.ceil(p.pennies / 10)));
+    var html = "";
+    for (var i = 0; i < shown; i++) html += '<span class="pocketCoin">¢</span>';
+    coinsEl.innerHTML = html;
+    document.getElementById("pocketSub").textContent = "You check their pockets…";
+    amt.textContent = multiplier() > 1
+      ? fmt(p.pennies) + " pennies × " + multStr() + " = " + fmt(got) + "¢"
+      : fmt(p.pennies) + " pennies";
+    hint.textContent = "Tap the pennies to take them.";
+    take.style.display = "block"; closeBtn.style.display = "none";
+  } else {
+    coinsEl.innerHTML = "";
+    document.getElementById("pocketSub").textContent = "Empty pockets — nothing in here.";
+    amt.textContent = "";
+    hint.textContent = "";
+    take.style.display = "none"; closeBtn.style.display = "block";
+  }
+  pocketSheet.classList.add("open");
+  renderTour();
+  beep(660, 0.07, "square", 0.05);
+}
+function closePocket() {
+  pocketSheet.classList.remove("open");
+  pocketTarget = null;
+  if (!S.won && !S.lost) S.paused = false;
+  renderTour();
+}
+function takePocket() {
+  var p = pocketTarget; if (!p) return;
+  var base = p.pennies, got = Math.round(base * multiplier());
+  var fromRect = document.getElementById("pocketTake").getBoundingClientRect();
+  /* Bank FIRST, then animate: a reload mid-flight can never lose or double-count pennies. */
+  p.pennies = 0; p.looted = true; S.statsLooted++;
+  if (got > 0) { S.pennies += got; S.totalEarned += got; }
+  save(); renderHUD();
+  closePocket();
+  flyCoins(fromRect, Math.min(10, Math.max(3, Math.ceil(got / 10))));
+  burst(p.x, p.y - 12, Math.min(12, 4 + Math.floor(got / 10)), "#FFB703");
+  addFloat(p.x, p.y - 48, multiplier() > 1 ? "+" + got + "¢ (" + base + "×" + multStr() + ")" : "+" + got + "¢", "#0B6E4F");
+  beep(880, 0.09, "square", 0.06); setTimeout(function () { beep(1320, 0.12, "square", 0.06); }, 70);
+  checkWin();
+  if (!S.won) checkDefeat();
+  if (S.tourStep === 2) advanceTour(3);
+  save();
+}
+function closePocketEmpty() {
+  if (S.tourStep === 2) advanceTour(3);
+  closePocket();
+  save();
+}
+document.getElementById("pocketTake").addEventListener("click", takePocket);
+document.getElementById("pocketClose").addEventListener("click", closePocketEmpty);
+/* Physical pennies flying from the panel up to the HUD counter (capped at 10 coins). */
+function flyCoins(fromRect, n) {
+  var target = document.getElementById("pennyStack").getBoundingClientRect();
+  var tx = target.left + target.width / 2, ty = target.top + target.height / 2;
+  var fx = fromRect.left + fromRect.width / 2, fy = fromRect.top + fromRect.height / 2;
+  for (var i = 0; i < n; i++) {
+    (function (i) {
+      var c = document.createElement("div");
+      c.className = "flyCoin"; c.textContent = "¢";
+      var ox = (Math.random() - 0.5) * 60, oy = (Math.random() - 0.5) * 30;
+      c.style.left = (fx + ox - 11) + "px"; c.style.top = (fy + oy - 11) + "px";
+      document.body.appendChild(c);
+      var dx = tx - (fx + ox), dy = ty - (fy + oy);
+      var anim = c.animate([
+        { transform: "translate(0px, 0px) scale(1)", opacity: 1 },
+        { transform: "translate(" + (dx * 0.5) + "px, " + (dy * 0.5 - 46) + "px) scale(1.05)", opacity: 1, offset: 0.55 },
+        { transform: "translate(" + dx + "px, " + dy + "px) scale(0.5)", opacity: 0.9 }
+      ], { duration: 620 + Math.random() * 260, delay: i * 45, easing: "cubic-bezier(.25,.7,.3,1)", fill: "forwards" });
+      anim.onfinish = function () { c.remove(); };
+      setTimeout(function () { c.remove(); }, 1600 + i * 45); /* safety net if animation events are missed */
+    })(i);
+  }
+}
+attackBtn.addEventListener("click", doAttack);
+lootBtn.addEventListener("click", doLoot);
+
+function burst(x, y, n, color) {
+  for (var i = 0; i < n; i++) {
+    var a = Math.random() * 6.28, sp = 40 + Math.random() * 130;
+    S.particles.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, life: 0.55 + Math.random() * 0.3, color: color, r: 2 + Math.random() * 3 });
+  }
+}
+function addFloat(x, y, text, color) { S.floats.push({ x: x, y: y, text: text, color: color, life: 1.1 }); }
+function wake(p) {
+  p.down = false; p.hp = p.maxHp; p.downT = 0;
+  /* Pennies never change on wake: unlooted stashes stay, looted pockets stay empty forever. */
+}
+function checkWin() {
+  if (S.totalEarned >= GOAL && !S.won) {
+    S.won = true; S.paused = true; save();
+    var mins = Math.max(S.elapsed / 60, 0.01);
+    document.getElementById("winStats").textContent =
+      "You collected all 10,000 pennies in " + fmtTime(S.elapsed) + " — " + Math.round(S.totalEarned / mins) + " pennies per minute. The streets are finally quiet.";
+    document.getElementById("winOverlay").classList.add("open");
+    beep(523, 0.15, "square", 0.07); setTimeout(function () { beep(784, 0.15, "square", 0.07); }, 140); setTimeout(function () { beep(1046, 0.3, "square", 0.07); }, 280);
+  }
+}
+function checkDefeat() {
+  if (S.won || S.lost) return;
+  if (S.totalEarned >= GOAL) return; /* win takes precedence — never show defeat at/over goal */
+  if (!S.protesters.length) return;
+  var allLooted = S.protesters.every(function (p) { return !!p.looted; });
+  if (!allLooted) return;
+  S.lost = true; S.paused = true; save();
+  document.getElementById("loseOverlay").classList.add("open");
+  renderTour();
+  beep(392, 0.18, "square", 0.06); setTimeout(function () { beep(311, 0.18, "square", 0.06); }, 160); setTimeout(function () { beep(233, 0.32, "square", 0.06); }, 320);
+}
+function fmtTime(s) { s = Math.floor(s); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
+function fmt(n) { return n.toLocaleString("en-US"); }
+
+/* ---------- Tour ---------- */
+var TOUR = [
+  { title: "Move", text: "Drag anywhere on the field to move — or use WASD / arrow keys.", spot: null },
+  { title: "Attack", text: "Get close to a protester and smash ATTACK (or Space). Three hits knocks them out.", spot: "attackBtn" },
+  { title: "Loot", text: "They're down! Stand next to them and hit LOOT to check their pockets.", spot: "lootBtn" },
+  { title: "Shop", text: "Pennies buy power. Open the SHOP and spend what you looted.", spot: "shopBtn" },
+  { title: "Detector & Tags", text: "In the shop: the DETECTOR beeps and points at hidden pennies. TAGS mark people so you remember who you've looted — tags survive wake-ups.", spot: null, btn: true }
+];
+function renderTour() {
+  document.querySelectorAll(".spotlight").forEach(function (el) { el.classList.remove("spotlight"); });
+  if (!S || !S.started || S.tourDone || S.paused || S.won || S.lost) { tourBox.style.display = "none"; return; }
+  var step = TOUR[S.tourStep]; if (!step) { tourBox.style.display = "none"; return; }
+  tourBox.style.display = "block";
+  tourTitle.textContent = "▶ " + step.title;
+  tourText.textContent = step.text;
+  tourBtn.style.display = step.btn ? "inline-block" : "none";
+  if (step.spot) { var el = document.getElementById(step.spot); if (el) el.classList.add("spotlight"); }
+}
+function advanceTour(to) {
+  if (S.tourDone) return;
+  S.tourStep = to;
+  if (to >= TOUR.length) { S.tourDone = true; }
+  renderTour(); save();
+}
+tourBtn.addEventListener("click", function () { advanceTour(TOUR.length); });
+
+/* ---------- Shop ---------- */
+var DOWN_COSTS = [75, 150, 275, 450, 700, 1050, 1550, 2300, 3400];
+var UPGS = [
+  { id: "mult", name: "Penny Multiplier", max: 5, costs: MULT_COSTS,
+    desc: function () {
+      var nxt = S.multLevel < 5 ? " Next: ×" + MULTS[S.multLevel + 1] + "." : "";
+      return "Every loot pays base × your multiplier, rounded." + nxt + " Everyone pays once, so unlooted people are worth more later once the multiplier grows — save the rich ones for a bigger multiplier.";
+    },
+    state: function () { return "Current multiplier: ×" + multStr(); },
+    lvl: function () { return S.multLevel; }, buy: function () { S.multLevel++; } },
+  { id: "down", name: "Down and Out", max: DOWN_COSTS.length, costs: DOWN_COSTS,
+    desc: function () { return "Every level adds +60 seconds to how long a knocked-out protester stays down. More time to loot, less re-checking the same pockets."; },
+    state: function () { return "Down time: " + downDuration() + "s"; },
+    lvl: function () { return S.downLevel; }, buy: function () { S.downLevel++; } },
+  { id: "tags", name: "Tags", max: 1, costs: [150],
+    desc: function () { return "Unlock tagging. Turn on TAG mode, pick green / yellow / blue, and tap a person to mark them. Tags stay on after they wake up — mark the looted and stop wasting hits."; },
+    state: function () { return S.tagsOwned ? "Owned — use the TAG button" : "Not owned"; },
+    lvl: function () { return S.tagsOwned ? 1 : 0; }, buy: function () { S.tagsOwned = true; } },
+  { id: "det", name: "Penny Detector", max: 3, costs: [100, 250, 500],
+    desc: function () { return "Beeps faster as you near hidden pennies, pulses the DET light, and draws an arrow to the nearest carrier. Each level widens the range."; },
+    state: function () { return S.detLevel ? "Range: " + detRadius() + "px" : "Not owned"; },
+    lvl: function () { return S.detLevel; }, buy: function () { S.detLevel++; } },
+  { id: "dmg", name: "More Damage", max: 5, costs: [75, 150, 300, 550, 900],
+    desc: function () { return "Hit harder. Damage per hit: 1 → 2 → 3 → 4 → 5 → 6. Fewer hits per knockout means more looting per minute."; },
+    state: function () { return "Damage per hit: " + damage(); },
+    lvl: function () { return S.dmgLevel; }, buy: function () { S.dmgLevel++; } }
+];
+var shopSheet = document.getElementById("shopSheet"), shopList = document.getElementById("shopList");
+function renderShop() {
+  document.getElementById("shopWallet").textContent = "Wallet: " + fmt(S.pennies) + "¢  ·  Collected: " + fmt(S.totalEarned) + " / 10,000";
+  document.getElementById("muteBtn").textContent = S.muted ? "🔇 Sound: OFF" : "🔊 Sound: ON";
+  shopList.innerHTML = "";
+  UPGS.forEach(function (u) {
+    var lvl = u.lvl(), maxed = lvl >= u.max, cost = maxed ? null : u.costs[lvl];
+    var div = document.createElement("div"); div.className = "upg";
+    var pips = ""; for (var i = 0; i < u.max; i++) pips += '<span class="pip' + (i < lvl ? " f" : "") + '"></span>';
+    div.innerHTML = '<div class="uTop"><span class="uName">' + u.name + '</span><span class="uLvl">LV ' + lvl + '</span><span class="pips">' + pips + '</span></div>' +
+      '<div class="uDesc">' + u.desc() + '</div><div class="uState">' + u.state() + '</div>';
+    var b = document.createElement("button"); b.className = "btn buy" + (maxed ? " owned" : "");
+    b.textContent = maxed ? "✓ MAXED" : "Buy — " + fmt(cost) + "¢";
+    b.disabled = maxed || S.pennies < cost;
+    if (!maxed && S.pennies < cost) b.textContent = "Need " + fmt(cost) + "¢ (have " + fmt(S.pennies) + "¢)";
+    b.addEventListener("click", function () {
+      if (S.pennies < cost) return;
+      S.pennies -= cost; u.buy(); beep(990, 0.1, "square", 0.06);
+      if (u.id === "tags") { /* picker lives on main screen */ }
+      renderShop(); renderHUD(); save();
+    });
+    div.appendChild(b); shopList.appendChild(div);
+  });
+  var tg = document.getElementById("shopTags");
+}
+function openShop() {
+  if (!S.started || S.won || S.lost) return;
+  if (pocketSheet.classList.contains("open")) return; /* one modal at a time */
+  S.paused = true; renderShop();
+  shopSheet.classList.add("open"); renderTour();
+  if (S.tourStep === 3) advanceTour(4);
+}
+function closeShop() { if (!S.lost && !S.won) S.paused = false; shopSheet.classList.remove("open"); abandonArm = false; document.getElementById("abandonBtn").textContent = "Abandon run"; renderTour(); save(); }
+shopBtn.addEventListener("click", openShop);
+document.getElementById("closeShop").addEventListener("click", closeShop);
+document.getElementById("muteBtn").addEventListener("click", function () { S.muted = !S.muted; renderShop(); save(); });
+var abandonArm = false;
+document.getElementById("abandonBtn").addEventListener("click", function () {
+  if (!abandonArm) { abandonArm = true; this.textContent = "⚠ Tap again to abandon this run"; return; }
+  wipeSave(); resetRun();
+});
+function resetRun() {
+  var muted = S ? S.muted : false;
+  S = freshState(); S.muted = muted; spawnInitial();
+  shopSheet.classList.remove("open"); document.getElementById("winOverlay").classList.remove("open"); document.getElementById("loseOverlay").classList.remove("open");
+  storyStep = 0; showStory();
+  renderHUD(); renderTour();
+}
+tagBtn.addEventListener("click", function () {
+  if (!S.tagsOwned) { openShop(); return; }
+  S.tagMode = !S.tagMode;
+  tagBtn.classList.toggle("on", S.tagMode);
+  tagPicker.style.display = S.tagMode ? "flex" : "none";
+  resize();
+});
+tagPicker.querySelectorAll(".sw").forEach(function (sw) {
+  sw.addEventListener("click", function () {
+    tagPicker.querySelectorAll(".sw").forEach(function (x) { x.classList.remove("sel"); });
+    sw.classList.add("sel"); S.tagColor = sw.getAttribute("data-c");
+  });
+});
+document.getElementById("againBtn").addEventListener("click", function () { wipeSave(); resetRun(); });
+document.getElementById("loseAgainBtn").addEventListener("click", function () { wipeSave(); resetRun(); });
+
+/* ---------- Story ---------- */
+var storyStep = 0;
+var storyOverlay = document.getElementById("storyOverlay"), storyText = document.getElementById("storyText"), storyBtn = document.getElementById("storyBtn"), storyTitle = document.getElementById("storyTitle");
+function showStory() {
+  storyOverlay.classList.add("open");
+  if (storyStep === 0) { storyTitle.textContent = "Down to the Last Penny"; storyText.textContent = "The penny is dead. The government melted the last one yesterday."; storyBtn.textContent = "Next"; }
+  else if (storyStep === 1) { storyTitle.textContent = "The Bounty"; storyText.textContent = "Ten thousand are still out there — in the pockets of the crowd that won't let go. You're the bounty hunter they sent."; storyBtn.textContent = "Next"; }
+  else { storyTitle.textContent = "Your Job"; storyText.textContent = "Knock out protesters, loot their pockets, and cash in 10,000 pennies."; storyBtn.textContent = "▶ Start"; }
+}
+storyBtn.addEventListener("click", function () {
+  beep(520, 0.07, "square", 0.05);
+  if (storyStep < 2) { storyStep++; showStory(); return; }
+  storyOverlay.classList.remove("open");
+  S.started = true; S.paused = false; renderTour(); save();
+});
+
+/* ---------- Update ---------- */
+function update(dt) {
+  if (!S.started || S.paused || S.won || S.lost) return;
+  S.elapsed += dt;
+  if (S.attackCd > 0) S.attackCd -= dt;
+  /* movement */
+  var mx = 0, my = 0;
+  if (keys["KeyA"] || keys["ArrowLeft"]) mx -= 1;
+  if (keys["KeyD"] || keys["ArrowRight"]) mx += 1;
+  if (keys["KeyW"] || keys["ArrowUp"]) my -= 1;
+  if (keys["KeyS"] || keys["ArrowDown"]) my += 1;
+  if (joy && (joy.dx || joy.dy)) { mx = joy.dx; my = joy.dy; }
+  var mm = Math.hypot(mx, my);
+  if (mm > 0.01) {
+    mx /= Math.max(mm, 1); my /= Math.max(mm, 1);
+    var sp = 235, nx = S.player.x + mx * sp * dt, ny = S.player.y + my * sp * dt;
+    var ox = S.player.x, oy = S.player.y;
+    if (!hitsSolid(nx, S.player.y, 14)) S.player.x = Math.max(16, Math.min(WORLD_W - 16, nx));
+    if (!hitsSolid(S.player.x, ny, 14)) S.player.y = Math.max(16, Math.min(WORLD_H - 16, ny));
+    if (mx) S.player.face = mx > 0 ? 1 : -1;
+    S.movedDist += Math.hypot(S.player.x - ox, S.player.y - oy);
+    if (S.tourStep === 0 && S.movedDist > 50) advanceTour(1);
+  }
+  /* protesters */
+  S.protesters.forEach(function (p) {
+    if (p.flash > 0) p.flash -= dt;
+    if (p.down) { p.downT -= dt; if (p.downT <= 0) wake(p); return; }
+    if (p.waitT > 0) { p.waitT -= dt; return; }
+    var d = Math.hypot(p.tx - p.x, p.ty - p.y);
+    if (d < 8) { var t = randomWalkPoint(); p.tx = t.x; p.ty = t.y; p.waitT = Math.random() * 1.6; return; }
+    var vx = (p.tx - p.x) / d * p.speed, vy = (p.ty - p.y) / d * p.speed;
+    var nx2 = p.x + vx * dt, ny2 = p.y + vy * dt;
+    if (!hitsSolid(nx2, p.y, 13)) p.x = nx2; else p.tx = p.x;
+    if (!hitsSolid(p.x, ny2, 13)) p.y = ny2; else p.ty = p.y;
+  });
+  /* detector */
+  var nearCarrier = nearest(function (p) { return !p.down && p.pennies > 0; }, detRadius() || 0);
+  detDot.classList.toggle("hot", !!nearCarrier);
+  if (nearCarrier && S.detLevel > 0) {
+    S.beepTimer -= dt;
+    if (S.beepTimer <= 0) {
+      var dd = Math.hypot(nearCarrier.x - S.player.x, nearCarrier.y - S.player.y);
+      S.beepTimer = 0.3 + (dd / detRadius()) * 1.1;
+      beep(1180, 0.07, "sine", 0.07);
+    }
+  }
+  /* loot button + tour loot step safety */
+  var lootable = nearest(function (p) { return p.down; }, 76);
+  lootBtn.style.display = lootable ? "block" : "none";
+  if (S.tourStep === 1 && S.protesters.some(function (p) { return p.down; })) advanceTour(2);
+  if (S.tourStep === 2 && S.totalEarned > 0) advanceTour(3);
+  /* particles / floats */
+  S.particles = S.particles.filter(function (pt) { pt.life -= dt; pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vy += 260 * dt; return pt.life > 0; });
+  S.floats = S.floats.filter(function (f) { f.life -= dt; f.y -= 34 * dt; return f.life > 0; });
+  if (S.shake > 0) S.shake = Math.max(0, S.shake - dt * 26);
+  /* autosave */
+  S.saveTimer -= dt; if (S.saveTimer <= 0) { S.saveTimer = 4; save(); }
+  renderHUD();
+}
+function renderHUD() {
+  pennyEl.innerHTML = fmt(S.totalEarned) + " <small>/ 10,000</small>";
+  renderStack(S.totalEarned);
+  document.getElementById("multPill").textContent = "×" + multStr();
+  var ppm = S.elapsed > 5 ? Math.round(S.totalEarned / (S.elapsed / 60)) : 0;
+  statsEl.innerHTML = "⏱ " + fmtTime(S.elapsed) + "<br>" + fmt(ppm) + " ¢/min";
+  var pct = Math.min(100, S.totalEarned / GOAL * 100);
+  progFill.style.width = pct + "%";
+  progLabel.textContent = fmt(S.totalEarned) + " / 10,000 PENNIES";
+  syncHooks();
+}
+
+/* ---------- Growing penny-stack counter ----------
+   First 20 pennies are actually counted (that many coins drawn).
+   Then the pile grows at every doubling — 40, 80, 160, 320, 640, 1280,
+   2560, 5120 — and at 10,000 it becomes a large bag. The exact number
+   always stays readable next to the stack. */
+var lastStackTotal = -1;
+function stackTierNum(n) {
+  if (n >= 10000) return 9; /* bag */
+  if (n <= 20) return 0;
+  var t = 0, v = 40;
+  while (v <= n && t < 8) { t++; v *= 2; }
+  return t; /* 1 = 40–79, 2 = 80–159, … 8 = 5120–9999; 21–39 stays tier 0 pile */
+}
+function stackDrawn(n) {
+  if (n >= 10000) return 0;
+  if (n <= 20) return n;
+  return Math.min(42, 20 + stackTierNum(n) * 3);
+}
+function renderStack(total) {
+  if (total === lastStackTotal) return;
+  lastStackTotal = total;
+  var el = document.getElementById("pennyStack");
+  var tier = stackTierNum(total);
+  el.setAttribute("data-tier", tier >= 9 ? "bag" : "tier" + tier);
+  if (tier >= 9) {
+    el.innerHTML = '<svg viewBox="0 0 64 48" aria-hidden="true"><path d="M32 4 L25 13 L39 13 Z" fill="#FFD23F" stroke="#000" stroke-width="2"/><path d="M17 15 Q9 30 15 42 Q32 49 49 42 Q55 30 47 15 Q32 10 17 15 Z" fill="#FFD23F" stroke="#000" stroke-width="2"/><text x="32" y="37" text-anchor="middle" font-size="17" font-weight="900" fill="#111">¢</text></svg>';
+    return;
+  }
+  var drawn = stackDrawn(total);
+  var rows = [9, 8, 7, 6, 5, 4, 3], r = 4, step = 6, bottomY = 42, svg = '<svg viewBox="0 0 64 48" aria-hidden="true">';
+  if (drawn === 0) {
+    svg += '<circle cx="32" cy="26" r="13" fill="none" stroke="#111" stroke-width="2" stroke-dasharray="4 3"/><text x="32" y="30" text-anchor="middle" font-size="11" font-weight="900" fill="#111">0</text>';
+  } else {
+    var left = drawn, row = 0;
+    while (left > 0 && row < rows.length) {
+      var w = Math.min(left, rows[row]), y = bottomY - row * step;
+      var x0 = 32 - (w - 1) * (r + 0.6);
+      for (var i = 0; i < w; i++) {
+        var cx = x0 + i * (r * 2 + 1.2);
+        svg += '<circle cx="' + cx.toFixed(1) + '" cy="' + y + '" r="' + r + '" fill="#FFD23F" stroke="#000" stroke-width="1.2"/><circle cx="' + cx.toFixed(1) + '" cy="' + y + '" r="1.6" fill="#F0A500"/>';
+      }
+      left -= w; row++;
+    }
+  }
+  el.innerHTML = svg + "</svg>";
+}
+function draw(now) {
+  var r = fieldWrap.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  var cam = camPos();
+  var shx = S.shake ? (Math.random() - 0.5) * S.shake : 0, shy = S.shake ? (Math.random() - 0.5) * S.shake : 0;
+  ctx.save(); ctx.translate(-cam.x + shx, -cam.y + shy);
+  /* ground: streets */
+  ctx.fillStyle = "#8D99AE"; ctx.fillRect(cam.x - 12, cam.y - 12, r.width + 24, r.height + 24);
+  ctx.fillStyle = "#EDF2F4";
+  BLOCKS.forEach(function (b) { ctx.fillRect(b.x - 8, b.y - 8, b.w + 16, b.h + 16); }); /* sidewalks */
+  BLOCKS.forEach(function (b) {
+    if (b.park) {
+      ctx.fillStyle = "#7BC950"; ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.fillStyle = "#5DA23E";
+      b.trees.forEach(function (t) { ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, 6.29); ctx.fill(); });
+    }
+    b.buildings.forEach(function (bd) {
+      ctx.fillStyle = "#000"; ctx.fillRect(bd.x + 5, bd.y + 5, bd.w, bd.h);
+      ctx.fillStyle = bd.color; ctx.fillRect(bd.x, bd.y, bd.w, bd.h);
+      ctx.strokeStyle = "#000"; ctx.lineWidth = 3; ctx.strokeRect(bd.x, bd.y, bd.w, bd.h);
+      ctx.fillStyle = "rgba(255,255,255,.75)";
+      for (var wx = bd.x + 14; wx < bd.x + bd.w - 16; wx += 30) for (var wy = bd.y + 12; wy < bd.y + bd.h - 16; wy += 30) ctx.fillRect(wx, wy, 14, 14);
+    });
+  });
+  /* detector arrow + pulse ring */
+  var t = now / 1000;
+  if (S.detLevel > 0 && S.started && !S.won) {
+    var nc = nearest(function (p) { return !p.down && p.pennies > 0; }, detRadius());
+    ctx.strokeStyle = "#FF2E4D"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(S.player.x, S.player.y, 24 + Math.sin(t * 6) * 4, 0, 6.29); ctx.stroke();
+    if (nc) {
+      var a = Math.atan2(nc.y - S.player.y, nc.x - S.player.x), ax = S.player.x + Math.cos(a) * 44, ay = S.player.y + Math.sin(a) * 44;
+      ctx.fillStyle = "#FF2E4D";
+      ctx.save(); ctx.translate(ax, ay); ctx.rotate(a);
+      ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-7, -8); ctx.lineTo(-7, 8); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+  }
+  /* protesters */
+  S.protesters.forEach(function (p) { drawProtester(p, t); });
+  drawPlayer(t);
+  /* particles */
+  S.particles.forEach(function (pt) { ctx.globalAlpha = Math.max(pt.life, 0); ctx.fillStyle = pt.color; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r, 0, 6.29); ctx.fill(); });
+  ctx.globalAlpha = 1;
+  /* floats */
+  ctx.font = "900 15px system-ui, sans-serif"; ctx.textAlign = "center";
+  S.floats.forEach(function (f) { ctx.globalAlpha = Math.min(1, f.life); ctx.fillStyle = "#fff"; ctx.fillText(f.text, f.x + 2, f.y + 2); ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y); });
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  /* joystick */
+  if (joy) {
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 3; ctx.fillStyle = "rgba(255,255,255,.55)";
+    ctx.beginPath(); ctx.arc(joy.sx, joy.sy, 40, 0, 6.29); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#FFD23F"; ctx.beginPath(); ctx.arc(joy.sx + joy.dx * 26, joy.sy + joy.dy * 26, 18, 0, 6.29); ctx.fill(); ctx.stroke();
+  }
+}
+function drawProtester(p, t) {
+  var bob = p.down ? 0 : Math.sin(t * 5 + p.phase) * 2.5;
+  ctx.save(); ctx.translate(p.x, p.y + bob);
+  if (p.tag) {
+    ctx.fillStyle = TAG_COLORS[p.tag]; ctx.strokeStyle = "#000"; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(0, -52); ctx.lineTo(9, -40); ctx.lineTo(-9, -40); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  if (p.down) {
+    ctx.rotate(1.45);
+    ctx.fillStyle = "#000"; ctx.fillRect(-15, -7, 32, 16);
+    ctx.fillStyle = p.hue; ctx.fillRect(-17, -9, 32, 16);
+    ctx.fillStyle = "#FFD9B3"; ctx.beginPath(); ctx.arc(24, 0, 9, 0, 6.29); ctx.fill(); ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.rotate(-1.45);
+    /* circling KO stars */
+    ctx.fillStyle = "#FFB703"; ctx.font = "13px sans-serif"; ctx.textAlign = "center";
+    for (var i = 0; i < 3; i++) { var a = t * 3 + i * 2.09; ctx.fillText("★", Math.cos(a) * 20, -20 + Math.sin(a) * 6); }
+    /* down timer bar */
+    var frac = Math.max(0, p.downT / downDuration());
+    ctx.fillStyle = "#fff"; ctx.fillRect(-20, 16, 40, 7); ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.strokeRect(-20, 16, 40, 7);
+    ctx.fillStyle = "#3FA7FF"; ctx.fillRect(-19, 17, 38 * frac, 5);
+  } else {
+    /* sign */
+    var sw = 74;
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(12, -8); ctx.lineTo(16, -34 + bob * 0.6); ctx.stroke();
+    ctx.fillStyle = "#000"; ctx.fillRect(16 - sw / 2 + 3, -58 + bob * 0.6, sw, 22);
+    ctx.fillStyle = "#fff"; ctx.fillRect(16 - sw / 2, -61 + bob * 0.6, sw, 22);
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.strokeRect(16 - sw / 2, -61 + bob * 0.6, sw, 22);
+    ctx.fillStyle = "#111"; ctx.font = "900 8.5px system-ui, sans-serif"; ctx.textAlign = "center";
+    ctx.fillText(p.slogan, 16, -46 + bob * 0.6);
+    /* body */
+    ctx.fillStyle = "#000"; ctx.fillRect(-11, -14, 24, 28);
+    ctx.fillStyle = p.flash > 0 ? "#fff" : p.hue; ctx.fillRect(-13, -16, 24, 28);
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.strokeRect(-13, -16, 24, 28);
+    ctx.fillStyle = "#FFD9B3"; ctx.beginPath(); ctx.arc(0, -24, 10, 0, 6.29); ctx.fill(); ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.stroke();
+    if (p.hp < p.maxHp) {
+      ctx.fillStyle = "#fff"; ctx.fillRect(-16, -40, 32, 6); ctx.fillStyle = "#D62828"; ctx.fillRect(-16, -40, 32 * (p.hp / p.maxHp), 6);
+      ctx.strokeStyle = "#000"; ctx.lineWidth = 1.5; ctx.strokeRect(-16, -40, 32, 6);
+    }
+  }
+  ctx.restore();
+}
+function drawPlayer(t) {
+  var p = S.player;
+  ctx.save(); ctx.translate(p.x, p.y);
+  ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(0, 14, 15, 5, 0, 0, 6.29); ctx.fill();
+  ctx.fillStyle = "#000"; ctx.fillRect(-12, -13, 26, 29);
+  ctx.fillStyle = "#FFF200"; ctx.fillRect(-14, -15, 26, 29); ctx.strokeStyle = "#000"; ctx.lineWidth = 2.5; ctx.strokeRect(-14, -15, 26, 29);
+  ctx.fillStyle = "#FFD9B3"; ctx.beginPath(); ctx.arc(0, -23, 10.5, 0, 6.29); ctx.fill(); ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = "#111"; ctx.fillRect(-10.5, -33, 21, 7); /* cap */
+  ctx.fillStyle = "#111"; ctx.font = "900 11px system-ui, sans-serif"; ctx.textAlign = "center"; ctx.fillText("YOU", 0, -40);
+  /* fist in facing direction */
+  ctx.fillStyle = "#FFD9B3"; ctx.strokeStyle = "#000"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(p.face * 17, -4 + Math.sin(t * 4) * 1.5, 6, 0, 6.29); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+
+/* ---------- Loop ---------- */
+var lastTs = 0;
+function loop(ts) {
+  var dt = Math.min((ts - lastTs) / 1000 || 0, 0.05); lastTs = ts;
+  if (S) { update(dt); draw(ts); }
+  requestAnimationFrame(loop);
+}
+
+/* ---------- Test hooks (not shown in UI) ---------- */
+var HOOK_STATE = { pennies: 0, elapsed: 0, protesters: [] };
+function syncHooks() {
+  HOOK_STATE.pennies = S.totalEarned; HOOK_STATE.wallet = S.pennies; HOOK_STATE.elapsed = S.elapsed;
+  HOOK_STATE.protesters = S.protesters; HOOK_STATE.totalEarned = S.totalEarned;
+  HOOK_STATE.dmgLevel = S.dmgLevel; HOOK_STATE.detLevel = S.detLevel; HOOK_STATE.downLevel = S.downLevel; HOOK_STATE.downDuration = downDuration();
+  HOOK_STATE.multLevel = S.multLevel; HOOK_STATE.multiplier = multiplier(); HOOK_STATE.worldW = WORLD_W; HOOK_STATE.worldH = WORLD_H;
+  HOOK_STATE.won = !!S.won; HOOK_STATE.lost = !!S.lost; HOOK_STATE.lootedCount = S.protesters.filter(function (p) { return !!p.looted; }).length;
+  HOOK_STATE.pocketOpen = pocketSheet.classList.contains("open");
+  HOOK_STATE.pocketPennies = pocketTarget ? pocketTarget.pennies : 0;
+}
+setInterval(function () { if (S) syncHooks(); }, 250);
+window.__penny = {
+  state: HOOK_STATE,
+  teleportToNearestProtester: function () {
+    var t = nearest(function () { return true; }, 1e9);
+    if (t) { S.player.x = t.x - 30; S.player.y = t.y; }
+    return t;
+  },
+  teleport: function () { return this.teleportToNearestProtester(); },
+  teleportToCarrier: function (minPennies) {
+    var best = null, bd = 1e18;
+    S.protesters.forEach(function (p) { if (p.pennies >= minPennies && !p.down) { var d = Math.hypot(p.x - S.player.x, p.y - S.player.y); if (d < bd) { bd = d; best = p; } } });
+    if (best) { S.player.x = best.x - 30; S.player.y = best.y; if (!walkable(S.player.x, S.player.y)) { S.player.x = best.x + 30; } }
+    return best;
+  },
+  forceKO: function () {
+    var t = nearest(function (p) { return !p.down; }, 1e9);
+    if (t) { t.hp = 0; t.down = true; t.downT = downDuration(); }
+    return t;
+  },
+  forceWakeAll: function () { S.protesters.forEach(function (p) { if (p.down) wake(p); }); },
+  wakeAll: function () { this.forceWakeAll(); },
+  setPennies: function (n) {
+    n = Math.max(0, Math.floor(n));
+    S.pennies = n; if (n > S.totalEarned) S.totalEarned = n;
+    renderHUD(); checkWin(); save();
+  },
+  stackInfo: function (n) {
+    var t = stackTierNum(n);
+    return { total: n, tier: t >= 9 ? "bag" : "tier" + t, bag: t >= 9, drawn: stackDrawn(n) };
+  },
+  getState: function () { syncHooks(); return HOOK_STATE; }
+};
+
+/* ---------- Boot ---------- */
+if (!load()) { S = freshState(); spawnInitial(); }
+resize();
+if (S.started && S.lost) { storyOverlay.classList.remove("open"); S.paused = true; document.getElementById("loseOverlay").classList.add("open"); }
+else if (S.started) { storyOverlay.classList.remove("open"); S.paused = false; }
+else showStory();
+renderHUD(); renderTour();
+if (S.muted) { /* reflected in shop */ }
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
