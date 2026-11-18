@@ -222,7 +222,62 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
   #buildcard{ bottom:calc(var(--safe-b) + 12px); }
   #banner{ top:22%; }
 }
+#flash{ position:absolute; inset:0; z-index:6; pointer-events:none; opacity:0; background:radial-gradient(circle,rgba(255,255,255,0) 35%,rgba(255,236,160,.8) 100%); }
+#flash.go{ animation:flashA .26s ease-out; }
+@keyframes flashA{ 0%{opacity:1} 100%{opacity:0} }
+#streak{ position:absolute; pointer-events:none; right:calc(14px + var(--safe-r)); bottom:calc(clamp(96px,23vmin,128px) + 44px + var(--safe-b)); padding:5px 12px 6px;
+  font-family:var(--display); font-size:19px; color:#fff; background:var(--bonk); text-shadow:2px 2px 0 #221407; transform:rotate(-3deg); }
+#streak.pop{ animation:streakPop .32s cubic-bezier(.3,1.7,.5,1); }
+@keyframes streakPop{ 0%{transform:rotate(-3deg) scale(.6)} 60%{transform:rotate(-3deg) scale(1.25)} 100%{transform:rotate(-3deg) scale(1)} }
+.end-stars{ font-family:var(--display); font-size:38px; letter-spacing:.08em; color:var(--gold); text-shadow:2px 2px 0 var(--shadowc); margin:0 0 4px; }
+.end-stars .off{ color:var(--panel2); }
+.end-best{ font-weight:800 !important; font-size:13px !important; color:var(--muted); margin:-4px 0 12px !important; }
+.tip{ font-size:13px; font-weight:700; color:var(--muted); line-height:1.35; margin:0; padding-top:8px; border-top:2px solid var(--panel2); }
+.how b{ color:var(--bonk-d); }
+#fade{ position:absolute; inset:0; z-index:95; display:flex; align-items:center; justify-content:center; background:#6cc8ee; opacity:0; pointer-events:none; transition:opacity .4s ease;
+  font-family:var(--display); font-size:30px; color:#fff; text-shadow:3px 3px 0 #221407; }
+#fade.on{ opacity:1; pointer-events:auto; }
+#hud-btns{ display:flex; flex-direction:column; gap:8px; flex:none; }
+#btn-hats{ width:44px; height:44px; padding:0; display:grid; place-items:center; flex:none; background:var(--panel); position:relative; }
+#btn-hats svg{ width:30px; height:30px; }
+#hat-dot{ position:absolute; top:-7px; right:-7px; width:17px; height:17px; border-radius:50%; background:var(--bonk); border:2px solid var(--line); animation:throb .5s ease-in-out infinite alternate; }
+.l1 #res{ flex-wrap:wrap; justify-content:flex-end; max-width:132px; }
+.l1 .rp{ font-size:16px; padding:2px 8px 2px 4px; }
+.l1 .rp svg{ width:19px; height:19px; }
+.l1 #objective{ max-width:min(calc(100vw - 246px), 330px); min-width:132px; }
+.fl.crystal{ color:#9be8ff; }
+#talk{ position:absolute; z-index:31; left:50%; transform:translateX(-50%); bottom:calc(var(--safe-b) + 154px); width:min(88vw,340px); padding:7px 10px; display:flex; gap:10px; align-items:center; }
+#talk.in{ animation:cardIn .25s cubic-bezier(.2,.9,.3,1.2); }
+#talk .pic{ width:48px; height:48px; flex:none; border:3px solid var(--line); overflow:hidden; background:#cfeaf7; }
+#talk .pic svg{ width:100%; height:100%; display:block; }
+#talk .who{ font-family:var(--display); font-size:12px; color:var(--bonk-d); }
+#talk .tt{ font-weight:800; font-size:14px; line-height:1.2; flex:1; }
+#talk .cta{ width:auto; flex:none; font-size:16px; padding:8px 12px; }
+.qb-head{ display:flex; gap:12px; align-items:center; margin-bottom:10px; }
+.qpic{ width:64px; height:64px; flex:none; border:3px solid var(--line); overflow:hidden; background:#cfeaf7; }
+.qpic svg{ width:100%; height:100%; display:block; }
+.qb-head h2{ margin:0; font-size:22px; line-height:1.05; }
+.qb-head .who{ font-family:var(--display); font-size:12px; color:var(--bonk-d); margin-bottom:2px; }
+#qb-text{ font-weight:700; font-size:15.5px; line-height:1.42; margin:0 0 10px; }
+.qgoal{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.qgoal .gl{ flex:1 1 100%; background:var(--panel2); border:2px solid var(--line); padding:6px 9px; font-weight:800; font-size:14px; line-height:1.3; }
+.qgoal .cost{ flex:1 1 28%; }
+.qrew{ display:flex; gap:10px; align-items:center; background:var(--panel2); border:2px dashed var(--line); padding:7px 9px; margin-bottom:10px; }
+.hat-ic{ width:46px; height:46px; flex:none; border:3px solid var(--line); background:#cfeaf7; display:grid; place-items:center; }
+.hat-ic svg{ width:36px; height:36px; }
+.hat-nm{ font-family:var(--display); font-size:15px; line-height:1.1; }
+.hat-pk{ font-size:12.5px; font-weight:700; color:var(--muted); line-height:1.25; margin-top:2px; }
+.hat-row{ display:flex; gap:10px; align-items:center; padding:8px 0; border-top:2px solid var(--panel2); }
+.hat-tx{ flex:1; min-width:0; }
+.hat-row.locked .hat-ic{ filter:grayscale(1) brightness(.62); }
+.hat-row.locked .hat-nm{ color:var(--muted); }
+.hat-row .cta{ width:auto; flex:none; font-size:14px; padding:7px 11px; }
+.cta.sm{ width:auto; font-size:17px; padding:9px 18px; }
+@media (max-height:520px){ #talk{ bottom:calc(var(--safe-b) + 12px); } }
 @media (prefers-reduced-motion: reduce){
+  #hat-dot{ animation:none; }
+  #flash.go{ animation:none; }
+  #streak.pop{ animation:none; }
   #banner.show, #toast.show{ animation-duration:2.4s; }
   .cta.ready, #noggin.hot, #btn-bonk.hinted::after, #hint-stick .dot{ animation:none; }
 }
@@ -232,6 +287,7 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 <div id="app">
   <canvas id="gl" aria-label="Hard Head: a 3D game world"></canvas>
   <div id="vig"></div>
+  <div id="flash"></div>
   <div id="fx"></div>
 
   <header id="hud" class="hidden">
@@ -246,15 +302,18 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
         <div class="rp chip hidden" id="rp-stone"><span data-ico="stone"></span><b id="n-stone">0</b></div>
         <div class="rp chip hidden" id="rp-wood"><span data-ico="wood"></span><b id="n-wood">0</b></div>
         <div class="rp chip hidden" id="rp-gold"><span data-ico="gold"></span><b id="n-gold">0</b></div>
+        <div class="rp chip hidden" id="rp-crystal"><span data-ico="crystal"></span><b id="n-crystal">0</b></div>
       </div>
       <div id="noggin" class="chip hidden" title="Head: fills when you bonk. Full means dizzy.">
         <span data-ico="head"></span>
         <div class="bar"><i id="noggin-fill"></i></div>
       </div>
     </div>
+    <div id="hud-btns">
+    <button id="btn-hats" class="chip pressable hidden" aria-label="Hats"><svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.6" stroke-linejoin="round"><path d="M6 28 Q20 4 34 28z" fill="#ffc21a"/><rect x="3" y="27" width="34" height="6" rx="2" fill="#e0a010"/><circle cx="20" cy="23" r="3.2" fill="#fff6b0"/></svg><i id="hat-dot" class="hidden"></i></button>
     <button id="btn-menu" class="chip pressable" aria-label="Pause and settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h14"/></svg>
-    </button>
+    </button></div>
   </header>
 
   <div id="bubble" class="chip hidden" role="status" aria-live="polite">
@@ -287,6 +346,8 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
     <button class="cta pressable" id="bc-go">Build</button>
   </div>
 
+  <div id="talk" class="chip hidden"><div class="pic" id="talk-pic"></div><div class="tt"><div class="who">Mabel</div><div id="talk-tx"></div></div><button class="cta pressable" id="talk-go">Talk</button></div>
+
   <div id="controls" class="hidden">
     <div id="stick"><i></i></div>
     <div id="hint-stick" class="hidden"><div class="base"></div><div class="dot"></div><div class="lab">Drag to walk</div></div>
@@ -296,6 +357,7 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
       <span>BONK</span>
     </button>
     <div id="bonk-key" class="hidden">or hold Space</div>
+    <div id="streak" class="chip hidden" aria-live="polite"></div>
   </div>
 
   <div class="overlay" id="ov-start">
@@ -305,9 +367,11 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
     </div>
     <div class="start-foot">
       <p id="webgl-fail" class="hidden">This browser can’t run 3D graphics. Try a recent Chrome, Safari or Firefox.</p>
-      <p class="how">Drag to walk. Tap to bonk. Hold to charge, then let go in the green.</p>
+      <p class="how"><b>Drag</b> to walk. <b>Tap</b> to bonk. <b>Hold</b> to charge, then <b>let go in the green</b> for a perfect hit.</p>
+      <p class="how hidden" id="best-line"></p>
       <button class="cta big pressable" id="btn-start">Start bonking</button>
-      <p class="studio">A Weird Demon Games prototype &middot; about 7 minutes</p>
+      <button class="cta ghost sm pressable" id="btn-l1">Level 1: Bonk Isles</button>
+      <p class="studio">A Weird Demon Games prototype &middot; tutorial about 7 minutes</p>
     </div>
   </div>
 
@@ -322,13 +386,32 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
     </div>
   </div>
 
+  <div id="board" class="sheet-wrap hidden">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Quest from Mabel">
+      <div class="qb-head"><div class="qpic" id="qb-pic"></div><div><div class="who" id="qb-num">Mabel</div><h2 id="qb-title"></h2></div></div>
+      <p id="qb-text"></p>
+      <div class="qgoal" id="qb-goal"></div>
+      <div class="qrew hidden" id="qb-reward"></div>
+      <div class="row2"><button class="cta ghost pressable" id="qb-close">Later</button><button class="cta pressable" id="qb-go">Accept quest</button></div>
+    </div>
+  </div>
+
+  <div id="wardrobe" class="sheet-wrap hidden">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Hats">
+      <h2>Hats</h2>
+      <div id="hat-list"></div>
+      <div class="row2"><button class="cta pressable" id="hat-close">Done</button></div>
+    </div>
+  </div>
+
   <div id="menu" class="sheet-wrap hidden">
-    <div class="sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Paused">
       <h2>Paused</h2>
       <div class="set-row"><div>Sound<small>Bonks, thunks, cheers</small></div><div class="seg" data-set="sound"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>Music<small>A jaunty little loop</small></div><div class="seg" data-set="music"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>Screen shake<small>Bonks rattle the camera</small></div><div class="seg" data-set="shake"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>Vibration<small>Phone buzzes on bonks</small></div><div class="seg" data-set="vib"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
+      <p class="tip">Reminder: tap = small bonk. Hold and release in the green = PERFECT (4x damage). A full head means dizzy, so pace yourself.</p>
       <div class="row2"><button class="cta ghost pressable" id="btn-restart">Start over</button><button class="cta pressable" id="btn-resume">Resume</button></div>
     </div>
   </div>
@@ -336,12 +419,16 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
   <div class="overlay hidden" id="ov-end">
     <div class="panel-box">
       <div id="end-art" aria-hidden="true" style="display:flex;justify-content:center"></div>
-      <h2>A monument to your forehead.</h2>
+      <h2 id="end-title">A monument to your forehead.</h2>
+      <div class="end-stars" id="end-stars" role="img"></div>
+      <p class="end-best" id="end-best"></p>
       <p class="review" id="end-review"></p>
       <div class="stats" id="end-stats"></div>
-      <div class="btns"><button class="cta pressable" id="btn-free">Keep bonking</button><button class="cta ghost pressable" id="btn-again">Play again</button></div>
+      <div class="btns"><button class="cta pressable hidden" id="btn-next">Level 1 &rarr;</button><button class="cta pressable" id="btn-free">Keep bonking</button><button class="cta ghost pressable" id="btn-share">Share result</button><button class="cta ghost pressable" id="btn-again">Play again</button></div>
     </div>
   </div>
+
+  <div id="fade">Level 1</div>
 
   <div id="loading">Warming up the forehead&hellip;</div>
 </div>
@@ -377,12 +464,16 @@ function srand() { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(se
 /* ---------- state ---------- */
 var S = { sound: true, music: true, shake: !REDUCED, vib: true };
 var G = { started: false, playing: false, paused: false, title: true, time: 0, playTime: 0, hitstop: 0, cine: null, orbit: false, shakeAmt: 0,
-  step: -1, stepT: 0, stepDone: false, lastProgress: 0, free: false, ended: false, flags: {} };
-var inv = { stone: 0, wood: 0, gold: 0 };
-var seen = { stone: false, wood: false, gold: false };
-var stats = { builds: 0, bonks: 0, perfects: 0, rocks: 0, trees: 0, golds: 0, dizzy: 0, coconuts: 0, sheep: 0, bounces: 0 };
+  step: -1, stepT: 0, stepDone: false, lastProgress: 0, free: false, ended: false, level: 0, sheet: null, flags: {} };
+var SAVE_KEY = "hardhead.v1";
+function loadSave() { try { var r = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"); return r && typeof r === "object" ? r : {}; } catch (e) { return {}; } }
+function writeSave(o) { try { var c = loadSave(); for (var k in o) c[k] = o[k]; localStorage.setItem(SAVE_KEY, JSON.stringify(c)); } catch (e) {} }
+(function () { var sv = loadSave(); ["sound", "music", "shake", "vib"].forEach(function (k) { if (typeof sv[k] === "boolean") S[k] = sv[k]; }); })();
+var inv = { stone: 0, wood: 0, gold: 0, crystal: 0 };
+var seen = { stone: false, wood: false, gold: false, crystal: false };
+var stats = { crystals: 0, bigs: 0, bestStreak: 0, builds: 0, bonks: 0, perfects: 0, rocks: 0, trees: 0, golds: 0, dizzy: 0, coconuts: 0, sheep: 0, bounces: 0 };
 var P = { pos: new V3(0, 0, 3.5), face: new V3(0, 0, -1), yaw: Math.PI, charging: false, charge: 0, chargeT: 0, lunge: null, cool: 0, noggin: 0, lastBonk: -9,
-  dizzy: 0, hat: false, stun: 0, walkT: 0, speed: 0, inZone: false, fakeU: 0, hop: 0, nogShown: false };
+  dizzy: 0, hat: false, hatId: "none", stun: 0, walkT: 0, speed: 0, inZone: false, fakeU: 0, hop: 0, nogShown: false };
 
 /* ---------- tiny timer + tween helpers (run on real time, so hit-stop never freezes cutscenes) ---------- */
 var timers = [], tweens = [];
@@ -432,7 +523,7 @@ var snd = {
   zone: function () { tone(1200, .07, "square", .05); tone(1800, .09, "sine", .06, .03); },
   whoosh: function () { noise(.14, .08, 1800); tone(300, .12, "sine", .04, 0, 120); },
   bonk: function (p) { tone(150 - 40 * p, .17, "sine", .36, 0, 58); tone(540, .05, "triangle", .12, 0, 260); noise(.06, .1, 900); },
-  perfect: function () { snd.bonk(1); tone(1046, .12, "triangle", .12, .03); tone(1568, .22, "sine", .1, .1); },
+  perfect: function (n) { var s = 1 + Math.min(n || 0, 7) * .07; snd.bonk(1); tone(1046 * s, .12, "triangle", .12, .03); tone(1568 * s, .22, "sine", .1, .1); if (n > 1) tone(2093 * s, .2, "sine", .06, .16); },
   tink: function () { tone(1900, .07, "square", .04); tone(2500, .14, "sine", .07, .02); tone(200, .1, "triangle", .12, .01, 110); },
   crack: function () { noise(.26, .26, 1600); tone(120, .22, "sawtooth", .08, 0, 46); },
   wood: function () { tone(250, .11, "triangle", .2, 0, 130); noise(.05, .1, 2600); },
@@ -654,7 +745,7 @@ function buildDunk() {
   // charge glow ring on the ground
   D.charge = new THREE.Mesh(new THREE.RingGeometry(.7, .95, 24), new THREE.MeshBasicMaterial({ color: 0xffd93d, transparent: true, opacity: .0, side: THREE.DoubleSide }));
   D.charge.rotation.x = -Math.PI / 2; D.charge.position.y = .05; root.add(D.charge);
-  dunk = D; root.position.copy(P.pos); root.rotation.y = P.yaw;
+  buildHats(D); dunk = D; root.position.copy(P.pos); root.rotation.y = P.yaw;
 }
 
 /* ---------- Mabel, the pigeon foreman ---------- */
@@ -765,7 +856,7 @@ function buildForge(g) {
   signBoard(g, ["HATS", "(ROCK)"], 1.25, .62, -1.55, .5, 1.55);
   g.userData.chimney = new V3(-.7, 2.9, -.5);
 }
-function buildHut(g) {
+function buildHut(g, sign) {
   var wood = mat(0xd9a066), dark = mat(0x6b4426), roof = mat(0xb8452a), stone = mat(0x8d97a3);
   M(sub(g, 0, 0, 0), boxG(3.6, .25, 3.2), mat(0x9a6a3a), 0, 0, 0);
   var wl = sub(g, 0, .25, 0);
@@ -778,7 +869,7 @@ function buildHut(g) {
   var rf = sub(g, 0, 1.85, 0);
   var r = M(rf, coneG(2.3, 1.5, 4), roof, 0, 0, 0); r.rotation.y = Math.PI / 4;
   M(sub(g, -.9, 2.3, -.5), boxG(.45, 1.0, .45), stone, 0, 0, 0);
-  signBoard(g, ["HOME", "(ISH)"], 1.15, .58, 2.1, .45, 1.9);
+  signBoard(g, sign || ["HOME", "(ISH)"], 1.15, .58, 2.1, .45, 1.9);
   g.userData.chimney = new V3(-.9, 3.4, -.5); g.userData.roof = new V3(.2, 3.25, 0);
 }
 function buildBridge(g) {
@@ -830,10 +921,12 @@ function buildPlots() {
 }
 
 /* ---------- particles ---------- */
-var parts = [], puffs = [];
+var parts = [], puffs = [], rings = [];
 function buildParticlePools() {
   var g = new THREE.TetrahedronGeometry(.17, 0);
   for (var i = 0; i < 150; i++) { var m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xffffff })); m.visible = false; scene.add(m); parts.push({ m: m, v: new V3(), spin: new V3(), life: 0, max: 1, grav: -16, on: false, size: 1 }); }
+  var rgG = new THREE.RingGeometry(.62, .8, 28);
+  for (var r = 0; r < 6; r++) { var rm = new THREE.Mesh(rgG, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .85, side: THREE.DoubleSide, depthWrite: false, depthTest: false })); rm.visible = false; rm.renderOrder = 10; scene.add(rm); rings.push({ m: rm, life: 0, max: .4, on: false, size: 3 }); }
   var pg = new THREE.SphereGeometry(.3, 8, 6);
   for (var j = 0; j < 40; j++) { var q = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .8, depthWrite: false })); q.visible = false; scene.add(q); puffs.push({ m: q, life: 0, max: 1, size: 1, on: false, rise: 0 }); }
 }
@@ -855,7 +948,21 @@ function puff(pos, size, color, life, rise) {
     p.m.position.copy(pos); p.m.visible = true; p.m.material.color.setHex(color || 0xffffff); p.m.scale.setScalar(.2); return;
   }
 }
+function shockwave(pos, color, size, life) {
+  for (var i = 0; i < rings.length; i++) { var r = rings[i]; if (r.on) continue; r.on = true; r.life = 0; r.max = life || .4; r.size = size || 3; r.m.position.copy(pos); r.m.material.color.setHex(color || 0xffffff); r.m.visible = true; r.m.scale.setScalar(.2); return; }
+}
+function flash() { if (REDUCED) return; var f = $("flash"); f.classList.remove("go"); void f.offsetWidth; f.classList.add("go"); }
+function punch(a) { if (S.shake && !REDUCED) G.punch = Math.max(G.punch || 0, a); }
+function showStreak(n) {
+  var el = $("streak"); if (n < 2) { el.classList.add("hidden"); return; }
+  el.textContent = "PERFECT x" + n; el.classList.remove("hidden", "pop"); void el.offsetWidth; el.classList.add("pop");
+}
 function updateParticles(dt) {
+  for (var ri = 0; ri < rings.length; ri++) {
+    var rr = rings[ri]; if (!rr.on) continue;
+    rr.life += dt; var ru = rr.life / rr.max; if (ru >= 1) { rr.on = false; rr.m.visible = false; continue; }
+    rr.m.quaternion.copy(camera.quaternion); rr.m.scale.setScalar(rr.size * easeOut(ru) + .2); rr.m.material.opacity = .85 * (1 - ru);
+  }
   for (var i = 0; i < parts.length; i++) {
     var p = parts[i]; if (!p.on) continue;
     p.life += dt; if (p.life >= p.max) { p.on = false; p.m.visible = false; continue; }
@@ -897,6 +1004,7 @@ function updateFloaters(dt) {
 /* ---------- pickups ---------- */
 var PK_GEO = { stone: new THREE.DodecahedronGeometry(.2, 0), wood: new THREE.CylinderGeometry(.11, .11, .5, 6), gold: new THREE.OctahedronGeometry(.24, 0) };
 var PK_MAT = { stone: toon(0xaab3be), wood: toon(0xa4663a), gold: toon(0xf5b921, { emissive: 0x5a3c00 }) };
+PK_GEO.crystal = new THREE.OctahedronGeometry(.21, 0); PK_MAT.crystal = toon(0x7fe3ff, { emissive: 0x15405a });
 function dropItems(type, n, pos, dir) {
   for (var i = 0; i < n; i++) {
     var m = new THREE.Mesh(PK_GEO[type], PK_MAT[type]); outline(m, .035); scene.add(m);
@@ -919,17 +1027,17 @@ function updatePickups(dt) {
     } else {
       var dx = P.pos.x - k.m.position.x, dz = P.pos.z - k.m.position.z, dy = (P.pos.y + .8) - k.m.position.y, d = Math.sqrt(dx * dx + dz * dz + dy * dy);
       if (d < .75) { collect(k, i); continue; }
-      if (d < 8 || k.t > 3) {
+      if (d < 8 * HAT().magnet || k.t > 3) {
         var sp = Math.min(22, 7 + (k.t - .7) * 12) * dt / d;
         k.m.position.x += dx * sp; k.m.position.y += dy * sp; k.m.position.z += dz * sp;
-        k.m.rotation.y += dt * 9;
+        k.m.rotation.y += dt * 9; if (k.type === "crystal" && Math.random() < .4) burst(k.m.position, [0x7fe3ff, 0xb99cff], 1, .3, .8, .4, .5);
       }
     }
   }
 }
 function collect(k, i) {
   scene.remove(k.m); pickups.splice(i, 1);
-  inv[k.type]++; seen[k.type] = true; G.lastProgress = G.time;
+  inv[k.type]++; GATH[k.type] = (GATH[k.type] || 0) + 1; seen[k.type] = true; if (k.type === "crystal") P.sparkle = 4; G.lastProgress = G.time;
   coinChain = (G.time - lastCoin < .4) ? coinChain + 1 : 0; lastCoin = G.time; snd.coin(coinChain);
   updateRes(k.type);
 }
@@ -937,12 +1045,14 @@ function collect(k, i) {
 /* ---------- ground / walking ---------- */
 function plotBuilt(id) { return plots[id] && plots[id].built; }
 function walkable(x, z) {
+  if (G.level === 1) return walkable1(x, z);
   if (x * x + z * z <= 14.2 * 14.2) return true;
   var ex = x - 30; if (ex * ex + z * z <= 8.7 * 8.7) return true;
   if (plotBuilt("bridge") && x >= BRIDGE_X0 && x <= BRIDGE_X1 && Math.abs(z) <= 1.15) return true;
   return false;
 }
-function groundY(x, z) { return (plotBuilt("bridge") && x > 15.2 && x < 20.4 && Math.abs(z) < 1.4) ? .16 : 0; }
+function groundY(x, z) {
+  if (G.level === 1) return groundY1(x, z); return (plotBuilt("bridge") && x > 15.2 && x < 20.4 && Math.abs(z) < 1.4) ? .16 : 0; }
 function pushOut(pos, r) {
   for (var i = 0; i < T.length; i++) {
     var t = T[i]; if (!t.alive || t.kind === "sheep" || t.noCol) continue;
@@ -963,7 +1073,7 @@ function setupInput() {
   var app = $("app"), stick = $("stick"), thumb = stick.firstElementChild, R = 54;
   app.addEventListener("pointerdown", function (e) {
     if (!canAct() || inp.stickId !== null) return;
-    if (e.target.closest("#btn-bonk,#hud,#buildcard,#bubble,.sheet-wrap,#story,#ov-end")) return;
+    if (e.target.closest("#btn-bonk,#hud,#buildcard,#talk,#bubble,.sheet-wrap,#story,#ov-end")) return;
     if (e.pointerType === "touch" && e.clientX > innerWidth * .62) return;
     inp.stickId = e.pointerId; inp.sx = e.clientX; inp.sy = e.clientY;
     stick.style.left = e.clientX + "px"; stick.style.top = e.clientY + "px"; stick.classList.add("on"); thumb.style.transform = "translate(0,0)";
@@ -983,12 +1093,16 @@ function setupInput() {
   bb.addEventListener("pointerup", up); bb.addEventListener("pointercancel", up); bb.addEventListener("lostpointercapture", up);
   bb.addEventListener("contextmenu", function (e) { e.preventDefault(); });
   window.addEventListener("keydown", function (e) {
-    var k = e.key.toLowerCase();
-    if (k === "escape" || k === "p") { if (G.playing) toggleMenu(); return; }
-    if (menuOpen() || !G.playing) return;
+    var k = e.key.toLowerCase(), ae = document.activeElement, onBtn = ae && ae.tagName === "BUTTON";
+    if (!onBtn && (k === "enter" || k === " ")) {
+      if (!$("ov-start").classList.contains("hidden") && !$("btn-start").disabled) { e.preventDefault(); $("btn-start").click(); return; }
+      if (!$("story").classList.contains("hidden")) { e.preventDefault(); $("story-next").click(); return; }
+    }
+    if (k === "escape" || k === "p") { if (G.sheet && !menuOpen()) { closeSheet(); return; } if (G.playing) toggleMenu(); return; }
+    if (menuOpen() || G.sheet || !G.playing) return;
     if ("wasd".indexOf(k) >= 0 && k.length === 1 || k.indexOf("arrow") === 0) { inp.keys[k] = true; e.preventDefault(); }
     if (k === " ") { e.preventDefault(); if (!e.repeat) { $("btn-bonk").classList.add("down"); startCharge(); } }
-    if ((k === "e" || k === "enter") && !e.repeat) tryBuild();
+    if ((k === "e" || k === "enter") && !e.repeat) { if (L1.talkOn) openBoard(); else tryBuild(); }
   });
   window.addEventListener("keyup", function (e) {
     var k = e.key.toLowerCase(); inp.keys[k] = false;
@@ -1009,21 +1123,20 @@ function moveVec() {
 }
 
 /* ---------- the bonk ---------- */
-function zone() { return P.hat ? [.60, .92] : [.66, .88]; }
+function zone() { return HAT().zone; }
 function addNog(v) {
-  if (P.hat) v *= .5;
+  v *= HAT().nog;
   P.noggin = Math.min(100, P.noggin + v); P.nogShown = true;
   if (P.noggin >= 100 && P.dizzy <= 0) startDizzy();
 }
 function startDizzy() {
-  P.dizzy = 2.4; stats.dizzy++; P.charging = false; P.charge = 0; dunk.stars.visible = true;
+  P.dizzy = 2.4 * (HAT().dizzyT || 1); stats.dizzy++; P.charging = false; P.charge = 0; dunk.stars.visible = true;
   $("vig").classList.add("dizzy"); snd.dizzy(); floater(P.pos.clone().setY(2.9), "Dizzy…", "ow", 1.0);
   once("dizzy", function () { say("That wobble means your head is full. Wait it out. The wobble is free.", 1); });
 }
 function startCharge() {
   if (!canAct() || P.dizzy > 0 || P.lunge || P.cool > 0 || P.stun > 0 || P.charging) return;
   P.charging = true; P.charge = 0; P.chargeT = 0; P.inZone = false; snd.charge();
-  if (G.stepId === "boulder") $("gauge-tip").classList.remove("hidden");
 }
 function releaseCharge() {
   if (!P.charging) return;
@@ -1045,10 +1158,10 @@ function pickTarget(maxD, maxAng) {
 function doBonk(c) {
   var z = zone(), kind, dmg, perfect = false;
   if (c < .16) { kind = "tap"; dmg = 1; }
-  else if (c >= z[0] && c <= z[1]) { kind = "perfect"; dmg = 4; perfect = true; }
+  else if (c >= z[0] && c <= z[1]) { kind = "perfect"; dmg = 4; perfect = true; G.flags.hadPerfect = true; }
   else if (c > z[1]) { kind = "over"; dmg = 2; }
   else { kind = "charged"; dmg = 2; }
-  if (P.hat) dmg += 1;
+  dmg += HAT().dmg;
   stats.bonks++; if (kind === "perfect") stats.perfects++;
   var tg = pickTarget(3.4, 1.3), from = P.pos.clone(), to = P.pos.clone(), dist = 1.5;
   if (tg) {
@@ -1070,7 +1183,7 @@ function resolveBonk(L) {
     var dx = tg.g.position.x - P.pos.x, dz = tg.g.position.z - P.pos.z;
     if (Math.sqrt(dx * dx + dz * dz) - tg.radius > 1.3) tg = null;
   }
-  if (!tg) { addNog(3); puff(P.pos.clone().add(new V3(P.face.x * .9, .3, P.face.z * .9)), .8, 0xffffff, .4, .3); once("whiff", function () { say("That was air. You’ve bonked air. Air is not a resource.", 0); }); return; }
+  if (!tg) { G.perfStreak = 0; showStreak(0); addNog(3); puff(P.pos.clone().add(new V3(P.face.x * .9, .3, P.face.z * .9)), .8, 0xffffff, .4, .3); once("whiff", function () { say("That was air. You’ve bonked air. Air is not a resource.", 0); }); return; }
   hitTarget(tg, L);
 }
 var WORDS_TAP = ["BONK!", "THUNK!", "DONK!", "CLONK!", "BOINK!"], WORDS_CHARGE = ["KA-BONK!", "WHUMP!", "KRONK!"];
@@ -1080,10 +1193,13 @@ function hitTarget(tg, L) {
   P.lastBonk = G.time; G.lastProgress = G.time;
   var gp = tg.g.position, hp = new V3(gp.x, 1.2 + (tg.kind === "tree" ? .6 : 0), gp.z), toP = new V3(P.pos.x - gp.x, 0, P.pos.z - gp.z).normalize();
   hp.addScaledVector(toP, tg.radius * .5);
+  shockwave(hp, L.perfect ? 0xffe14d : 0xffffff, L.perfect ? 4.4 : 1.6 + pw * 1.6, L.perfect ? .45 : .28);
+  if (L.perfect) { flash(); punch(1); } else punch(pw * .5);
   if (tg.kind === "sheep") { launchGary(L); return; }
   if (tg.kind === "statue") { tg.wob = 1; snd.dong(); floater(hp, "DONGGG", "bw big", 1.4); once("statueBonk", function () { say("I said don’t bonk the monument.", 1); }); return; }
-  if (L.dmg < tg.hard) {
-    stats.bounces++; addNog(20); snd.tink(); tg.wob = 1; floater(hp, "TINK", "bw", 1.2); burst(hp, 0xffffff, 5, 4, 4, .7, .4);
+  var effD = L.dmg + (tg.kind === "tree" ? HAT().treeDmg : 0), effH = tg.hard - ((tg.kind === "gold" || tg.kind === "crystal") ? HAT().gemEase : 0);
+  if (effD < effH) {
+    stats.bounces++; addNog(20); G.perfStreak = 0; showStreak(0); snd.tink(); tg.wob = 1; floater(hp, "TINK", "bw", 1.2); burst(hp, 0xffffff, 5, 4, 4, .7, .4);
     P.stun = .25; P.pos.x += toP.x * .5; P.pos.z += toP.z * .5; if (!walkable(P.pos.x, P.pos.z)) { P.pos.x -= toP.x * .5; P.pos.z -= toP.z * .5; }
     G.bounceCount = (G.bounceCount || 0) + 1;
     if (G.bounceCount % 2 === 1) {
@@ -1092,13 +1208,13 @@ function hitTarget(tg, L) {
     }
     return;
   }
-  var kindCol = tg.kind === "tree" ? [0x70cc6c, 0x8a5a33] : tg.kind === "gold" ? [0xf5b921, 0xb4bdc8] : [0xb4bdc8, 0x8d97a3];
-  if (L.perfect) { snd.perfect(); floater(hp, "PERFECT NOGGIN!", "perfect", 1.6); G.perfStreak = (G.perfStreak || 0) + 1; }
-  else { G.perfStreak = 0; snd.bonk(pw); floater(hp, pick(L.kind === "tap" ? WORDS_TAP : WORDS_CHARGE), L.kind === "tap" ? "bw" : "bw big", 1.2); }
+  var kindCol = tg.kind === "tree" ? [0x70cc6c, 0x8a5a33] : tg.kind === "crystal" ? [0x7fe3ff, 0xb99cff] : tg.kind === "gold" ? [0xf5b921, 0xb4bdc8] : [0xb4bdc8, 0x8d97a3];
+  if (L.perfect) { G.perfStreak = (G.perfStreak || 0) + 1; stats.bestStreak = Math.max(stats.bestStreak, G.perfStreak); snd.perfect(G.perfStreak); floater(hp, G.perfStreak > 1 ? "PERFECT x" + G.perfStreak + "!" : "PERFECT NOGGIN!", "perfect", 1.6); showStreak(G.perfStreak); }
+  else { G.perfStreak = 0; showStreak(0); snd.bonk(pw); floater(hp, pick(L.kind === "tap" ? WORDS_TAP : WORDS_CHARGE), L.kind === "tap" ? "bw" : "bw big", 1.2); }
   if (L.kind === "over") { floater(hp.clone().add(new V3(0, .9, 0)), "Too much forehead", "ow", 1.0); }
   if (tg.kind === "tree") snd.wood();
   addNog(L.perfect ? 6 : L.kind === "tap" ? 10 : L.kind === "over" ? 26 : 16);
-  tg.hp -= L.dmg; tg.wob = 1;
+  tg.hp -= effD; tg.wob = 1;
   burst(hp, kindCol, L.perfect ? 12 : 6, 5, 5, 1, .6);
   if (tg.kind === "tree") {
     tg.sway = 1;
@@ -1108,13 +1224,13 @@ function hitTarget(tg, L) {
   stepEvents();
 }
 function breakTarget(tg, L, dir) {
-  var n = tg.yield + (L.perfect ? 1 : 0), gp = tg.g.position.clone();
+  var n = tg.yield + (L.perfect ? 1 : 0) + (HAT().yieldB[tg.res] || 0), gp = tg.g.position.clone();
   tg.alive = false; tg.respawn = G.time + tg.rt;
   if (tg.kind === "tree") { tg.canopy.forEach(function (c) { c.visible = false; }); tg.trunk.scale.y = .3; stats.trees++; snd.woodBreak(); burst(gp.clone().setY(2.5), [0x70cc6c, 0x4fb05a], 14, 6, 6, 1.2, .9); }
-  else { tg.g.visible = false; if (tg.kind === "gold") stats.golds++; else stats.rocks++; snd.crack(); burst(gp.clone().setY(.8), tg.kind === "gold" ? [0xf5b921, 0xb4bdc8, 0x8d97a3] : [0xb4bdc8, 0x8d97a3, 0x9aa3ad], tg.big ? 22 : 14, 7, 7, 1.3, .9); }
+  else { tg.g.visible = false; if (tg.kind === "gold") stats.golds++; else if (tg.kind === "crystal") stats.crystals++; else stats.rocks++; if (tg.big) stats.bigs++; snd.crack(); burst(gp.clone().setY(.8), tg.kind === "crystal" ? [0x7fe3ff, 0xb99cff, 0xffffff] : tg.kind === "gold" ? [0xf5b921, 0xb4bdc8, 0x8d97a3] : [0xb4bdc8, 0x8d97a3, 0x9aa3ad], tg.big ? 22 : 14, 7, 7, 1.3, .9); }
   puff(gp.clone().setY(.5), 1.6, 0xe8e0d0, .6, .8);
   dropItems(tg.res, n, gp, dir); shake(.45);
-  floater(gp.clone().setY(2.2), "+" + n + " " + tg.res, "num " + tg.res, 1.6);
+  floater(gp.clone().setY(2.2), "+" + n + " " + tg.res, "num " + tg.res, 1.6); hatWord(tg, gp);
   if (tg.big) G.flags.bigBroke = true;
   tg.g.scale.set(1, 1, 1);
 }
@@ -1174,19 +1290,21 @@ function updateHazards(dt) {
 
 /* ---------- player frame update ---------- */
 function updatePlayer(dt) {
+  if (G.perfStreak && G.time - P.lastBonk > 4) { G.perfStreak = 0; showStreak(0); }
   P.cool = Math.max(0, P.cool - dt); P.stun = Math.max(0, P.stun - dt);
   if (P.dizzy > 0) {
     P.dizzy -= dt; P.noggin = lerp(P.noggin, 35, 1 - Math.exp(-1.6 * dt));
     if (P.dizzy <= 0) { dunk.stars.visible = false; $("vig").classList.remove("dizzy"); P.noggin = Math.min(P.noggin, 40); }
-  } else if (P.noggin > 0 && G.time - P.lastBonk > .9 && !P.charging) P.noggin = Math.max(0, P.noggin - (P.hat ? 20 : 16) * dt);
+  } else if (P.noggin > 0 && G.time - P.lastBonk > .9 && !P.charging) P.noggin = Math.max(0, P.noggin - 16 * HAT().rec * dt);
   if (G.cine && P.charging) { P.charging = false; P.charge = 0; }
   if (P.charging) {
     P.chargeT += dt; P.charge = clamp(P.chargeT / 1.0, 0, 1);
     var z = zone(), inz = P.charge >= z[0] && P.charge <= z[1];
-    if (inz && !P.inZone) snd.zone(); P.inZone = inz;
+    P.tickT = (P.tickT || 0) - dt; if (P.tickT <= 0 && P.charge < 1 && P.chargeT > .15) { P.tickT = .09; tone(220 + P.charge * 700, .05, "triangle", .03); }
+    if (inz && !P.inZone) { snd.zone(); vibrate(12); } P.inZone = inz;
   } else P.inZone = false;
   var mv = G.cine ? { x: 0, y: 0, l: 0 } : moveVec();
-  var spd = 5.6 * (P.charging ? .45 : 1) * (P.dizzy > 0 ? .5 : 1) * (P.lunge ? 0 : 1) * (P.stun > 0 ? .25 : 1);
+  var spd = 5.6 * HAT().speed * (P.charging ? .45 : 1) * (P.dizzy > 0 ? .5 : 1) * (P.lunge ? 0 : 1) * (P.stun > 0 ? .25 : 1);
   var tx = mv.x * mv.l * spd, tz = mv.y * mv.l * spd;
   if (P.dizzy > 0) { tx += Math.sin(G.time * 5) * 1.6; tz += Math.cos(G.time * 4.3) * 1.6; }
   P.vel = P.vel || new V3(); P.vel.x = damp(P.vel.x, tx, 14, dt); P.vel.z = damp(P.vel.z, tz, 14, dt);
@@ -1232,7 +1350,7 @@ function animPlayer(dt) {
   D.mouth.scale.set(P.charging ? 1.2 : 1, P.charging ? 1.6 : 1, 1);
   D.bump.material.emissive.setHex(P.noggin > 60 ? 0xaa2200 : 0x4a1000);
   var bs = 1 + P.noggin / 100 * .5 + (P.charging ? .12 * P.charge : 0); D.bump.scale.set(1.25 * bs, .8 * bs, .5 * bs);
-  if (D.hat.visible) { D.hat.rotation.z = D.head.rotation.z * .5; }
+  var hc = D.hats && D.hats[P.hatId]; if (hc) hc.rotation.z = D.head.rotation.z * .5; if (D.prop) D.prop.rotation.y += dt * (P.hatId === "prop" ? 26 : 0);
   if (D.stars.visible) { D.stars.rotation.y += dt * 6; D.stars.children.forEach(function (s, i) { s.position.set(Math.cos(s.userData.a) * .75, Math.sin(t * 5 + i) * .08, Math.sin(s.userData.a) * .75); s.rotation.y += dt * 5; }); }
   D.charge.material.opacity = P.charging ? (P.inZone ? .95 : .35 + .3 * P.charge) : 0;
   if (P.charging) { var rs = .8 + P.charge * 1.4; D.charge.scale.set(rs, rs, rs); D.charge.material.color.setHex(P.inZone ? 0x6ff06f : 0xffd93d); }
@@ -1276,6 +1394,7 @@ var ICO = {
   gold: '<svg viewBox="0 0 24 24" stroke="#221407" stroke-width="2" stroke-linejoin="round"><path d="M12 2l8 8-8 12L4 10z" fill="#f5b921"/><path d="M4 10h16M12 2l-3 8 3 12 3-12z" fill="none" stroke-width="1.5"/></svg>',
   head: '<svg viewBox="0 0 28 28" stroke="#221407" stroke-width="2.2" stroke-linejoin="round"><circle cx="14" cy="15" r="11" fill="#f0b48a"/><path d="M6 8 Q14 1 22 8" fill="#ff6a4a" stroke-width="2"/><circle cx="10.5" cy="14.5" r="1.6" fill="#221407" stroke="none"/><circle cx="17.5" cy="14.5" r="1.6" fill="#221407" stroke="none"/><path d="M7.5 11l5 1.6M20.5 11l-5 1.6" stroke-linecap="round" stroke-width="2"/><path d="M10 20h8" stroke-linecap="round"/></svg>'
 };
+ICO.crystal = '<svg viewBox="0 0 24 24" stroke="#221407" stroke-width="2" stroke-linejoin="round"><path d="M12 2l6 7-6 13-6-13z" fill="#7fe3ff"/><path d="M6 9h12M12 2l-2.4 7L12 22l2.4-13z" fill="none" stroke-width="1.5"/></svg>';
 var ART = {
   dunk: '<svg viewBox="0 0 100 100" stroke="#221407" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><rect width="100" height="100" fill="#cfeaf7" stroke="none"/><path d="M26 100 Q28 78 50 78 Q72 78 74 100z" fill="#ff8a1f"/><circle cx="50" cy="46" r="31" fill="#f0b48a"/><path d="M30 30 Q50 14 70 30 Q50 26 30 30z" fill="#ff6a4a"/><circle cx="19" cy="48" r="6" fill="#f0b48a"/><circle cx="81" cy="48" r="6" fill="#f0b48a"/><path d="M33 40l14 5M67 40l-14 5" stroke-width="4.5"/><circle cx="39" cy="50" r="4.5" fill="#fff"/><circle cx="61" cy="50" r="4.5" fill="#fff"/><circle cx="40" cy="51" r="2" fill="#221407" stroke="none"/><circle cx="60" cy="51" r="2" fill="#221407" stroke="none"/><circle cx="50" cy="57" r="3.2" fill="#e39b72" stroke-width="2.5"/><path d="M41 67h18" stroke-width="4"/></svg>',
   dunkHat: '<svg viewBox="0 0 100 100" stroke="#221407" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><rect width="100" height="100" fill="#cfeaf7" stroke="none"/><path d="M26 100 Q28 78 50 78 Q72 78 74 100z" fill="#ff8a1f"/><circle cx="50" cy="50" r="31" fill="#f0b48a"/><path d="M17 38 Q50 -2 83 38z" fill="#8d97a3"/><rect x="15" y="36" width="70" height="8" rx="3" fill="#6f7985"/><circle cx="50" cy="31" r="4" fill="#fff2a8"/><circle cx="19" cy="55" r="6" fill="#f0b48a"/><circle cx="81" cy="55" r="6" fill="#f0b48a"/><path d="M33 52l14 4M67 52l-14 4" stroke-width="4.5"/><circle cx="39" cy="59" r="4.5" fill="#fff"/><circle cx="61" cy="59" r="4.5" fill="#fff"/><circle cx="40" cy="60" r="2" fill="#221407" stroke="none"/><circle cx="60" cy="60" r="2" fill="#221407" stroke="none"/><path d="M41 72h18" stroke-width="4"/></svg>',
@@ -1325,7 +1444,7 @@ function actBanner(big, small) {
 
 /* ---------- resources HUD ---------- */
 function updateRes(bumpType) {
-  ["stone", "wood", "gold"].forEach(function (k) {
+  ["stone", "wood", "gold", "crystal"].forEach(function (k) {
     $("n-" + k).textContent = inv[k];
     if (seen[k]) $("rp-" + k).classList.remove("hidden");
   });
@@ -1347,6 +1466,7 @@ function setObjective(text, costs) {
   refreshObjective(true);
 }
 function refreshObjective(force) {
+  if (G.level === 1) { refreshQuestChip(); return; }
   var st = STEPS[G.step]; if (!st || !obj) return;
   var cur = 0, max = 0;
   if (st.plot) { var c = plots[st.plot].cost, bt = plots[st.plot].built; for (var k in c) { cur += bt ? c[k] : Math.min(inv[k], c[k]); max += c[k]; } }
@@ -1384,7 +1504,7 @@ function updateBuildCard() {
     if (have < need) ok = false;
   });
   var go = $("bc-go"); go.disabled = !ok; go.classList.toggle("ready", ok);
-  go.textContent = ok ? "Build it" : "Not enough yet";
+  go.textContent = ok ? (COARSE ? "Build it" : "Build it [E]") : "Not enough yet";
 }
 function tryBuild() {
   if (!cardPlot || !canAct()) return;
@@ -1409,7 +1529,7 @@ function doBuild(p) {
       var lu = (tt - i * stag) / .42;
       if (lu > 0) {
         c.scale.setScalar(Math.max(.001, easeBack(lu)));
-        if (!c.userData.shown) { c.userData.shown = true; snd.hammer(0); if (i % 2 === 0) snd.stomp(); puff(new V3(p.pos.x + c.position.x, .3, p.pos.z + c.position.z), 1.1, 0xe8e0d0, .5, .6); shake(.12); }
+        if (!c.userData.shown) { c.userData.shown = true; snd.hammer(0); if (i % 2 === 0) snd.stomp(); c.getWorldPosition(_wp2); puff(new V3(_wp2.x, .3, _wp2.z), 1.1, 0xe8e0d0, .5, .6); shake(.12); }
       }
     });
   }, function () {
@@ -1422,6 +1542,7 @@ function doBuild(p) {
   });
 }
 function afterBuild(p) {
+  if (p.after) { p.after(p); return; }
   if (p.id === "forge") { giveHat(); return; }
   if (p.id === "hut") {
     var r = p.real.userData.roof, bd = mabel.bird, wp = new V3(); bd.getWorldPosition(wp);
@@ -1444,7 +1565,7 @@ function giveHat() {
   M(hat, cylG(.76, .76, .12, 14), toon(0x6f7985), 0, -.08, 0, .04);
   var from = plots.forge.pos.clone().add(new V3(-.8, 2.0, -.4)), to = P.pos.clone().add(new V3(0, 2.35, 0));
   tween(.9, function (u) { var e = easeOut(u); hat.position.set(lerp(from.x, to.x, e), lerp(from.y, to.y, e) + Math.sin(Math.PI * u) * 2.2, lerp(from.z, to.z, e)); hat.rotation.y = u * 9; }, function () {
-    scene.remove(hat); P.hat = true; dunk.hat.visible = true; snd.clunk(); shake(.5); G.hitstop = .1;
+    scene.remove(hat); P.hat = true; UNL.stone = true; setHat("stone", true); snd.clunk(); shake(.5); G.hitstop = .1;
     floater(P.pos.clone().setY(3.0), "CLUNK", "bw big", 1.2); burst(P.pos.clone().setY(2.3), [0xb4bdc8, 0x8d97a3], 14, 6, 6, 1, .8);
     puff(P.pos.clone().setY(2.2), 1.2, 0xffffff, .5, .4);
     toast("Stone hat equipped: bonks hit harder, hurt half as much");
@@ -1455,6 +1576,7 @@ function giveHat() {
 
 /* ---------- guide arrow (3D marker + off-screen pointer) ---------- */
 function stepTarget() {
+  if (G.level === 1) return questTarget();
   var st = STEPS[G.step]; if (!st || G.stepDone) return null;
   if (st.plot) { var p = plots[st.plot]; if (!p.built) return { pos: p.pos, h: p.id === "bridge" ? 2.2 : 4.2, plot: true }; return null; }
   if (st.target) return st.target();
@@ -1490,7 +1612,9 @@ function updateGauge() {
   if (!P.charging) { g.classList.add("hidden"); return; }
   g.classList.remove("hidden"); g.classList.toggle("zone", P.inZone);
   var s = toScreen(new V3(P.pos.x, 3.15, P.pos.z)); g.style.transform = "translate(" + s.x.toFixed(1) + "px," + s.y.toFixed(1) + "px)";
-  var z = zone(), zs = $("g-zone"), fl = $("g-fill");
+  var z = zone(), zs = $("g-zone"), fl = $("g-fill"), tip = $("gauge-tip");
+  tip.classList.toggle("hidden", !(P.chargeT > .22 && !G.flags.hadPerfect));
+  tip.textContent = P.inZone ? "NOW!" : P.charge > z[1] ? "Too far!" : "Let go in the green";
   zs.setAttribute("stroke-dasharray", ((z[1] - z[0]) * GC).toFixed(1) + " " + GC.toFixed(1)); zs.setAttribute("stroke-dashoffset", (-z[0] * GC).toFixed(1));
   fl.setAttribute("stroke-dasharray", (P.charge * GC).toFixed(1) + " " + GC.toFixed(1));
   fl.setAttribute("stroke", P.inZone ? "#ffe14d" : P.charge > z[1] ? "#d42a1e" : "#ff5a36");
@@ -1533,9 +1657,9 @@ var STEPS = [
     check: function () { return inv.stone >= 5; },
     done: function () { say("Five stone. Your head is now the company’s best-performing asset.", 1); } },
   { id: "boulder", obj: "Charge-bonk the Big Boulder", target: function () { return tgt(T.big, 3.4); },
-    enter: function () { $("btn-bonk").classList.add("hinted"); say("That boulder is thick. Taps just tickle it. HOLD bonk, then let go while the ring is green.", 1); },
+    enter: function () { $("btn-bonk").classList.add("hinted"); $("btn-bonk").querySelector("span").textContent = "HOLD"; say("That boulder is thick. Taps just tickle it. HOLD bonk, then let go while the ring is green.", 1); },
     check: function () { return !!G.flags.bigBroke; },
-    done: function () { $("btn-bonk").classList.remove("hinted"); say("A boulder, humbled by a forehead. Beautiful.", 1); } },
+    done: function () { $("btn-bonk").classList.remove("hinted"); $("btn-bonk").querySelector("span").textContent = "BONK"; say("A boulder, humbled by a forehead. Beautiful.", 1); } },
   { id: "forge", act: ["Act 2: Some assembly required", "Dunk builds. Mabel supervises."], obj: "Build the Hat Forge", plot: "forge",
     enter: function () { say("You’ve been bonking with a bare head. Let’s fix that. Walk to the blue outline and build.", 1); },
     check: function () { return plots.forge.built && P.hat && !G.cine; } },
@@ -1617,6 +1741,7 @@ function confetti(pos) {
 }
 function fmtTime(s) { s = Math.round(s); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
 function showEnd() {
+  if (G.level === 1) { showEndL1(); return; }
   G.ended = true; G.orbit = true; $("controls").classList.add("hidden"); $("hud").classList.add("hidden"); hideBubble();
   $("end-art").innerHTML = '<div style="width:110px;height:110px;border:3px solid var(--line);overflow:hidden;margin-bottom:8px">' + ART.statue + '</div>';
   var ratio = stats.bonks ? stats.perfects / stats.bonks : 0, review;
@@ -1625,8 +1750,15 @@ function showEnd() {
   else if (stats.sheep > 0) review = "Mabel’s review: “Solid work. Gary has filed a complaint.”";
   else review = "Mabel’s review: “Met expectations. The expectations were low. Your forehead was not.”";
   $("end-review").textContent = review;
-  var rows = [[stats.bonks, "Bonks"], [stats.perfects, "Perfect bonks"], [stats.dizzy, "Dizzy spells"], [stats.coconuts, "Coconut incidents"], [stats.sheep, "Gary launches"], [fmtTime(stats.finalTime || G.playTime), "Time"]];
+  var ft = stats.finalTime || G.playTime, stars = 1 + (ratio >= .2 ? 1 : 0) + (stats.dizzy <= 2 ? 1 : 0), sv = loadSave(), prev = sv.bestTime, isBest = !prev || ft < prev;
+  var sh = ""; for (var si = 0; si < 3; si++) sh += si < stars ? "\u2605" : '<span class="off">\u2605</span>';
+  $("end-stars").innerHTML = sh; $("end-stars").setAttribute("aria-label", stars + " out of 3 stars");
+  $("end-best").textContent = isBest ? (prev ? "New best time! Previous: " + fmtTime(prev) : "First finish on the books.") : "Best time: " + fmtTime(prev);
+  writeSave({ bestTime: isBest ? ft : prev, bestStars: Math.max(sv.bestStars || 0, stars), plays: (sv.plays || 0) + 1 });
+  G.shareText = "I built a monument to my forehead in Hard Head: " + fmtTime(ft) + ", " + stars + "/3 stars, " + stats.perfects + " perfect bonks, " + stats.dizzy + " dizzy spells.";
+  var rows = [[stats.bonks, "Bonks"], [stats.perfects, "Perfect bonks"], [stats.dizzy, "Dizzy spells"], [stats.coconuts, "Coconut incidents"], [stats.sheep, "Gary launches"], [stats.bestStreak, "Best streak"], [stats.rocks + stats.trees + stats.golds, "Things bonked"], [fmtTime(stats.finalTime || G.playTime), "Time"]];
   $("end-stats").innerHTML = rows.map(function (r) { return '<div class="stat"><b>' + r[0] + '</b><span>' + r[1] + '</span></div>'; }).join("");
+  $("end-title").textContent = "A monument to your forehead."; $("btn-next").classList.remove("hidden"); $("btn-again").textContent = "Play again"; writeSave({ tutDone: true });
   $("ov-end").classList.remove("hidden");
 }
 
@@ -1635,7 +1767,7 @@ var cam = { tgt: new V3(0, 0, 2), zoom: 1, yaw: 0, dist: 20, pitch: .9 };
 function resize() {
   var w = innerWidth, h = innerHeight, aspect = w / h, portrait = aspect < .9;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOW_END ? 1 : IS_MOBILE ? 1.75 : 2)); renderer.setSize(w, h, false);
-  camera.aspect = aspect; camera.fov = portrait ? 52 : 38; camera.updateProjectionMatrix();
+  camera.aspect = aspect; camera.fov = portrait ? 52 : 38; G.baseFov = camera.fov; camera.updateProjectionMatrix();
   var tanH = Math.tan(camera.fov * Math.PI / 360), halfW = portrait ? 5.8 : 7.2;
   cam.dist = clamp(halfW / (aspect * tanH), portrait ? 15 : 17, 30);
 }
@@ -1645,7 +1777,7 @@ function updateCamera(dt) {
   if (G.title) { tx = P.pos.x + .9; tz = P.pos.z + .2; zoom = .46; cam.yaw = Math.sin(G.time * .3) * .28 - .15; }
   else if (G.cine) { tx = G.cine.pos.x; tz = G.cine.pos.z; ty = G.cine.pos.y * .3; zoom = G.cine.zoom; }
   else if (cardPlot) { tx = lerp(P.pos.x, cardPlot.pos.x, .5); tz = lerp(P.pos.z, cardPlot.pos.z, .5); zoom = 1.12; }
-  else { tx = P.pos.x; tz = P.pos.z; }
+  else { tx = P.pos.x + (P.vel ? P.vel.x * .22 : 0); tz = P.pos.z + (P.vel ? P.vel.z * .22 : 0); }
   if (G.orbit) cam.yaw += dt * .28; else if (!G.title) cam.yaw = damp(cam.yaw, 0, 3, dt);
   var k = G.cine ? 3.2 : 6.5;
   cam.tgt.x = damp(cam.tgt.x, tx, k, dt); cam.tgt.z = damp(cam.tgt.z, tz, k, dt); cam.tgt.y = damp(cam.tgt.y, ty, k, dt);
@@ -1657,12 +1789,14 @@ function updateCamera(dt) {
   var sx = G.shakeAmt > 0 ? (Math.random() - .5) * G.shakeAmt * .9 : 0, sy = G.shakeAmt > 0 ? (Math.random() - .5) * G.shakeAmt * .9 : 0;
   camera.position.set(cam.tgt.x + ox + sx, cam.tgt.y + oy + sy, cam.tgt.z + oz);
   camera.lookAt(cam.tgt.x, cam.tgt.y + 1.0, cam.tgt.z);
+  G.punch = Math.max(0, (G.punch || 0) - dt * 3);
+  if (G.baseFov) { var nf = G.baseFov - G.punch * 3.5; if (Math.abs(nf - camera.fov) > .01) { camera.fov = nf; camera.updateProjectionMatrix(); } }
 }
 
 /* ---------- ambience ---------- */
 function updateAmbient(dt) {
   floaters3d.forEach(function (p) { p.position.y = p.userData.y0 + Math.sin(G.time * .8 + p.userData.bob) * .35; });
-  clouds.forEach(function (c) { c.g.position.x += c.v * dt; if (c.g.position.x > 70) c.g.position.x = -40; });
+  clouds.forEach(function (c) { c.g.position.x += c.v * dt; if (c.g.position.x > (c.xmax || 70)) c.g.position.x = (c.xmin || -40); });
   Object.keys(plots).forEach(function (id) { var p = plots[id]; if (p.active && p.ring) { var s = 1 + Math.sin(G.time * 4) * .03; p.ring.scale.set(s, s, 1); p.ring.material.opacity = .55 + .35 * Math.sin(G.time * 5); } });
   for (var i = 0; i < emitters.length; i++) {
     var e = emitters[i]; e.t -= dt; if (e.t > 0) continue; e.t = e.p.id === "statue" ? .5 : .55;
@@ -1685,8 +1819,8 @@ var _wp = new V3();
 /* ---------- menu ---------- */
 function toggleMenu(force) {
   var open = force !== undefined ? force : !menuOpen();
-  $("menu").classList.toggle("hidden", !open); G.paused = open;
-  if (open) { P.charging = false; inp.x = inp.y = 0; inp.keys = {}; $("btn-bonk").classList.remove("down"); syncSettings(); }
+  $("menu").classList.toggle("hidden", !open); G.paused = open || !!G.sheet;
+  if (open) { P.charging = false; inp.x = inp.y = 0; inp.keys = {}; $("btn-bonk").classList.remove("down"); syncSettings(); setTimeout(function () { $("btn-resume").focus(); }, 30); }
 }
 function syncSettings() {
   document.querySelectorAll(".seg").forEach(function (sg) {
@@ -1694,13 +1828,20 @@ function syncSettings() {
   });
 }
 document.querySelectorAll(".seg button").forEach(function (b) {
-  b.addEventListener("click", function () { var k = b.parentNode.getAttribute("data-set"); S[k] = b.getAttribute("data-v") === "1"; syncSettings(); snd.tap(); });
+  b.addEventListener("click", function () { var k = b.parentNode.getAttribute("data-set"); S[k] = b.getAttribute("data-v") === "1"; var o = {}; o[k] = S[k]; writeSave(o); syncSettings(); snd.tap(); });
 });
 $("btn-menu").addEventListener("click", function () { toggleMenu(true); });
 $("btn-resume").addEventListener("click", function () { toggleMenu(false); });
-$("btn-restart").addEventListener("click", function () { location.reload(); });
+$("btn-restart").addEventListener("click", function () { if (G.level === 1) writeSave({ l1: null, l1done: false }); location.reload(); });
 $("btn-again").addEventListener("click", function () { location.reload(); });
+$("btn-share").addEventListener("click", function () {
+  var b = $("btn-share"), t = G.shareText || "I played Hard Head.";
+  function done(m) { b.textContent = m; setTimeout(function () { b.textContent = "Share result"; }, 1800); }
+  if (navigator.share) { navigator.share({ text: t }).catch(function () {}); return; }
+  try { navigator.clipboard.writeText(t).then(function () { done("Copied!"); }, function () { done("Couldn\u2019t copy"); }); } catch (e) { done("Couldn\u2019t copy"); }
+});
 $("btn-free").addEventListener("click", function () {
+  if (G.level === 1) { $("ov-end").classList.add("hidden"); $("controls").classList.remove("hidden"); $("hud").classList.remove("hidden"); G.ended = false; G.cine = null; G.orbit = false; refreshQuestChip(); say("Free bonk. Everything regrows. Gary is nervous.", 0); return; }
   $("ov-end").classList.add("hidden"); $("controls").classList.remove("hidden"); $("hud").classList.remove("hidden"); G.ended = false; G.cine = null; G.orbit = false; G.free = true; G.step = STEPS.length; G.stepId = "free";
   setObjective("Free bonk: everything grows back", null); $("obj-bar").classList.add("hidden"); say("Fine. Bonk to your heart’s content. Gary is nervous.", 0);
 });
@@ -1732,7 +1873,658 @@ function beginGame() {
   $("hud").classList.remove("hidden"); $("controls").classList.remove("hidden");
   updateRes(); startStep(0);
 }
+$("btn-next").addEventListener("click", function () { snd.pop(); enterLevel1(false); });
+$("btn-l1").addEventListener("click", function () { var sv = loadSave(); snd.pop(); enterLevel1(!!(sv.l1 && !sv.l1done)); });
 $("btn-start").addEventListener("click", function () { audio(); startMusic(); snd.pop(); $("ov-start").classList.add("hidden"); showStory(); });
+
+/* =====================================================================
+   D. LEVEL 1: BONK ISLES. Five islands, four resources, five hats, ten quests.
+   ===================================================================== */
+var _wp2 = new V3();
+var UNL = { none: true, stone: false, lumber: false, miner: false, prop: false, crown: false, dunce: false, wool: false, tiara: false };
+var GATH = { stone: 0, wood: 0, gold: 0, crystal: 0 };
+var Q = { idx: 0, state: "offer", snap: null };
+var L1 = { ox: 0, oz: 240, built: false, islands: [], bridges: [], house: null, mpos: new V3(), mark: null, talkOn: false, restoring: false, saveT: 0, sparkT: 0, falls: [], hzT: 6, isl: -1, flT: 0 };
+var HAT_ORDER = ["none", "stone", "lumber", "miner", "prop", "crown", "dunce", "wool", "tiara"];
+var HATS = {
+  none:   { name: "Bare Head", perk: "Just you and your forehead.", dmg: 0, nog: 1, rec: 1, zone: [.66, .88], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, col: 0xf0b48a, from: "" },
+  stone:  { name: "Stone Hat", perk: "+1 damage. Bonks hurt half as much.", dmg: 1, nog: .5, rec: 1.25, zone: [.60, .92], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, col: 0x8d97a3, from: "Built at the Hat Forge (tutorial)" },
+  lumber: { name: "Lumberjack Cap", perk: "Trees take +2 damage and drop +1 wood.", dmg: 0, nog: .75, rec: 1.1, zone: [.62, .90], speed: 1, treeDmg: 2, gemEase: 0, yieldB: { wood: 1 }, magnet: 1, col: 0xd23a2a, from: "Quest: Timber!" },
+  miner:  { name: "Miner\u2019s Helmet", perk: "Gold and crystal crack easier. Wider green zone. +1 stone.", dmg: 0, nog: .75, rec: 1.1, zone: [.55, .94], speed: 1, treeDmg: 0, gemEase: 1, yieldB: { stone: 1 }, magnet: 1, col: 0xffc21a, from: "Quest: Rock Solid" },
+  prop:   { name: "Propeller Beanie", perk: "Walk 30% faster. Loot flies to you from farther away.", dmg: 0, nog: .85, rec: 1.2, zone: [.63, .90], speed: 1.3, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1.7, col: 0x2f9bd8, from: "Quest: Perfect Timing" },
+  crown:  { name: "Golden Crown", perk: "+1 damage. +1 gold and crystal per node. Smug.", dmg: 1, nog: .6, rec: 1.3, zone: [.58, .93], speed: 1.05, treeDmg: 0, gemEase: 0, yieldB: { gold: 1, crystal: 1 }, magnet: 1.2, col: 0xf5b921, from: "Quest: Gold Rush" },
+  dunce:  { name: "Dizzy Dunce Cap", perk: "Dizzy spells last 40% shorter. Stars still included.", dmg: 0, nog: .9, rec: 1.2, zone: [.64, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, dizzyT: .6, col: 0xf2e6b8, from: "Secret: get dizzy 3 times" },
+  wool:   { name: "Woolly Cap", perk: "Soft bonks: a quarter less headache. Gary approves.", dmg: 0, nog: .7, rec: 1.2, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, col: 0xfbf6ee, from: "Secret: launch Gary twice" },
+  tiara:  { name: "Crystal Tiara", perk: "A constant sparkle trail. Loot flies in from farther.", dmg: 0, nog: .85, rec: 1.2, zone: [.62, .91], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1.5, col: 0x7fe3ff, from: "Secret: mine 10 crystals" }
+};
+function HAT() { return HATS[P.hatId] || HATS.none; }
+var HAT_ICO = {
+  none: ICO.head,
+  stone: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M6 27 Q20 2 34 27z" fill="#8d97a3"/><rect x="4" y="26" width="32" height="6" rx="2" fill="#6f7985"/><circle cx="20" cy="18" r="2.6" fill="#fff2a8"/></svg>',
+  lumber: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M7 27 Q20 6 33 27z" fill="#d23a2a"/><rect x="5" y="26" width="30" height="5" rx="2" fill="#8a1e14"/><path d="M28 28h10v4H28z" fill="#5a1a14"/><circle cx="20" cy="10" r="2.8" fill="#fff"/></svg>',
+  miner: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M6 28 Q20 5 34 28z" fill="#ffc21a"/><rect x="3" y="27" width="34" height="6" rx="2" fill="#e0a010"/><rect x="17" y="9" width="6" height="19" fill="#e0a010"/><circle cx="20" cy="23" r="3.4" fill="#fff6b0"/></svg>',
+  prop: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M8 31 Q20 13 32 31z" fill="#2f9bd8"/><rect x="6" y="30" width="28" height="5" rx="2" fill="#f5b921"/><rect x="19" y="9" width="2.4" height="9" fill="#6b4426"/><path d="M7 8 L33 8 L29 11.5 L11 11.5z" fill="#ff5a36"/></svg>',
+  crown: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M6 31 L6 14 L13 22 L20 10 L27 22 L34 14 L34 31z" fill="#f5b921"/><rect x="6" y="29" width="28" height="5" fill="#e0b020"/><circle cx="20" cy="25" r="2.8" fill="#ff3b2a"/></svg>',
+  dunce: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M20 3 L33 31 L7 31z" fill="#f2e6b8"/><path d="M14 20 L26 20 L29 27 L11 27z" fill="#d42a1e"/><circle cx="20" cy="5" r="2.6" fill="#ffe14d"/></svg>',
+  wool: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><circle cx="13" cy="24" r="7" fill="#fbf6ee"/><circle cx="27" cy="24" r="7" fill="#fbf6ee"/><circle cx="20" cy="17" r="8" fill="#fbf6ee"/><circle cx="20" cy="26" r="7" fill="#fbf6ee"/></svg>',
+  tiara: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M6 30 Q20 24 34 30 L34 34 Q20 28 6 34z" fill="#f5b921"/><path d="M12 28 L14 14 L17 28z" fill="#7fe3ff"/><path d="M18 27 L20 8 L22 27z" fill="#b99cff"/><path d="M23 28 L26 14 L28 28z" fill="#7fe3ff"/></svg>'
+};
+
+/* ---------- Dunk’s extra hats ---------- */
+function buildHats(D) {
+  var head = D.head; D.hats = { stone: D.hat };
+  var lc = sub(head, 0, 1.0, -.02); lc.visible = false; D.hats.lumber = lc;
+  var d1 = M(lc, new THREE.SphereGeometry(.7, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xd23a2a), 0, 0, 0, .05); d1.scale.y = .78;
+  M(lc, cylG(.74, .74, .1, 16), toon(0x8a1e14), 0, -.07, 0, .04);
+  M(lc, boxG(.62, .06, .5), toon(0x5a1a14), 0, -.05, .66, .03);
+  M(lc, new THREE.SphereGeometry(.12, 8, 6), toon(0xffffff), 0, .6, 0, .02);
+  var mh = sub(head, 0, 1.0, -.02); mh.visible = false; D.hats.miner = mh;
+  var d2 = M(mh, new THREE.SphereGeometry(.72, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xffc21a), 0, 0, 0, .05); d2.scale.y = .8;
+  M(mh, cylG(.8, .8, .1, 16), toon(0xe0a010), 0, -.08, 0, .04);
+  M(mh, boxG(.14, .1, 1.2), toon(0xe0a010), 0, .56, 0, .03);
+  var lamp = new THREE.Mesh(new THREE.SphereGeometry(.15, 8, 6), new THREE.MeshBasicMaterial({ color: 0xfff6b0 })); lamp.position.set(0, .3, .72); mh.add(lamp);
+  var ph = sub(head, 0, 1.0, -.02); ph.visible = false; D.hats.prop = ph;
+  var d3 = M(ph, new THREE.SphereGeometry(.66, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toon(0x2f9bd8), 0, 0, 0, .05); d3.scale.y = .72;
+  M(ph, cylG(.7, .7, .1, 16), toon(0xf5b921), 0, -.07, 0, .04);
+  M(ph, cylG(.05, .05, .3, 6), toon(0x6b4426), 0, .46, 0, .02);
+  var pr = sub(ph, 0, .8, 0); D.prop = pr;
+  [0, Math.PI / 2].forEach(function (a, i) { var b = M(pr, boxG(.9, .04, .16), toon(i ? 0xff5a36 : 0xff8a1f), 0, 0, 0, .02); b.rotation.y = a; });
+  var ch = sub(head, 0, 1.1, -.02); ch.visible = false; D.hats.crown = ch;
+  var gm = toon(0xf5b921, { emissive: 0x4a3100 });
+  M(ch, cylG(.58, .62, .28, 16), gm, 0, 0, 0, .04);
+  for (var i = 0; i < 6; i++) { var a = i / 6 * Math.PI * 2; M(ch, coneG(.12, .3, 5), gm, Math.cos(a) * .55, .26, Math.sin(a) * .55, .03); }
+  M(ch, new THREE.SphereGeometry(.1, 8, 6), toon(0xff3b2a, { emissive: 0x7a0a00 }), 0, .14, .63, .02);
+  var dh = sub(head, 0, 1.05, -.02); dh.visible = false; D.hats.dunce = dh;
+  M(dh, coneG(.58, 1.3, 16), toon(0xf2e6b8), 0, 0, 0, .05);
+  M(dh, cylG(.6, .62, .14, 16), toon(0xd42a1e), 0, 0, 0, .03);
+  M(dh, new THREE.SphereGeometry(.1, 8, 6), toon(0xffe14d, { emissive: 0x4a3100 }), 0, 1.32, 0, .02);
+  var wh = sub(head, 0, 1.0, -.02); wh.visible = false; D.hats.wool = wh;
+  var wl = toon(0xfbf6ee);
+  [[0, .4, 0, .52], [-.38, .22, 0, .34], [.38, .22, 0, .34], [0, .22, .38, .32], [0, .22, -.38, .32]].forEach(function (c) { M(wh, new THREE.IcosahedronGeometry(c[3], 0), wl, c[0], c[1], c[2], .03); });
+  var th = sub(head, 0, 1.08, -.02); th.visible = false; D.hats.tiara = th;
+  M(th, cylG(.62, .64, .09, 18), toon(0xf5b921, { emissive: 0x4a3100 }), 0, 0, 0, .03);
+  [[-.3, .22], [0, .34], [.3, .22]].forEach(function (c, i) { var cr = M(th, coneG(.1, c[1] + .1, 5), toon(i === 1 ? 0xb99cff : 0x7fe3ff, { emissive: 0x15405a }), c[0], .08, .56 - Math.abs(c[0]) * .35, .02); });
+}
+function setHat(id, silent) {
+  if (!HATS[id]) id = "none";
+  P.hatId = id; var D = dunk;
+  if (D && D.hats) {
+    for (var k in D.hats) D.hats[k].visible = (k === id);
+    var h = D.hats[id];
+    if (h && !silent) { h.scale.setScalar(1.7); tween(.28, function (u) { h.scale.setScalar(lerp(1.7, 1, easeOut(u))); }); }
+  }
+  if (!silent) saveL1();
+}
+function unlockHat(id, quiet) {
+  UNL[id] = true; var h = HATS[id];
+  if (quiet) { setHat(id, true); return; }
+  G.cine = { pos: P.pos.clone().add(new V3(0, 1.2, 0)), zoom: .42 };
+  var hat = sub(scene, 0, 0, 0), dm = M(hat, new THREE.SphereGeometry(.72, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(h.col), 0, 0, 0, .05); dm.scale.y = .85;
+  M(hat, cylG(.76, .76, .12, 14), toon(h.col), 0, -.08, 0, .04);
+  var from = L1.mpos.clone(), to = P.pos.clone().add(new V3(0, 2.35, 0));
+  snd.whoosh();
+  tween(.9, function (u) { var e = easeOut(u); hat.position.set(lerp(from.x, to.x, e), lerp(from.y, to.y, e) + Math.sin(Math.PI * u) * 2.4, lerp(from.z, to.z, e)); hat.rotation.y = u * 10; }, function () {
+    scene.remove(hat); setHat(id); snd.clunk(); snd.fanfare(); shake(.5); G.hitstop = .1; flash();
+    floater(P.pos.clone().setY(3.1), "NEW HAT!", "perfect", 1.4);
+    burst(P.pos.clone().setY(2.3), [h.col, 0xffffff, 0xffd93d], 22, 7, 8, 1.1, 1);
+    shockwave(P.pos.clone().setY(2.3), 0xffe14d, 4.5, .5);
+    toast(h.name + " unlocked and equipped");
+    say(h.perk, 1);
+    $("hat-dot").classList.remove("hidden");
+    later(1.6, function () { G.cine = null; });
+  });
+}
+
+/* ---------- quests ---------- */
+var QUESTS = [
+  { id: "timber", title: "Timber!", type: "gain", res: "wood", n: 8, obj: "Gather wood", goal: "Gather 8 wood from the trees on this island.",
+    offer: "Welcome to Bonk Isles, Dunk. HR needs eight wood by close of business. Trees are the tall green things. Bonk them until they stop being tall.",
+    accept: "Eight wood. Trees. Forehead. You know the drill.", hint: "Eight wood, remember? Trees are the tall green things.",
+    ready: "Wood! Real, splintery wood. Take this cap. It was in lost and found. I\u2019m choosing not to ask whose.", reward: { hat: "lumber" } },
+  { id: "bridgeN", title: "Bridge to the Quarry", type: "build", plot: "l1_bN", obj: "Build the North Bridge", goal: "Build the bridge north to the Quarry.",
+    offer: "North of here is the Quarry. Between here and there is air. Air is not load-bearing. Build a bridge.",
+    accept: "Follow the blue outline north and hit Build when you have the stuff.", hint: "Walk up to the blue outline at the north edge. Wood and stone, please.",
+    ready: "A bridge! I\u2019ll pretend I never doubted you.", reward: { note: "Mabel\u2019s grudging respect" } },
+  { id: "rocksolid", title: "Rock Solid", type: "combo", res: "stone", n: 12, obj: "Mine stone + 1 boulder", goal: "Mine 12 stone and flatten 1 Big Boulder at the Quarry.",
+    offer: "The Quarry has more rocks than sense. Mine twelve stone and flatten one Big Boulder. Hold BONK, let go in the green. Boulders respect timing.",
+    accept: "Twelve stone and a boulder. Hold, release in the green.", hint: "Twelve stone and one Big Boulder. The boulder is the big one with the moss.",
+    ready: "Boulder: flattened. Forehead: undefeated. Here, a helmet. It has a lamp. The lamp doesn\u2019t work. Wear it anyway.", reward: { hat: "miner" } },
+  { id: "bridgeE", title: "Bridge to the Forest", type: "build", plot: "l1_bE", obj: "Build the East Bridge", goal: "Build the bridge east to the Forest.",
+    offer: "East is the Forest. Lots of trees, lots of coconuts. Coconuts are rude. Build the bridge anyway.",
+    accept: "East edge. Blue outline. You know the drill.", hint: "The east bridge needs wood and stone. Find the blue outline.",
+    ready: "The Forest is open. Mind your head. I mean that literally.", reward: { note: "Access to a lot more trees" } },
+  { id: "perfect", title: "Perfect Timing", type: "perfect", n: 6, obj: "Land perfect bonks", goal: "Land 6 perfect bonks. Hold, then release in the green.",
+    offer: "Anyone can bonk. I want PERFECT bonks. Six of them. Hold, let go in the green, hit anything. Rocks, trees, my patience.",
+    accept: "Six perfects. Watch the ring above your head.", hint: "Six perfect bonks. Hold, release in the green.",
+    ready: "Six perfects. I\u2019m only slightly moved. Take this beanie. The propeller is purely decorative. (It is not.)", reward: { hat: "prop" } },
+  { id: "bridgeC", title: "Crystal Crossing", type: "build", plot: "l1_bC", obj: "Build the Crystal Bridge", goal: "Build the bridge from the Quarry east to Crystal Isle.",
+    offer: "Past the Quarry, something sparkles. I want it. Build the crossing from the Quarry\u2019s east side.",
+    accept: "Cross the Quarry to its east edge. Blue outline.", hint: "The crystal bridge starts on the Quarry\u2019s east side.",
+    ready: "Ooh, shiny. And the bridge is nice too.", reward: { note: "A very sparkly island" } },
+  { id: "crystal", title: "Gem Fever", type: "gain", res: "crystal", n: 6, obj: "Mine crystals", goal: "Mine 6 crystals. They\u2019re tough: perfect bonks, or wear the Miner\u2019s Helmet.",
+    offer: "Crystals are tougher than rocks. Plain charged bonks bounce off. Perfect bonks work. So does the helmet. Bring me six.",
+    accept: "Six crystals. Helmet on, or aim for the green.", hint: "Six crystals. If they bounce, try the Miner\u2019s Helmet (the hat button, top right).",
+    ready: "Sparkly. Keep a few. The last bridge is going to want some.", reward: { note: "Shiny things, owed" } },
+  { id: "bridgeG", title: "The Golden Gangway", type: "build", plot: "l1_bG", obj: "Build the Gold Bridge", goal: "Build the bridge from the Forest east to Gold Isle. It needs crystals.",
+    offer: "Gold Isle is east of the Forest. The bridge is fancy and wants crystals. Don\u2019t ask why a bridge wants crystals.",
+    accept: "Cross the Forest to its east edge. You\u2019ll need crystals.", hint: "Gold bridge: wood, stone and crystal. East edge of the Forest.",
+    ready: "Gold. Finally. Go. Bonk. Enrich us.", reward: { note: "Gold, at last" } },
+  { id: "goldrush", title: "Gold Rush", type: "gain", res: "gold", n: 8, obj: "Mine gold", goal: "Mine 8 gold on Gold Isle.",
+    offer: "Eight gold. The rocks with the shiny bits are the hard kind. Charge up, or wear a hat that helps.",
+    accept: "Eight gold. Go be rich.", hint: "Eight gold. Gold rocks have the yellow shiny bits.",
+    ready: "Eight gold! Dunk, you\u2019re the best employee I\u2019ve ever supervised. You\u2019re also the only one. Take this crown.", reward: { hat: "crown" } },
+  { id: "statue", title: "The Monument", type: "build", plot: "l1_statue", obj: "Build the Statue", goal: "Build the Statue of Dunk\u2019s Forehead on Gold Isle.",
+    offer: "One last job. A statue of the part of you that did all the work. Gold, stone and a crystal or two. Make it magnificent.",
+    accept: "The plot is on Gold Isle. Go big.", hint: "Statue: gold, stone and crystal. If you\u2019re short, the quarries regrow.",
+    ready: "", reward: {} }
+];
+function curQ() { return QUESTS[Q.idx] || null; }
+function qProg(q) {
+  var s = Q.snap || { g: GATH, perf: 0, big: 0 };
+  if (q.type === "gain") return [Math.min(Math.max(0, GATH[q.res] - s.g[q.res]), q.n), q.n];
+  if (q.type === "build") return [plots[q.plot].built ? 1 : 0, 1];
+  if (q.type === "perfect") return [Math.min(Math.max(0, stats.perfects - s.perf), q.n), q.n];
+  return [Math.min(Math.max(0, GATH[q.res] - s.g[q.res]), q.n) + Math.min(Math.max(0, stats.bigs - s.big), 1), q.n + 1];
+}
+function qDone(q) { var p = qProg(q); return p[0] >= p[1]; }
+function copyG() { return { stone: GATH.stone, wood: GATH.wood, gold: GATH.gold, crystal: GATH.crystal }; }
+
+/* ---------- sheets (quest board, hats): freeze the world while open ---------- */
+function openSheet(id) {
+  G.sheet = id; $(id).classList.remove("hidden"); G.paused = true;
+  P.charging = false; inp.x = inp.y = 0; inp.keys = {}; $("btn-bonk").classList.remove("down");
+}
+function closeSheet() {
+  if (!G.sheet) return;
+  $(G.sheet).classList.add("hidden"); G.sheet = null; G.paused = menuOpen();
+}
+function costChips(cost) {
+  return Object.keys(cost).map(function (k) { var ok = inv[k] >= cost[k]; return '<div class="cost' + (ok ? " ok" : "") + '">' + ICO[k] + "<b>" + Math.min(inv[k], cost[k]) + "/" + cost[k] + "</b></div>"; }).join("");
+}
+function renderBoard() {
+  var q = curQ(); if (!q) return;
+  $("qb-pic").innerHTML = ART.mabel;
+  $("qb-title").textContent = q.title;
+  $("qb-num").textContent = "Mabel \u00b7 Quest " + (Q.idx + 1) + " of " + QUESTS.length;
+  var txt = Q.state === "offer" ? q.offer : Q.state === "ready" ? q.ready : q.hint;
+  $("qb-text").textContent = txt;
+  var g = $("qb-goal");
+  if (q.type === "build") g.innerHTML = '<div class="gl">' + q.goal + "</div>" + costChips(plots[q.plot].cost);
+  else { var p = qProg(q); g.innerHTML = '<div class="gl">' + q.goal + (Q.state === "active" ? "  (" + p[0] + "/" + p[1] + ")" : "") + "</div>"; }
+  var r = q.reward || {}, rw = $("qb-reward");
+  if (r.hat) { rw.classList.remove("hidden"); rw.innerHTML = '<div class="hat-ic">' + HAT_ICO[r.hat] + '</div><div><div class="hat-nm">Reward: ' + HATS[r.hat].name + '</div><div class="hat-pk">' + HATS[r.hat].perk + "</div></div>"; }
+  else if (r.note && Q.state !== "active") { rw.classList.remove("hidden"); rw.innerHTML = '<div><div class="hat-nm">Reward</div><div class="hat-pk">' + r.note + "</div></div>"; }
+  else rw.classList.add("hidden");
+  var go = $("qb-go"), cl = $("qb-close");
+  if (Q.state === "offer") { go.textContent = "Accept quest"; cl.classList.remove("hidden"); }
+  else if (Q.state === "ready") { go.textContent = r.hat ? "Claim hat" : "Thanks, Mabel"; cl.classList.add("hidden"); }
+  else { go.textContent = "Got it"; cl.classList.add("hidden"); }
+}
+function openBoard() { if (G.level !== 1 || !curQ() || G.cine || G.ended || G.paused) return; renderBoard(); openSheet("board"); snd.pop(); }
+function acceptQuest() {
+  var q = curQ(); if (!q || Q.state !== "offer") return;
+  Q.state = "active"; Q.snap = { g: copyG(), perf: stats.perfects, big: stats.bigs }; G.lastProgress = G.time;
+  if (q.type === "build") activatePlot(q.plot);
+  snd.chime(); say(q.accept, 1); saveL1(); refreshQuestChip();
+}
+function claimQuest() {
+  var q = curQ(); if (!q || Q.state !== "ready") return;
+  var r = q.reward || {}; Q.idx++; Q.state = "offer"; Q.snap = null; G.lastProgress = G.time; snd.chime();
+  if (r.hat) unlockHat(r.hat);
+  else { floater(L1.mpos.clone().setY(L1.mpos.y + 1.6), "Quest complete!", "perfect", 1.4); burst(L1.mpos.clone().setY(L1.mpos.y + .6), [0xffd93d, 0xffffff, 0xff5a36], 14, 5, 6, 1, .9); }
+  var nxt = curQ();
+  later(r.hat ? 2.6 : .8, function () { say(nxt ? "Got another job when you\u2019re ready. Come see me." : "That\u2019s everything. Go bonk something for fun.", 0); });
+  saveL1(); refreshQuestChip();
+}
+$("qb-go").addEventListener("click", function () {
+  var st = Q.state; closeSheet();
+  if (st === "offer") acceptQuest(); else if (st === "ready") claimQuest();
+});
+$("qb-close").addEventListener("click", function () { closeSheet(); });
+$("talk-go").addEventListener("click", function () { openBoard(); });
+$("talk-go").addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+
+/* ---------- wardrobe ---------- */
+function renderWardrobe() {
+  $("hat-list").innerHTML = HAT_ORDER.map(function (id) {
+    var h = HATS[id], un = UNL[id], on = P.hatId === id;
+    return '<div class="hat-row' + (un ? "" : " locked") + '"><div class="hat-ic">' + HAT_ICO[id] + '</div><div class="hat-tx"><div class="hat-nm">' + (un ? h.name : "???") + '</div><div class="hat-pk">' + (un ? h.perk : h.from) + "</div></div>" +
+      (un ? '<button class="cta pressable' + (on ? "" : " ghost") + '" data-hat="' + id + '"' + (on ? " disabled" : "") + ">" + (on ? "Wearing" : "Wear") + "</button>" : '<button class="cta" disabled>Locked</button>') + "</div>";
+  }).join("");
+  document.querySelectorAll("#hat-list button[data-hat]").forEach(function (b) {
+    b.addEventListener("click", function () { setHat(b.getAttribute("data-hat")); snd.clunk(); renderWardrobe(); });
+  });
+}
+$("btn-hats").addEventListener("click", function () { if (!canAct()) return; renderWardrobe(); $("hat-dot").classList.add("hidden"); openSheet("wardrobe"); snd.pop(); });
+$("hat-close").addEventListener("click", function () { closeSheet(); });
+
+/* ---------- objective chip for level 1 ---------- */
+var qChip = { key: "", sig: "" };
+function refreshQuestChip() {
+  if (G.level !== 1) return;
+  var q = curQ(), el = $("objective"), cc = $("obj-costs"), txt, cur = 0, max = 0, costs = null, done = false, key;
+  if (!q) { txt = "All quests done. Bonk freely!"; done = true; key = "done"; }
+  else if (Q.state === "offer") { txt = "Talk to Mabel at the house"; key = "o" + Q.idx; }
+  else if (Q.state === "ready") { txt = "Quest done! Return to Mabel"; done = true; key = "r" + Q.idx; }
+  else {
+    var p = qProg(q); key = "a" + Q.idx;
+    if (q.type === "build") { costs = plots[q.plot].cost; txt = q.obj; for (var k in costs) { cur += Math.min(inv[k], costs[k]); max += costs[k]; } }
+    else { cur = p[0]; max = p[1]; txt = q.obj + "  " + cur + "/" + max; }
+  }
+  var sig = key + "|" + txt + "|" + cur + "/" + max + "|" + (costs ? inv.stone + "," + inv.wood + "," + inv.gold + "," + inv.crystal : "");
+  if (sig === qChip.sig) return; qChip.sig = sig;
+  if (key !== qChip.key) {
+    qChip.key = key; el.classList.remove("done");
+    if (costs) { cc.innerHTML = Object.keys(costs).map(function (k) { return '<span data-k="' + k + '">' + ICO[k] + "<b></b></span>"; }).join(""); cc.classList.remove("hidden"); } else cc.classList.add("hidden");
+    if (done) { void el.offsetWidth; el.classList.add("done"); }
+  }
+  $("obj-t").textContent = txt;
+  $("obj-fill").style.width = (max ? Math.min(100, cur / max * 100) : 0) + "%";
+  $("obj-bar").classList.toggle("hidden", !max);
+  if (costs) document.querySelectorAll("#obj-costs span").forEach(function (sp) { var kk = sp.getAttribute("data-k"); sp.querySelector("b").textContent = Math.min(inv[kk], costs[kk]) + "/" + costs[kk]; sp.classList.toggle("ok", inv[kk] >= costs[kk]); });
+}
+
+/* ---------- islands, bridges, walking ---------- */
+function islandOf(x, z) {
+  for (var i = 0; i < L1.islands.length; i++) { var s = L1.islands[i], dx = x - s.x, dz = z - s.z; if (dx * dx + dz * dz <= (s.r + .5) * (s.r + .5)) return i; }
+  return -1;
+}
+function walkable1(x, z) {
+  for (var i = 0; i < L1.islands.length; i++) { var s = L1.islands[i], dx = x - s.x, dz = z - s.z, r = s.r - .8; if (dx * dx + dz * dz <= r * r) return true; }
+  for (var j = 0; j < L1.bridges.length; j++) {
+    var b = L1.bridges[j]; if (!plots[b.id].built) continue;
+    var u = b.alongZ ? z - b.z : x - b.x, v = b.alongZ ? x - b.x : z - b.z;
+    if (Math.abs(u) <= b.len / 2 && Math.abs(v) <= 1.15) return true;
+  }
+  return false;
+}
+function groundY1(x, z) {
+  for (var j = 0; j < L1.bridges.length; j++) {
+    var b = L1.bridges[j]; if (!plots[b.id].built) continue;
+    var u = b.alongZ ? z - b.z : x - b.x, v = b.alongZ ? x - b.x : z - b.z;
+    if (Math.abs(u) < b.len / 2 - 1.3 && Math.abs(v) < 1.4) return .16;
+  }
+  return 0;
+}
+function reachSet() {
+  var from = islandOf(P.pos.x, P.pos.z), seen2 = {}, q2 = [];
+  if (from < 0) return seen2; seen2[from] = true; q2.push(from);
+  while (q2.length) {
+    var c = q2.shift();
+    L1.bridges.forEach(function (b) {
+      if (!plots[b.id].built) return;
+      var o = b.a === c ? b.b : b.b === c ? b.a : -1;
+      if (o >= 0 && !seen2[o]) { seen2[o] = true; q2.push(o); }
+    });
+  }
+  return seen2;
+}
+function nearestQ(filter) {
+  var rs = reachSet(), best = null, bd = 1e9;
+  for (var i = 0; i < T.length; i++) {
+    var t = T[i]; if (t.lvl !== 1 || !t.alive || !filter(t)) continue;
+    var isl = islandOf(t.g.position.x, t.g.position.z); if (isl < 0 || !rs[isl]) continue;
+    var d = Math.hypot(t.g.position.x - P.pos.x, t.g.position.z - P.pos.z); if (d < bd) { bd = d; best = t; }
+  }
+  return best;
+}
+function questTarget() {
+  if (G.ended || G.won) return null;
+  var q = curQ(); if (!q) return null;
+  if (Q.state !== "active") return { pos: L1.house.pos, h: 3.9 };
+  if (q.type === "build") { var p = plots[q.plot]; return p.built ? null : { pos: p.pos, h: p.isBridge ? 2.2 : 4.2, plot: true }; }
+  var t;
+  if (q.type === "gain") { var kind = { wood: "tree", stone: "rock", gold: "gold", crystal: "crystal" }[q.res]; t = nearestQ(function (o) { return o.kind === kind; }); }
+  else if (q.type === "combo") { t = (stats.bigs - Q.snap.big < 1 && nearestQ(function (o) { return o.big; })) || nearestQ(function (o) { return o.kind === "rock"; }); }
+  else t = nearestQ(function (o) { return o.kind === "rock" || o.kind === "tree"; });
+  return t ? tgt(t, t.kind === "tree" ? 4.2 : undefined) : null;
+}
+
+/* ---------- save / restore ---------- */
+function saveL1() {
+  if (G.level !== 1 || L1.restoring) return;
+  var built = []; Object.keys(plots).forEach(function (id) { if (id.indexOf("l1_") === 0 && plots[id].built) built.push(id); });
+  var hats = HAT_ORDER.filter(function (k) { return UNL[k]; });
+  writeSave({ l1: { q: Q.idx, st: Q.state, snap: Q.snap, hats: hats, eq: P.hatId, built: built, inv: { stone: inv.stone, wood: inv.wood, gold: inv.gold, crystal: inv.crystal }, gath: copyG(), t: G.playTime,
+    st2: { bonks: stats.bonks, perfects: stats.perfects, dizzy: stats.dizzy, bestStreak: stats.bestStreak, bigs: stats.bigs, builds: stats.builds, coconuts: stats.coconuts, sheep: stats.sheep } } });
+}
+function instantBuild(p) {
+  p.built = true; p.active = false; p.ghost.visible = false; p.real.visible = true; stats.builds++;
+  if (p.col) colliders.push({ x: p.pos.x, z: p.pos.z, r: p.col });
+  if (p.id === "l1_statue") emitters.push({ p: p, t: 0 });
+}
+function restoreL1(sv) {
+  L1.restoring = true;
+  Q.idx = sv.q || 0; Q.state = sv.st || "offer"; Q.snap = sv.snap || null;
+  UNL.stone = true; (sv.hats || []).forEach(function (h) { UNL[h] = true; });
+  for (var k in inv) inv[k] = (sv.inv && sv.inv[k]) || 0;
+  for (var g in GATH) GATH[g] = (sv.gath && sv.gath[g]) || 0;
+  for (var s in seen) seen[s] = inv[s] > 0 || GATH[s] > 0;
+  if (sv.st2) for (var z in sv.st2) stats[z] = sv.st2[z];
+  G.playTime = sv.t || 0;
+  (sv.built || []).forEach(function (id) { if (plots[id] && !plots[id].built) instantBuild(plots[id]); });
+  setHat(sv.eq && UNL[sv.eq] ? sv.eq : "stone", true);
+  var q = curQ();
+  if (q && Q.state === "active" && q.type === "build" && !plots[q.plot].built) activatePlot(q.plot);
+  L1.restoring = false;
+}
+
+/* ---------- building the world ---------- */
+function buildBridgeGen(g, len) {
+  var dark = mat(0x8a5a33), n = Math.ceil(len / .62), step = len / n;
+  for (var i = 0; i < n; i++) M(sub(g, -len / 2 + step * (i + .5), 0, 0), boxG(step * .84, .16, 2.5), mat(i % 2 ? 0xc68b52 : 0xb87d45), 0, 0, 0, .03);
+  [-1, 1].forEach(function (s) { [-1.35, 1.35].forEach(function (z) {
+    var po = sub(g, s * (len / 2 - .15), 0, z); M(po, cylG(.1, .12, 1.1, 6), dark, 0, 0, 0, .03); M(po, new THREE.SphereGeometry(.16, 8, 6), mat(0xf5b921, { emissive: 0x3a2a00 }), 0, 1.15, 0, .03);
+  }); });
+  [-1.35, 1.35].forEach(function (z) { M(sub(g, 0, .85, z), boxG(len - .3, .07, .07), mat(0xe8d9a8), 0, 0, 0, .02); });
+}
+function addPlot(id, o) {
+  var p = { id: id, name: o.name, blurb: o.blurb, cost: o.cost, pos: new V3(o.pos[0], 0, o.pos[1]), col: o.col || 0, built: false, active: false, range: o.range || (o.ring ? o.ring + 1.6 : 5.4), isBridge: !!o.len, after: o.after };
+  GHOST = true; p.ghost = sub(scene, o.pos[0], 0, o.pos[1]); p.ghost.rotation.y = o.rotY || 0; o.build(p.ghost); GHOST = false;
+  if (o.ring) {
+    var ring = new THREE.Mesh(new THREE.RingGeometry(o.ring - .16, o.ring, 40), new THREE.MeshBasicMaterial({ color: 0xffd93d, transparent: true, opacity: .85, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; ring.position.y = .06; p.ghost.add(ring); p.ring = ring;
+  }
+  p.ghost.visible = false;
+  p.real = sub(scene, o.pos[0], 0, o.pos[1]); p.real.rotation.y = o.rotY || 0; o.build(p.real); p.real.visible = false;
+  plots[id] = p; return p;
+}
+function decorIsland(cx, cz, r, o) {
+  var dm = new THREE.Object3D(), tg2 = new THREE.ConeGeometry(.12, .45, 4); tg2.translate(0, .22, 0);
+  var tuf = new THREE.InstancedMesh(tg2, toon(o.tuft), o.nT);
+  for (var i = 0; i < o.nT; i++) { var a = srand() * 6.28, d = Math.sqrt(srand()) * (r - 1.4); dm.position.set(cx + Math.cos(a) * d, 0, cz + Math.sin(a) * d); dm.rotation.set(0, srand() * 6, 0); dm.scale.setScalar(.7 + srand() * .8); dm.updateMatrix(); tuf.setMatrixAt(i, dm.matrix); }
+  scene.add(tuf);
+  if (o.nF) {
+    var cols = o.fl || [0xff7aa8, 0xffe14d, 0xffffff, 0xb59bff], fl = new THREE.InstancedMesh(new THREE.SphereGeometry(.13, 6, 5), new THREE.MeshBasicMaterial({ color: 0xffffff }), o.nF);
+    for (var f = 0; f < o.nF; f++) { var a2 = srand() * 6.28, d2 = Math.sqrt(srand()) * (r - 1.4); dm.position.set(cx + Math.cos(a2) * d2, .2, cz + Math.sin(a2) * d2); dm.rotation.set(0, 0, 0); dm.scale.setScalar(1); dm.updateMatrix(); fl.setMatrixAt(f, dm.matrix); fl.setColorAt(f, new THREE.Color(cols[f % cols.length])); }
+    scene.add(fl);
+  }
+  for (var b = 0; b < o.nB; b++) {
+    var ab = b / o.nB * 6.283 + srand() * .15, skip = false;
+    (o.skip || []).forEach(function (sa) { if (Math.abs(angDiff(ab, sa)) < .38) skip = true; });
+    if (skip) continue;
+    var s = .5 + srand() * .35, bg = sub(scene, cx + Math.cos(ab) * (r - .5), 0, cz + Math.sin(ab) * (r - .5));
+    var bm = M(bg, new THREE.IcosahedronGeometry(s, 0), toon(o.bush), 0, s * .6, 0, .05); bm.rotation.y = srand() * 3; blob(bg, s * 1.2);
+  }
+}
+function makeCrystal(x, z, s) {
+  var g = sub(scene, x, 0, z);
+  var body = M(g, new THREE.DodecahedronGeometry(s, 0), toon(0x7d7a9a), 0, s * .55, 0, .05); body.scale.set(1.1, .7, 1); body.rotation.y = srand() * 6;
+  var cols = [0x7fe3ff, 0xb99cff, 0x8ff0d8];
+  for (var i = 0; i < 5; i++) { var a = srand() * 6.28, h = .7 + srand() * .7; var cr = M(g, coneG(s * (.16 + srand() * .08), s * h * 1.4, 5), toon(cols[i % 3], { emissive: 0x15405a }), Math.cos(a) * s * .45, s * .5, Math.sin(a) * s * .45, .03); cr.rotation.set((srand() - .5) * .7, 0, (srand() - .5) * .7); }
+  blob(g, s * 1.35);
+  var o = { kind: "crystal", g: g, radius: s * 1.05, alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, hp: 4, max: 4, hard: 3, yield: 2, res: "crystal", rt: 30, name: "crystal" };
+  T.push(o); return o;
+}
+function markTex(ch, bg) {
+  var c = document.createElement("canvas"); c.width = c.height = 128; var x = c.getContext("2d");
+  x.fillStyle = "#221407"; x.beginPath(); x.arc(64, 64, 58, 0, 6.283); x.fill(); x.fillStyle = bg; x.beginPath(); x.arc(64, 64, 48, 0, 6.283); x.fill();
+  x.fillStyle = "#221407"; x.font = "900 84px 'Archivo Black','Arial Black',Impact,sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(ch, 64, 70);
+  return new THREE.CanvasTexture(c);
+}
+var TEX_E = null, TEX_Q = null;
+function addClouds(x0, x1, z0, z1, n, ny) {
+  for (var i = 0; i < n; i++) {
+    var c = sub(scene, x0 + srand() * (x1 - x0), -9 - srand() * 4, z0 + srand() * (z1 - z0));
+    for (var k = 0; k < 4; k++) { var s = M(c, new THREE.SphereGeometry(2.6 + srand() * 2.2, 10, 8), toon(0xf4f9ff), (k - 1.5) * 3, srand() * .6, srand() * 1.2, false); s.scale.y = .55; }
+    clouds.push({ g: c, v: .15 + srand() * .2, low: true, xmin: x0 - 20, xmax: x1 + 20 });
+  }
+  for (var j = 0; j < ny; j++) {
+    var cg = sub(scene, x0 + srand() * (x1 - x0), 12 + srand() * 6, z0 - 10 - srand() * 14);
+    for (var q = 0; q < 3; q++) { var sp = M(cg, new THREE.SphereGeometry(1.8 + srand() * 1.2, 10, 8), toon(0xffffff), (q - 1) * 2.4, srand() * .5, 0, .06); sp.scale.y = .7; }
+    clouds.push({ g: cg, v: .3 + srand() * .3, xmin: x0 - 20, xmax: x1 + 20 });
+  }
+}
+function buildLevel1() {
+  if (L1.built) return; L1.built = true;
+  var ox = L1.ox, oz = L1.oz;
+  var ISL = [
+    { x: 0, z: 0, r: 12.5, top: 0x7ccf6a, side: 0x5fb352, tuft: 0x58b84a, bush: 0x4fb05a, nT: 90, nF: 34, nB: 22 },
+    { x: 32, z: 0, r: 10.5, top: 0x5fb86a, side: 0x3f9a52, tuft: 0x3f9a52, bush: 0x378a4a, nT: 80, nF: 10, nB: 22, fl: [0xffe14d, 0xffffff] },
+    { x: 0, z: -30, r: 10.5, top: 0xbdbdae, side: 0x8f9086, tuft: 0x9aa58a, bush: 0x7d9a68, nT: 40, nF: 0, nB: 8 },
+    { x: 30, z: -30, r: 9, top: 0xc8d4ee, side: 0x8fa6d0, tuft: 0xa7c6e8, bush: 0x8fb7d8, nT: 50, nF: 22, nB: 10, fl: [0x7fe3ff, 0xb99cff, 0xffffff] },
+    { x: 62, z: 0, r: 9.5, top: 0xe6d27c, side: 0xc4a94e, tuft: 0xc8b25a, bush: 0x9ab552, nT: 60, nF: 14, nB: 12, fl: [0xffe14d, 0xff9a3d] }
+  ];
+  var EDGES = [[0, 2], [0, 1], [2, 3], [1, 4]];
+  ISL.forEach(function (s, i) {
+    buildIsland(s.x + ox, s.z + oz, s.r, s.top, s.side);
+    L1.islands.push({ x: s.x + ox, z: s.z + oz, r: s.r });
+    s.skip = [];
+    EDGES.forEach(function (e) { var o = e[0] === i ? e[1] : e[1] === i ? e[0] : -1; if (o >= 0) s.skip.push(Math.atan2(ISL[o].z - s.z, ISL[o].x - s.x)); });
+    decorIsland(s.x + ox, s.z + oz, s.r, s);
+  });
+  addClouds(-45, 110, -75 + oz, 40 + oz, 20, 8);
+  function tr(x, z, s) { var o = makeTree(x + ox, z + oz, s); o.lvl = 1; return o; }
+  function rk(x, z, s, t) { var o = makeRock(x + ox, z + oz, s, t); o.lvl = 1; return o; }
+  function cr(x, z, s) { var o = makeCrystal(x + ox, z + oz, s); o.lvl = 1; return o; }
+  // home isle
+  [[-9, -5], [-9.5, 3.5], [6, 9], [10.5, -4], [-3, -10]].forEach(function (p) { tr(p[0], p[1], .9 + srand() * .3); });
+  [[5, -6], [8.5, 3], [1.5, 8], [-7, 7], [6.5, -9.5]].forEach(function (p) { rk(p[0], p[1], .62 + srand() * .2, "rock"); });
+  // forest
+  [[26, -4], [27, 5], [30, -7], [33, 6], [36, -4], [38, 3], [35, -8], [29, 8], [39, -5.5], [25, 4.5], [32, -3], [33.5, 2]].forEach(function (p) { tr(p[0], p[1], .95 + srand() * .35); });
+  [[31, 3.5], [36.5, 6]].forEach(function (p) { rk(p[0], p[1], .65, "rock"); });
+  // quarry
+  [[-5, -26], [5, -27], [-7.5, -31], [7.5, -33], [-3, -35.5], [3.5, -36.5], [-1.5, -23.5], [1, -32]].forEach(function (p) { rk(p[0], p[1], .62 + srand() * .2, "rock"); });
+  rk(-6.5, -35, 1.45, "big"); rk(7.5, -27.5, 1.45, "big"); tr(-8, -26, 1);
+  // crystal isle
+  [[26, -27, .8], [33, -26.5, .8], [35.5, -31, .8], [30, -35.5, .8], [25.5, -33, .8], [30.5, -30, .9], [34, -34.5, .75]].forEach(function (p) { cr(p[0], p[1], p[2]); });
+  [[28, -24.5], [36, -27]].forEach(function (p) { rk(p[0], p[1], .65, "rock"); });
+  // gold isle
+  [[57, 5], [61, 7], [67, 5.5], [68.5, .5], [57, -6], [66, -6.5]].forEach(function (p) { rk(p[0], p[1], .78, "gold"); });
+  [[57, 1.5], [67.5, -4]].forEach(function (p) { rk(p[0], p[1], .72, "rock"); });
+  tr(63.5, 8, 1);
+  // the house: Mabel’s office
+  var hx = -5.5 + ox, hz = -1 + oz, hg = sub(scene, hx, 0, hz); buildHut(hg, ["QUESTS", "(MABEL)"]);
+  colliders.push({ x: hx, z: hz, r: 2.2 });
+  L1.house = { pos: new V3(hx, 0, hz), g: hg };
+  L1.mpos.set(hx + hg.userData.roof.x, hg.userData.roof.y, hz + hg.userData.roof.z);
+  emitters.push({ p: { id: "l1_house", pos: L1.house.pos, real: hg }, t: 0 });
+  var sg = sub(scene, 3 + ox, 0, -4 + oz); signBoard(sg, ["LEVEL 1", "BONK ISLES"], 1.5, .72, 0, .5, 0);
+  TEX_E = markTex("!", "#ffd93d"); TEX_Q = markTex("?", "#8cf08c");
+  L1.mark = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX_E, depthTest: false, transparent: true })); L1.mark.scale.set(1.2, 1.2, 1); L1.mark.renderOrder = 11; scene.add(L1.mark);
+  // bridges and the statue
+  function bridge(id, name, blurb, cost, x, z, len, alongZ, a, b) {
+    addPlot(id, { name: name, blurb: blurb, cost: cost, pos: [x + ox, z + oz], len: len, range: len / 2 + 3.2, rotY: alongZ ? Math.PI / 2 : 0, build: function (g) { buildBridgeGen(g, len); },
+      after: function (p) { G.cine = { pos: p.pos.clone(), zoom: .9 }; snd.fanfare(); later(2, function () { G.cine = null; }); saveL1(); } });
+    L1.bridges.push({ id: id, x: x + ox, z: z + oz, len: len, alongZ: alongZ, a: a, b: b });
+  }
+  bridge("l1_bN", "Plank Bridge North", "To the Quarry. Rocks as far as the eye can see.", { wood: 8, stone: 4 }, 0, -16, 8.6, true, 0, 2);
+  bridge("l1_bE", "Plank Bridge East", "To the Forest. Trees drop things. So does the sky.", { wood: 10, stone: 6 }, 17, 0, 10.6, false, 0, 1);
+  bridge("l1_bC", "Crystal Crossing", "Shiny rocks ahead. The bridge is a little sparkly too.", { wood: 10, stone: 8 }, 15.75, -30, 12.1, false, 2, 3);
+  bridge("l1_bG", "Golden Gangway", "The final bridge. Mabel says it\u2019s probably safe.", { wood: 12, stone: 6, crystal: 4 }, 47.5, 0, 11.6, false, 1, 4);
+  addPlot("l1_statue", { name: "Statue of Dunk\u2019s Forehead", blurb: "A tribute to the hardest-working part of Dunk.", cost: { gold: 6, stone: 8, crystal: 2 }, pos: [62 + ox, -3 + oz], col: 2.3, ring: 3.0, build: buildStatue, after: function () { finaleL1(); } });
+}
+
+/* ---------- entering the level ---------- */
+function resetHints() {
+  ["hint-stick", "hint-keys", "bonk-key", "buildcard"].forEach(function (id) { $(id).classList.add("hidden"); });
+  $("btn-bonk").classList.remove("hinted"); $("btn-bonk").querySelector("span").textContent = "BONK";
+}
+function enterLevel1(resume) {
+  audio(); startMusic();
+  ["ov-start", "story", "ov-end", "menu"].forEach(function (id) { $(id).classList.add("hidden"); });
+  var fd = $("fade"); fd.classList.add("on");
+  setTimeout(function () {
+    buildLevel1();
+    G.level = 1; G.title = false; G.playing = true; G.started = true; G.ended = false; G.orbit = false; G.cine = null; G.won = false; G.free = true; G.paused = false; G.sheet = null;
+    G.step = STEPS.length; G.stepId = "l1"; G.perfStreak = 0; showStreak(0);
+    resetHints(); activePlot = null; cardPlot = null; marker.visible = false;
+    pickups.forEach(function (k) { scene.remove(k.m); }); pickups.length = 0;
+    hazards.forEach(function (h) { scene.remove(h.m); scene.remove(h.sh); }); hazards.length = 0; L1.falls.forEach(function (h) { scene.remove(h.m); scene.remove(h.sh); }); L1.falls.length = 0; L1.hzT = 6; L1.isl = -1;
+    for (var k in stats) stats[k] = 0;
+    for (var i in inv) inv[i] = 0; for (var g in GATH) GATH[g] = 0; for (var s in seen) seen[s] = false;
+    Object.keys(plots).forEach(function (id) { if (id.indexOf("l1_") === 0) { var p = plots[id]; p.built = false; p.active = false; p.ghost.visible = false; p.real.visible = false; } });
+    colliders.length = 0; colliders.push({ x: -1.6, z: -2.2, r: .45 }, { x: L1.house.pos.x, z: L1.house.pos.z, r: 2.2 });
+    G.playTime = 0; G.lastProgress = G.time; P.lastBonk = -9;
+    P.pos.set(2 + L1.ox, 0, 4 + L1.oz); P.face.set(0, 0, -1); P.yaw = Math.PI; P.fakeU = 0; P.hop = 0; P.noggin = 0; P.dizzy = 0; P.stun = 0; P.charging = false; P.lunge = null; P.vel = new V3(); P.gy = 0;
+    dunk.stars.visible = false; $("vig").classList.remove("dizzy");
+    cam.tgt.set(P.pos.x, 0, P.pos.z); cam.zoom = 1.1; cam.yaw = 0; cam.pitch = .9;
+    // Mabel moves into the new office
+    var bd = mabel.bird, to = L1.mpos.clone();
+    if (bd.parent) bd.parent.remove(bd); scene.add(bd); bd.position.copy(to); mabel.flying = false; mabel.perched = true; mabel.perch = to;
+    // Gary tags along
+    gary.root.position.set(4 + L1.ox, 0, 6 + L1.oz); gary.home.set(4 + L1.ox, 0, 6 + L1.oz); gary.state = "wander"; gary.body.scale.set(1, 1, 1); gary.body.rotation.z = 0;
+    $("app").classList.add("l1"); $("hud").classList.remove("hidden"); $("controls").classList.remove("hidden"); $("btn-hats").classList.remove("hidden");
+    Q.idx = 0; Q.state = "offer"; Q.snap = null; qChip.key = ""; qChip.sig = "";
+    for (var h in UNL) UNL[h] = (h === "none" || h === "stone");
+    var sv = loadSave();
+    if (resume && sv.l1) restoreL1(sv.l1); else { setHat("stone", true); writeSave({ l1: null, l1done: false }); }
+    updateRes(); refreshQuestChip();
+    var q = curQ();
+    if (q && Q.state === "active" && q.type === "build") activatePlot(q.plot);
+    fd.classList.remove("on");
+    actBanner("Level 1: Bonk Isles", "Five islands. One head. Several hats.");
+    later(2.6, function () {
+      if (Q.state === "offer" && curQ()) { say(resume ? "Back already? I have a job for you." : "Come into the office. Okay, it\u2019s a hut. Come in.", 1); later(.9, function () { if (Q.state === "offer") openBoard(); }); }
+    });
+  }, 420);
+}
+
+/* ---------- per-frame: quest progress, talk card, sparkles ---------- */
+function updateQuest(dt) {
+  if (G.level !== 1) return;
+  var q = curQ();
+  if (q && Q.state === "active" && !G.cine && qDone(q)) {
+    Q.state = "ready"; G.lastProgress = G.time; snd.chime(); toast("Quest done! Return to Mabel"); saveL1();
+  }
+  refreshQuestChip(); updatePolish(dt);
+  L1.saveT += dt; if (L1.saveT > 12) { L1.saveT = 0; saveL1(); }
+  L1.sparkT -= dt;
+  if (L1.sparkT <= 0 && P.pos.x > 12 && P.pos.z < L1.oz - 20 && P.pos.x < 45) {
+    L1.sparkT = .35; var cx = 30 + L1.ox + rnd(-6, 6), cz = -30 + L1.oz + rnd(-6, 6);
+    burst(new V3(cx, .5, cz), [0x7fe3ff, 0xb99cff, 0xffffff], 1, .6, 2.2, .5, 1.1);
+  }
+}
+function updateTalk() {
+  var c = $("talk");
+  if (G.level !== 1 || !canAct() || cardPlot || !L1.house || !curQ()) { c.classList.add("hidden"); L1.talkOn = false; return; }
+  var d = Math.hypot(P.pos.x - L1.house.pos.x, P.pos.z - L1.house.pos.z);
+  if (d > 6.2) { c.classList.add("hidden"); L1.talkOn = false; return; }
+  var msg = Q.state === "offer" ? "I\u2019ve got a job for you!" : Q.state === "ready" ? "Quest done? Come tell me." : "Need a reminder?";
+  if (c.classList.contains("hidden")) { c.classList.remove("hidden", "in"); void c.offsetWidth; c.classList.add("in"); $("talk-pic").innerHTML = ART.mabel; }
+  if ($("talk-tx").textContent !== msg) $("talk-tx").textContent = msg;
+  $("talk-go").classList.toggle("ready", Q.state !== "active"); $("talk-go").textContent = COARSE ? "Talk" : "Talk [E]";
+  L1.talkOn = true;
+}
+function updateMark() {
+  if (!L1.mark) return;
+  var show = G.level === 1 && !!curQ() && Q.state !== "active" && !G.ended;
+  L1.mark.visible = show;
+  if (show) { L1.mark.material.map = Q.state === "ready" ? TEX_Q : TEX_E; L1.mark.position.set(L1.mpos.x, L1.mpos.y + 1.15 + Math.sin(G.time * 4) * .18, L1.mpos.z); }
+}
+
+/* ---------- polish: hat flair, feat hats, island hazards, crystal sparkle ---------- */
+function hatWord(tg, gp) {
+  var id = P.hatId, w = null;
+  if (id === "lumber" && tg.kind === "tree") w = "TIMBER!";
+  else if (id === "miner" && (tg.kind === "crystal" || tg.kind === "gold")) w = "CLINK!";
+  else if (id === "crown" && (tg.kind === "gold" || tg.kind === "crystal")) w = "CHA-CHING!";
+  else if (id === "tiara" && tg.kind === "crystal") w = "Sparkle!";
+  else if (id === "wool") w = "Fluffy!";
+  else if (id === "dunce") w = "Duh.";
+  if (w) floater(gp.clone().setY(3.1), w, "bw", 1.4);
+}
+function hatFlair(dt) {
+  L1.flT -= dt; if (L1.flT > 0) return;
+  var id = P.hatId, top = P.pos.clone(); top.y = 2.9;
+  var jit = function (a) { return new V3(rnd(-a, a), 0, rnd(-a, a)); };
+  if (id === "crown") { L1.flT = .3; burst(top.clone().add(jit(.5)), [0xffd93d, 0xffffff], 1, .5, 1.4, .5, .8); }
+  else if (id === "miner") { L1.flT = .5; burst(new V3(P.pos.x + P.face.x * .8, 2.4, P.pos.z + P.face.z * .8), 0xfff6b0, 1, .2, .5, .45, .35); }
+  else if (id === "lumber") { L1.flT = .7; burst(top.clone().add(jit(.9)), [0x70cc6c, 0x4fb05a], 1, .5, .3, .6, 1.1); }
+  else if (id === "prop") { L1.flT = .1; if (P.speed > .3) puff(P.pos.clone().setY(.25), .5, 0xffffff, .35, .3); }
+  else if (id === "dunce") { L1.flT = .45; burst(top.clone().add(new V3(0, .6, 0)).add(jit(.4)), 0xffe14d, 1, .6, 1.4, .5, .7); }
+  else if (id === "wool") { L1.flT = 1; puff(top.clone().add(jit(.4)), .45, 0xffffff, .8, .4); }
+  else if (id === "tiara") { L1.flT = .22; burst(top.clone().add(jit(.5)), [0x7fe3ff, 0xb99cff], 1, .5, 1.4, .5, .8); }
+  else L1.flT = .5;
+}
+function checkFeatHats() {
+  if (!canAct()) return;
+  if (!UNL.dunce && stats.dizzy >= 3) unlockHat("dunce");
+  else if (!UNL.wool && stats.sheep >= 2) unlockHat("wool");
+  else if (!UNL.tiara && stats.crystals >= 10) unlockHat("tiara");
+}
+/* island hazards: forest coconuts, quarry rockfall, crystal shard drops. Always telegraphed with a red circle. */
+function spawnFall(kind) {
+  var x = P.pos.x + (P.vel ? P.vel.x * .85 : 0) + rnd(-.8, .8), z = P.pos.z + (P.vel ? P.vel.z * .85 : 0) + rnd(-.8, .8);
+  var m = sub(scene, x, 8, z);
+  if (kind === "coconut") M(m, new THREE.SphereGeometry(.3, 10, 8), toon(0x6b4a2b), 0, 0, 0, .04);
+  else if (kind === "rock") M(m, new THREE.DodecahedronGeometry(.38, 0), toon(0x8f99a5), 0, 0, 0, .04);
+  else M(m, new THREE.OctahedronGeometry(.34, 0), toon(0x7fe3ff, { emissive: 0x15405a }), 0, 0, 0, .04);
+  var sh = new THREE.Mesh(BLOB_GEO, new THREE.MeshBasicMaterial({ color: 0xd42a1e, transparent: true, opacity: .38, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.set(x, .05, z); scene.add(sh);
+  L1.falls.push({ m: m, sh: sh, t: 0, dur: 1.15, x: x, z: z, kind: kind });
+  if (kind === "rock") once("rockfall", function () { say("Quarry rule one: rocks fall. Watch the red circles.", 0); });
+  else if (kind === "shard") once("shardfall", function () { say("Crystal shards drop from above. Pretty. Pointy. Dodge.", 0); });
+  else once("coconutWarn", function () { say("Heads up. Literally. Something\u2019s falling.", 0); });
+}
+var FALL_MSG = { coconut: "OW. COCONUT.", rock: "OW. ROCK.", shard: "OW. SHARD." };
+function updateFalls(dt) {
+  for (var i = L1.falls.length - 1; i >= 0; i--) {
+    var h = L1.falls[i]; h.t += dt; var u = h.t / h.dur;
+    h.m.position.y = lerp(8, 1.6, u * u); h.m.rotation.y += dt * 6; h.sh.scale.setScalar(.2 + .9 * u);
+    if (u >= 1) {
+      if (Math.hypot(P.pos.x - h.x, P.pos.z - h.z) < 1.0 && !P.lunge) {
+        stats.ouch = (stats.ouch || 0) + 1; addNog(h.kind === "rock" ? 24 : 18); P.stun = .6; snd.dong(); snd.ow(); shake(.5); vibrate(40); G.hitstop = .08;
+        floater(P.pos.clone().setY(2.8), FALL_MSG[h.kind], "ow", 1.2); burst(P.pos.clone().setY(2.3), h.kind === "shard" ? 0x7fe3ff : h.kind === "rock" ? 0x8f99a5 : 0x6b4a2b, 8, 4, 5, 1, .6);
+        $("vig").classList.remove("hurt"); void $("vig").offsetWidth; $("vig").classList.add("hurt");
+      } else { floater(new V3(h.x, 1.2, h.z), "Missed!", "bw", 1.0); snd.pop(); }
+      puff(new V3(h.x, .4, h.z), 1, 0xe8e0d0, .5, .4);
+      scene.remove(h.m); scene.remove(h.sh); L1.falls.splice(i, 1);
+    }
+  }
+  if (!canAct() || L1.falls.length) return;
+  var isl = islandOf(P.pos.x, P.pos.z);
+  if (isl !== L1.isl) { L1.isl = isl; L1.hzT = 5; return; }
+  L1.hzT -= dt;
+  if (L1.hzT <= 0) {
+    if (isl === 1) { L1.hzT = rnd(6, 10); spawnFall("coconut"); }
+    else if (isl === 2) { L1.hzT = rnd(8, 12); spawnFall("rock"); }
+    else if (isl === 3) { L1.hzT = rnd(9, 14); spawnFall("shard"); }
+    else L1.hzT = 4;
+  }
+}
+function updatePolish(dt) {
+  hatFlair(dt); updateFalls(dt);
+  if (P.hatId === "tiara") P.sparkle = Math.max(P.sparkle || 0, .5);
+  if (P.sparkle > 0) {
+    P.sparkle -= dt; P.spT = (P.spT || 0) - dt;
+    if (P.spT <= 0 && P.speed > .2) { P.spT = .05; burst(P.pos.clone().setY(.3), [0x7fe3ff, 0xb99cff, 0xffffff], 1, .8, 1.6, .55, .8); }
+  }
+  checkFeatHats();
+}
+
+/* ---------- level 1 finale ---------- */
+function finaleL1() {
+  G.won = true; Q.idx = QUESTS.length; Q.state = "offer"; snd.fanfare(); refreshQuestChip();
+  var st = plots.l1_statue; G.cine = { pos: st.pos.clone().add(new V3(0, 2.2, 0)), zoom: 1.15 }; G.orbit = true; cam.yaw = 0;
+  stats.finalTime = G.playTime; saveL1(); writeSave({ l1done: true });
+  confetti(st.pos);
+  later(1.0, function () { confetti(st.pos); snd.chime(); });
+  later(2.2, function () { say("Level 1 complete. Please do not bonk the monument.", 1); confetti(st.pos); });
+  T.push({ kind: "statue", g: st.real, radius: 2.0, hp: 99, max: 99, hard: 0, alive: true, wob: 0, sc: 1, noCol: true, pop: 1, lvl: 1 });
+  later(5.4, function () { showEnd(); });
+}
+
+function showEndL1() {
+  G.ended = true; G.orbit = true; $("controls").classList.add("hidden"); $("hud").classList.add("hidden"); hideBubble(); closeSheet();
+  $("end-title").textContent = "Level 1 complete!";
+  $("end-art").innerHTML = '<div style="width:110px;height:110px;border:3px solid var(--line);overflow:hidden;margin-bottom:8px">' + ART.statue + '</div>';
+  var ratio = stats.bonks ? stats.perfects / stats.bonks : 0, nh = HAT_ORDER.filter(function (k) { return UNL[k] && k !== "none"; }).length, review;
+  if (stats.dizzy >= 8) review = "Mabel\u2019s review: \u201cFive islands, five hats, and a lot of stars circling your head. Concerning.\u201d";
+  else if (ratio > .3) review = "Mabel\u2019s review: \u201cYou\u2019re a professional. I\u2019m updating your job title to Head of Everything.\u201d";
+  else if ((stats.ouch || 0) >= 6) review = "Mabel\u2019s review: \u201cThe islands hit back. You hit harder. Mostly.\u201d";
+  else review = "Mabel\u2019s review: \u201cLevel 1 complete. HR is reconsidering. Don\u2019t get your hopes up.\u201d";
+  $("end-review").textContent = review;
+  var ft = stats.finalTime || G.playTime, stars = 1 + (ratio >= .2 ? 1 : 0) + (stats.dizzy <= 4 ? 1 : 0), sv = loadSave(), prev = sv.l1BestTime, isBest = !prev || ft < prev;
+  var sh = ""; for (var si = 0; si < 3; si++) sh += si < stars ? "\u2605" : '<span class="off">\u2605</span>';
+  $("end-stars").innerHTML = sh; $("end-stars").setAttribute("aria-label", stars + " out of 3 stars");
+  $("end-best").textContent = isBest ? (prev ? "New best time! Previous: " + fmtTime(prev) : "First time through Bonk Isles.") : "Best time: " + fmtTime(prev);
+  writeSave({ l1BestTime: isBest ? ft : prev, l1Stars: Math.max(sv.l1Stars || 0, stars), l1done: true });
+  G.shareText = "I finished Level 1 of Hard Head in " + fmtTime(ft) + ": " + stars + "/3 stars, " + nh + "/" + (HAT_ORDER.length - 1) + " hats, " + stats.perfects + " perfect bonks, " + stats.dizzy + " dizzy spells.";
+  var rows = [[stats.bonks, "Bonks"], [stats.perfects, "Perfect bonks"], [stats.bestStreak, "Best streak"], [nh + "/" + (HAT_ORDER.length - 1), "Hats"], [stats.crystals, "Crystals"], [stats.golds, "Gold rocks"], [stats.dizzy, "Dizzy spells"], [stats.ouch || 0, "Ouchies"], [fmtTime(ft), "Time"]];
+  $("end-stats").innerHTML = rows.map(function (r) { return '<div class="stat"><b>' + r[0] + '</b><span>' + r[1] + "</span></div>"; }).join("");
+  $("btn-next").classList.add("hidden"); $("btn-again").textContent = "Back to title";
+  $("ov-end").classList.remove("hidden");
+}
 
 /* ---------- main loop ---------- */
 var last = 0;
@@ -1750,9 +2542,9 @@ function update(rdt) {
     if (u < .05) G.titleHit = false;
   } else {
     updatePlayer(dt); updatePickups(dt); updateHazards(dt); updateDirector(rdt);
-    updateBuildCard();
+    updateBuildCard(); updateQuest(rdt); updateTalk();
   }
-  updateTargets(dt); animPlayer(dt); updateParticles(dt); updateFloaters(dt); updateAmbient(dt);
+  updateTargets(dt); animPlayer(dt); updateParticles(dt); updateFloaters(dt); updateAmbient(dt); updateMark();
   updateBubble(rdt); updateCamera(rdt); updateGuide(rdt); updateGauge(); updateNoggin();
 }
 function frame(now) {
@@ -1770,13 +2562,15 @@ function init() {
     $("loading").classList.add("hidden"); $("webgl-fail").classList.remove("hidden"); $("btn-start").disabled = true; return;
   }
   setupInput(); syncSettings();
+  (function () { var sv = loadSave(); if (sv.bestTime) { var bl = $("best-line"); bl.textContent = "Your best: " + fmtTime(sv.bestTime) + " \u00b7 " + (sv.bestStars || 1) + "/3 stars"; bl.classList.remove("hidden"); } })();
+  (function () { var sv = loadSave(), b = $("btn-l1"); b.textContent = (sv.l1 && !sv.l1done) ? "Continue Level 1" : (sv.tutDone || sv.l1done) ? "Level 1: Bonk Isles" : "Skip to Level 1"; })();
   G.title = true;
   // place the title scene: Dunk facing the first rock
   P.pos.set(3.5, 0, -.6); P.face.set(1, 0, 0); P.yaw = Math.PI / 2;
   cam.tgt.set(4.6, 0, -.6); cam.zoom = .5;
   setTimeout(function () { $("loading").classList.add("hidden"); }, 250);
   requestAnimationFrame(frame);
-  if (DEBUG) window.__hh = { G: G, P: P, inv: inv, stats: stats, T: T, plots: plots, STEPS: STEPS, startStep: startStep, beginGame: beginGame, finale: finale, spawnCoconut: spawnCoconut, gary: function () { return gary; }, info: function () { return JSON.stringify({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries }); }, doBuild: doBuild, snap: function () { renderer.render(scene, camera); }, sim: function (sec) { for (var t = 0; t < sec; t += 1 / 60) update(1 / 60); renderer.render(scene, camera); }, startCharge: startCharge, releaseCharge: releaseCharge, tryBuild: tryBuild, chargeFor: function (sec) { startCharge(); for (var t = 0; t < sec; t += 1 / 60) update(1 / 60); releaseCharge(); }, zone: zone, say: say, showEnd: showEnd, dunk: function () { return dunk; } };
+  if (DEBUG) window.__hh = { G: G, P: P, inv: inv, stats: stats, T: T, plots: plots, STEPS: STEPS, startStep: startStep, beginGame: beginGame, finale: finale, spawnCoconut: spawnCoconut, gary: function () { return gary; }, info: function () { return JSON.stringify({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries }); }, doBuild: doBuild, enterLevel1: enterLevel1, Q: Q, QUESTS: QUESTS, L1: L1, UNL: UNL, GATH: GATH, setHat: setHat, acceptQuest: acceptQuest, claimQuest: claimQuest, openBoard: openBoard, closeSheet: closeSheet, qProg: qProg, curQ: curQ, HAT: HAT, walkable: walkable, saveL1: saveL1, restoreL1: restoreL1, loadSave: loadSave, snap: function () { renderer.render(scene, camera); }, sim: function (sec) { for (var t = 0; t < sec; t += 1 / 60) update(1 / 60); renderer.render(scene, camera); }, startCharge: startCharge, releaseCharge: releaseCharge, tryBuild: tryBuild, chargeFor: function (sec) { startCharge(); for (var t = 0; t < sec; t += 1 / 60) update(1 / 60); releaseCharge(); }, zone: zone, say: say, showEnd: showEnd, dunk: function () { return dunk; } };
 }
 if (document.fonts && document.fonts.ready) { document.fonts.ready.then(init, init); setTimeout(init, 1500); } else init();
 })();
