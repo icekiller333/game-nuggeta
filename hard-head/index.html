@@ -71,7 +71,10 @@ button:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
 #objective.done #obj-t::before{ content:"\2713  "; color:var(--good); }
 .spacer{ flex:1; }
 #hud-right{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
-#res{ display:flex; gap:6px; }
+#res{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+#pack{ display:flex; align-items:center; gap:5px; padding:3px 10px 3px 6px; font-family:var(--display); font-size:19px; font-variant-numeric:tabular-nums; }
+#pack svg{ width:24px; height:24px; flex:none; }
+#pack-list{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
 .rp{ display:flex; align-items:center; gap:5px; padding:3px 10px 3px 6px; font-family:var(--display); font-size:19px; font-variant-numeric:tabular-nums; }
 .rp svg{ width:22px; height:22px; flex:none; }
 #noggin{ display:flex; align-items:center; gap:7px; padding:5px 9px 5px 6px; }
@@ -150,7 +153,8 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .cta.big{ background:var(--bonk); color:#fff; text-shadow:2px 2px 0 #221407; font-size:24px; padding:14px 26px; box-shadow:var(--shadow); width:auto; }
 
 /* ---------- act banner / toast ---------- */
-#banner{ position:absolute; z-index:45; left:0; right:0; top:30%; text-align:center; pointer-events:none; opacity:0; padding:0 16px; }
+#banner{ position:absolute; z-index:45; left:0; right:0; top:30%; text-align:center; pointer-events:none; opacity:0; padding:0 24px; box-sizing:border-box; }
+#bn-big{ max-width:100%; white-space:normal; overflow-wrap:anywhere; }
 #banner.show{ animation:bnr 3.1s ease both; }
 @keyframes bnr{ 0%{ opacity:0; transform:translateY(-24px) scale(.9) } 10%{ opacity:1; transform:none } 82%{ opacity:1 } 100%{ opacity:0; transform:translateY(10px) } }
 #bn-big{ display:inline-block; font-family:var(--display); font-size:clamp(30px,8.4vmin,58px); line-height:1; color:#fff; padding:10px 18px 12px; background:var(--bonk);
@@ -208,6 +212,8 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .sheet .row2{ display:flex; gap:10px; margin-top:12px; }
 .sheet .row2 .cta{ font-size:16px; padding:10px 8px; }
 .cta.ghost{ background:var(--panel2); }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .cta.ghost{ color:#fff; } }
+:root[data-theme="dark"] .cta.ghost{ color:#fff; }
 
 #ov-end{ z-index:85; justify-content:center; padding:20px; background:rgba(24,14,4,.45); }
 .panel-box{ width:min(94vw,440px); max-height:94vh; overflow:auto; background:var(--panel); border:3px solid var(--line); box-shadow:var(--shadow); padding:16px 16px 18px; text-align:center; animation:cardPop .4s cubic-bezier(.2,.9,.3,1.2); }
@@ -279,6 +285,39 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 #hud-btns{ display:flex; flex-direction:column; gap:8px; flex:none; }
 #btn-hats{ width:44px; height:44px; padding:0; display:grid; place-items:center; flex:none; background:var(--panel); position:relative; }
 #btn-hats svg{ width:30px; height:30px; }
+#btn-swap{ width:44px; height:44px; padding:0; display:grid; place-items:center; flex:none; background:var(--panel); position:relative; }
+#btn-swap .swic svg{ width:28px; height:28px; display:block; }
+#btn-swap .swarr{ position:absolute; right:-6px; bottom:-6px; width:19px; height:19px; border-radius:50%; background:var(--gold); border:2px solid var(--line); display:grid; place-items:center; }
+#btn-swap .swarr svg{ width:11px; height:11px; }
+#btn-swap.new{ animation:throb .5s ease-in-out infinite alternate; }
+.hat-btns{ display:flex; flex-direction:column; gap:5px; flex:none; }
+.hat-btns .cta{ min-width:84px; }
+.hat-sum{ display:flex; gap:8px; margin:0 0 8px; }
+.hat-sum>div{ flex:1; display:flex; gap:8px; align-items:center; background:var(--panel2); border:2px solid var(--line); padding:5px 7px; min-width:0; }
+.hat-sum .hat-ic{ width:34px; height:34px; border-width:2px; }
+.hat-sum .hat-ic svg{ width:26px; height:26px; }
+.hat-sum small{ display:block; font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.hat-sum b{ font-family:var(--display); font-size:13px; line-height:1.05; font-weight:400; }
+#title-ask{ position:absolute; left:50%; top:30%; transform:translateX(-50%); z-index:3; padding:10px 14px 12px; width:min(78vw,300px); text-align:center; animation:cardIn .25s cubic-bezier(.2,.9,.3,1.2); }
+#title-ask .who{ font-family:var(--display); font-size:12px; color:var(--bonk-d); }
+#title-ask .tt{ font-family:var(--display); font-size:24px; line-height:1.05; margin:2px 0 10px; }
+#title-ask .row{ display:flex; gap:10px; justify-content:center; }
+#ov-start.free{ pointer-events:none; justify-content:flex-start; background:none; }
+#ov-start.free #title-top{ display:none; }
+#ov-start.free .start-foot{ flex-direction:row; flex-wrap:wrap; justify-content:center; gap:10px; pointer-events:none; }
+#ov-start.free .start-foot button{ pointer-events:auto; }
+#ov-start.free .cta.big{ font-size:19px; padding:9px 16px; animation:none !important; }
+#ov-start.free .cta.sm{ font-size:15px; padding:9px 14px; }
+#app.tfree #controls{ z-index:76; }
+#app.tfree #hud{ z-index:76; }
+#app.tfree #objective, #app.tfree #hud-btns, #app.tfree #res, #app.tfree #pack{ display:none; }
+#app.tfree #hud{ top:auto; bottom:auto; top:calc(64px + var(--safe-t)); }
+#hub-ui{ display:none; position:absolute; top:calc(12px + var(--safe-t)); left:12px; right:12px; align-items:center; gap:8px; pointer-events:none; z-index:3; }
+#hub-ui button{ pointer-events:auto; flex:none; }
+#hub-tip{ flex:1; min-width:0; padding:7px 10px; font-weight:800; font-size:13px; line-height:1.2; text-align:center; }
+#ov-start.hub #hub-ui{ display:flex; }
+#ov-start.hub .start-foot{ display:none; }
+#app.hub #hud{ top:calc(66px + var(--safe-t)); }
 #hat-dot{ position:absolute; top:-7px; right:-7px; width:17px; height:17px; border-radius:50%; background:var(--bonk); border:2px solid var(--line); animation:throb .5s ease-in-out infinite alternate; }
 .l1 #res{ flex-wrap:wrap; justify-content:flex-end; max-width:132px; }
 .l1 .rp{ font-size:16px; padding:2px 8px 2px 4px; }
@@ -286,13 +325,19 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .l1 #objective{ max-width:min(calc(100vw - 246px), 330px); min-width:132px; }
 .fl.crystal{ color:#9be8ff; }
 .fl.scrap{ color:#c9d4e0; }
-#talk{ position:absolute; z-index:31; left:50%; transform:translateX(-50%); bottom:calc(var(--safe-b) + 154px); width:min(88vw,340px); padding:7px 10px; display:flex; gap:10px; align-items:center; }
+#talk{ position:absolute; z-index:31; left:50%; transform:translateX(-50%); bottom:calc(var(--safe-b) + 154px); width:min(74vw,280px); padding:6px 8px; display:flex; gap:10px; align-items:center; }
 #talk.in{ animation:cardIn .25s cubic-bezier(.2,.9,.3,1.2); }
-#talk .pic{ width:48px; height:48px; flex:none; border:3px solid var(--line); overflow:hidden; background:#cfeaf7; }
+#talk .pic{ width:40px; height:40px; flex:none; border:3px solid var(--line); overflow:hidden; background:#cfeaf7; }
 #talk .pic svg{ width:100%; height:100%; display:block; }
 #talk .who{ font-family:var(--display); font-size:12px; color:var(--bonk-d); }
 #talk .tt{ font-weight:800; font-size:14px; line-height:1.2; flex:1; }
 #talk .cta{ width:auto; flex:none; font-size:16px; padding:8px 12px; }
+#anvilcard{ position:absolute; z-index:31; left:50%; transform:translateX(-50%); bottom:calc(var(--safe-b) + 154px); width:min(78vw,300px); padding:6px 8px; display:flex; gap:10px; align-items:center; }
+#anvilcard.in{ animation:cardIn .25s cubic-bezier(.2,.9,.3,1.2); }
+#anvilcard .who{ font-family:var(--display); font-size:12px; color:var(--bonk-d); }
+#anvilcard .tt{ font-weight:800; font-size:14px; line-height:1.2; flex:1; }
+#anvilcard .cta{ width:auto; flex:none; font-size:16px; padding:8px 12px; }
+@media (max-height:520px){ #anvilcard{ bottom:calc(var(--safe-b) + 12px); } }
 .qb-head{ display:flex; gap:12px; align-items:center; margin-bottom:10px; }
 .qpic{ width:64px; height:64px; flex:none; border:3px solid var(--line); overflow:hidden; background:#cfeaf7; }
 .qpic svg{ width:100%; height:100%; display:block; }
@@ -329,7 +374,7 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .lvl-st{ font-size:13px; font-weight:800; color:var(--gold); text-shadow:1px 1px 0 var(--shadowc); }
 .lvl-card .cta{ width:auto; flex:none; font-size:14px; padding:7px 11px; }
 @media (prefers-reduced-motion: reduce){
-  #hat-dot{ animation:none; }
+  #hat-dot, #btn-swap.new{ animation:none; }
   #flash.go{ animation:none; }
   #streak.pop{ animation:none; }
   #banner.show, #toast.show{ animation-duration:2.4s; }
@@ -353,7 +398,7 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
     </div>
     <div class="spacer"></div>
     <div id="hud-right">
-      <div id="res"></div>
+      <div id="res"><button id="pack" class="chip pressable hidden" aria-label="Backpack" aria-expanded="false"><svg viewBox="0 0 28 28" stroke="#221407" stroke-width="2.2" stroke-linejoin="round"><path d="M8 11q0-6 6-6t6 6v13a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2z" fill="#e0a010"/><rect x="10" y="16" width="8" height="6" rx="1.5" fill="#ffc21a"/><path d="M11 11h6" fill="none"/></svg><b id="pack-n">0</b></button><div id="pack-list" class="hidden"></div></div>
       <div id="noggin" class="chip hidden" title="Head: fills when you bonk. Full means dizzy.">
         <span data-ico="head"></span>
         <div class="bar"><i id="noggin-fill"></i></div>
@@ -361,6 +406,7 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
     </div>
     <div id="hud-btns">
     <button id="btn-hats" class="chip pressable hidden" aria-label="Hats"><svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.6" stroke-linejoin="round"><path d="M6 28 Q20 4 34 28z" fill="#ffc21a"/><rect x="3" y="27" width="34" height="6" rx="2" fill="#e0a010"/><circle cx="20" cy="23" r="3.2" fill="#fff6b0"/></svg><i id="hat-dot" class="hidden"></i></button>
+    <button id="btn-swap" class="chip pressable hidden" aria-label="Swap to your backup hat" title="Swap hats (Q)"><span class="swic"></span><span class="swarr"><svg viewBox="0 0 24 24" fill="none" stroke="#221407" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h15M15 3l5 5-5 5M20 16H5M9 11l-5 5 5 5"/></svg></span></button>
     <button id="btn-menu" class="chip pressable" aria-label="Pause and settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h14"/></svg>
     </button></div>
@@ -397,6 +443,7 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
   </div>
 
   <div id="talk" class="chip hidden"><div class="pic" id="talk-pic"></div><div class="tt"><div class="who">Mabel</div><div id="talk-tx"></div></div><button class="cta pressable" id="talk-go">Talk</button></div>
+  <div id="anvilcard" class="chip hidden"><div class="tt"><div class="who">Anvil</div><div id="anv-tx"></div></div><button class="cta pressable" id="anv-go">Upgrade</button></div>
 
   <div id="controls" class="hidden">
     <div id="stick"><i></i></div>
@@ -411,17 +458,16 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
   </div>
 
   <div class="overlay" id="ov-start">
-    <div>
+    <div id="title-top">
       <h1 class="logo"><span class="w1">HARD</span><span class="w2">HEAD</span></h1>
-      <p class="tagline">The robots took the jobs. Not the forehead.</p>
+      <p class="tagline">The robots took the jobs, not the foreheads.</p>
     </div>
+    <div id="hub-ui"><button class="cta ghost sm pressable" id="hub-back">&larr; Back</button><div id="hub-tip" class="chip">Level select: Perfect-bonk a node to enter</div></div>
+    <div id="title-ask" class="chip hidden" role="dialog" aria-label="Dunk asks if you are ready to work"><div class="who">Dunk</div><div class="tt">You ready to work?</div><div class="row"><button class="cta sm pressable" id="ta-yes">Yes</button><button class="cta ghost sm pressable" id="ta-no">Not yet</button></div></div>
     <div class="start-foot">
       <p id="webgl-fail" class="hidden">This browser can’t run 3D graphics. Try a recent Chrome, Safari or Firefox.</p>
-      <p class="how"><b>Drag</b> to walk. <b>Tap</b> to bonk. <b>Hold</b> to charge, then <b>let go in the green</b> for a perfect hit.</p>
-      <p class="how hidden" id="best-line"></p>
       <button class="cta big pressable" id="btn-start">Start bonking</button>
       <button class="cta ghost sm pressable" id="btn-map">Level map</button>
-      <p class="studio">A Weird Demon Games prototype &middot; tutorial about 7 minutes</p>
     </div>
   </div>
 
@@ -451,6 +497,15 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
       <h2>Hats</h2>
       <div id="hat-list"></div>
       <div class="row2"><button class="cta pressable" id="hat-close">Done</button></div>
+    </div>
+  </div>
+
+  <div id="anvilsheet" class="sheet-wrap hidden">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Anvil upgrades">
+      <h2>Anvil upgrades</h2>
+      <p id="anv-sub" class="hat-pk"></p>
+      <div id="anv-list"></div>
+      <div class="row2"><button class="cta pressable" id="anv-close">Done</button></div>
     </div>
   </div>
 
@@ -536,6 +591,8 @@ var G = { started: false, playing: false, paused: false, title: true, time: 0, p
   step: -1, stepT: 0, stepDone: false, lastProgress: 0, free: false, ended: false, level: 0, sheet: null, flags: {} };
 var SAVE_KEY = "hardhead.v1";
 function loadSave() { try { var r = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"); return r && typeof r === "object" ? r : {}; } catch (e) { return {}; } }
+var UPG = (function () { var u = (loadSave().upg) || {}; return { loot: u.loot | 0, speed: u.speed | 0, head: u.head | 0, magnet: u.magnet | 0, turret: u.turret | 0 }; })();
+function upgTotal() { return UPG.loot + UPG.speed + UPG.head + UPG.magnet + UPG.turret; }
 function writeSave(o) { try { var c = loadSave(); for (var k in o) c[k] = o[k]; localStorage.setItem(SAVE_KEY, JSON.stringify(c)); } catch (e) {} }
 (function () { var sv = loadSave(); ["sound", "music", "shake", "vib", "memos", "assist"].forEach(function (k) { if (typeof sv[k] === "boolean") S[k] = sv[k]; }); })();
 var RES_KEYS = ["stone", "wood", "gold", "crystal", "scrap", "gear", "slime"], inv = {}, seen = {}, GATH = {};
@@ -548,7 +605,7 @@ function lgDur() { return 1 + (1 / LG - 1) * .4; }        // bonk lunge duration
 function lgHop() { return 1 + (1 / LG - 1) * .8; }        // Dunk's hop height
 var stats = { crystals: 0, bigs: 0, bestStreak: 0, builds: 0, bonks: 0, perfects: 0, rocks: 0, trees: 0, golds: 0, dizzy: 0, coconuts: 0, sheep: 0, bounces: 0, robots: 0, squashed: 0, dodges: 0, beltT: 0, pads: 0, gooT: 0, spored: 0 };
 var P = { pos: new V3(0, 0, 3.5), face: new V3(0, 0, -1), yaw: Math.PI, charging: false, charge: 0, chargeT: 0, lunge: null, cool: 0, noggin: 0, lastBonk: -9,
-  dizzy: 0, hat: false, hatId: "none", stun: 0, walkT: 0, speed: 0, inZone: false, fakeU: 0, hop: 0, nogShown: false };
+  dizzy: 0, hat: false, hatId: "none", hat2: "none", stun: 0, walkT: 0, speed: 0, inZone: false, fakeU: 0, hop: 0, nogShown: false };
 
 /* ---------- tiny timer + tween helpers (run on real time, so hit-stop never freezes cutscenes) ---------- */
 var timers = [], tweens = [];
@@ -875,7 +932,7 @@ function applySky(sky) {
   st.classList.toggle("on", !!(sky && sky.stars));
 }
 /* ---------- vents: a ground hazard. The grate glows, then a steam jet shoves Dunk sideways (no head damage) ---------- */
-var VENT = { warn: 1.3, burst: .7, push: 9, pushT: .55 };
+var VENT = { warn: .8, burst: .7, push: 13, pushT: .7 };
 function makeVent(R, n, cfg) {
   var a = (cfg.dir || 0) * Math.PI / 180, r = cfg.r || 1.4, vx = cfg.x + R.ox, vz = cfg.z + R.oz;
   var g = sub(scene, vx, 0, vz);
@@ -920,7 +977,7 @@ function updateVents(dt) {
             floater(P.pos.clone().setY(2.8), "Blub.", "bw", 1.0);
             once("vent_fish", function () { say("Fishbowl: officially rated for steam. Mostly.", 1); });
           } else {
-            P.shove = { vx: v.dx * VENT.push, vz: v.dz * VENT.push, t: VENT.pushT, dur: VENT.pushT };
+            G.flags.ventShoved = true; stats.ventHits = (stats.ventHits || 0) + 1; P.shove = { vx: v.dx * VENT.push, vz: v.dz * VENT.push, t: VENT.pushT, dur: VENT.pushT };
             stats.shoved = (stats.shoved || 0) + 1; floater(P.pos.clone().setY(2.8), "WHOOSH", "bw big", 1.1); shake(.3); vibrate(25);
           }
         }
@@ -991,7 +1048,7 @@ function makeRock(x, z, s, type) {
   var o = { kind: type === "gold" ? "gold" : "rock", g: g, radius: s * 1.05, alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, spawnAt: 0 };
   if (type === "gold") { o.hp = 3; o.hard = 3; o.yield = 3; o.res = "gold"; o.rt = 28; }
   else if (type === "big") { o.hp = 5; o.hard = 2; o.yield = 6; o.res = "stone"; o.rt = 40; o.big = true; }
-  else { o.hp = 3; o.hard = 1; o.yield = 2; o.res = "stone"; o.rt = 22; }
+  else { o.hp = 3; o.hard = 1; o.yield = s < .9 ? 1 : s < 1.2 ? 2 : 3; o.res = "stone"; o.rt = 22; }
   o.max = o.hp; o.name = type;
   T.push(o); return o;
 }
@@ -1003,6 +1060,7 @@ function makeTree(x, z, s) {
   blob(g, 1.5 * s);
   [c1, c2].forEach(function (c) { c.material = c.material.clone(); c.material.transparent = true; c.userData.outs = c.children.filter(function (ch) { return ch.userData.ol; }); });
   var o = { kind: "tree", fade: 1, g: g, radius: .55 * s, hp: 3, max: 3, hard: 1, yield: 2, res: "wood", alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, rt: 18, canopy: [c1, c2], trunk: trunk, s: s, sway: 0 };
+  o.yield = s < 1.05 ? 1 : s < 1.35 ? 2 : 3;
   T.push(o); return o;
 }
 var ROCK_SPOTS = [[3.4, -2.4], [6.0, -0.6], [-3.6, -6.6], [7.2, -6.4], [-9.8, 1.0], [2.4, -10.6], [10.2, -3.6], [-5.8, -10]];
@@ -1192,7 +1250,7 @@ function dropItems(type, n, pos, dir) {
   for (var i = 0; i < n; i++) {
     var m = new THREE.Mesh(PK_GEO[type], PK_MAT[type]); outline(m, .035); scene.add(m);
     m.position.set(pos.x, pos.y + .8, pos.z);
-    var a = Math.random() * 6.283, s = rnd(1.5, 3.2);
+    var a = Math.random() * 6.283, s = rnd(2.6, 4.6);
     var hf = lgFly(), v = new V3((Math.cos(a) * s + (dir ? dir.x * 2 : 0)) * hf, rnd(6, 9), (Math.sin(a) * s + (dir ? dir.z * 2 : 0)) * hf);
     if (type === "wood") m.rotation.z = Math.PI / 2;
     pickups.push({ m: m, v: v, type: type, t: 0, mag: false });
@@ -1211,8 +1269,8 @@ function updatePickups(dt) {
     } else {
       var dx = P.pos.x - k.m.position.x, dz = P.pos.z - k.m.position.z, dy = (P.pos.y + .8) - k.m.position.y, d = Math.sqrt(dx * dx + dz * dz + dy * dy);
       if (d < .75) { collect(k, i); continue; }
-      if (!(d < 8 * HAT().magnet || k.t > 3)) { var bq2 = beltAt(k.m.position.x, k.m.position.z); if (bq2.b) { k.m.position.x += bq2.x * dt; k.m.position.z += bq2.z * dt; } }
-      if (d < 8 * HAT().magnet || k.t > 3) {
+      if (!(d < 8 * HAT().magnet * (1 + .25 * UPG.magnet) || k.t > 3)) { var bq2 = beltAt(k.m.position.x, k.m.position.z); if (bq2.b) { k.m.position.x += bq2.x * dt; k.m.position.z += bq2.z * dt; } }
+      if (d < 8 * HAT().magnet * (1 + .25 * UPG.magnet) || k.t > 3) {
         var sp = Math.min(22, 7 + (k.t - .7) * 12) * dt / d;
         k.m.position.x += dx * sp; k.m.position.y += dy * sp; k.m.position.z += dz * sp;
         k.m.rotation.y += dt * 9; if (k.type === "crystal" && Math.random() < .4) burst(k.m.position, [0x7fe3ff, 0xb99cff], 1, .3, .8, .4, .5);
@@ -1258,7 +1316,7 @@ function setupInput() {
   var app = $("app"), stick = $("stick"), thumb = stick.firstElementChild, R = 54;
   app.addEventListener("pointerdown", function (e) {
     if (!canAct() || inp.stickId !== null) return;
-    if (e.target.closest("#btn-bonk,#hud,#buildcard,#talk,#bubble,.sheet-wrap,#story,#ov-end")) return;
+    if (e.target.closest("#btn-bonk,#hud,#buildcard,#talk,#anvilcard,#bubble,.sheet-wrap,#story,#ov-end,.start-foot,#title-ask")) return;
     if (e.pointerType === "touch" && e.clientX > innerWidth * .62) return;
     inp.stickId = e.pointerId; inp.sx = e.clientX; inp.sy = e.clientY;
     stick.style.left = e.clientX + "px"; stick.style.top = e.clientY + "px"; stick.classList.add("on"); thumb.style.transform = "translate(0,0)";
@@ -1280,13 +1338,14 @@ function setupInput() {
   window.addEventListener("keydown", function (e) {
     var k = e.key.toLowerCase(), ae = document.activeElement, onBtn = ae && ae.tagName === "BUTTON";
     if (!onBtn && (k === "enter" || k === " ")) {
-      if (!$("ov-start").classList.contains("hidden") && !$("btn-start").disabled) { e.preventDefault(); $("btn-start").click(); return; }
+      if (!$("ov-start").classList.contains("hidden") && !$("btn-start").disabled && !G.titleFree && !G.titleAsk) { e.preventDefault(); $("btn-start").click(); return; }
       if (!$("story").classList.contains("hidden")) { e.preventDefault(); $("story-next").click(); return; }
     }
     if (k === "escape" || k === "p") { if (G.sheet && !menuOpen()) { closeSheet(); return; } if (G.playing) toggleMenu(); return; }
     if (menuOpen() || G.sheet || !G.playing) return;
     if ("wasd".indexOf(k) >= 0 && k.length === 1 || k.indexOf("arrow") === 0) { inp.keys[k] = true; e.preventDefault(); }
     if (k === " ") { e.preventDefault(); if (!e.repeat) { $("btn-bonk").classList.add("down"); startCharge(); } }
+    if (k === "q" && !e.repeat) { swapHats(); return; }
     if ((k === "e" || k === "enter") && !e.repeat) { if (LR.talkOn) openBoard(); else tryBuild(); }
   });
   window.addEventListener("keyup", function (e) {
@@ -1308,9 +1367,14 @@ function moveVec() {
 }
 
 /* ---------- the bonk ---------- */
-function zone() { var z = HAT().zone; return S.assist ? [Math.max(.4, z[0] - .12), Math.min(.97, z[1] + .05)] : z; }
+function matOf(tg) { if (!tg) return null; if (tg.kind === "tree") return "tree"; var r = tg.res; return (r === "stone" || r === "gold" || r === "crystal" || r === "scrap" || r === "slime" || r === "gear") ? r : null; }
+function zone() {
+  var H = HAT(), z = H.zone;
+  if (H.spec) { var m = matOf(pickTarget(3.4, 1.3)); if (m) z = H.spec.indexOf(m) >= 0 ? H.zoneBig : H.zoneSmall; }   // specialist hats: huge zone on their material, tiny elsewhere
+  return S.assist ? [Math.max(.4, z[0] - .12), Math.min(.97, z[1] + .05)] : z;
+}
 function addNog(v) {
-  v *= HAT().nog;
+  v *= HAT().nog * (1 - .1 * UPG.head);
   P.noggin = Math.min(100, P.noggin + v); P.nogShown = true;
   if (P.noggin >= 100 && P.dizzy <= 0) startDizzy();
 }
@@ -1320,7 +1384,7 @@ function startDizzy() {
   once("dizzy", function () { say("That wobble means your head is full. Wait it out. The wobble is free.", 1); });
 }
 function startCharge() {
-  if (!canAct() || P.dizzy > 0 || P.lunge || P.cool > 0 || P.stun > 0 || P.charging || P.jump) return;
+  if (!canAct() || P.dizzy > 0 || P.lunge || P.cool > 0 || P.stun > 0 || P.charging || P.jump || P.fall) return;
   P.charging = true; P.charge = 0; P.chargeT = 0; P.inZone = false; snd.charge();
 }
 function releaseCharge() {
@@ -1343,7 +1407,7 @@ function pickTarget(maxD, maxAng) {
 function doBonk(c) {
   var z = zone(), kind, dmg, perfect = false;
   if (c < .16) { kind = "tap"; dmg = 1; }
-  else if (c >= z[0] && c <= z[1]) { kind = "perfect"; dmg = 4; perfect = true; G.flags.hadPerfect = true; }
+  else if (c >= z[0] && c <= z[1] && P.hatId !== "none") { kind = "perfect"; dmg = 4; perfect = true; G.flags.hadPerfect = true; }
   else if (c > z[1]) { kind = "over"; dmg = 2; }
   else { kind = "charged"; dmg = 2; }
   dmg += HAT().dmg;
@@ -1380,7 +1444,13 @@ function hitTarget(tg, L) {
   hp.addScaledVector(toP, tg.radius * .5);
   shockwave(hp, L.perfect ? 0xffe14d : 0xffffff, L.perfect ? 4.4 : 1.6 + pw * 1.6, L.perfect ? .45 : .28);
   if (L.perfect) { flash(); punch(1); } else punch(pw * .5);
-  if (tg.kind === "sheep") { launchGary(L); return; }
+  if (tg.kind !== "sheep") G.sheepHits = 0;
+  if (tg.kind === "raider") { hitRaider(tg, L, hp); return; }
+  if (tg.kind === "lvlnode") { hubHit(tg, L, hp); return; }
+  if (tg.kind === "egg") { hitEgg(tg, L, hp); return; }
+  if (tg.kind === "squirrel") { launchSquirrel(tg); return; }
+  if (tg.kind === "tree" && G.level === 1 && !squirrelOut() && G.time > (G.sqCool || 0) && Math.random() < .1) spawnSquirrel(tg);
+  if (tg.kind === "sheep") { G.sheepHits = (G.sheepHits || 0) + 1; if (G.sheepHits % 5 === 0) say("Cut that out. Gary is not a stress ball. Gary has a family.", 1); launchGary(L); return; }
   if (tg.kind === "boss") { hitBoss(tg, L, hp); return; }
   if (tg.kind === "statue") { tg.wob = 1; snd.dong(); floater(hp, "DONGGG", "bw big", 1.4); once("statueBonk", function () { say("I said don’t bonk the monument.", 1); }); return; }
   var effD = L.dmg + (tg.kind === "tree" ? HAT().treeDmg : 0), effH = tg.hard - ((tg.kind === "gold" || tg.kind === "crystal") ? HAT().gemEase : 0);
@@ -1414,7 +1484,7 @@ function hitTarget(tg, L) {
   stepEvents();
 }
 function breakTarget(tg, L, dir) {
-  var n = tg.yield + (L.perfect ? 1 : 0) + (HAT().yieldB[tg.res] || 0) + (tg.kind === "robot" ? (HAT().robotB || 0) : 0), gp = tg.g.position.clone();
+  var n = tg.yield + UPG.loot + (L.perfect ? 1 : 0) + (HAT().yieldB[tg.res] || 0) + (tg.kind === "robot" ? (HAT().robotB || 0) : 0), gp = tg.g.position.clone();
   tg.alive = false; tg.respawn = G.time + tg.rt;
   if (tg.kind === "tree") { tg.canopy.forEach(function (c) { c.visible = false; }); tg.trunk.scale.y = .3; stats.trees++; snd.woodBreak(); burst(gp.clone().setY(2.5), [0x70cc6c, 0x4fb05a], 14, 6, 6, 1.2, .9); }
   else { tg.g.visible = false; if (tg.kind === "gold") stats.golds++; else if (tg.kind === "crystal") stats.crystals++; else if (tg.kind === "robot") { stats.robots = (stats.robots || 0) + 1; snd.clunk(); } else stats.rocks++; if (tg.big) stats.bigs++; if (tg.name === "vending") { stats.vends = (stats.vends || 0) + 1; once("vend1", function () { say("The machine paid out. In scrap. Which is all it was ever holding.", 0); }); } snd.crack(); burst(gp.clone().setY(.8), tg.kind === "crystal" ? [0x7fe3ff, 0xb99cff, 0xffffff] : tg.kind === "gold" ? [0xf5b921, 0xb4bdc8, 0x8d97a3] : tg.kind === "robot" ? [0xffb347, 0xc9d4e0, 0x5fd8ff] : [0xb4bdc8, 0x8d97a3, 0x9aa3ad], tg.big ? 22 : 14, 7, 7, 1.3, .9); }
@@ -1427,9 +1497,11 @@ function breakTarget(tg, L, dir) {
 function launchGary(L) {
   var Y = gary; if (Y.state === "fly") return;
   stats.sheep++; Y.state = "fly"; Y.t = 0; snd.baa();
-  Y.vx = P.face.x * 9 * lgFly(); Y.vz = P.face.z * 9 * lgFly(); Y.vy = 11; Y.spin = rnd(7, 11) * (Math.random() < .5 ? -1 : 1);
-  floater(Y.root.position.clone().setY(1.6), "BAAAH", "bw big", 1.4); burst(Y.root.position.clone().setY(.9), 0xfbf6ee, 10, 5, 5, 1.1, .8);
-  once("sheep", function () { later(1.6, function () { say("That was Gary. Gary has a family. Gary also has no hands. Gary’s fine.", 0); }); });
+  var rv = (stats.sheep - 1) % 4; Y.sq = [1, 1.2, .8, 1.6][rv];
+  var lf = lgFly() * (rv === 2 ? .4 : 1);
+  Y.vx = P.face.x * 9 * lf; Y.vz = P.face.z * 9 * lf; Y.vy = [11, 13, 7, 9][rv]; Y.spin = rnd(7, 11) * [1, 1.8, .4, 1.5][rv] * (Math.random() < .5 ? -1 : 1);
+  floater(Y.root.position.clone().setY(1.6), ["BAAAH", "BLEAT!", "MEH.", "BAA-OING!"][rv], "bw big", 1.4); burst(Y.root.position.clone().setY(.9), 0xfbf6ee, 10, 5, 5, 1.1, .8);
+  once("sheep", function () { later(1.2, function () { sayBeat("That was Gary.", "Gary has a family. Gary also has no hands. Gary’s fine.", null, 2.5); }); });
 }
 function updateGary(dt) {
   var Y = gary, p = Y.root.position;
@@ -1441,7 +1513,7 @@ function updateGary(dt) {
     if (Y.y <= 0 && Y.vy < 0) { Y.y = 0; Y.state = "boing"; Y.t = 0; Y.body.rotation.z = 0; Y.root.position.y = 0; snd.stomp(); puff(p.clone().setY(.3), 1.1, 0xe8e0d0, .5, .5); }
     return;
   }
-  if (Y.state === "boing") { Y.t += dt; var k = Math.sin(Y.t * 18) * Math.max(0, 1 - Y.t * 1.6); Y.body.scale.set(1 + .18 * k, 1 - .22 * k, 1 + .18 * k); if (Y.t > .65) { Y.state = "wander"; Y.body.scale.set(1, 1, 1); } return; }
+  if (Y.state === "boing") { Y.t += dt; var k = Math.sin(Y.t * 18) * Math.max(0, 1 - Y.t * 1.6); var sq = Y.sq || 1; Y.body.scale.set(1 + .18 * sq * k, 1 - .22 * sq * k, 1 + .18 * sq * k); if (Y.t > .65) { Y.state = "wander"; Y.body.scale.set(1, 1, 1); } return; }
   Y.dirT -= dt;
   if (Y.dirT <= 0) { Y.dirT = rnd(1.5, 3.5); var a = Math.random() * 6.283, still = Math.random() < .35; Y.dx = still ? 0 : Math.cos(a); Y.dz = still ? 0 : Math.sin(a); }
   var hx = Y.home.x - p.x, hz = Y.home.z - p.z; if (hx * hx + hz * hz > 20) { Y.dx = hx / 4; Y.dz = hz / 4; }
@@ -1479,7 +1551,260 @@ function updateHazards(dt) {
 }
 
 /* ---------- player frame update ---------- */
+/* ---------- optional upgrade anvil (every level): permanent upgrades, paid in that level's staple resource ---------- */
+var ANV_RES = { 1: "stone", 2: "scrap", 3: "scrap", 4: "slime", 5: "gear" };
+var UPS = [
+  { id: "loot", name: "Fatter Loot", desc: "+1 resource from every node", max: 3 },
+  { id: "speed", name: "Quick Feet", desc: "Walk 8% faster", max: 4 },
+  { id: "head", name: "Thick Skull", desc: "Head meter fills 10% slower", max: 4 },
+  { id: "magnet", name: "Loot Magnet", desc: "Loot flies in from 25% farther", max: 3 },
+  { id: "turret", name: "Turret Tuning", desc: "Turrets shoot faster and reach farther", max: 3 }
+];
+function upCost(u) { return 5 + 4 * UPG[u.id]; }
+function buildAnvilMesh(g) {
+  var iron = toon(0x4a5160), dark = toon(0x2a2f3a), hi = toon(0x7f8aa0);
+  M(g, boxG(1.5, .35, 1.0), dark, 0, 0, 0, .04);
+  M(g, boxG(.8, .5, .6), iron, 0, .35, 0, .04);
+  M(g, boxG(1.7, .32, .85), hi, 0, .85, 0, .04);
+  var horn = M(g, coneG(.34, .9, 8), hi, .85, .98, 0, .04); horn.rotation.z = -Math.PI / 2;
+  M(g, boxG(.5, .2, .5), toon(0xff7a2b, { emissive: 0x802000 }), -.4, 1.17, 0, false);
+}
+function spotFree(R, n, C, pl, s, x, z, pad) {
+  if (Math.hypot(x - s.x, z - s.z) > s.r - 2.4) return false;
+  var ox = R.ox, oz = R.oz, bad = false;
+  T.forEach(function (t) { if (t.lvl === n && t.alive !== false && Math.hypot(t.g.position.x - x, t.g.position.z - z) < (t.radius || .6) + pad) bad = true; });
+  colliders.forEach(function (c) { if (Math.hypot(c.x - x, c.z - z) < c.r + pad) bad = true; });
+  Object.keys(plots).forEach(function (id) { var p = plots[id]; if (Math.hypot(p.pos.x - x, p.pos.z - z) < (p.col || 1) + 2.2) bad = true; });
+  [C.vents, C.belts, C.presses, C.pads, C.slows, C.spores].forEach(function (a) { (a || []).forEach(function (c) { if (Math.hypot(c.x + ox - x, c.z + oz - z) < 4.5) bad = true; }); });
+  (pl.props || []).forEach(function (a) { if (Math.hypot(a[1] + ox - x, a[2] + oz - z) < 2.6) bad = true; });
+  if (R.house && Math.hypot(R.house.pos.x - x, R.house.pos.z - z) < 4.6) bad = true;
+  if (C.spawn && Math.hypot(C.spawn[0] + ox - x, C.spawn[1] + oz - z) < 2.6) bad = true;
+  return !bad;
+}
+function findSpot(R, n, C, pl, s, offs, pad) {
+  for (var i = 0; i < offs.length; i++) { var x = s.x + offs[i][0], z = s.z + offs[i][1]; if (spotFree(R, n, C, pl, s, x, z, pad)) return [x, z]; }
+  for (var r = 4; r <= s.r - 2.6; r += 1.5) for (var a = 0; a < 12; a++) { var x2 = s.x + Math.cos(a * .5236 + r) * r, z2 = s.z + Math.sin(a * .5236 + r) * r; if (spotFree(R, n, C, pl, s, x2, z2, pad)) return [x2, z2]; }
+  return null;
+}
+function buildAnvilNow(p) {
+  for (var k in p.cost) inv[k] -= p.cost[k]; updateRes();
+  p.built = true; p.ghost.visible = false; p.real.visible = true;
+  var parts = p.real.children.slice(); parts.forEach(function (c) { c.scale.setScalar(.001); });
+  tween(.7, function (u) { parts.forEach(function (c, i) { c.scale.setScalar(Math.max(.001, easeBack(clamp(u * 1.6 - i * .15, 0, 1)))); }); }, function () { parts.forEach(function (c) { c.scale.setScalar(1); }); });
+  colliders.push({ x: p.pos.x, z: p.pos.z, r: p.col }); snd.hammer(0); snd.stomp(); shake(.2);
+  puff(p.pos.clone().setY(.4), 1.4, 0xe8e0d0, .5, .6); burst(p.pos.clone().setY(1.2), [0xffd93d, 0xff9a3d, 0xffffff], 18, 6, 7, 1, .9);
+  floater(p.pos.clone().setY(2.6), "Anvil built!", "perfect", 1.4); G.lastProgress = G.time; saveLevel();
+}
+function renderAnvil() {
+  var p = LR.anvil; if (!p) return; var res = p.res;
+  $("anv-sub").textContent = "Permanent, across every level. Paid in " + res + ". You have " + inv[res] + ".";
+  $("anv-list").innerHTML = UPS.map(function (u) {
+    var lv = UPG[u.id], maxed = lv >= u.max, c = upCost(u), can = !maxed && inv[res] >= c;
+    return '<div class="hat-row"><div class="hat-ic">' + ICO[res] + '</div><div class="hat-tx"><div class="hat-nm">' + u.name + " " + lv + "/" + u.max + '</div><div class="hat-pk">' + u.desc + '</div></div><button class="cta pressable' + (can ? "" : " ghost") + '" data-up="' + u.id + '"' + (can ? "" : " disabled") + ">" + (maxed ? "Maxed" : c + " " + res) + "</button></div>";
+  }).join("");
+}
+function buyUpgrade(id) {
+  var p = LR.anvil, u = UPS.filter(function (x) { return x.id === id; })[0]; if (!p || !u) return;
+  var res = p.res, c = upCost(u); if (UPG[id] >= u.max || inv[res] < c) { snd.tink(); return; }
+  inv[res] -= c; UPG[id]++; writeSave({ upg: UPG }); updateRes(); snd.chime(); snd.clunk(); renderAnvil(); saveLevel();
+}
+$("anv-list").addEventListener("click", function (e) { var b = e.target.closest("button[data-up]"); if (b && !b.disabled) buyUpgrade(b.getAttribute("data-up")); });
+$("anv-close").addEventListener("click", function () { closeSheet(); });
+$("anv-go").addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+$("anv-go").addEventListener("click", function () {
+  var p = LR.anvil; if (!p || !canAct()) return;
+  if (!p.built) { if (inv[p.res] >= p.cost[p.res]) buildAnvilNow(p); else snd.tink(); }
+  else { renderAnvil(); openSheet("anvilsheet"); snd.pop(); }
+});
+function updateAnvil() {
+  var c = $("anvilcard"), p = LR && LR.anvil;
+  if (G.level < 1 || !p || !canAct() || cardPlot || P.fall) { c.classList.add("hidden"); return; }
+  if (Math.hypot(P.pos.x - p.pos.x, P.pos.z - p.pos.z) > p.range) { c.classList.add("hidden"); return; }
+  var res = p.res, need = p.cost[res], ok = true, msg, label;
+  if (!p.built) { msg = "Optional: build an anvil for permanent upgrades. " + need + " " + res + "."; ok = inv[res] >= need; label = ok ? "Build" : "Need " + (need - inv[res]); }
+  else { msg = "Anvil. Permanent upgrades, paid in " + res + "."; label = "Upgrade"; }
+  if (c.classList.contains("hidden")) { c.classList.remove("hidden", "in"); void c.offsetWidth; c.classList.add("in"); }
+  c.style.bottom = LR.talkOn ? "calc(var(--safe-b) + 214px)" : "";
+  if ($("anv-tx").textContent !== msg) $("anv-tx").textContent = msg;
+  var go = $("anv-go"); go.textContent = label; go.disabled = !ok; go.classList.toggle("ready", ok && !p.built);
+}
+
+/* ---------- Easter eggs: small bonkable things, one or two per level ---------- */
+var EGG = {
+  duck: { r: .55, lines: ["SQUEAK!", "QUACK?", "SQUEE!"], tip: "A rubber duck. It has seen things. Mostly squeaking.",
+    sfx: function () { tone(1200, .08, "square", .05); tone(1700, .1, "square", .05, .07); },
+    mk: function (g) { var y = toon(0xffd93d); M(g, new THREE.SphereGeometry(.42, 12, 10), y, 0, .42, 0, .035); M(g, new THREE.SphereGeometry(.26, 10, 8), y, .18, .9, 0, .03);
+      var bk = M(g, coneG(.08, .22, 5), toon(0xff8a1f), .4, .88, 0, .02); bk.rotation.z = -Math.PI / 2;
+      [-.14, .14].forEach(function (z) { M(g, new THREE.SphereGeometry(.04, 6, 5), toon(0x221407), .3, .97, z, false); }); } },
+  cactus: { r: .6, lines: ["OW!", "PRICKLY!", "OUCH."], tip: "The cactus has been here a hundred years. Dunk has been here a few minutes. Dunk lost.",
+    sfx: function () { snd.ow(); },
+    hit: function () { addNog(45); P.stun = Math.max(P.stun, .5); var v = $("vig"); v.classList.remove("hurt"); void v.offsetWidth; v.classList.add("hurt"); floater(P.pos.clone().setY(2.7), "Ow.", "ow", 1.3); vibrate(60); },
+    mk: function (g) { var gm = toon(0x3e9a4f); M(g, cylG(.3, .36, 1.5, 10), gm, 0, 0, 0, .035);
+      var a1 = M(g, cylG(.11, .11, .42, 8), gm, .12, .75, 0, .03); a1.rotation.z = -Math.PI / 2; M(g, cylG(.11, .12, .5, 8), gm, .54, .75, 0, .03);
+      var a2 = M(g, cylG(.11, .11, .42, 8), gm, -.12, .95, 0, .03); a2.rotation.z = Math.PI / 2; M(g, cylG(.11, .12, .45, 8), gm, -.54, .95, 0, .03);
+      M(g, new THREE.SphereGeometry(.13, 8, 6), toon(0xff7aa8), 0, 1.58, 0, false); } },
+  pretzel: { r: .6, lines: ["CLINK!", "STALE.", "CRUNCH."], tip: "A stale pretzel. It has been here since the station opened. It is load-bearing.",
+    sfx: function () { tone(520, .06, "square", .05); tone(390, .09, "square", .05, .06); },
+    mk: function (g) { var d = toon(0xc8843c); M(g, new THREE.TorusGeometry(.4, .1, 8, 18), d, 0, .62, 0, .03); var b = M(g, boxG(.95, .1, .1), d, 0, .5, 0, .02); b.rotation.z = .55;
+      [[-.2, .98], [.15, 1.0], [.35, .78]].forEach(function (a) { M(g, new THREE.SphereGeometry(.04, 5, 4), toon(0xffffff), a[0], a[1], .1, false); }); } },
+  button: { r: .6, lines: ["BEEP.", "DON'T.", "CLICK."], tip: "You pressed the big red button. Nothing happened. HR is nervous.",
+    sfx: function () { tone(880, .07, "square", .05); tone(660, .12, "square", .05, .09); },
+    mk: function (g) { M(g, boxG(1.0, .45, 1.0), toon(0x4a5160), 0, 0, 0, .04); M(g, cylG(.34, .4, .22, 14), toon(0xd42a1e, { emissive: 0x600000 }), 0, .45, 0, .03);
+      var rg = M(g, new THREE.TorusGeometry(.42, .05, 6, 16), toon(0xffd93d), 0, .47, 0, false); rg.rotation.x = Math.PI / 2; } },
+  gloop: { r: .6, lines: ["SPLORP!", "BLORP!", "GLOOP!"], tip: "A small gloop. It is not a pet. It acts like one.",
+    sfx: function () { tone(220, .14, "sine", .08, 0, 140); tone(300, .1, "sine", .06, .1, 180); },
+    hit: function (tg, L, hp) { burst(hp, [0xb98aff, 0xd9c2ff], 8, 4, 5, 1, .6); },
+    mk: function (g) { var b = M(g, new THREE.SphereGeometry(.5, 12, 10), toon(0xb98aff, { emissive: 0x2a1850 }), 0, .4, 0, .035); b.scale.set(1.1, .8, 1.1);
+      [-.16, .16].forEach(function (z) { M(g, new THREE.SphereGeometry(.1, 8, 6), toon(0xffffff), .4, .62, z, false); M(g, new THREE.SphereGeometry(.05, 6, 5), toon(0x221407), .48, .62, z, false); }); } },
+  stapler: { r: .6, lines: ["CHUNK!", "STAPLED.", "KA-CHUNK!"], tip: "Your memo has been stapled to the wall. HR approves.",
+    sfx: function () { tone(180, .08, "square", .08); tone(120, .1, "square", .08, .06); },
+    mk: function (g) { M(g, boxG(1.1, .22, .4), toon(0x3a414f), 0, 0, 0, .035); var t = M(g, boxG(1.05, .2, .36), toon(0xd42a1e), 0, .2, 0, .035); t.rotation.z = .06; M(g, boxG(.3, .08, .3), toon(0x8d97a3), .5, .38, 0, false); } },
+  cooler: { r: .6, lines: ["GLUG!", "BLOOP!", "GLUG-GLUG!"], tip: "A water cooler. Your head meter notices the refreshment.",
+    sfx: function () { tone(300, .1, "sine", .06, 0, 420); tone(380, .1, "sine", .06, .1, 520); },
+    hit: function () { P.noggin = Math.max(0, P.noggin - 20); },
+    mk: function (g) { M(g, cylG(.4, .42, .85, 12), toon(0xe9eef5), 0, 0, 0, .035); M(g, boxG(.16, .1, .2), toon(0x3b82c4), .42, .55, 0, false);
+      var jug = new THREE.Mesh(new THREE.SphereGeometry(.36, 12, 10), new THREE.MeshBasicMaterial({ color: 0x8fd8f5, transparent: true, opacity: .55, depthWrite: false })); jug.position.y = 1.2; g.add(jug); } }
+};
+function makeEgg(type, x, z) {
+  var E = EGG[type], g = sub(scene, x, 0, z); E.mk(g); blob(g, (E.r || .55) * 1.4);
+  var o = { kind: "egg", egg: type, g: g, radius: E.r || .55, hp: 99, max: 99, hard: 0, alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, noShrink: true, hop: 0, n: 0, found: false };
+  T.push(o); return o;
+}
+function hitEgg(tg, L, hp) {
+  var E = EGG[tg.egg], i = tg.n++;
+  tg.wob = 1; tg.hop = 1; shake(.2); if (E.sfx) E.sfx();
+  floater(hp, E.lines[i % E.lines.length], "bw big", 1.3);
+  if (!tg.found) { tg.found = true; stats.eggs = (stats.eggs || 0) + 1; once("egg_" + tg.egg, function () { say(E.tip, 1); }); }
+  if (E.hit) E.hit(tg, L, hp);
+}
+function updateEggs(dt) {
+  for (var i = 0; i < T.length; i++) {
+    var t = T[i]; if (t.kind !== "egg" || t.lvl !== G.level) continue;
+    if (t.hop > 0) { t.hop = Math.max(0, t.hop - dt * 2.2); t.g.position.y = Math.abs(Math.sin(t.hop * Math.PI * 2)) * .8 * t.hop; } else t.g.position.y = 0;
+  }
+}
+
+/* ---------- Forest Easter egg: bonk a tree and an angry squirrel may run out. Bonk the squirrel and it flies away. ---------- */
+function squirrelOut() { for (var i = 0; i < T.length; i++) if (T[i].kind === "squirrel" && T[i].lvl === G.level) return true; return false; }
+function spawnSquirrel(tree) {
+  var x = tree.g.position.x, z = tree.g.position.z, g = sub(scene, x, 0, z), body = sub(g, 0, 0, 0), fur = toon(0xb5651d), cream = toon(0xf2d9b0);
+  var b = M(body, new THREE.SphereGeometry(.34, 10, 8), fur, 0, .38, 0, .035); b.scale.set(1, .9, 1.25);
+  M(body, new THREE.SphereGeometry(.22, 10, 8), fur, 0, .66, .3, .03); M(body, new THREE.SphereGeometry(.09, 6, 5), cream, 0, .6, .5, false);
+  [-.1, .1].forEach(function (ex) { M(body, new THREE.SphereGeometry(.06, 6, 5), toon(0xd42a1e), ex, .72, .46, false); var br = M(body, boxG(.14, .04, .04), toon(0x221407), ex, .8, .46, false); br.rotation.z = ex > 0 ? .5 : -.5; });
+  var tail = M(body, new THREE.SphereGeometry(.28, 8, 6), fur, 0, .62, -.5, .03); tail.scale.set(.7, 1.5, .7); tail.rotation.x = -.5;
+  blob(g, .7);
+  var si = islandOf(x, z), isl = si >= 0 ? LR.islands[si] : { x: x, z: z, r: 8 };
+  var q = { kind: "squirrel", g: g, body: body, radius: .55, hp: 99, max: 99, hard: 0, alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, noShrink: true, lvl: G.level, state: "run", isl: isl, tx: x, tz: z, timer: 0, chat: 1.2, sp: 5.4, life: 26 };
+  T.push(q); G.sqCool = G.time + 25; puff(g.position.clone().setY(.4), 1.2, 0xe8e0d0, .5, .5); snd.pop();
+  floater(g.position.clone().setY(1.6), "CHITTER!", "bw", 1.2);
+  once("squirrel_tip", function () { say("A squirrel. It is furious. You bonked its tree. Bonk it back.", 1); });
+}
+function launchSquirrel(q) {
+  if (q.state === "fly") return;
+  q.state = "fly"; q.t = 0; q.vx = P.face.x * 11; q.vz = P.face.z * 11; q.vy = 9; q.spin = rnd(8, 12);
+  floater(q.g.position.clone().setY(1.6), "SQUEEEE!", "bw big", 1.4); burst(q.g.position.clone().setY(.8), 0xb5651d, 10, 5, 5, 1, .8); snd.baa(); shake(.2);
+  once("squirrel_fly", function () { later(1.4, function () { say("The squirrel has left the island. It has filed a complaint with HR.", 0); }); });
+}
+function updateSquirrels(dt) {
+  for (var i = T.length - 1; i >= 0; i--) {
+    var q = T[i]; if (q.kind !== "squirrel" || q.lvl !== G.level) continue;
+    var p = q.g.position;
+    if (q.state === "fly") {
+      q.t += dt; q.vy -= 26 * dt; p.x += q.vx * dt; p.z += q.vz * dt; p.y += q.vy * dt; q.body.rotation.z += q.spin * dt; q.body.rotation.x += q.spin * .4 * dt;
+      if (q.t > 1.7) { scene.remove(q.g); T.splice(i, 1); }
+      continue;
+    }
+    q.timer -= dt;
+    if (q.timer <= 0 || Math.hypot(q.tx - p.x, q.tz - p.z) < .5) { var a = Math.random() * 6.283, d = Math.sqrt(Math.random()) * Math.max(2, q.isl.r - 3); q.tx = q.isl.x + Math.cos(a) * d; q.tz = q.isl.z + Math.sin(a) * d; q.timer = rnd(1.2, 2.6); }
+    var dx = q.tx - p.x, dz = q.tz - p.z, dd = Math.hypot(dx, dz) || 1, nx = p.x + dx / dd * q.sp * dt, nz = p.z + dz / dd * q.sp * dt;
+    if (walkable(nx, nz)) { p.x = nx; p.z = nz; } else q.timer = 0;
+    q.g.rotation.y += angDiff(q.g.rotation.y, Math.atan2(dx, dz)) * (1 - Math.exp(-10 * dt));
+    q.body.position.y = Math.abs(Math.sin(G.time * 18)) * .12;
+    q.chat -= dt; if (q.chat <= 0) { q.chat = rnd(2.5, 4.5); floater(p.clone().setY(1.5), pick(["CHITTER!", "!!!", "GRRR."]), "bw", 1.0); }
+    q.life -= dt; if (q.life <= 0) { puff(p.clone().setY(.4), 1.0, 0xe8e0d0, .5, .5); scene.remove(q.g); T.splice(i, 1); }
+  }
+}
+
+/* ---------- wind gusts: a new hazard on every island past the start island (Levels 2 to 5) ---------- */
+var GUST = { warn: 1.5, push: 9, pushT: .6 };
+function updateGusts(dt) {
+  if (G.level < 2 || !canAct() || P.fall || P.jump || G.cine || (LR.boss && LR.boss.active)) return;
+  var isl = islandOf(P.pos.x, P.pos.z);
+  if (isl < 1) { LR.gust = null; LR.gustT = 9; LR.gustIsl = -1; return; }
+  if (LR.gustIsl !== isl) { LR.gustIsl = isl; LR.gustT = 8; LR.gust = null; }
+  if (!LR.gust) {
+    LR.gustT -= dt; if (LR.gustT > 0) return;
+    var s = LR.islands[isl], a = Math.atan2(s.z - P.pos.z, s.x - P.pos.x) + rnd(-1.1, 1.1);   // mostly inward: it shoves, it doesn't bully
+    LR.gust = { t: 0, dx: Math.cos(a), dz: Math.sin(a), pt: 0 };
+    once("gust_hint", function () { say("Wind. The streaks show where it blows. Lean into it, or stand somewhere else. Elsewhere is free.", 0); });
+    return;
+  }
+  var g = LR.gust; g.t += dt;
+  if (g.t < GUST.warn) {
+    g.pt -= dt; if (g.pt <= 0) { g.pt = .12; var k = rnd(1.5, 4); puff(new V3(P.pos.x - g.dx * k + rnd(-1, 1), .7 + rnd(0, 1.2), P.pos.z - g.dz * k + rnd(-1, 1)), .5, 0xffffff, .3, .35); }
+    return;
+  }
+  P.shove = { vx: g.dx * GUST.push, vz: g.dz * GUST.push, t: GUST.pushT, dur: GUST.pushT }; snd.whoosh(); shake(.1);
+  LR.gust = null; LR.gustT = rnd(10, 16);
+}
+
+/* ---------- falling off an island: a scream, the drones catch you, the bag is gone ---------- */
+function fallsOn() { return G.playing && !G.paused && !G.cine && !G.ended && !G.title && !G.cutOnly && !P.walk && !P.fall && (G.level < 1 || (LR && LR.islands && LR.islands.length > 0)); }
+function solidGround(x, z) {
+  if (walkable(x, z)) return true;
+  if (G.level >= 1) {
+    for (var i = 0; i < LR.islands.length; i++) { var s = LR.islands[i], dx = x - s.x, dz = z - s.z, r = s.r - .05; if (dx * dx + dz * dz <= r * r) return true; }
+    for (var j = 0; j < LR.bridges.length; j++) {
+      var b = LR.bridges[j]; if (!plots[b.id].built) continue;
+      var u = b.alongZ ? z - b.z : x - b.x, v = b.alongZ ? x - b.x : z - b.z;
+      if (Math.abs(u) <= b.len / 2 + .2 && Math.abs(v) <= 1.45) return true;
+    }
+    return false;
+  }
+  if (x * x + z * z <= 14.7 * 14.7) return true;
+  var ex = x - 30; if (ex * ex + z * z <= 9.2 * 9.2) return true;
+  if (plotBuilt("bridge") && x >= BRIDGE_X0 - .2 && x <= BRIDGE_X1 + .2 && Math.abs(z) <= 1.5) return true;
+  return false;
+}
+function makeRescueDrone() {
+  var g = sub(scene, P.pos.x, 4, P.pos.z), bd = sub(g, 0, 0, 0); bd.scale.setScalar(1.7);
+  M(bd, new THREE.SphereGeometry(.42, 12, 10), toon(0xc3ccd9), 0, 0, 0, .04);
+  M(bd, new THREE.CylinderGeometry(.44, .44, .16, 14), toon(0x2a2f3a), 0, 0, 0, .03);
+  var eye = new THREE.Mesh(new THREE.SphereGeometry(.13, 8, 6), new THREE.MeshBasicMaterial({ color: 0x5fd8ff })); eye.position.set(0, 0, .4); bd.add(eye);
+  g.userData.rots = [-1, 1].map(function (k) { return M(bd, new THREE.CylinderGeometry(.5, .5, .04, 12), toon(0x7f8aa0), k * .55, .3, 0, false); });
+  return g;
+}
+function startFall() {
+  P.fall = { t: 0, x0: P.pos.x, z0: P.pos.z, drone: null };
+  P.charging = false; P.charge = 0; P.lunge = null; P.vel = new V3(); P.shove = null; $("gauge-tip").classList.add("hidden");
+  RES_KEYS.forEach(function (k) { inv[k] = 0; }); updateRes();
+  floater(P.pos.clone().setY(2.6), "AAAAAAH!", "bw big", 1.6); shake(.3); vibrate(40);
+  tone(900, .5, "sawtooth", .05); tone(620, .6, "sawtooth", .05, .12); tone(380, .7, "sawtooth", .05, .3);
+}
+function updateFall(dt) {
+  var F = P.fall, D = dunk, t, tx, tz; F.t += dt; t = F.t;
+  if (G.level >= 1 && LV) { tx = LV.spawn[0] + LR.ox; tz = LV.spawn[1] + LR.oz; } else { tx = 0; tz = 3.5; }
+  P.vel.set(0, 0, 0); P.speed = 0; P.hop = 0;
+  if (t < .9) { P.gy = -16 * t * t; D.root.rotation.z = t * 9; }
+  else if (t < 1.5) {
+    if (!F.drone) { F.drone = makeRescueDrone(); snd.chime(); say("Luckily, the drones caught you.", 2, "hr"); }
+    P.gy = lerp(-12.96, -6, easeOut((t - .9) / .6)); D.root.rotation.z = lerp(D.root.rotation.z, 0, 1 - Math.exp(-8 * dt));
+  } else if (t < 3.7) {
+    var u = (t - 1.5) / 2.2, e = u * u * (3 - 2 * u);
+    P.pos.x = lerp(F.x0, tx, e); P.pos.z = lerp(F.z0, tz, e); P.gy = lerp(-6, 3, Math.min(1, u * 2.2));
+  } else if (t < 4.4) {
+    var u3 = (t - 3.7) / .7; P.pos.x = tx; P.pos.z = tz; P.gy = lerp(3, 0, u3 * u3);
+  } else {
+    var dg = F.drone, y0 = dg ? dg.position.y : 0;
+    P.fall = null; P.gy = 0; D.root.rotation.z = 0; P.pos.x = tx; P.pos.z = tz; G.lastProgress = G.time;
+    puff(P.pos.clone().setY(.2), 1.3, 0xefe6d2, .6, .5); snd.stomp(); toast("The drones kept your resources as a handling fee.");
+    if (dg) tween(1.0, function (k) { dg.position.y = y0 + k * k * 9; dg.userData.rots.forEach(function (r) { r.rotation.y += .8; }); }, function () { scene.remove(dg); });
+    return;
+  }
+  if (F.drone) { F.drone.position.set(P.pos.x, P.gy + 2.4, P.pos.z); F.drone.userData.rots.forEach(function (r) { r.rotation.y += dt * 40; }); }
+}
 function updatePlayer(dt) {
+  if (P.fall) { updateFall(dt); return; }
   if (G.perfStreak && G.time - P.lastBonk > 4) { G.perfStreak = 0; showStreak(0); }
   P.cool = Math.max(0, P.cool - dt); P.stun = Math.max(0, P.stun - dt);
   if (P.dizzy > 0) {
@@ -1489,12 +1814,12 @@ function updatePlayer(dt) {
   if (G.cine && P.charging) { P.charging = false; P.charge = 0; }
   if (P.charging) {
     P.chargeT += dt; P.charge = clamp(P.chargeT / 1.0, 0, 1);
-    var z = zone(), inz = P.charge >= z[0] && P.charge <= z[1];
+    var z = zone(), inz = P.hatId !== "none" && P.charge >= z[0] && P.charge <= z[1];
     P.tickT = (P.tickT || 0) - dt; if (P.tickT <= 0 && P.charge < 1 && P.chargeT > .15) { P.tickT = .09; tone(220 + P.charge * 700, .05, "triangle", .03); }
     if (inz && !P.inZone) { snd.zone(); vibrate(12); } P.inZone = inz;
   } else P.inZone = false;
   var mv = (G.cine || P.jump) ? { x: 0, y: 0, l: 0 } : moveVec();
-  var spd = 5.6 * HAT().speed * (P.charging ? .45 : 1) * (P.dizzy > 0 ? .5 : 1) * (P.lunge ? 0 : 1) * (P.stun > 0 ? .25 : 1) * slowAt(P.pos.x, P.pos.z);
+  var spd = 5.6 * HAT().speed * (1 + .08 * UPG.speed) * (P.charging ? .45 : 1) * (P.dizzy > 0 ? .5 : 1) * (P.lunge ? 0 : 1) * (P.stun > 0 ? .25 : 1) * slowAt(P.pos.x, P.pos.z);
   var tx = mv.x * mv.l * spd, tz = mv.y * mv.l * spd;
   if (P.dizzy > 0) { tx += Math.sin(G.time * 5) * 1.6; tz += Math.cos(G.time * 4.3) * 1.6; }
   P.vel = P.vel || new V3(); P.vel.x = damp(P.vel.x, tx, 14, dt); P.vel.z = damp(P.vel.z, tz, 14, dt);
@@ -1503,7 +1828,7 @@ function updatePlayer(dt) {
   if (!P.lunge && G.level >= 1) { var bv = beltAt(P.pos.x, P.pos.z); if (bv.b) { var bk = P.dizzy > 0 ? .5 : 1; shx += bv.x * bk; shz += bv.z * bk; if (Math.abs(bv.b.mult) > .3) stats.beltT = (stats.beltT || 0) + dt; } }
   var nx = P.pos.x + (P.vel.x + shx) * dt, nz = P.pos.z + (P.vel.z + shz) * dt;
   if (!P.lunge) {
-    if (walkable(nx, nz)) { P.pos.x = nx; P.pos.z = nz; } else if (walkable(nx, P.pos.z)) P.pos.x = nx; else if (walkable(P.pos.x, nz)) P.pos.z = nz;
+    if (fallsOn()) { P.pos.x = nx; P.pos.z = nz; } else if (walkable(nx, nz)) { P.pos.x = nx; P.pos.z = nz; } else if (walkable(nx, P.pos.z)) P.pos.x = nx; else if (walkable(P.pos.x, nz)) P.pos.z = nz;
   }
   if (P.lunge) {
     var L = P.lunge; L.t += dt; var u = clamp(L.t / L.dur, 0, 1), e = easeOut(u);
@@ -1511,8 +1836,9 @@ function updatePlayer(dt) {
     if (!L.hit && u >= .55) { L.hit = true; resolveBonk(L); }
     if (u >= 1) { P.cool = L.cool; P.lunge = null; P.hop = 0; }
   }
-  if (!P.lunge) { var ox0 = P.pos.x, oz0 = P.pos.z; pushOut(P.pos, .45); if (G.level >= 1 && !walkable(P.pos.x, P.pos.z)) { P.pos.x = ox0; P.pos.z = oz0; } }
+  if (!P.lunge) { var ox0 = P.pos.x, oz0 = P.pos.z; pushOut(P.pos, .45); if (G.level >= 1 && !fallsOn() && !walkable(P.pos.x, P.pos.z)) { P.pos.x = ox0; P.pos.z = oz0; } }
   P.gy = damp(P.gy || 0, groundY(P.pos.x, P.pos.z), 20, dt);
+  if (fallsOn() && !P.lunge && !P.jump && !solidGround(P.pos.x, P.pos.z)) { startFall(); return; }
   var sp = Math.hypot(P.vel.x, P.vel.z); P.speed = clamp(sp / 5.6, 0, 1.2);
   if (mv.l > .2 && !P.lunge && P.stun <= 0) {
     P.face.set(mv.x, 0, mv.y).normalize();
@@ -1575,7 +1901,7 @@ function updateTargets(dt) {
     if (t.kind === "tree") t.g.rotation.z = Math.sin(G.time * 1.2 + t.g.position.x) * .012 + k * .14 * (t.sway ? 1 : 0);
     if (t.kind === "statue") { var sh = 1 + .03 * k; t.g.scale.set(sh, 1 - .03 * k, sh); }
   }
-  updateGary(dt);
+  updateGary(dt); updateEggs(dt); updateSquirrels(dt);
 }
 
 /* =====================================================================
@@ -1598,7 +1924,7 @@ var ART = {
   mabel: '<svg viewBox="0 0 100 100" stroke="#221407" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><rect width="100" height="100" fill="#cfeaf7" stroke="none"/><ellipse cx="50" cy="86" rx="34" ry="26" fill="#9aa5b5"/><ellipse cx="50" cy="90" rx="20" ry="18" fill="#c6cfdb" stroke-width="2.5"/><circle cx="50" cy="52" r="24" fill="#9aa5b5"/><path d="M26 44 Q50 8 74 44z" fill="#ffd93d"/><rect x="22" y="42" width="56" height="8" rx="3" fill="#e0b020"/><path d="M66 58 L90 63 L66 70z" fill="#ff9a3d"/><circle cx="60" cy="58" r="6.5" fill="#fff"/><circle cx="62" cy="59" r="3" fill="#221407" stroke="none"/><path d="M40 72 Q50 78 60 72" stroke-width="2.5" fill="none" stroke="#7f8aa0"/><path d="M62 24 V8" stroke-width="3"/><circle cx="62" cy="7" r="4" fill="#5fd8ff"/></svg>',
   statue: '<svg viewBox="0 0 100 100" stroke="#221407" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><rect width="100" height="100" fill="#cfeaf7" stroke="none"/><rect x="18" y="84" width="64" height="12" fill="#8d97a3"/><rect x="26" y="74" width="48" height="12" fill="#b4bdc8"/><circle cx="50" cy="46" r="30" fill="#f5b921"/><path d="M22 36 Q50 4 78 36z" fill="#8d97a3"/><ellipse cx="50" cy="40" rx="9" ry="6" fill="#ff3b2a"/><circle cx="39" cy="52" r="6" fill="#fff"/><circle cx="61" cy="52" r="6" fill="#fff"/><circle cx="40" cy="53" r="2.6" fill="#221407" stroke="none"/><circle cx="60" cy="53" r="2.6" fill="#221407" stroke="none"/><path d="M42 66h16" stroke-width="4"/></svg>'
 };
-RES_KEYS.forEach(function (k) { var d = document.createElement("div"); d.className = "rp chip hidden"; d.id = "rp-" + k; d.innerHTML = '<span data-ico="' + k + '"></span><b id="n-' + k + '">0</b>'; $("res").appendChild(d); });
+RES_KEYS.forEach(function (k) { var d = document.createElement("div"); d.className = "rp chip hidden"; d.id = "rp-" + k; d.innerHTML = '<span data-ico="' + k + '"></span><b id="n-' + k + '">0</b>'; $("pack-list").appendChild(d); });
 document.querySelectorAll("[data-ico]").forEach(function (el) { el.innerHTML = ICO[el.getAttribute("data-ico")]; });
 
 /* ---------- once(), vibration, shake ---------- */
@@ -1607,15 +1933,34 @@ function vibrate(ms) { if (S.vib && navigator.vibrate) { try { navigator.vibrate
 function shake(a) { if (S.shake) G.shakeAmt = Math.max(G.shakeAmt, a); }
 
 /* ---------- Mabel’s speech bubble ---------- */
-var bubble = { cur: null, t: 0, q: [] };
-function say(text, pri, who) {
-  pri = pri || 0;
-  if (G.time < (G.quiet || 0)) { later(G.quiet - G.time + .05, function () { say(text, pri, who); }); return; }
-  if (bubble.cur) {
-    if (pri < bubble.cur.pri) return;
-    if (bubble.t < 1.1) { if (!bubble.q.length || bubble.q[0].pri <= pri) bubble.q = [{ text: text, pri: pri, who: who }]; return; }
+var bubble = { cur: null, t: 0, dur: 0 };
+/* One message on screen at a time. Speech bubbles, toasts, act banners and timed waits (comedic beats) share this queue. */
+var MQ = [], msgCur = null;
+function say(text, pri, who) { msgPush({ k: "say", text: text, pri: pri || 0, who: who }, (pri || 0) >= 2); }
+function toast(msg) { msgPush({ k: "toast", text: msg }); }
+function actBanner(big, small) { msgPush({ k: "banner", big: big, small: small }); }
+function sayBeat(setup, punch, who, gap) {   // setup line, let it clear, wait 2-3 s, then the punchline
+  msgPush({ k: "say", text: setup, pri: 1, who: who });
+  msgPush({ k: "wait", dur: gap || 2.5 });
+  msgPush({ k: "say", text: punch, pri: 1, who: who });
+}
+function msgPush(it, front) {
+  if (it.k === "say") {
+    if (msgCur && msgCur.k === "say" && msgCur.text === it.text) return;
+    for (var i = 0; i < MQ.length; i++) if (MQ[i].k === "say" && MQ[i].text === it.text) return;
+    if (!it.pri && MQ.length >= 3) return;          // idle chatter is skipped when the line is already long
   }
-  bubble.q = []; showBubble(text, pri, who);
+  if (front && !(MQ.length && MQ[0].k === "wait")) MQ.unshift(it); else MQ.push(it);
+  if (!msgCur) msgNext();
+}
+function msgNext() {
+  msgCur = null; bubble.cur = null;
+  var it = MQ.shift(); if (!it) return;
+  msgCur = it; it.t = 0;
+  if (it.k === "say") { showBubble(it.text, it.pri, it.who); it.dur = bubble.dur; }
+  else if (it.k === "toast") { var el = $("toast"); el.textContent = it.text; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show"); it.dur = 3.0; }
+  else if (it.k === "banner") { var b = $("banner"); $("bn-big").textContent = it.big; $("bn-small").textContent = it.small; b.classList.remove("show"); void b.offsetWidth; b.classList.add("show"); snd.chime(); it.dur = 3.1; }
+  else it.dur = it.dur || 2.5;
 }
 function showBubble(text, pri, who) {
   var el = $("bubble");
@@ -1625,27 +1970,32 @@ function showBubble(text, pri, who) {
   tone(740, .06, "triangle", .06); tone(988, .08, "triangle", .06, .06);
   if (mabel && who !== "hr") mabel.hop = 1;
 }
-function hideBubble() { $("bubble").classList.add("hidden"); bubble.cur = null; if (bubble.q.length) { var n = bubble.q.shift(); showBubble(n.text, n.pri, n.who); } }
+function skipMsg() { if (msgCur && msgCur.k === "say") { $("bubble").classList.add("hidden"); msgNext(); } }
+function clearMsgs() {
+  MQ.length = 0; msgCur = null; bubble.cur = null;
+  $("bubble").classList.add("hidden"); $("toast").classList.remove("show"); $("banner").classList.remove("show");
+}
 function updateBubble(dt) {
-  if (!bubble.cur) return;
-  bubble.t += dt;
-  if (bubble.t > bubble.dur) hideBubble();
+  if (!msgCur) { if (MQ.length) msgNext(); return; }
+  msgCur.t += dt; bubble.t = msgCur.t;
+  if (msgCur.t > msgCur.dur) { if (msgCur.k === "say") $("bubble").classList.add("hidden"); msgNext(); }
 }
-$("bubble").addEventListener("click", function () { if (bubble.cur && bubble.t > .5) hideBubble(); });
-
-var toastT = 0;
-function toast(msg) { var el = $("toast"); el.textContent = msg; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show"); }
-function actBanner(big, small) {
-  var b = $("banner"); $("bn-big").textContent = big; $("bn-small").textContent = small;
-  b.classList.remove("show"); void b.offsetWidth; b.classList.add("show"); snd.chime(); G.quiet = G.time + 2.9;
-}
+$("bubble").addEventListener("click", function () { if (msgCur && msgCur.k === "say" && msgCur.t > .5) skipMsg(); });
 
 /* ---------- resources HUD ---------- */
+var packT = 0;
+$("pack").addEventListener("click", function () {
+  var l = $("pack-list"), open = !l.classList.toggle("hidden"); $("pack").setAttribute("aria-expanded", open ? "true" : "false");
+  clearTimeout(packT); if (open) packT = setTimeout(function () { l.classList.add("hidden"); $("pack").setAttribute("aria-expanded", "false"); }, 4500);
+});
 function updateRes(bumpType) {
   RES_KEYS.forEach(function (k) {
     $("n-" + k).textContent = inv[k];
     if (seen[k]) $("rp-" + k).classList.remove("hidden");
   });
+  var packTot = 0, packAny = false; RES_KEYS.forEach(function (k) { packTot += inv[k]; if (seen[k]) packAny = true; });
+  $("pack-n").textContent = packTot; if (packAny) $("pack").classList.remove("hidden");
+  if (bumpType) { var pk = $("pack"); pk.classList.remove("pop"); void pk.offsetWidth; pk.classList.add("pop"); }
   if (bumpType) { var el = $("rp-" + bumpType); el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
   refreshObjective(true);
 }
@@ -1768,6 +2118,7 @@ function giveHat() {
     puff(P.pos.clone().setY(2.2), 1.2, 0xffffff, .5, .4);
     toast("Stone hat equipped: bonks hit harder, hurt half as much");
     say("Stone hat: +1 damage, half the headache. HR calls it ‘a cranial amenity’.", 1);
+    say("Wearing a hat also unlocks Perfect bonks: hold BONK, then let go in the green ring.", 1);
     later(1.5, function () { G.cine = null; });
   });
 }
@@ -1812,13 +2163,13 @@ function updateGauge() {
   var s = toScreen(new V3(P.pos.x, 3.15, P.pos.z)); g.style.transform = "translate(" + s.x.toFixed(1) + "px," + s.y.toFixed(1) + "px)";
   var z = zone(), zs = $("g-zone"), fl = $("g-fill"), tip = $("gauge-tip");
   tip.classList.toggle("hidden", !(P.chargeT > .22 && !G.flags.hadPerfect));
-  tip.textContent = P.inZone ? "NOW!" : P.charge > z[1] ? "Too far!" : "Let go in the green";
-  zs.setAttribute("stroke-dasharray", ((z[1] - z[0]) * GC).toFixed(1) + " " + GC.toFixed(1)); zs.setAttribute("stroke-dashoffset", (-z[0] * GC).toFixed(1));
+  tip.textContent = P.hatId === "none" ? "Hold to charge, then let go" : P.inZone ? "NOW!" : P.charge > z[1] ? "Too far!" : "Let go in the green";
+  zs.setAttribute("stroke-dasharray", (P.hatId === "none" ? "0" : ((z[1] - z[0]) * GC).toFixed(1)) + " " + GC.toFixed(1)); zs.setAttribute("stroke-dashoffset", (-z[0] * GC).toFixed(1));
   fl.setAttribute("stroke-dasharray", (P.charge * GC).toFixed(1) + " " + GC.toFixed(1));
-  fl.setAttribute("stroke", P.inZone ? "#ffe14d" : P.charge > z[1] ? "#d42a1e" : "#ff5a36");
+  fl.setAttribute("stroke", P.inZone ? "#ffe14d" : P.charge > z[1] && P.hatId !== "none" ? "#d42a1e" : "#ff5a36");
   var an = -Math.PI / 2 + P.charge * 2 * Math.PI, nd = $("g-needle");
   nd.setAttribute("cx", (36 + 27 * Math.cos(an)).toFixed(1)); nd.setAttribute("cy", (36 + 27 * Math.sin(an)).toFixed(1));
-  nd.setAttribute("fill", P.inZone ? "#ffe14d" : P.charge > z[1] ? "#d42a1e" : "#ffffff");
+  nd.setAttribute("fill", P.inZone ? "#ffe14d" : P.charge > z[1] && P.hatId !== "none" ? "#d42a1e" : "#ffffff");
 }
 
 /* ---------- noggin meter ---------- */
@@ -1855,7 +2206,7 @@ var STEPS = [
     check: function () { return inv.stone >= 5; },
     done: function () { say("Five stone. Your head is now the company’s best-performing asset.", 1); } },
   { id: "boulder", obj: "Charge-bonk the Big Boulder", target: function () { return tgt(T.big, 3.4); },
-    enter: function () { $("btn-bonk").classList.add("hinted"); $("btn-bonk").querySelector("span").textContent = "HOLD"; say("That boulder is thick. Taps just tickle it. HOLD bonk, then let go while the ring is green.", 1); },
+    enter: function () { $("btn-bonk").classList.add("hinted"); $("btn-bonk").querySelector("span").textContent = "HOLD"; say("That boulder is thick. Taps just tickle it. HOLD bonk to charge, then let go. A bigger charge hits harder.", 1); },
     check: function () { return !!G.flags.bigBroke; },
     done: function () { $("btn-bonk").classList.remove("hinted"); $("btn-bonk").querySelector("span").textContent = "BONK"; say("A boulder, humbled by a forehead. Beautiful.", 1); } },
   { id: "forge", act: ["Act 2: Some assembly required", "Dunk builds. Mabel supervises."], obj: "Build the Hat Forge", plot: "forge",
@@ -1940,7 +2291,7 @@ function confetti(pos) {
 function fmtTime(s) { s = Math.round(s); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
 function showEnd() {
   if (G.level >= 1) { showEndLevel(); return; }
-  G.ended = true; G.orbit = true; $("controls").classList.add("hidden"); $("hud").classList.add("hidden"); hideBubble();
+  G.ended = true; G.orbit = true; $("controls").classList.add("hidden"); $("hud").classList.add("hidden"); clearMsgs();
   $("end-art").innerHTML = '<div style="width:110px;height:110px;border:3px solid var(--line);overflow:hidden;margin-bottom:8px">' + ART.statue + '</div>';
   var ratio = stats.bonks ? stats.perfects / stats.bonks : 0, review;
   if (stats.dizzy >= 4) review = "Mabel’s review: “Exceeds expectations. Concerning amounts of dizziness.”";
@@ -1970,18 +2321,20 @@ function resize() {
   cam.dist = clamp(halfW / (aspect * tanH), portrait ? 15 : 17, 30);
 }
 window.addEventListener("resize", function () { if (renderer) resize(); });
+function portraitK() { var a = window.innerWidth / Math.max(1, window.innerHeight); return a >= 1 ? 1 : Math.min(1.8, Math.sqrt(1 / a)); }
 function updateCamera(dt) {
   if (CAMD.on) { camdApply(dt); return; }
   var tx, tz, ty = 0, zoom = 1;
-  if (G.title) { tx = P.pos.x + .9; tz = P.pos.z + .2; zoom = .46; cam.yaw = Math.sin(G.time * .3) * .28 - .15; }
-  else if (G.cine) { tx = G.cine.pos.x; tz = G.cine.pos.z; ty = G.cine.pos.y * .3; zoom = G.cine.zoom; }
+  var tt = G.title && !G.titleFree;
+  if (tt) { tx = P.pos.x + .9; tz = P.pos.z + .2; zoom = .46; cam.yaw = Math.sin(G.time * .3) * .28 - .15; }
+  else if (G.cine) { tx = G.cine.pos.x; tz = G.cine.pos.z; ty = G.cine.pos.y * .3; zoom = G.cine.zoom * portraitK(); }
   else if (cardPlot) { tx = lerp(P.pos.x, cardPlot.pos.x, .5); tz = lerp(P.pos.z, cardPlot.pos.z, .5); zoom = 1.12; }
   else { tx = P.pos.x + (P.vel ? P.vel.x * .22 : 0); tz = P.pos.z + (P.vel ? P.vel.z * .22 : 0); }
-  if (G.orbit) cam.yaw += dt * .28; else if (!G.title) cam.yaw = damp(cam.yaw, 0, 3, dt);
+  if (G.orbit) cam.yaw += dt * .28; else if (!tt) cam.yaw = damp(cam.yaw, 0, 3, dt);
   var k = G.cine ? 3.2 : 6.5;
   cam.tgt.x = damp(cam.tgt.x, tx, k, dt); cam.tgt.z = damp(cam.tgt.z, tz, k, dt); cam.tgt.y = damp(cam.tgt.y, ty, k, dt);
   cam.zoom = damp(cam.zoom, zoom, 3.5, dt);
-  cam.pitch = damp(cam.pitch, G.title ? .5 : G.orbit ? .38 : .9, 2.4, dt);
+  cam.pitch = damp(cam.pitch, tt ? .5 : G.orbit ? .38 : .9, 2.4, dt);
   var d = cam.dist * cam.zoom, cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
   var ox = Math.sin(cam.yaw) * cp * d, oz = Math.cos(cam.yaw) * cp * d, oy = sp * d;
   G.shakeAmt = Math.max(0, G.shakeAmt - dt * 2.2);
@@ -2012,7 +2365,7 @@ function updateAmbient(dt) {
     if (m.led) m.led.visible = Math.sin(tt * 6) > -.3;
     if (m.head) m.head.rotation.x = Math.sin(tt * 1.4) * .08 + (Math.sin(tt * .9) > .92 ? .6 : 0);
     bb.getWorldPosition(_wp);
-    bb.rotation.y = damp(bb.rotation.y, Math.atan2(P.pos.x - _wp.x, P.pos.z - _wp.z), 4, dt);
+    bb.rotation.y += angDiff(bb.rotation.y, Math.atan2(P.pos.x - _wp.x, P.pos.z - _wp.z)) * (1 - Math.exp(-(G.cine ? 9 : 5) * dt));
   }
 }
 var _wp = new V3();
@@ -2056,7 +2409,126 @@ var INTRO = [
   { art: "hr", kicker: "Meet HR-9000", text: "\u201cWelcome to Mandatory Fun. Your enthusiasm has been noted and found insufficient.\u201d" }
 ];
 var storyIdx = 0;
-function showStory() { G.title = false; playCutscene(PROLOGUE(), beginGame); }
+/* ---------- level select hub: walk Dunk to a level\u2019s node and land a Perfect bonk on it ---------- */
+var HUB = { nodes: null };
+function lvlUnlocked(n, sv) {
+  if (!(n === 0 || LEVELS[n])) return false;
+  if (n <= 1) return true;
+  return !!(LAB || sv["l" + (n - 1) + "done"]);
+}
+function hubBuild() {
+  if (HUB.nodes) return;
+  var mk = [
+    function (x, z) { return makeRock(x, z, .9, "rock"); },
+    function (x, z) { return makeTree(x, z, .95); },
+    function (x, z) { return makeScrap(x, z, 1); },
+    function (x, z) { return makeVending(x, z, 1.05, 0); },
+    function (x, z) { return makeCrystal(x, z, .95); },
+    function (x, z) { return makeRock(x, z, 1.1, "gold"); }
+  ];
+  HUB.nodes = [];
+  for (var i = 0; i < 6; i++) {
+    var t = (i / 5 - .5) * 2, x = t * 10.5, z = -9 + 4.5 * t * t;
+    var o = mk[i](x, z);
+    o.kind = "lvlnode"; o.hub = i; o.lvl = 0; o.hp = o.max = 99; o.hard = 0; o.noShrink = true; o.respawn = 0; o.rt = 0; o.name = "level " + i;
+    // locked stand-in: a dull boulder with a big question mark
+    var lk = sub(scene, x, 0, z);
+    var rk = M(lk, new THREE.DodecahedronGeometry(1.0, 0), toon(0x58606b), 0, .8, 0, .05); rk.scale.set(1.15, .8, 1.05); rk.rotation.y = i * 1.3;
+    blob(lk, 1.5);
+    var q = new THREE.Sprite(new THREE.SpriteMaterial({ map: markTex("?", "#c9d4e0"), depthTest: false })); q.scale.set(1.5, 1.5, 1); q.position.set(0, 2.6, 0); q.renderOrder = 5; lk.add(q);
+    function sign(lines) {
+      var g = sub(scene, x, 0, z + 2.0), bd;
+      M(g, cylG(.06, .07, 1.3, 6), mat(0x8a5a33), 0, 0, 0, false);
+      bd = sub(g, 0, 1.25, 0); M(bd, boxG(3.2, 1.15, .1), mat(0xc68b52), 0, 0, 0);
+      var pl = new THREE.Mesh(new THREE.PlaneGeometry(3.0, .95), new THREE.MeshBasicMaterial({ map: signTex(lines, "#221407", "#f7dca8", 512, 160) }));
+      pl.position.set(0, .575, .056); bd.add(pl); return g;
+    }
+    o.lockG = lk; o.signOn = null; o.signOff = sign(["? ? ?"]);
+    o.signOn = sign(["LEVEL " + (i === 0 ? "T" : i), LEVEL_META[i].name]);
+    o.signOn.userData.tex = true;
+    HUB.nodes.push(o);
+  }
+}
+function hubRefresh() {
+  var sv = loadSave();
+  HUB.nodes.forEach(function (o) {
+    var un = lvlUnlocked(o.hub, sv);
+    o.unlocked = un; o.alive = un; o.noHit = !un; o.g.visible = un; o.lockG.visible = !un; o.signOn.visible = un; o.signOff.visible = !un;
+  });
+}
+function hubOn() {
+  hubBuild(); G.hub = true; hubRefresh();
+  T.forEach(function (t) { if ((t.lvl || 0) === 0 && t.hub === undefined && t.kind !== "sheep") { t.alive = false; t.g.visible = false; } });   // clear the island so the nodes read clearly
+  $("ov-start").classList.add("hub"); $("app").classList.add("hub");
+  P.pos.set(0, 0, 1.5); P.face.set(0, 0, -1); P.yaw = Math.PI; P.vel = new V3(); cam.tgt.set(0, 0, 0);
+  if (gary && gary.root) { gary.root.position.set(3, 0, 3); gary.home.set(3, 0, 3); }
+}
+function hubOff() {
+  G.hub = false; G.hubPick = false;
+  $("ov-start").classList.remove("hub"); $("app").classList.remove("hub");
+  if (HUB.nodes) HUB.nodes.forEach(function (o) { o.alive = false; o.g.visible = false; o.lockG.visible = false; o.signOn.visible = false; o.signOff.visible = false; });
+}
+function hubHit(tg, L, hp) {
+  if (G.hubPick) return;
+  tg.wob = 1; var m = LEVEL_META[tg.hub];
+  if (!L.perfect) {
+    snd.tink(); G.perfStreak = 0; showStreak(0); floater(hp, "PERFECT BONK TO ENTER", "bw", 1.4);
+    once("hubTip", function () { say("Hold BONK and let go in the green to pick a level.", 1); });
+    return;
+  }
+  G.hubPick = true; snd.perfect(1); snd.fanfare && snd.fanfare(); flash();
+  floater(hp, m.name, "perfect", 1.8); burst(hp, [0xffe14d, 0xffffff], 18, 6, 7, 1, .9); shockwave(hp, 0xffe14d, 5, .5);
+  later(1.0, function () { if (G.hub) playLevel(tg.hub); });
+}
+function openMap() {
+  snd.pop(); $("menu").classList.add("hidden");
+  if (G.started || G.level >= 1) {                    // inside a level: the hub lives on a fresh island, so reload straight into it
+    if (G.playing && G.level >= 1) saveLevel();
+    writeSave({ autostart: "hub" }); location.reload(); return;
+  }
+  if (G.hub) return;
+  titleAskClose(); titleFreeEnd(); titleFreeStart(true);
+}
+$("hub-back").addEventListener("click", function () { snd.pop(); titleFreeEnd(); });
+/* ---------- title screen: tap Dunk, he asks if you are ready to work, and the menu becomes a playground ---------- */
+var titleHat = "none";
+function titleAskOpen() {
+  if (!G.title || G.titleFree || G.titleAsk) return;
+  G.titleAsk = true; $("title-ask").classList.remove("hidden"); snd.pop();
+  var c = $("title-ask"); c.style.animation = "none"; void c.offsetWidth; c.style.animation = "";
+}
+function titleAskClose() { G.titleAsk = false; $("title-ask").classList.add("hidden"); }
+function titleFreeStart(hub) {
+  titleAskClose(); if (G.titleFree) return;
+  G.titleFree = true; G.playing = true; snd.fanfare && snd.fanfare();
+  titleHat = P.hatId; setHat("stone", true);          // borrowed for the playground; handed back on exit
+  P.fakeU = 0; P.hop = 0; P.lunge = null; P.vel = new V3(); P.cool = 0;
+  $("ov-start").classList.add("free"); $("app").classList.add("tfree");
+  $("controls").classList.remove("hidden"); $("hud").classList.remove("hidden");
+  if (hub === true) hubOn();
+}
+function titleFreeEnd() {
+  if (!G.titleFree) return;
+  if (G.hub) hubOff();
+  G.titleFree = false; G.playing = false;
+  $("ov-start").classList.remove("free"); $("app").classList.remove("tfree");
+  $("controls").classList.add("hidden"); $("hud").classList.add("hidden");
+  inp.x = inp.y = 0; P.charging = false; P.charge = 0; P.lunge = null; P.jump = null; P.dizzy = 0; P.stun = 0; P.noggin = 0; P.shove = null;
+  dunk.stars.visible = false; $("vig").classList.remove("dizzy"); $("gauge").classList.add("hidden");
+  pickups.forEach(function (k) { scene.remove(k.m); }); pickups.length = 0;
+  for (var k in inv) inv[k] = 0; for (var g in GATH) GATH[g] = 0; for (var sn in seen) seen[sn] = false; for (var z in stats) stats[z] = 0;
+  resetTargets(0); G.playTime = 0; G.perfStreak = 0; showStreak(0); G.flags = {};
+  setHat(titleHat, true);
+  P.pos.set(3.5, 0, -.6); P.face.set(1, 0, 0); P.yaw = Math.PI / 2;
+}
+$("ov-start").addEventListener("click", function (e) {
+  if (!G.title || G.titleFree || G.titleAsk || e.target.closest("button")) return;
+  var sp = toScreen(P.pos.clone().add(new V3(0, 1.1, 0)));
+  if (!sp.behind && Math.hypot(e.clientX - sp.x, e.clientY - sp.y) <= Math.max(56, innerHeight * .1)) titleAskOpen();
+});
+$("ta-yes").addEventListener("click", function () { titleFreeStart(false); });
+$("ta-no").addEventListener("click", function () { titleAskClose(); snd.pop(); });
+function showStory() { titleFreeEnd(); titleAskClose(); G.title = false; playCutscene(PROLOGUE(), beginGame); }
 function renderStory() {
   var c = INTRO[storyIdx];
   $("story-art").innerHTML = '<div style="width:116px;height:116px;border:3px solid var(--line);overflow:hidden;box-shadow:var(--shadow-s)">' + ART[c.art] + '</div>';
@@ -2082,20 +2554,21 @@ $("btn-start").addEventListener("click", function () { audio(); startMusic(); sn
    D. LEVEL 1: BONK ISLES. Five islands, four resources, five hats, ten quests.
    ===================================================================== */
 var _wp2 = new V3();
-var UNL = { none: true, stone: false, lumber: false, miner: false, prop: false, crown: false, dunce: false, wool: false, tiara: false, fishbowl: false, tinfoil: false, visor: false, bowler: false, cone: false, antenna: false, slimecrown: false, tophat: false };
+var UNL = { none: true, nest: false, stone: false, lumber: false, miner: false, prop: false, crown: false, dunce: false, wool: false, tiara: false, fishbowl: false, tinfoil: false, visor: false, bowler: false, cone: false, antenna: false, slimecrown: false, tophat: false };
 var Q = { idx: 0, state: "offer", snap: null };
-var HAT_ORDER = ["none", "stone", "lumber", "miner", "prop", "crown", "dunce", "wool", "tiara", "fishbowl", "tinfoil", "visor", "bowler", "cone", "antenna", "slimecrown", "tophat"];
+var HAT_ORDER = ["none", "stone", "lumber", "miner", "prop", "crown", "dunce", "wool", "tiara", "fishbowl", "tinfoil", "visor", "bowler", "cone", "antenna", "slimecrown", "tophat", "nest"];
 var HATS = {
   none:   { name: "Bare Head", perk: "Just you and your forehead.", dmg: 0, nog: 1, rec: 1, zone: [.66, .88], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, col: 0xf0b48a, from: "" },
-  stone:  { name: "Stone Hat", perk: "+1 damage. Bonks hurt half as much.", dmg: 1, nog: .5, rec: 1.25, zone: [.60, .92], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, col: 0x8d97a3, from: "Built at the Hat Forge (tutorial)" },
-  lumber: { name: "Lumberjack Cap", perk: "Trees take +2 damage and drop +1 wood.", dmg: 0, nog: .75, rec: 1.1, zone: [.62, .90], speed: 1, treeDmg: 2, gemEase: 0, yieldB: { wood: 1 }, magnet: 1, col: 0xd23a2a, from: "Quest: Timber!" },
-  miner:  { name: "Miner\u2019s Helmet", perk: "Gold and crystal crack easier. Wider green zone. +1 stone.", dmg: 0, nog: .75, rec: 1.1, zone: [.55, .94], speed: 1, treeDmg: 0, gemEase: 1, yieldB: { stone: 1 }, magnet: 1, col: 0xffc21a, from: "Quest: Rock Solid" },
+  stone:  { name: "Stone Hat", perk: "+1 damage. Bonks hurt half as much. Huge Perfect zone on stone, tiny on everything else.", dmg: 1, nog: .5, rec: 1.25, zone: [.60, .92], spec: ["stone"], zoneBig: [.50, .94], zoneSmall: [.77, .84], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, col: 0x8d97a3, from: "Built at the Hat Forge (tutorial)" },
+  lumber: { name: "Lumberjack Cap", perk: "Trees take +2 damage and drop +1 wood. Huge Perfect zone on trees, tiny on everything else.", dmg: 0, nog: .75, rec: 1.1, zone: [.62, .90], spec: ["tree"], zoneBig: [.48, .95], zoneSmall: [.77, .84], speed: 1, treeDmg: 2, gemEase: 0, yieldB: { wood: 1 }, magnet: 1, col: 0xd23a2a, from: "Quest: Timber!" },
+  miner:  { name: "Miner\u2019s Helmet", perk: "Gold and crystal crack easier. Huge Perfect zone on gold and crystal, tiny elsewhere. +1 stone.", dmg: 0, nog: .75, rec: 1.1, zone: [.55, .94], spec: ["crystal", "gold"], zoneBig: [.46, .96], zoneSmall: [.77, .84], speed: 1, treeDmg: 0, gemEase: 1, yieldB: { stone: 1 }, magnet: 1, col: 0xffc21a, from: "Quest: Rock Solid" },
   prop:   { name: "Propeller Beanie", perk: "Walk 30% faster. Loot flies to you from farther away.", dmg: 0, nog: .85, rec: 1.2, zone: [.63, .90], speed: 1.3, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1.7, col: 0x2f9bd8, from: "Quest: Perfect Timing" },
   crown:  { name: "Golden Crown", perk: "+1 damage. +1 gold and crystal per node. Smug.", dmg: 1, nog: .6, rec: 1.3, zone: [.58, .93], speed: 1.05, treeDmg: 0, gemEase: 0, yieldB: { gold: 1, crystal: 1 }, magnet: 1.2, col: 0xf5b921, from: "Quest: Gold Rush" },
   dunce:  { name: "Dizzy Dunce Cap", perk: "Dizzy spells last 40% shorter. Stars still included.", dmg: 0, nog: .9, rec: 1.2, zone: [.64, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, dizzyT: .6, col: 0xf2e6b8, from: "Secret: get dizzy 3 times" },
   wool:   { name: "Woolly Cap", perk: "Soft bonks: a quarter less headache. Gary approves.", dmg: 0, nog: .7, rec: 1.2, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, col: 0xfbf6ee, from: "Secret: launch Gary twice" },
   tiara:  { name: "Crystal Tiara", perk: "A constant sparkle trail. Loot flies in from farther.", dmg: 0, nog: .85, rec: 1.2, zone: [.62, .91], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1.5, col: 0x7fe3ff, from: "Secret: mine 10 crystals" },
-  fishbowl: { name: "Fishbowl Helmet", perk: "Immune to steam vent shoves. The fish is on loan.", dmg: 0, nog: .8, rec: 1.15, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, ventImmune: true, col: 0x9fe0ff, from: "Quest: Scrap Run (Level 2)" },
+  fishbowl: { name: "Fishbowl Helmet", perk: "Immune to steam vent shoves. The fish is on loan.", dmg: 0, nog: .8, rec: 1.15, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, ventImmune: true, col: 0x9fe0ff, from: "Quest: Salvage Rights (Level 2)" },
+  nest: { name: "Bird\u2019s Nest Hat", perk: "Mabel rides on your head. Pick up and manage quests from anywhere. No more running home.", dmg: 0, nog: .85, rec: 1.2, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, remoteQuests: true, col: 0x8a5a33, from: "Quest: Vending Machine Shakedown (Level 2)" },
   tinfoil: { name: "Tin Foil Hat", perk: "HR memos become conspiracy theories. They were always conspiracy theories.", dmg: 0, nog: .9, rec: 1.2, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, conspiracy: true, col: 0xc9d4e0, from: "Secret: get shoved by steam 3 times" },
   visor: { name: "Welder Visor", perk: "Immune to sparks. Wider green zone. Looks cool, sees poorly.", dmg: 0, nog: .8, rec: 1.15, zone: [.52, .95], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, sparkImmune: true, col: 0xff9a2f, from: "Quest: Belt Basics (Level 3)" },
   bowler: { name: "Bowler Bot-Hat", perk: "Robots drop an extra gear. The hat insists it is not a robot.", dmg: 0, nog: .8, rec: 1.15, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1.2, robotB: 1, col: 0x3a414f, from: "Quest: First Contact (Level 3)" },
@@ -2122,6 +2595,7 @@ var HAT_ICO = {
   cone: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M20 3 L31 31 H9z" fill="#ff6a1f"/><path d="M16 15 H24 L26 21 H14z" fill="#fff"/><rect x="5" y="30" width="30" height="5" rx="2" fill="#e0501a"/></svg>',
   antenna: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M7 30 Q20 12 33 30z" fill="#3ee0c0"/><rect x="5" y="29" width="30" height="5" rx="2" fill="#2fb89a"/><path d="M14 17 L10 6 M26 17 L30 6" fill="none"/><circle cx="10" cy="5" r="3" fill="#ff7ad9"/><circle cx="30" cy="5" r="3" fill="#ffe14d"/></svg>',
   slimecrown: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M6 28 L6 12 L13 20 L20 8 L27 20 L34 12 L34 28z" fill="#9d5cff"/><rect x="6" y="26" width="28" height="5" fill="#7a3fd0"/><path d="M10 31 q0 6 3 0 M19 31 q0 8 3 0 M28 31 q0 5 3 0" fill="#b98aff"/></svg>',
+  nest: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><ellipse cx="20" cy="27" rx="15" ry="7" fill="#8a5a33"/><ellipse cx="20" cy="24" rx="11" ry="4.5" fill="#6b4423"/><circle cx="20" cy="17" r="7" fill="#9aa5b5"/><circle cx="23" cy="14" r="1.4" fill="#221407" stroke="none"/><path d="M26 15l5 1.5-5 1.5z" fill="#ff9a3d"/></svg>',
   tophat: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><rect x="11" y="6" width="18" height="21" rx="2" fill="#1f2430"/><rect x="11" y="20" width="18" height="5" fill="#f5b921"/><rect x="4" y="26" width="32" height="5" rx="2.5" fill="#1f2430"/></svg>'
 };
 
@@ -2159,6 +2633,13 @@ function buildHats(D) {
   var th = sub(head, 0, 1.08, -.02); th.visible = false; D.hats.tiara = th;
   M(th, cylG(.62, .64, .09, 18), toon(0xf5b921, { emissive: 0x4a3100 }), 0, 0, 0, .03);
   [[-.3, .22], [0, .34], [.3, .22]].forEach(function (c, i) { var cr = M(th, coneG(.1, c[1] + .1, 5), toon(i === 1 ? 0xb99cff : 0x7fe3ff, { emissive: 0x15405a }), c[0], .08, .56 - Math.abs(c[0]) * .35, .02); });
+  var nh = sub(head, 0, 1.0, -.02); nh.visible = false; D.hats.nest = nh;
+  var nt = M(nh, new THREE.TorusGeometry(.55, .17, 8, 16), toon(0x8a5a33), 0, .12, 0, .03); nt.rotation.x = Math.PI / 2;
+  M(nh, cylG(.5, .42, .2, 12), toon(0x6b4423), 0, 0, 0, .03);
+  var nbd = M(nh, new THREE.SphereGeometry(.3, 10, 8), toon(0x9aa5b5), 0, .42, 0, .03); nbd.scale.set(1, .9, 1.2);
+  M(nh, new THREE.SphereGeometry(.18, 10, 8), toon(0xc6cfdb), 0, .72, .16, .025);
+  var nbk = M(nh, coneG(.05, .15, 5), toon(0xff9a3d), 0, .72, .36, .02); nbk.rotation.x = Math.PI / 2;
+  [-.08, .08].forEach(function (ex) { M(nh, new THREE.SphereGeometry(.03, 6, 5), toon(0x221407), ex, .78, .3, false); });
   var fh = sub(head, 0, 1.0, -.02); fh.visible = false; D.hats.fishbowl = fh;
   var glass = new THREE.Mesh(new THREE.SphereGeometry(.88, 18, 14), new THREE.MeshBasicMaterial({ color: 0xbfeaff, transparent: true, opacity: .32, depthWrite: false })); glass.position.y = .3; fh.add(glass);
   M(fh, cylG(.8, .84, .1, 18), toon(0x8a94a6), 0, -.1, 0, .04);
@@ -2202,17 +2683,21 @@ function buildHats(D) {
 }
 function setHat(id, silent) {
   if (!HATS[id]) id = "none";
+  var prevHat = P.hatId;
+  if (P.hat2 === id) P.hat2 = (prevHat && prevHat !== "none" && prevHat !== id) ? prevHat : "none";   // wearing the backup swaps the two
   P.hatId = id; var D = dunk;
+  if (mabel && mabel.bird && !mabel.flying && mabel.bird.parent !== scene) mabel.bird.visible = id !== "nest";   // the bird rides on Dunk instead
   if (D && D.hats) {
     for (var k in D.hats) D.hats[k].visible = (k === id);
     var h = D.hats[id];
     if (h && !silent) { h.scale.setScalar(1.7); tween(.28, function (u) { h.scale.setScalar(lerp(1.7, 1, easeOut(u))); }); }
   }
   if (id === "tinfoil" && !silent && LR) LR.memoT = Math.min(LR.memoT, 5);   // the first theory arrives quickly
+  refreshSwap();
   if (!silent) saveLevel();
 }
 function unlockHat(id, quiet) {
-  UNL[id] = true; var h = HATS[id];
+  UNL[id] = true; var h = HATS[id], prevHatId = P.hatId;
   if (quiet) { setHat(id, true); return; }
   G.cine = { pos: P.pos.clone().add(new V3(0, 1.2, 0)), zoom: .42 };
   var hat = sub(scene, 0, 0, 0), dm = M(hat, new THREE.SphereGeometry(.72, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(h.col), 0, 0, 0, .05); dm.scale.y = .85;
@@ -2220,13 +2705,14 @@ function unlockHat(id, quiet) {
   var from = (G.hatFrom || LR.mpos).clone(), to = P.pos.clone().add(new V3(0, 2.35, 0));
   snd.whoosh();
   tween(.9, function (u) { var e = easeOut(u); hat.position.set(lerp(from.x, to.x, e), lerp(from.y, to.y, e) + Math.sin(Math.PI * u) * 2.4, lerp(from.z, to.z, e)); hat.rotation.y = u * 10; }, function () {
-    scene.remove(hat); setHat(id); snd.clunk(); snd.fanfare(); shake(.5); G.hitstop = .1; flash();
+    scene.remove(hat); setHat(id); if (prevHatId && prevHatId !== "none" && prevHatId !== id) { P.hat2 = prevHatId; saveLevel(); } refreshSwap(); snd.clunk(); snd.fanfare(); shake(.5); G.hitstop = .1; flash();
     floater(P.pos.clone().setY(3.1), "NEW HAT!", "perfect", 1.4);
     burst(P.pos.clone().setY(2.3), [h.col, 0xffffff, 0xffd93d], 22, 7, 8, 1.1, 1);
     shockwave(P.pos.clone().setY(2.3), 0xffe14d, 4.5, .5);
     toast(h.name + " unlocked and equipped");
     say(h.perk, 1);
     $("hat-dot").classList.remove("hidden");
+    teachSwap();
     later(1.6, function () { G.cine = null; });
   });
 }
@@ -2235,6 +2721,7 @@ function unlockHat(id, quiet) {
 function curQ() { return QUESTS[Q.idx] || null; }
 function qProg(q) {
   var s = Q.snap || { g: GATH, perf: 0, big: 0, vend: 0, robot: 0, dodge: 0, belt: 0, pad: 0, goo: 0 };
+  if (q.type === "gain") return [Math.min(inv[q.res] || 0, q.n), q.n];
   if (q.type === "gain") return [Math.min(Math.max(0, GATH[q.res] - s.g[q.res]), q.n), q.n];
   if (q.type === "build") return [plots[q.plot].built ? 1 : 0, 1];
   if (q.type === "perfect") return [Math.min(Math.max(0, stats.perfects - s.perf), q.n), q.n];
@@ -2245,6 +2732,10 @@ function qProg(q) {
   if (q.type === "belt") return [Math.min(Math.max(0, Math.floor((stats.beltT || 0) - (s.belt || 0))), q.n), q.n];
   if (q.type === "pad") return [Math.min(Math.max(0, (stats.pads || 0) - (s.pad || 0)), q.n), q.n];
   if (q.type === "goo") return [Math.min(Math.max(0, Math.floor((stats.gooT || 0) - (s.goo || 0))), q.n), q.n];
+  if (q.type === "egg") { var eg = T.filter(function (t) { return t.kind === "egg" && t.lvl === G.level; }), need = Math.min(q.n || 1, eg.length || 1), got = eg.filter(function (t) { return t.found; }).length; return [eg.length ? Math.min(got, need) : 1, need]; }
+  if (q.type === "upgrade") return [(!LR.anvil || upgTotal() - (s.upg || 0) >= 1) ? 1 : 0, 1];
+  if (q.type === "bonk") return [Math.min(Math.max(0, stats.bonks - (s.bonk || 0)), q.n), q.n];
+  if (q.type === "vent") return [Math.min(Math.max(0, (stats.ventHits || 0) - (s.vent || 0)), q.n), q.n];
   if (q.type === "boss") return [0, 1];
   return [Math.min(Math.max(0, GATH[q.res] - s.g[q.res]), q.n) + Math.min(Math.max(0, stats.bigs - s.big), 1), q.n + 1];
 }
@@ -2284,12 +2775,13 @@ function renderBoard() {
 function openBoard() { if (G.level < 1 || !curQ() || G.cine || G.ended || G.paused) return; renderBoard(); openSheet("board"); snd.pop(); }
 function acceptQuest() {
   var q = curQ(); if (!q || Q.state !== "offer") return;
-  Q.state = "active"; Q.snap = { g: copyG(), perf: stats.perfects, big: stats.bigs, vend: stats.vends || 0, robot: stats.robots || 0, dodge: stats.dodges || 0, belt: stats.beltT || 0, pad: stats.pads || 0, goo: stats.gooT || 0 }; G.lastProgress = G.time;
+  Q.state = "active"; Q.snap = { g: copyG(), perf: stats.perfects, big: stats.bigs, vend: stats.vends || 0, robot: stats.robots || 0, dodge: stats.dodges || 0, belt: stats.beltT || 0, pad: stats.pads || 0, goo: stats.gooT || 0, vent: stats.ventHits || 0, upg: upgTotal(), bonk: stats.bonks }; G.lastProgress = G.time;
   if (q.type === "build") activatePlot(q.plot);
   snd.chime(); say(q.accept, 1); saveLevel(); refreshQuestChip();
 }
 function claimQuest() {
   var q = curQ(); if (!q || Q.state !== "ready") return;
+  if (q.type === "gain") { if ((inv[q.res] || 0) < q.n) { Q.state = "active"; toast("Mabel wants " + q.n + " " + q.res + ". You\u2019re short."); return; } inv[q.res] -= q.n; updateRes(); }
   var r = q.reward || {}; Q.idx++; Q.state = "offer"; Q.snap = null; G.lastProgress = G.time; snd.chime();
   if (r.hat) unlockHat(r.hat);
   else { floater(LR.mpos.clone().setY(LR.mpos.y + 1.6), "Quest complete!", "perfect", 1.4); burst(LR.mpos.clone().setY(LR.mpos.y + .6), [0xffd93d, 0xffffff, 0xff5a36], 14, 5, 6, 1, .9); }
@@ -2307,15 +2799,56 @@ $("talk-go").addEventListener("pointerdown", function (e) { e.stopPropagation();
 
 /* ---------- wardrobe ---------- */
 function renderWardrobe() {
-  $("hat-list").innerHTML = HAT_ORDER.map(function (id) {
-    var h = HATS[id], un = UNL[id], on = P.hatId === id;
-    return '<div class="hat-row' + (un ? "" : " locked") + '"><div class="hat-ic">' + HAT_ICO[id] + '</div><div class="hat-tx"><div class="hat-nm">' + (un ? h.name : "???") + '</div><div class="hat-pk">' + (un ? h.perk : h.from) + "</div></div>" +
-      (un ? '<button class="cta pressable' + (on ? "" : " ghost") + '" data-hat="' + id + '"' + (on ? " disabled" : "") + ">" + (on ? "Wearing" : "Wear") + "</button>" : '<button class="cta" disabled>Locked</button>') + "</div>";
+  var sum = "";
+  if (swapReady()) {
+    var h2 = HATS[P.hat2];
+    sum = '<div class="hat-sum"><div><span class="hat-ic">' + HAT_ICO[P.hatId] + '</span><span><small>Wearing</small><b>' + HATS[P.hatId].name + '</b></span></div>' +
+      '<div><span class="hat-ic">' + (h2 && P.hat2 !== "none" ? HAT_ICO[P.hat2] : "") + '</span><span><small>Quick-swap</small><b>' + (h2 && P.hat2 !== "none" ? h2.name : "Pick a backup") + '</b></span></div></div>';
+  }
+  $("hat-list").innerHTML = sum + HAT_ORDER.map(function (id) {
+    var h = HATS[id], un = UNL[id], on = P.hatId === id, bk = P.hat2 === id, btns;
+    if (!un) btns = '<button class="cta" disabled>Locked</button>';
+    else if (!swapReady()) btns = '<button class="cta pressable' + (on ? "" : " ghost") + '" data-hat="' + id + '"' + (on ? " disabled" : "") + ">" + (on ? "Wearing" : "Wear") + "</button>";
+    else btns = '<button class="cta pressable' + (on ? "" : " ghost") + '" data-hat="' + id + '"' + (on ? " disabled" : "") + ">" + (on ? "Wearing" : "Wear") + "</button>" +
+      (id === "none" ? "" : '<button class="cta pressable ghost" data-bk="' + id + '"' + (on || bk ? " disabled" : "") + ">" + (bk ? "Backup \u2713" : "Backup") + "</button>");
+    return '<div class="hat-row' + (un ? "" : " locked") + '"><div class="hat-ic">' + HAT_ICO[id] + '</div><div class="hat-tx"><div class="hat-nm">' + (un ? h.name : "???") + '</div><div class="hat-pk">' + (un ? h.perk : h.from) + '</div></div><div class="hat-btns">' + btns + "</div></div>";
   }).join("");
   document.querySelectorAll("#hat-list button[data-hat]").forEach(function (b) {
     b.addEventListener("click", function () { setHat(b.getAttribute("data-hat")); snd.clunk(); renderWardrobe(); });
   });
+  document.querySelectorAll("#hat-list button[data-bk]").forEach(function (b) {
+    b.addEventListener("click", function () { P.hat2 = b.getAttribute("data-bk"); snd.pop(); refreshSwap(); saveLevel(); renderWardrobe(); });
+  });
 }
+/* ---------- hat quick-swap slot: unlocked with the second hat ---------- */
+function ownedHats() { return HAT_ORDER.filter(function (k) { return k !== "none" && UNL[k]; }); }
+function swapReady() { return ownedHats().length >= 2; }
+function refreshSwap() {
+  var b = $("btn-swap"); if (!b || typeof UNL === "undefined") return;
+  if (swapReady() && (!P.hat2 || P.hat2 === "none" || !UNL[P.hat2] || P.hat2 === P.hatId)) {
+    var o = ownedHats().filter(function (k) { return k !== P.hatId; }); P.hat2 = o.length ? o[o.length - 1] : "none";
+  }
+  var show = swapReady() && P.hat2 !== "none" && !$("btn-hats").classList.contains("hidden");
+  b.classList.toggle("hidden", !show);
+  if (show) { b.querySelector(".swic").innerHTML = HAT_ICO[P.hat2]; b.setAttribute("aria-label", "Swap to " + HATS[P.hat2].name); }
+}
+function swapHats() {
+  if (!canAct() || !swapReady() || P.charging || !P.hat2 || P.hat2 === "none" || !UNL[P.hat2]) return;
+  var b = $("btn-swap"); b.classList.remove("new");
+  setHat(P.hat2); snd.clunk();
+  floater(P.pos.clone().setY(3.1), HATS[P.hatId].name, "num", 1.1);
+  burst(P.pos.clone().setY(2.3), [0xffffff, 0xffd93d], 8, 4, 5, .6, .7);
+}
+function teachSwap() {
+  if (!swapReady()) return;
+  var sv = loadSave(); if (sv.swapTaught) return; writeSave({ swapTaught: true });
+  $("btn-swap").classList.add("new");
+  later(2.4, function () {
+    say("Two hats! Your other hat now waits on the quick-swap button under the hat button. Tap it to switch mid-bonk (or press Q).", 1);
+    say("Open the hat menu to choose which hat you wear and which one waits as your backup.", 1);
+  });
+}
+$("btn-swap").addEventListener("click", function () { swapHats(); });
 $("btn-hats").addEventListener("click", function () { if (!canAct()) return; renderWardrobe(); $("hat-dot").classList.add("hidden"); openSheet("wardrobe"); snd.pop(); });
 $("hat-close").addEventListener("click", function () { closeSheet(); });
 
@@ -2494,7 +3027,7 @@ function updateTalk() {
   var c = $("talk");
   if (G.level < 1 || !canAct() || cardPlot || !LR.house || !curQ()) { c.classList.add("hidden"); LR.talkOn = false; return; }
   var d = Math.hypot(P.pos.x - LR.house.pos.x, P.pos.z - LR.house.pos.z);
-  if (d > 6.2 && !(LV.talkAnywhere && Q.state !== "active")) { c.classList.add("hidden"); LR.talkOn = false; return; }
+  if (d > 4.2 && !(LV.talkAnywhere && Q.state !== "active") && !HAT().remoteQuests) { c.classList.add("hidden"); LR.talkOn = false; return; }
   var msg = Q.state === "offer" ? "I\u2019ve got a job for you!" : Q.state === "ready" ? "Quest done? Come tell me." : "Need a reminder?";
   if (c.classList.contains("hidden")) { c.classList.remove("hidden", "in"); void c.offsetWidth; c.classList.add("in"); $("talk-pic").innerHTML = ART.mabel; }
   if ($("talk-tx").textContent !== msg) $("talk-tx").textContent = msg;
@@ -2600,6 +3133,7 @@ var HAZ = {
 
 /* ---------- LEVEL 1: Bonk Isles (Legacy Terrain Preserve) ---------- */
 LEVELS[1] = {
+  eggs: [{ type: "duck", isl: 0, offs: [[-2, 8], [6, 6], [-6, 6], [3, -3]] }, { type: "cactus", isl: 4, offs: [[-1, -3], [3, 2], [-4, 3], [0, 6], [5, -4]] }],
   n: 1, name: "Bonk Isles", sub: "Legacy Terrain Preserve",
   banner: ["Level 1: Bonk Isles", "Authentic nature. Mandatory fun enabled."],
   arrive: "Come into the office. Okay, it\u2019s a hut. Come in.",
@@ -2651,7 +3185,7 @@ LEVELS[1] = {
     "Coconut incidents are not covered by your wellness plan."
   ],
   quests: [
-  { id: "timber", title: "Timber!", type: "gain", res: "wood", n: 8, obj: "Gather wood", goal: "Gather 8 wood from the trees on this island.",
+  { id: "timber", title: "Timber!", type: "gain", turnIn: true, res: "wood", n: 8, obj: "Turn in wood", goal: "Turn in 8 wood from the trees on this island. Wood you already have counts.",
     offer: "Welcome to the Legacy Terrain Preserve, Dunk. HR-9000 needs eight wood by close of business. Real wood. Heritage grade. Trees are the tall green things.",
     accept: "Eight wood. Trees. Forehead. You know the drill.", hint: "Eight wood, remember? Trees are the tall green things.",
     ready: "Wood! Real, splintery wood. Take this cap. It was in lost and found. I\u2019m choosing not to ask whose.", reward: { hat: "lumber" } },
@@ -2671,19 +3205,27 @@ LEVELS[1] = {
     offer: "Anyone can bonk. I want PERFECT bonks. Six of them. Hold, let go in the green, hit anything. Rocks, trees, my patience.",
     accept: "Six perfects. Watch the ring above your head.", hint: "Six perfect bonks. Hold, release in the green.",
     ready: "Six perfects. I\u2019m only slightly moved. Take this beanie. The propeller is purely decorative. (It is not.)", reward: { hat: "prop" } },
-  { id: "bridgeC", title: "Crystal Crossing", type: "build", plot: "l1_bC", obj: "Build the Crystal Bridge", goal: "Build the bridge from the Quarry east to Crystal Isle.",
+  { id: "duckHunt", title: "Squeaky Business", type: "egg", n: 1, obj: "Bonk the rubber duck", goal: "Somewhere on the home island is a rubber duck. Give it a bonk.",
+      offer: "There is a rubber duck on this island. I do not know where it came from. I do not want to know. Bonk it. For science.",
+      accept: "A rubber duck. Home island. Bonk it.", hint: "Home island. Yellow. Smug. Squeaky.",
+      ready: "Squeak confirmed. Science is a beautiful thing.", reward: { note: "A deeper understanding of ducks" } },
+    { id: "bridgeC", title: "Crystal Crossing", type: "build", plot: "l1_bC", obj: "Build the Crystal Bridge", goal: "Build the bridge from the Quarry east to Crystal Isle.",
     offer: "Past the Quarry, something sparkles. I want it. Build the crossing from the Quarry\u2019s east side.",
     accept: "Cross the Quarry to its east edge. Blue outline.", hint: "The crystal bridge starts on the Quarry\u2019s east side.",
     ready: "Ooh, shiny. And the bridge is nice too.", reward: { note: "A very sparkly island" } },
-  { id: "crystal", title: "Gem Fever", type: "gain", res: "crystal", n: 6, obj: "Mine crystals", goal: "Mine 6 crystals. They\u2019re tough: perfect bonks, or wear the Miner\u2019s Helmet.",
+  { id: "crystal", title: "Gem Fever", type: "gain", turnIn: true, res: "crystal", n: 6, obj: "Turn in crystals", goal: "Turn in 6 crystals. They\u2019re tough: perfect bonks, or wear the Miner\u2019s Helmet.",
     offer: "Crystals are tougher than rocks. Plain charged bonks bounce off. Perfect bonks work. So does the helmet. Bring me six.",
     accept: "Six crystals. Helmet on, or aim for the green.", hint: "Six crystals. If they bounce, try the Miner\u2019s Helmet (the hat button, top right).",
     ready: "Sparkly. Keep a few. The last bridge is going to want some.", reward: { note: "Shiny things, owed" } },
-  { id: "bridgeG", title: "The Golden Gangway", type: "build", plot: "l1_bG", obj: "Build the Gold Bridge", goal: "Build the bridge from the Forest east to Gold Isle. It needs crystals.",
+  { id: "anvilIntro", title: "Forehead Maintenance", type: "upgrade", obj: "Buy an anvil upgrade", goal: "Build the anvil on the home island, then buy any one upgrade.",
+      offer: "There is an optional anvil spot on the home island. Build it, then buy one upgrade. Your forehead does everything. Let\u2019s make it do it faster.",
+      accept: "Anvil spot on the home island. Build it, then spend.", hint: "Home island, near the start. Build the anvil, then buy any upgrade.",
+      ready: "A better forehead, on credit. Welcome to the economy.", reward: { note: "Permanent upgrades" } },
+    { id: "bridgeG", title: "The Golden Gangway", type: "build", plot: "l1_bG", obj: "Build the Gold Bridge", goal: "Build the bridge from the Forest east to Gold Isle. It needs crystals.",
     offer: "Gold Isle is east of the Forest. The bridge is fancy and wants crystals. Don\u2019t ask why a bridge wants crystals.",
     accept: "Cross the Forest to its east edge. You\u2019ll need crystals.", hint: "Gold bridge: wood, stone and crystal. East edge of the Forest.",
     ready: "Gold. Finally. Go. Bonk. Enrich us.", reward: { note: "Gold, at last" } },
-  { id: "goldrush", title: "Gold Rush", type: "gain", res: "gold", n: 8, obj: "Mine gold", goal: "Mine 8 gold on Gold Isle.",
+  { id: "goldrush", title: "Gold Rush", type: "gain", turnIn: true, res: "gold", n: 8, obj: "Turn in gold", goal: "Turn in 8 gold from Gold Isle. Gold you already have counts.",
     offer: "Eight gold. The rocks with the shiny bits are the hard kind. Charge up, or wear a hat that helps.",
     accept: "Eight gold. Go be rich.", hint: "Eight gold. Gold rocks have the yellow shiny bits.",
     ready: "Eight gold! Dunk, you\u2019re the best employee I\u2019ve ever supervised. You\u2019re also the only one. Take this crown.", reward: { hat: "crown" } },
@@ -2699,6 +3241,7 @@ var LAB = /[#?&]lab\b/.test(location.hash + location.search);
 
 /* ---------- LEVEL 2: Orbital Break Room (low-gravity scrap yard) ---------- */
 LEVELS[2] = {
+  eggs: [{ type: "pretzel", isl: 0, offs: [[6, 4], [-6, 5], [2, -7], [7, -3]] }],
   n: 2, name: "Orbital Break Room", sub: "Low-gravity scrap yard", gravity: .4,
   banner: ["Level 2: Orbital Break Room", "Low gravity. Mandatory fun. Break room not included."],
   arrive: "Welcome to the office. It\u2019s an airlock. Come in. Hold on to something. Or don\u2019t.",
@@ -2738,6 +3281,7 @@ LEVELS[2] = {
     [56, -36, ["EMPLOYEE OF THE", "MONTH: NOBODY"]]
   ],
   drones: [{ x: 0, z: 0, r: 18, n: 2 }, { x: 32, z: 0, r: 15, n: 1 }, { x: 15, z: -30, r: 20, n: 1 }, { x: 58, z: -30, r: 14, n: 1 }],
+  ventsNear: true,
   vents: [
     { x: -3, z: 7, dir: 0 },
     { x: 28, z: -1, dir: 90 }, { x: 36, z: 3, dir: 270, phase: 2 },
@@ -2768,18 +3312,22 @@ LEVELS[2] = {
     base: "Mabel\u2019s review: \u201cLevel complete. The break room remains closed. HR-9000 has noted your gratitude.\u201d"
   },
   quests: [
-    { id: "scrapRun", title: "Scrap Run", type: "gain", res: "scrap", n: 6, obj: "Gather scrap", goal: "Bonk the grey wrecks and gather 6 scrap.",
+    { id: "scrapRun", title: "Scrap Run", type: "gain", turnIn: true, res: "scrap", n: 6, obj: "Turn in scrap", goal: "Bonk the grey wrecks, then turn in 6 scrap.",
       offer: "Welcome to the Orbital Break Room, Dunk. It is not a break room. It is a scrap yard with a microwave. HR-9000 needs six scrap. Bonk the grey wrecks. Everything falls slowly up here, so be patient.",
       accept: "Six scrap. Grey wrecks. Loot takes its time up here.", hint: "Six scrap. The grey boxy wrecks. They fall slowly. Patience.",
-      ready: "Scrap! Floaty, but scrap. Take this fishbowl. The fish is on loan. Do not ask whose fish.", reward: { hat: "fishbowl" } },
+      ready: "Scrap! Floaty, but scrap. HR-9000 will want more. Go on.", reward: { note: "Scrap, owed" } },
     { id: "airlock", title: "East Airlock", type: "build", plot: "l2_bE", obj: "Build the East Airlock", goal: "Build the bridge east to the Wreck Yard.",
       offer: "East is the Wreck Yard. Between here and there is vacuum. Vacuum is not load-bearing. Build a bridge. HR-9000 calls it an airlock. I call it a plank with ambitions.",
       accept: "Blue outline, east edge. You know the drill.", hint: "The east bridge needs scrap and stone. Find the blue outline.",
       ready: "Pressurized. Mostly. Go on.", reward: { note: "A yard full of wrecks" } },
+    { id: "ventTest", title: "Check It Out", type: "vent", n: 1, obj: "Step on a glowing grate", goal: "Step on a steam vent and see what it does.",
+      offer: "See the grates in the Wreck Yard floor? Glowing means steam. Don\u2019t take my word for it. Check it out. Step on one.",
+      accept: "Find a grate. Stand on it. Wait for the glow.", hint: "Stand on a grate and wait for it to glow. The arrow shows where the steam shoves you.",
+      ready: "Whoosh! Now you know. Steam shoves. It doesn\u2019t hurt. Mostly.", reward: { note: "Firsthand steam experience" } },
     { id: "salvage", title: "Salvage Rights", type: "gain", res: "scrap", n: 10, obj: "Salvage scrap", goal: "Gather 10 scrap in the Wreck Yard. Mind the steam vents.",
       offer: "The Wreck Yard is full of dead satellites. Ten scrap. Watch the glowing grates: steam. It shoves. A fishbowl helps. I\u2019m told.",
       accept: "Ten scrap. Don\u2019t stand on the glowing grates.", hint: "Ten scrap. The grates glow before the steam. Step aside, or wear the fishbowl.",
-      ready: "Ten scrap! The satellites would be proud. They are dead, but they would be.", reward: { note: "Wreckage, owed" } },
+      ready: "Ten scrap! The satellites would be proud. Take this fishbowl. The fish is on loan. Do not ask whose fish.", reward: { hat: "fishbowl" } },
     { id: "corridor", title: "Vending Corridor", type: "build", plot: "l2_bN", obj: "Build the Vending Corridor", goal: "Build the bridge north to the Vending Bay.",
       offer: "North of the dock is the Vending Bay. Vending machines. Plural. They owe us. Build the corridor.",
       accept: "North edge. Blue outline.", hint: "The north bridge needs scrap and stone. Walk to the north edge of the dock.",
@@ -2787,7 +3335,11 @@ LEVELS[2] = {
     { id: "shakedown", title: "Vending Machine Shakedown", type: "vend", n: 3, obj: "Bonk vending machines", goal: "Bonk 3 vending machines until they pay out.",
       offer: "Three vending machines. All of them have eaten my credits. Bonk them until they pay out. This is called a shakedown. It is also called Tuesday.",
       accept: "Three machines. Bonk until they pay out.", hint: "Three vending machines in the Vending Bay. They have a red light. Bonk them.",
-      ready: "Three machines, zero refunds, plenty of scrap. Good work.", reward: { note: "Snacks (none) and my gratitude" } },
+      ready: "Three machines, zero refunds, plenty of scrap. Good work. Take my old nest. Wear it and I ride along: new jobs from anywhere. No commute.", reward: { hat: "nest" } },
+    { id: "snackBreak", title: "Snack Break", type: "egg", n: 1, obj: "Bonk the stale pretzel", goal: "Find the stale pretzel on the dock and bonk it.",
+      offer: "There is a pretzel on the dock. It has been there since the station opened. Bonk it. Report back on its structural integrity.",
+      accept: "A pretzel. The dock. Bonk it.", hint: "On the dock island. Brown. Twisted. Ancient.",
+      ready: "Stale. As predicted. Thank you for your service.", reward: { note: "Pretzel data" } },
     { id: "zen", title: "Zero-G Zen", type: "streak", n: 3, obj: "Perfect bonks in a row", goal: "Land 3 perfect bonks in a row. Hold, then release in the green.",
       offer: "In low gravity, timing is everything. Everything else floats. Three perfect bonks in a row. Hold, let go in the green, repeat. Breathe. In space, nobody can hear you whiff.",
       accept: "Three in a row. Watch the ring above your head.", hint: "Three perfect bonks in a row. A miss resets the streak. Hit anything.",
@@ -3079,6 +3631,7 @@ function l3span(a, b) {
 }
 function l3bridge(id, name, blurb, cost, a, b) { var s = l3span(a, b); return { id: id, name: name, blurb: blurb, cost: cost, x: s.x, z: s.z, len: s.len, alongZ: s.alongZ, a: a, b: b }; }
 LEVELS[3] = {
+  eggs: [{ type: "button", isl: 0, offs: [[6, 5], [-4, 6], [4, -5], [8, 0]] }],
   n: 3, name: "Robot Factory", sub: "Conveyor belt heaven",
   banner: ["Level 3: Robot Factory", "Please keep your head and hands inside the forehead at all times."],
   arrive: "Welcome to the office. It\u2019s a loading dock. Mind the belt. The belt does not mind you.",
@@ -3089,6 +3642,7 @@ LEVELS[3] = {
   islands: L3I.map(function (s) { return { x: s.x, z: s.z, r: s.r, top: s.top, side: s.side, tuft: 0x8a94a6, bush: 0x8a94a6, nT: 0, nF: 0, nB: 0 }; }),
   edges: [[0, 1], [1, 2], [2, 3], [3, 4]],
   place: {
+    crystals: [[8, -32, .9], [-8, -36, .9], [0, -30, .9], [-3, -39, .9]],
     scraps: [[4, 6.5, .8], [8.5, 5, .8], [-8, 5, .8], [-2, 9.5, .8], [9.5, -4, .8], [-9, -6, .8],
       [26, -3.5, .85], [42.5, -3, .85], [28, 8.5, .85], [40, 8, .85], [43, 2.5, .85],
       [28, -26, .85], [40, -26.5, .85], [30, -37.5, .85], [37, -24, .85],
@@ -3182,10 +3736,18 @@ LEVELS[3] = {
       offer: "North of the Belt Hall is the Press Floor. It has stamping presses. They stamp. Build the bridge from the north edge. Wear whatever feels flat.",
       accept: "North edge of the Belt Hall. Blue outline.", hint: "The north bridge needs scrap and gears. North edge of the Belt Hall.",
       ready: "Bridge built. The presses sent a fruit basket. It was flat.", reward: { note: "Press-ure" } },
+    { id: "redButton", title: "Do Not Press", type: "egg", n: 1, obj: "Bonk the big red button", goal: "There is a big red button on the home island. Bonk it anyway.",
+      offer: "There is a big red button on the home island. It says DO NOT PRESS. So. Bonk it.",
+      accept: "The big red button. Home island. Bonk it.", hint: "Home island. Red. Big. Tempting.",
+      ready: "Nothing happened. That is exactly what it wants us to think.", reward: { note: "Plausible deniability" } },
     { id: "pressPanic", title: "Press Panic", type: "dodge", n: 4, obj: "Dodge the presses", goal: "Stand on a press pad, wait for the red shadow, then step out before it slams. Do it 4 times.",
       offer: "The presses are polite. They warn you. A red shadow grows, the head comes down, it lands. Stand on a pad when the shadow starts. Leave before it lands. Four times. Do not be flat.",
       accept: "Four dodges. Shadow starts, you move. Easy. Probably.", hint: "Four dodges. Stand on a press pad until the shadow grows, then step out. A bonk-lunge dodges too.",
       ready: "Four dodges. I\u2019m moved. HR-9000 has logged it under \u2018unscheduled agility\u2019.", reward: { note: "A perfectly un-flat Dunk" } },
+    { id: "quota", title: "Productivity Quota", type: "bonk", n: 20, obj: "Bonk 20 things", goal: "Bonk 20 things. Rocks, robots, regrets. Anything counts.",
+      offer: "HR wants a productivity number. The number is twenty bonks. It does not care what you bonk. Neither do I.",
+      accept: "Twenty bonks. Anything counts.", hint: "Twenty bonks. Rocks, robots, regrets.",
+      ready: "Twenty! HR has a graph. The graph is very pleased.", reward: { note: "A graph, somewhere" } },
     { id: "gantry", title: "Gear Works Gantry", type: "build", plot: "l3_bG", obj: "Build the Gear Works Gantry", goal: "Build the bridge west to the Robot Yard.",
       offer: "West of the Press Floor is the Robot Yard. Robots everywhere. Build the gantry from the west edge. Say hi to the robots. Don\u2019t say hi too hard.",
       accept: "West edge of the Press Floor. Blue outline.", hint: "The west bridge needs scrap and gears. West edge of the Press Floor.",
@@ -3194,6 +3756,14 @@ LEVELS[3] = {
       offer: "HR-9000 wants a gear surplus. The Robot Yard has robots. Bonk three. They drop gears. They also drop opinions. Ignore the opinions.",
       accept: "Three robots. Charge your bonk. They\u2019ll wait for you if you stand in front.", hint: "Three robots in the Yard. Charge your bonk. Sparks fall: watch the red circles.",
       ready: "Three robots, a pile of gears, and HR-9000 is almost warm toward you. Almost.", reward: { note: "Overtime pay (none)" } },
+    { id: "crystalDeal", title: "Crystal Clear", type: "gain", res: "crystal", n: 3, obj: "Turn in 3 crystal", goal: "Bonk the crystals in the Robot Yard and bring Mabel 3 crystal.",
+      offer: "HR-9000 is sending attack drones after anything you build. Bonk them yourself, or build turrets. Turrets need crystal. Fetch three.",
+      accept: "Three crystals from the Robot Yard. Hold the bonk and aim for the green: crystals are hard.", hint: "Crystals sit in the Robot Yard. Bring 3 back to me.",
+      ready: "Crystals! Pretty, pointy, and about to become weapons.", reward: { note: "Turret know-how" } },
+    { id: "turretTraining", title: "Turret Training", type: "build", plot: "l3_t0", obj: "Build a turret", goal: "Build a turret on the glowing pad beside the East Causeway. It shoots attack drones.",
+      offer: "Turrets go on the pads beside your buildings. Scrap plus crystal. Build one by the East Causeway.",
+      accept: "Pad by the bridge. Scrap and crystal. Then let the drones come.", hint: "Walk to the glowing turret pad beside the East Causeway.",
+      ready: "A turret! It shoots drones. It does not shoot opinions. More pads beside every bridge, if you want them. Anvil can tune them.", reward: { note: "Turret pads unlocked" } },
     { id: "walkway", title: "Assembly Line Walkway", type: "build", plot: "l3_bA", obj: "Build the Assembly Line Walkway", goal: "Build the bridge north to the Assembly Line.",
       offer: "North of the Robot Yard is the Assembly Line. Where the big thing gets built. Build the walkway. It wants gears. Obviously.",
       accept: "North edge of the Robot Yard. You\u2019ll need lots of gears.", hint: "Walkway: scrap and gears. North edge of the Robot Yard.",
@@ -3368,6 +3938,7 @@ function l4bridge(id, name, blurb, cost, a, b) {
   sg = B.x > A.x ? 1 : -1; s0 = A.x + sg * (A.r - .8); s1 = B.x - sg * (B.r - .8); return { id: id, name: name, blurb: blurb, cost: cost, x: (s0 + s1) / 2, z: A.z, len: Math.abs(s1 - s0), alongZ: false, a: a, b: b };
 }
 LEVELS[4] = {
+  eggs: [{ type: "gloop", isl: 0, offs: [[5, 5], [-5, 6], [6, -3], [0, 8]] }],
   n: 4, name: "Planet Gloop", sub: "Alien jungle", garyCol: 0x7fffd0,
   banner: ["Level 4: Planet Gloop", "Sticky, bouncy and extremely rude."],
   arrive: "Welcome to the office. It\u2019s a mushroom. Don\u2019t lick it. Don\u2019t lick anything. Come in.",
@@ -3447,6 +4018,10 @@ LEVELS[4] = {
       offer: "The Marsh has spore clouds. They drift. They don\u2019t chase. They tickle your head. Gather eight slime. Don\u2019t sneeze.",
       accept: "Eight slime. Avoid the green puffs.", hint: "Eight slime. Spore clouds fill your head meter slowly. Walk out of them.",
       ready: "Eight slime and only a little sneezing. I\u2019m proud. And congested.", reward: { note: "A mild head cold, owed" } },
+    { id: "gloopPet", title: "Gloop Pet", type: "egg", n: 1, obj: "Bonk the little gloop", goal: "A small gloop lives on the home island. Bonk it. Gently. Or not gently.",
+      offer: "There is a little gloop on the home island. It jiggles. Bonk it. It likes it. I think that is a smile.",
+      accept: "A little gloop. Home island. Bonk it.", hint: "Home island. Purple. Jiggly. Friendly.",
+      ready: "Splorp! A new best friend. Do not feed it.", reward: { note: "One (1) gloop friend" } },
     { id: "mile", title: "Mushroom Mile", type: "build", plot: "l4_bM", obj: "Build the Mushroom Mile", goal: "Build the bridge north to the Gem Glade. It needs gears.",
       offer: "North of the Marsh is the Gem Glade. The bridge wants slime and gears. The gears are in the crashed robots. Smash them. They\u2019re already crashed.",
       accept: "North edge of the Marsh. You\u2019ll need slime and gears.", hint: "Mile: slime and gears. Gears come from the orange crashed machines.",
@@ -3720,7 +4295,7 @@ var CREDITS = [
 ];
 function showCredits(done) {
   var c = $("credits"), inn = $("cr-in"); inn.innerHTML = CREDITS.map(function (r) { return r[0] === "h1" ? "<h1>" + r[1] + "</h1>" : r[0] === "h2" ? "<h2>" + r[1] + "</h2>" : r[0] === "memo" ? '<p class="memo">' + r[1] + "</p>" : r[0] === "big" ? '<p class="big">' + r[1] + "</p>" : "<p>" + r[1] + "</p>"; }).join("");
-  c.classList.remove("hidden", "static"); $("cr-skip").textContent = "Skip"; hideBubble(); $("hud").classList.add("hidden"); $("controls").classList.add("hidden");
+  c.classList.remove("hidden", "static"); $("cr-skip").textContent = "Skip"; clearMsgs(); $("hud").classList.add("hidden"); $("controls").classList.add("hidden");
   var finished = false;
   function end() { if (finished) return; finished = true; c.classList.add("hidden"); c.classList.remove("static"); G.creditsOn = false; if (done) done(); }
   $("cr-skip").onclick = end; G.creditsOn = true;
@@ -3794,6 +4369,7 @@ function l5bridge(id, name, blurb, cost, a, b) {
   sg = B.x > A.x ? 1 : -1; s0 = A.x + sg * (A.r - .8); s1 = B.x - sg * (B.r - .8); return { id: id, name: name, blurb: blurb, cost: cost, x: (s0 + s1) / 2, z: A.z, len: Math.abs(s1 - s0), alongZ: false, a: a, b: b };
 }
 LEVELS[5] = {
+  eggs: [{ type: "stapler", isl: 0, offs: [[5, 4], [-4, 5], [0, 7]] }, { type: "cooler", isl: 0, offs: [[7, -2], [-3, -6], [2, 8]] }],
   n: 5, name: "HR Tower", sub: "Final performance review", garyCol: 0xfbf6ee, talkAnywhere: true, endTitle: "Performance Review: PASSED",
   banner: ["Level 5: HR Tower", "Your annual performance review is now mandatory."],
   arrive: "Welcome to the HR Tower, Dunk. I\u2019m on the intercom: tap Talk any time. HR-9000 has summoned you for a review. Which is a nice word for a boss fight.",
@@ -3874,6 +4450,10 @@ LEVELS[5] = {
       offer: "Floor 1 is a factory in a trench coat. Smash the orange generators for four gears. The belts reverse. Treat them with suspicion.",
       accept: "Four gears. Orange generators. Mind the belts.", hint: "Four gears. The orange machines with the cog on top. Belts flash orange before they flip.",
       ready: "Gears! Greasy, legal, mine. Keep a few for the elevators.", reward: { note: "Grease, owed" } },
+    { id: "officeSupplies", title: "Office Supplies", type: "egg", n: 2, obj: "Bonk two office supplies", goal: "Find and bonk the stapler and the water cooler on the lobby floor.",
+      offer: "The lobby has a stapler and a water cooler. Both need bonking. That is policy now. I wrote it. Just now.",
+      accept: "Stapler and water cooler. Lobby floor. Bonk both.", hint: "Lobby floor. The stapler is red. The cooler is wet.",
+      ready: "Stapled and hydrated. Productivity is up 0.2%. Good enough.", reward: { note: "Office morale" } },
     { id: "mockReview", title: "Mock Review", type: "streak", n: 3, obj: "Perfect bonks in a row", goal: "Land 3 perfect bonks in a row. HR-9000 opens its shield in a rhythm: practice the timing.",
       offer: "Listen. HR-9000 hides behind a shield that opens in rhythm. You\u2019ll have to land perfect bonks while it\u2019s open. Practice: three in a row. Hold, let go in the green. It acts strange around me, you know. It says \u2018Mabel\u2019 like a password.",
       accept: "Three in a row. Watch the ring above your head.", hint: "Three perfect bonks in a row. A miss resets the streak. Hit anything.",
@@ -3965,7 +4545,7 @@ function camdBlend(dt) {
 (function () {
   var st = document.createElement("style");
   st.textContent = "#cutbars i{position:fixed;left:0;right:0;height:0;background:#000;z-index:70;transition:height .6s ease;pointer-events:none}#cutbars i:first-child{top:0}#cutbars i:last-child{bottom:0}body.letterbox #cutbars i{height:11vh}" +
-    ".cutting #hud,.cutting #controls,.cutting #btn-hats,.cutting #talk,.cutting #bubble,.cutting #banner,.cutting #bosshud,.cutting #buildcard,.cutting #objective,.cutting #toast,.cutting #noggin,.cutting #gauge,.cutting #hat-dot,.cutting #streak{display:none!important}" +
+    ".cutting #hud,.cutting #controls,.cutting #btn-hats,.cutting #btn-swap,.cutting #talk,.cutting #anvilcard,.cutting #bubble,.cutting #banner,.cutting #bosshud,.cutting #buildcard,.cutting #objective,.cutting #toast,.cutting #noggin,.cutting #gauge,.cutting #hat-dot,.cutting #streak{display:none!important}" +
     "#cutlayer{position:fixed;inset:0;z-index:73;cursor:pointer}#cutlayer.hidden,#cutskip.hidden,#cutcap.hidden{display:none}#cutskip{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;z-index:76;width:auto;padding:6px 12px;font-size:14px}" +
     "#cutcap{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(11vh + 16px);width:min(92vw,540px);z-index:74;pointer-events:none;box-sizing:border-box;padding:9px 13px 10px;background:#fff7e6;border:3px solid #221407;box-shadow:3px 3px 0 #221407;color:#221407;font-family:var(--body,Archivo,sans-serif);font-size:17px;line-height:1.3}" +
     "#cutcap .who{font-family:var(--display,'Archivo Black',sans-serif);font-size:12px;letter-spacing:.06em;margin-bottom:2px}#cutcap.NARRATOR{background:rgba(0,0,0,.62);border-color:rgba(255,255,255,.25);box-shadow:none;color:#fff;text-align:center;font-style:italic}#cutcap.NARRATOR .who{display:none}#cutcap.HR .who{color:#d42a1e}#cutcap.MABEL .who{color:#2a6f9a}#cutcap.DUNK .who{color:#c25a00}" +
@@ -4003,7 +4583,7 @@ function playCutscene(sc, done) {
   CUT = { sc: sc, i: -1, t: 0, d: 1, done: done, props: [], cap: null, capT: 0, capN: 0, acts: [], walk: null, hr: null, hrm: null };
   CAMD.ox = sc.world ? 0 : LR.ox; CAMD.oz = sc.world ? 0 : LR.oz; CAMD.on = false; CAMD.blend = 0;
   G.cutOnly = !!sc.cutOnly; CUT.prevCine = G.cine; G.cine = { pos: new V3(P.pos.x, 0, P.pos.z), zoom: 1 };
-  $("app").classList.add("cutting"); barsOn(true); hideBubble(); $("cutlayer").classList.remove("hidden"); $("cutskip").classList.remove("hidden");
+  $("app").classList.add("cutting"); barsOn(true); clearMsgs(); $("cutlayer").classList.remove("hidden"); $("cutskip").classList.remove("hidden");
   P.charging = false; P.charge = 0; inp.x = inp.y = 0;
   if (sc.setup) sc.setup(CUT);
   cutNext();
@@ -4180,6 +4760,22 @@ function buildLevel(n) {
   R.vents = R.vents || [];
   (C.vents || []).forEach(function (c) { R.vents.push(makeVent(R, n, c)); });
   (pl.crystals || []).forEach(function (a) { makeCrystal(a[0] + ox, a[1] + oz, a[2]).lvl = n; });
+  if (C.ventsNear) {   // vents beside every second mineable node, shoving you back toward the island centre
+    var vc = 0;
+    T.forEach(function (t) {
+      if (t.lvl !== n || !t.alive || (t.kind !== "rock" && t.kind !== "crystal" && t.kind !== "gold")) return;
+      if (++vc % 2) return;
+      var nx0 = t.g.position.x, nz0 = t.g.position.z, isl = null;
+      for (var qi = 0; qi < R.islands.length; qi++) { var s0 = R.islands[qi]; if ((nx0 - s0.x) * (nx0 - s0.x) + (nz0 - s0.z) * (nz0 - s0.z) <= s0.r * s0.r) isl = s0; }
+      if (!isl) return;
+      var ax = isl.x - nx0, az = isl.z - nz0, al = Math.hypot(ax, az) || 1; ax /= al; az /= al;
+      var vx = nx0 + ax * (t.radius + 1.7), vz = nz0 + az * (t.radius + 1.7);
+      if ((vx - isl.x) * (vx - isl.x) + (vz - isl.z) * (vz - isl.z) > (isl.r - 1.6) * (isl.r - 1.6)) return;
+      if (C.spawn && Math.hypot(vx - (C.spawn[0] + ox), vz - (C.spawn[1] + oz)) < 5) return;
+      for (var wi = 0; wi < R.vents.length; wi++) if (Math.hypot(R.vents[wi].x - vx, R.vents[wi].z - vz) < 3) return;
+      R.vents.push(makeVent(R, n, { x: vx - ox, z: vz - oz, dir: Math.atan2(az, ax) * 180 / Math.PI, phase: vc % 3 }));
+    });
+  }
   (C.signs || []).forEach(function (a) { signBoard(scene, a[2], 1.5, .72, a[0] + ox, .5, a[1] + oz); });
   // Mabel's office
   var hx = C.house.pos[0] + ox, hz = C.house.pos[1] + oz, hg = sub(scene, hx, 0, hz); BUILD[C.house.build || "hut"](hg, C.house.sign);
@@ -4196,12 +4792,42 @@ function buildLevel(n) {
   });
   var F = C.final;
   addPlot(F.id, { name: F.name, blurb: F.blurb, cost: F.cost, pos: [F.pos[0] + ox, F.pos[1] + oz], col: F.col, ring: F.ring, build: BUILD[F.build], after: function () { finaleLevel(); } });
+  // turret pads: one beside each bridge end (levels 3+), unlocked by the turret quest (always on in level 4+)
+  if (n >= 3) {
+    R.turrets = [];
+    C.bridges.forEach(function (b, bi) {
+      var isl = C.islands[b.a], ax = b.alongZ ? [0, 1] : [1, 0], pp = b.alongZ ? [1, 0] : [0, 1], cx = b.x, cz = b.z, site = null;
+      if (!isl) return;
+      var sg = ((isl.x - cx) * ax[0] + (isl.z - cz) * ax[1]) >= 0 ? 1 : -1;
+      [[3.6, 3], [3.6, -3], [4.6, 3], [4.6, -3], [4.6, 0]].forEach(function (o2) {
+        if (site) return;
+        var sx = cx + ax[0] * sg * (b.len / 2 + o2[0]) + pp[0] * o2[1], sz = cz + ax[1] * sg * (b.len / 2 + o2[0]) + pp[1] * o2[1];
+        if (Math.hypot(sx - isl.x, sz - isl.z) <= isl.r - 1.6) site = [sx, sz];
+      });
+      if (!site) return;
+      var cost = n >= 4 ? { slime: 3, crystal: 2 } : { scrap: 4, crystal: 2 };
+      var tp = addPlot("l" + n + "_t" + R.turrets.length, { name: "Turret", blurb: "Shoots attack drones that go after the building beside it.", cost: cost, pos: [site[0] + ox, site[1] + oz], col: .6, range: 4.6, build: buildTurretMesh });
+      tp.opt = true; tp.isTurret = true; tp.guard = b.id; R.turrets.push(tp);
+    });
+  }
+  // optional upgrade anvil, plus this level's Easter eggs, placed on free ground
+  (function () {
+    var s0 = R.islands[0]; if (!s0) return;
+    var AP = findSpot(R, n, C, pl, s0, [[6, 6.5], [7.5, 2.5], [3.5, 8.5], [9, 8], [-1.5, 9]], 2.2);
+    if (AP) {
+      var ar = ANV_RES[n] || "stone", cost = {}; cost[ar] = 6;
+      var ap = addPlot("l" + n + "_anvil", { name: "Upgrade Anvil", blurb: "Optional. Permanent upgrades for your whole forehead.", cost: cost, pos: [AP[0], AP[1]], col: .9, range: 3.8, build: buildAnvilMesh });
+      ap.ghost.visible = true; ap.res = ar; R.anvil = ap;
+    }
+    (C.eggs || []).forEach(function (e) { var sp = R.islands[e.isl]; if (!sp) return; var ep = findSpot(R, n, C, pl, sp, e.offs || [], 1.8); if (ep) makeEgg(e.type, ep[0], ep[1]).lvl = n; });
+  })();
   (C.drones || []).forEach(function (d) { buildDrones(n, d.x + ox, d.z + oz, d.r, d.n); });
 }
 function resetTargets(n) {
   for (var i = T.length - 1; i >= 0; i--) {
-    var t = T[i]; if (t.lvl !== n) continue;
-    if (t.kind === "statue") { T.splice(i, 1); continue; }
+    var t = T[i]; if ((t.lvl || 0) !== n || t.hub !== undefined) continue;
+    if (t.kind === "raider") { scene.remove(t.g); T.splice(i, 1); continue; }
+    if (t.kind === "statue" || t.kind === "squirrel") { if (t.kind === "squirrel") scene.remove(t.g); T.splice(i, 1); continue; }
     t.alive = true; t.hp = t.max; t.pop = 1; t.respawn = 0; t.wob = 0; t.g.visible = true; t.g.scale.set(1, 1, 1);
     if (t.kind === "tree") { t.canopy.forEach(function (c) { c.visible = true; }); t.trunk.scale.y = 1; }
     if (t.home) { t.g.position.copy(t.home); t.pi = 1; t.pdir = 1; t.wait = 0; t.stun = 0; }
@@ -4220,8 +4846,109 @@ function buildDrones(lvl, cx, cz, r, n) {
     var rot = sub(bd, 0, .5, 0); M(rot, new THREE.CylinderGeometry(.55, .55, .04, 14), toon(0x7f8aa0), 0, 0, 0, .02); M(rot, boxG(1.3, .03, .1), toon(0x2a2f3a), 0, .03, 0, false);
     M(g, cylG(.02, .02, .5, 4), toon(0x7f8aa0), 0, -.95, 0, false);
     var tx = DRONE_TXT[(i + lvl * 2) % DRONE_TXT.length];
-    var sign = new THREE.Mesh(new THREE.PlaneGeometry(1.5, .75), new THREE.MeshBasicMaterial({ map: signTex(tx, "#221407", "#f7dca8", 256, 128), side: THREE.DoubleSide })); sign.position.set(0, -1.35, 0); g.add(sign);
+    var sTex = signTex(tx, "#221407", "#f7dca8", 256, 128);
+    var sign = new THREE.Mesh(new THREE.PlaneGeometry(1.5, .75), new THREE.MeshBasicMaterial({ map: sTex })); sign.position.set(0, -1.35, .02); g.add(sign);
+    var sign2 = new THREE.Mesh(new THREE.PlaneGeometry(1.5, .75), new THREE.MeshBasicMaterial({ map: sTex })); sign2.position.set(0, -1.35, -.02); sign2.rotation.y = Math.PI; g.add(sign2);
     drones.push({ g: g, rot: rot, eye: eye, lvl: lvl, cx: cx, cz: cz, r: r, a: Math.random() * 6.28, sp: (i % 2 ? -1 : 1) * (.1 + Math.random() * .07), y: 6 + Math.random() * 1.5, ph: Math.random() * 6 });
+  }
+}
+/* ---------- attack drones + turrets (levels 3+) ---------- */
+var RC = { 3: { first: 28, gap: [40, 58], n: [1, 2], hp: 2 }, 4: { first: 22, gap: [30, 44], n: [2, 3], hp: 2 }, 5: { first: 22, gap: [30, 44], n: [2, 3], hp: 3 } };
+function buildTurretMesh(g) {
+  var dark = toon(0x2a2f3a), iron = toon(0x4a5160), hi = toon(0xff7a2b, { emissive: 0x802000 });
+  M(g, cylG(.62, .72, .3, 10), dark, 0, 0, 0, .04); M(g, cylG(.34, .42, .6, 8), iron, 0, .3, 0, .04);
+  var head = sub(g, 0, 1.0, 0); M(head, boxG(.7, .4, .7), iron, 0, 0, 0, .04); var br = M(head, cylG(.1, .12, .9, 8), hi, 0, .12, .35, .03); br.rotation.x = Math.PI / 2;
+  g.userData.head = head;
+}
+function structList() {
+  var out = []; Object.keys(plots).forEach(function (id) { var p = plots[id]; if (id.indexOf("l" + G.level + "_") === 0 && p.built && !p.isTurret && id !== LV.final.id) out.push(p); }); return out;
+}
+function turretsOn() {
+  var i = -1; for (var k = 0; k < QUESTS.length; k++) if (QUESTS[k].id === "turretTraining") i = k;
+  return i < 0 ? G.level >= 4 : (Q.idx > i || (Q.idx === i && Q.state === "active"));
+}
+function makeRaider(tp) {
+  var g = sub(scene, tp.pos.x + (Math.random() - .5) * 30, 7, tp.pos.z + (Math.random() - .5) * 30);
+  M(g, new THREE.SphereGeometry(.55, 10, 8), toon(0x3a4150), 0, 0, 0, .05);
+  var eye = new THREE.Mesh(new THREE.SphereGeometry(.18, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff3b3b })); eye.position.set(0, .05, .5); g.add(eye);
+  var rot = sub(g, 0, .6, 0); M(rot, boxG(1.5, .06, .16), toon(0x8d97a3), 0, 0, 0, false); M(rot, boxG(.16, .06, 1.5), toon(0x8d97a3), 0, 0, 0, false);
+  var hp = (RC[G.level] || RC[5]).hp;
+  var o = { kind: "raider", g: g, rot: rot, eye: eye, radius: .8, hp: hp, max: hp, hard: 0, alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, rt: 0, noShrink: true, lvl: G.level, tp: tp, zapT: 3, state: "in", name: "raider" };
+  T.push(o); return o;
+}
+function raiders() { return T.filter(function (t) { return t.kind === "raider" && t.alive && t.lvl === G.level; }); }
+function killRaider(t) { t.alive = false; scene.remove(t.g); var i = T.indexOf(t); if (i >= 0) T.splice(i, 1); }
+function hitRaider(tg, L, hp) {
+  tg.wob = 1; var d = L.perfect ? 2 : 1; tg.hp -= d; snd.tink(); G.perfStreak = 0; showStreak(0);
+  if (tg.hp > 0) { floater(hp.clone().setY(2.8), "ZZT!", "bw", 1); tg.state = "in"; return; }
+  stats.raiders = (stats.raiders || 0) + 1; var gp = tg.g.position.clone();
+  burst(gp, [0xffe14d, 0xff7a2b, 0xc9d4e0], 18, 6, 7, 1, .9); shockwave(gp.clone().setY(.4), 0xffe14d, 3, .35); snd.bonk(1);
+  var res = G.level >= 4 ? "gear" : "scrap"; inv[res] = (inv[res] || 0) + 2; GATH[res] = (GATH[res] || 0) + 2; updateRes();
+  floater(gp.clone().setY(2.6), "DRONE DOWN! +2 " + res, "num " + res, 1.6); killRaider(tg);
+}
+function wreckPlot(p) {
+  p.built = false; p.hp = 3; p.real.visible = false; p.ghost.visible = true; p.opt = true;
+  for (var i = colliders.length - 1; i >= 0; i--) if (Math.abs(colliders[i].x - p.pos.x) < .01 && Math.abs(colliders[i].z - p.pos.z) < .01) colliders.splice(i, 1);
+  for (var j = emitters.length - 1; j >= 0; j--) if (emitters[j].p === p) emitters.splice(j, 1);
+  burst(p.pos.clone().setY(1.2), [0xc9d4e0, 0x8d97a3, 0xff7a2b], 26, 8, 8, 1.2, 1.1); shake(.5); snd.stomp();
+  floater(p.pos.clone().setY(3), p.name + " wrecked! Rebuild it", "ow", 1.8); saveLevel();
+}
+function updateRaids(dt) {
+  if (G.level < 3 || G.cine || !LR) return;
+  var cfg = RC[G.level] || RC[5], list = raiders(), st = structList();
+  // spawn waves
+  LR.raidT = (LR.raidT === undefined ? cfg.first : LR.raidT) - dt;
+  if (LR.raidT <= 0) {
+    var near = st.filter(function (p) { return Math.hypot(p.pos.x - P.pos.x, p.pos.z - P.pos.z) < 45; });
+    if (!list.length && near.length) {
+      near.sort(function (a, b) { return Math.hypot(a.pos.x - P.pos.x, a.pos.z - P.pos.z) - Math.hypot(b.pos.x - P.pos.x, b.pos.z - P.pos.z); });
+      var n = cfg.n[0] + Math.floor(Math.random() * (cfg.n[1] - cfg.n[0] + 1));
+      for (var i = 0; i < n; i++) makeRaider(near[Math.min(i, near.length - 1)]);
+      toast("Attack drones incoming!"); snd.whoosh();
+      once("raidTip", function () { say("Attack drones! They zap what you build. Bonk them out of the sky before the structure breaks.", 1); });
+      LR.raidT = rnd(cfg.gap[0], cfg.gap[1]);
+    } else LR.raidT = 4;
+  }
+  // raiders
+  list.forEach(function (t) {
+    t.rot.rotation.y += dt * 30;
+    var tp = t.tp; if (!tp || !tp.built) { var alt = st.filter(function (p) { return p.built; })[0]; if (alt) { t.tp = tp = alt; } else { t.g.position.y += dt * 4; if (t.g.position.y > 12) killRaider(t); return; } }
+    var hx = tp.pos.x, hz = tp.pos.z, dx = hx - t.g.position.x, dz = hz - t.g.position.z, d = Math.hypot(dx, dz);
+    t.g.rotation.y = Math.atan2(dx, dz);
+    if (d > 1.2) { var sp = 6 * dt; t.g.position.x += dx / d * Math.min(sp, d); t.g.position.z += dz / d * Math.min(sp, d); t.g.position.y = damp(t.g.position.y, 3.2, 3, dt); return; }
+    t.g.position.y = 2.6 + Math.sin(G.time * 4 + t.g.position.x) * .15;
+    t.zapT -= dt; t.eye.material.color.setHex(t.zapT < 1 ? 0xffffff : 0xff3b3b);
+    if (t.zapT <= 0) {
+      t.zapT = 3.5; tp.hp = (tp.hp === undefined ? 3 : tp.hp) - 1; shake(.3); snd.zone();
+      burst(tp.pos.clone().setY(1.6), [0xffe14d, 0xffffff], 10, 5, 6, .8, .6); floater(tp.pos.clone().setY(3), "ZAP! " + Math.max(0, tp.hp) + " left", "ow", 1.2);
+      if (tp.hp <= 0) wreckPlot(tp);
+    }
+  });
+  // turrets
+  Object.keys(plots).forEach(function (id) {
+    var p = plots[id]; if (!p.isTurret || !p.built || id.indexOf("l" + G.level + "_") !== 0) return;
+    p.cd = (p.cd || 0) - dt; var range = 13 + 1.5 * UPG.turret, tgt = null, bd = 1e9;
+    list.forEach(function (t) { var dd = Math.hypot(t.g.position.x - p.pos.x, t.g.position.z - p.pos.z); if (dd < range && dd < bd) { bd = dd; tgt = t; } });
+    var head = p.real.userData.head;
+    if (tgt && head) head.rotation.y = Math.atan2(tgt.g.position.x - p.pos.x, tgt.g.position.z - p.pos.z) - p.real.rotation.y;
+    if (tgt && p.cd <= 0) {
+      p.cd = 2.2 / (1 + .3 * UPG.turret); snd.tink();
+      burst(tgt.g.position.clone(), [0xffe14d, 0xff7a2b], 8, 5, 6, .6, .5); shockwave(tgt.g.position.clone(), 0xffe14d, 1.6, .2);
+      floater(tgt.g.position.clone().setY(3.1), "PEW", "bw", .9);
+      tgt.hp -= 1 + (UPG.turret >= 3 ? 1 : 0); tgt.wob = 1;
+      if (tgt.hp <= 0) { var gp = tgt.g.position.clone(); burst(gp, [0xffe14d, 0xff7a2b, 0xc9d4e0], 16, 6, 7, 1, .9); stats.raiders = (stats.raiders || 0) + 1; killRaider(tgt); list = raiders(); }
+    }
+  });
+  // optional pads (turrets + wrecked buildings) get a build card when you walk up
+  if (!activePlot || activePlot.built || activePlot.opt) {
+    var best = null, bdd = 1e9, on = turretsOn();
+    Object.keys(plots).forEach(function (id) {
+      var p = plots[id]; if (!p.opt || p.built || id.indexOf("l" + G.level + "_") !== 0) return;
+      if (p.isTurret) { p.ghost.visible = on; if (!on) return; }
+      var dd = Math.hypot(P.pos.x - p.pos.x, P.pos.z - p.pos.z); if (dd < p.range && dd < bdd) { bdd = dd; best = p; }
+    });
+    if (best && activePlot !== best) { activePlot = best; best.active = true; best.ghost.visible = true; }
+    else if (!best && activePlot && activePlot.opt) { activePlot.active = false; activePlot = null; }
   }
 }
 function updateDrones(dt) {
@@ -4266,7 +4993,7 @@ function updateHR(dt) {
   if (!S.memos || !canAct() || (G.level < 1 && G.step < 4)) return;
   LR.memoT -= dt; if (LR.memoT > 0) return;
   LR.memoT = rnd(55, 85);
-  if (bubble.cur || G.time < (G.quiet || 0)) { LR.memoT = 12; return; }
+  if (msgCur || MQ.length) { LR.memoT = 12; return; }
   var pool = HR_LINES.concat((LV && G.level >= 1 && LV.memos) || []);
   if (HAT().conspiracy) pool = CONSPIRACY.concat((LV && G.level >= 1 && LV.conspiracies) || []);
   say(pick(pool), 0, "hr");
@@ -4280,9 +5007,9 @@ function saveLevel() {
   var n = G.level, pre = "l" + n + "_", built = [], o = {};
   Object.keys(plots).forEach(function (id) { if (id.indexOf(pre) === 0 && plots[id].built) built.push(id); });
   var hats = HAT_ORDER.filter(function (k) { return UNL[k]; });
-  o["l" + n] = { q: Q.idx, st: Q.state, snap: Q.snap, hats: hats, eq: P.hatId, built: built, inv: copyI(), gath: copyG(), bp: (LR.boss ? LR.boss.phase : 0), t: G.playTime,
+  o["l" + n] = { q: Q.idx, st: Q.state, snap: Q.snap, hats: hats, eq: P.hatId, eq2: P.hat2, built: built, inv: copyI(), gath: copyG(), bp: (LR.boss ? LR.boss.phase : 0), t: G.playTime,
     st2: { bonks: stats.bonks, perfects: stats.perfects, dizzy: stats.dizzy, bestStreak: stats.bestStreak, bigs: stats.bigs, builds: stats.builds, coconuts: stats.coconuts, sheep: stats.sheep, ouch: stats.ouch || 0, crystals: stats.crystals, vends: stats.vends || 0, shoved: stats.shoved || 0, robots: stats.robots || 0, squashed: stats.squashed || 0, dodges: stats.dodges || 0, beltT: stats.beltT || 0, pads: stats.pads || 0, gooT: stats.gooT || 0, spored: stats.spored || 0 } };
-  o.hats = hats; o.eq = P.hatId;
+  o.hats = hats; o.eq = P.hatId; o.eq2 = P.hat2;
   writeSave(o);
 }
 function instantBuild(p) {
@@ -4301,6 +5028,7 @@ function restoreLevel(sv) {
   G.playTime = sv.t || 0; if (LR.boss) LR.boss.phase = sv.bp || 0;
   (sv.built || []).forEach(function (id) { if (plots[id] && !plots[id].built) instantBuild(plots[id]); });
   setHat(sv.eq && UNL[sv.eq] ? sv.eq : "stone", true);
+  P.hat2 = sv.eq2 && UNL[sv.eq2] && sv.eq2 !== P.hatId ? sv.eq2 : "none"; refreshSwap();
   var q = curQ();
   if (q && Q.state === "active" && q.type === "build" && !plots[q.plot].built) activatePlot(q.plot);
   LR.restoring = false;
@@ -4309,6 +5037,7 @@ function restoreLevel(sv) {
 /* ---------- entering a level ---------- */
 function enterLevel(n, resume) {
   var C = LEVELS[n]; if (!C) return;
+  titleFreeEnd(); titleAskClose();
   audio(); startMusic();
   ["ov-start", "story", "ov-end", "menu", "map"].forEach(function (id) { $(id).classList.add("hidden"); });
   var fd = $("fade"); $("fade-tx").textContent = "Level " + n + ": " + C.name; fd.classList.add("on");
@@ -4345,8 +5074,8 @@ function enterLevel(n, resume) {
     for (var h in UNL) UNL[h] = (h === "none" || h === "stone");
     (sv.hats || []).forEach(function (hk) { if (hk in UNL) UNL[hk] = true; });
     if (resume && sv["l" + n]) restoreLevel(sv["l" + n]);
-    else { setHat(UNL[sv.eq] ? sv.eq : "stone", true); var o = {}; o["l" + n] = null; writeSave(o); }
-    updateRes(); refreshQuestChip();
+    else { setHat(UNL[sv.eq] ? sv.eq : "stone", true); P.hat2 = sv.eq2 && UNL[sv.eq2] && sv.eq2 !== P.hatId ? sv.eq2 : "none"; var o = {}; o["l" + n] = null; writeSave(o); }
+    refreshSwap(); updateRes(); refreshQuestChip();
     var q = curQ();
     if (q && Q.state === "active" && q.type === "build") activatePlot(q.plot);
     fd.classList.remove("on");
@@ -4388,7 +5117,6 @@ function renderMap() {
   }).join("");
   document.querySelectorAll("#map-list button[data-lvl]").forEach(function (b) { b.addEventListener("click", function () { snd.pop(); playLevel(+b.getAttribute("data-lvl")); }); });
 }
-function openMap() { renderMap(); $("map").classList.remove("hidden"); snd.pop(); }
 $("map-close").addEventListener("click", function () { $("map").classList.add("hidden"); });
 $("btn-menu-map").addEventListener("click", openMap);
 $("btn-endmap").addEventListener("click", openMap);
@@ -4398,7 +5126,8 @@ function updateQuest(dt) {
   if (G.level < 1) return;
   var q = curQ();
   if (q && Q.state === "active" && !G.cine && qDone(q)) {
-    Q.state = "ready"; G.lastProgress = G.time; snd.chime(); toast("Quest done! Return to Mabel"); saveLevel();
+    Q.state = "ready"; G.lastProgress = G.time; snd.chime();
+    if (q.type !== "gain") { var rdy = q.ready; toast("Quest completed!"); claimQuest(); if (rdy) later(.4, function () { say(rdy, 1); }); } else { toast("Quest done! Return to Mabel"); saveLevel(); }
   }
   refreshQuestChip(); updatePolish(dt);
   LR.saveT += dt; if (LR.saveT > 12) { LR.saveT = 0; saveLevel(); }
@@ -4462,7 +5191,7 @@ function finaleLevel() {
 }
 function showEndLevel() {
   var n = G.level;
-  G.ended = true; G.orbit = true; $("controls").classList.add("hidden"); $("hud").classList.add("hidden"); hideBubble(); closeSheet();
+  G.ended = true; G.orbit = true; $("controls").classList.add("hidden"); $("hud").classList.add("hidden"); clearMsgs(); closeSheet();
   $("end-title").textContent = LV.endTitle || ("Level " + n + " complete!");
   $("end-art").innerHTML = '<div style="width:110px;height:110px;border:3px solid var(--line);overflow:hidden;margin-bottom:8px">' + ART.statue + '</div>';
   var ratio = stats.bonks ? stats.perfects / stats.bonks : 0, nh = HAT_ORDER.filter(function (k) { return UNL[k] && k !== "none"; }).length, review;
@@ -4493,15 +5222,17 @@ function update(rdt) {
   if (G.hitstop > 0) { G.hitstop -= rdt; dt = rdt * .05; }
   updateTimers(rdt);
   if (G.playing && !G.ended) G.playTime += rdt;
-  if (G.title) {
+  if (G.title && G.titleFree) {
+    updatePlayer(dt); updatePickups(dt);
+  } else if (G.title) {
     var u = (G.time % 2.8) / 2.8, lunge = u < .22 ? u / .22 : 0, r0 = rockList[1].g.position;
     var bump = lunge > 0 ? Math.sin(Math.PI * lunge) : 0, bx = r0.x - 2.5;
     P.fakeU = lunge; P.pos.set(bx + bump * .8, 0, r0.z); P.face.set(1, 0, 0); P.hop = bump * .25;
     if (u > .11 && !G.titleHit) { G.titleHit = true; snd.bonk(.5); rockList[1].wob = 1; burst(new V3(r0.x - .7, 1.1, r0.z), [0xb4bdc8, 0x8d97a3], 6, 4, 5, 1, .5); }
     if (u < .05) G.titleHit = false;
   } else if (!G.cutOnly) {
-    updatePlayer(dt); updatePickups(dt); updateHazards(dt); updateDirector(rdt);
-    updateBuildCard(); updateQuest(rdt); updateTalk();
+    updatePlayer(dt); updatePickups(dt); updateHazards(dt); updateGusts(dt); updateRaids(dt); updateDirector(rdt);
+    updateBuildCard(); updateQuest(rdt); updateTalk(); updateAnvil();
   }
   updateTargets(dt); updateCut(dt); animPlayer(dt); updateParticles(dt); updateFloaters(dt); updateAmbient(dt); updateMark(); updateDrones(dt); updateHR(rdt);
   updateBubble(rdt); updateCamera(rdt); updateGuide(rdt); updateGauge(); updateNoggin();
@@ -4557,15 +5288,15 @@ function initStage2() {
 }
 function initStage3() {
   setupInput(); syncSettings();
+  if (loadSave().autostart === "hub") { writeSave({ autostart: null }); setTimeout(function () { titleFreeStart(true); }, 700); }
   if (loadSave().autostart === "tutorial") { writeSave({ autostart: null }); setTimeout(function () { $("ov-start").classList.add("hidden"); showStory(); }, 300); }
-  (function () { var sv = loadSave(); if (sv.bestTime) { var bl = $("best-line"); bl.textContent = "Your best: " + fmtTime(sv.bestTime) + " \u00b7 " + (sv.bestStars || 1) + "/3 stars"; bl.classList.remove("hidden"); } })();
     G.title = true;
   // place the title scene: Dunk facing the first rock
   P.pos.set(3.5, 0, -.6); P.face.set(1, 0, 0); P.yaw = Math.PI / 2;
   cam.tgt.set(4.6, 0, -.6); cam.zoom = .5;
   ldSet(90, "Almost there\u2026"); ldHide();
   requestAnimationFrame(frame);
-  if (DEBUG) window.__hh = { G: G, P: P, inv: inv, stats: stats, T: T, plots: plots, STEPS: STEPS, startStep: startStep, beginGame: beginGame, finale: finale, spawnCoconut: spawnCoconut, gary: function () { return gary; }, info: function () { return JSON.stringify({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries }); }, doBuild: doBuild, Q: Q, seen: seen, quests: function () { return QUESTS; }, lr: function () { return LR; }, lv: function () { return LV; }, enterLevel: enterLevel, openMap: openMap, renderMap: renderMap, playLevel: playLevel, updateHR: updateHR, drones: drones, say: say, UNL: UNL, GATH: GATH, setHat: setHat, acceptQuest: acceptQuest, claimQuest: claimQuest, openBoard: openBoard, closeSheet: closeSheet, qProg: qProg, curQ: curQ, HAT: HAT, walkable: walkable, saveLevel: saveLevel, restoreLevel: restoreLevel, loadSave: loadSave, snap: function () { renderer.render(scene, camera); }, sim: function (sec) { for (var t = 0; t < sec; t += 1 / 60) update(1 / 60); renderer.render(scene, camera); }, startCharge: startCharge, releaseCharge: releaseCharge, tryBuild: tryBuild, chargeFor: function (sec) { startCharge(); for (var t = 0; t < sec; t += 1 / 60) update(1 / 60); releaseCharge(); }, zone: zone, say: say, showEnd: showEnd, dunk: function () { return dunk; } };
+  if (DEBUG) window.__hh = { plots: plots, makeRaider: makeRaider, raiders: raiders, updateRaids: updateRaids, structList: structList, wreckPlot: wreckPlot, HUB: HUB, openMap: openMap, hubHit: hubHit, titleAskOpen: titleAskOpen, titleFreeStart: titleFreeStart, titleFreeEnd: titleFreeEnd, G: G, P: P, inv: inv, stats: stats, T: T, plots: plots, STEPS: STEPS, startStep: startStep, beginGame: beginGame, finale: finale, spawnCoconut: spawnCoconut, gary: function () { return gary; }, info: function () { return JSON.stringify({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries }); }, doBuild: doBuild, Q: Q, seen: seen, quests: function () { return QUESTS; }, lr: function () { return LR; }, lv: function () { return LV; }, enterLevel: enterLevel, openMap: openMap, renderMap: renderMap, playLevel: playLevel, updateHR: updateHR, drones: drones, say: say, UNL: UNL, GATH: GATH, setHat: setHat, acceptQuest: acceptQuest, claimQuest: claimQuest, openBoard: openBoard, closeSheet: closeSheet, qProg: qProg, curQ: curQ, HAT: HAT, walkable: walkable, saveLevel: saveLevel, restoreLevel: restoreLevel, loadSave: loadSave, snap: function () { renderer.render(scene, camera); }, sim: function (sec) { for (var t = 0; t < sec; t += 1 / 60) update(1 / 60); renderer.render(scene, camera); }, startCharge: startCharge, releaseCharge: releaseCharge, tryBuild: tryBuild, chargeFor: function (sec) { startCharge(); for (var t = 0; t < sec; t += 1 / 60) update(1 / 60); releaseCharge(); }, zone: zone, say: say, showEnd: showEnd, dunk: function () { return dunk; } };
 }
 if (document.fonts && document.fonts.ready) { document.fonts.ready.then(init, init); setTimeout(init, 1500); } else init();
 })();
