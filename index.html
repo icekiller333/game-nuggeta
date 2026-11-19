@@ -440,31 +440,15 @@
       <button class="sq" id="prev" type="button" aria-label="Previous featured game"><svg viewBox="0 0 24 24"><path d="M16 3 5 12l11 9z"/></svg></button>
       <button class="sq" id="next" type="button" aria-label="Next featured game"><svg viewBox="0 0 24 24"><path d="M8 3l11 9-11 9z"/></svg></button>
     </div>
-    <div class="segs" role="group" aria-label="Featured games">            <button class="seg" data-i="1" type="button" aria-label="Brick by Brick: Back in Time"><i></i></button>
+    <div class="segs" role="group" aria-label="Featured games">
       <button class="seg on" data-i="0" type="button" aria-label="The Wax Tower" aria-current="true"><i></i></button>
+      <button class="seg" data-i="1" type="button" aria-label="Brick by Brick: Back in Time"><i></i></button>
       <button class="seg" data-i="2" type="button" aria-label="Roll the Shoulder"><i></i></button>
       <button class="seg" data-i="3" type="button" aria-label="Hard Head"><i></i></button>
-      <button class="seg" data-i="4" type="button" aria-label="The Foxglove Derby"><i></i></button>
-      <button class="seg" data-i="5" type="button" aria-label="The Tin Shop’s Masks"><i></i></button>
-      <button class="seg" data-i="6" type="button" aria-label="The Last Wind"><i></i></button>
-      <button class="seg" data-i="7" type="button" aria-label="The Oven’s Breath"><i></i></button>
-      <button class="seg" data-i="8" type="button" aria-label="Arena Recall"><i></i></button>
-      <button class="seg" data-i="9" type="button" aria-label="Parry Card King"><i></i></button>
-      <button class="seg" data-i="10" type="button" aria-label="Shroom Siege"><i></i></button>
-      <button class="seg" data-i="11" type="button" aria-label="The Moon Ferry"><i></i></button>
-      <button class="seg" data-i="12" type="button" aria-label="The Wishing Field"><i></i></button>
-      <button class="seg" data-i="13" type="button" aria-label="The Kite Queen’s Mail"><i></i></button>
-      <button class="seg" data-i="14" type="button" aria-label="Ember of the Wishing Tree"><i></i></button>
-      <button class="seg" data-i="15" type="button" aria-label="The House Cut"><i></i></button>
-      <button class="seg" data-i="16" type="button" aria-label="Neon Gate"><i></i></button>
-      <button class="seg" data-i="17" type="button" aria-label="Signal Salvage"><i></i></button>
-      <button class="seg" data-i="18" type="button" aria-label="The Last Stamp"><i></i></button>
-      <button class="seg" data-i="19" type="button" aria-label="Orbit Gardener"><i></i></button>
-      <button class="seg" data-i="20" type="button" aria-label="Alien Bug Inspector"><i></i></button>
-      <button class="seg" data-i="21" type="button" aria-label="Shrink Ray"><i></i></button>
-      <button class="seg" data-i="22" type="button" aria-label="The Minotaur’s Maze"><i></i></button>
-      <button class="seg" data-i="23" type="button" aria-label="Kill a Billion Goblins"><i></i></button>
-      <button class="pz" id="pz" type="button" aria-label="Pause or resume auto-advance"><svg class="ic-pause" viewBox="0 0 14 14"><path d="M1 0h4v14H1zM9 0h4v14H9z"/></svg><svg class="ic-play" viewBox="0 0 14 14"><path d="M2 0l11 7-11 7z"/></svg></button>
+      <button class="seg" data-i="4" type="button" aria-label="Alien Bug Inspector"><i></i></button>
+      <button class="seg" data-i="5" type="button" aria-label="Down to the Last Penny"><i></i></button>
+      <button class="seg" data-i="6" type="button" aria-label="The Foxglove Derby"><i></i></button>
+      <button class="seg" data-i="7" type="button" aria-label="The Tin Shop’s Masks"><i></i></button>
     </div>
   </div>
 </section>
@@ -617,66 +601,19 @@
     { bg: '#FFC53D', ac: '#FF3D00', emoji: '💥', kicker: 'New from the workshop', title: 'Hard Head',
       pitch: 'Mine with your face. Build with the rubble.',
       meta: ['3D head-bonking', 'Charge in the green', '~7 minutes'], href: 'hard-head/index.html' },
+    { bg: '#C6FF4D', ac: '#FF3DA5', emoji: '🐛', kicker: 'New from the workshop', title: 'Alien Bug Inspector',
+      pitch: 'Customs for the weird: find the alien bugs, stamp PASS, and don\u2019t get fired.',
+      meta: ['6 objects to inspect', 'Rarity variants', 'Collection'], href: 'alien-bug-inspector/index.html' },
+    { bg: '#D97B4F', ac: '#5C1A00', emoji: '🪙', kicker: 'New from the workshop', title: 'Down to the Last Penny',
+      pitch: 'Knock out protesters, loot their pockets, bank 10,000 pennies.',
+      meta: ['Knock out protesters', 'Loot their pockets', 'Bank 10,000 pennies'], href: 'down-to-the-last-penny/index.html' },
     { bg: '#FF8C42', ac: '#FFC93C', emoji: '🦊', kicker: 'New from the workshop', title: 'The Foxglove Derby',
       pitch: 'Hold the book on a midnight race — stake gold, switch mid-race, bank 40.',
       meta: ['Midnight race', 'Stake & switch', 'Bank 40 gold'], href: 'daily-roguelike-the-foxglove-derby-2026-11-17/index.html' },
     { bg: '#FFD23F', ac: '#E63950', emoji: '🎭', kicker: 'New from the workshop', title: 'The Tin Shop’s Masks',
       pitch: 'Wake 5 wind-up toys by turning gears — each mask twists the controls.',
-      meta: ['Gear puzzle', 'Wake 5 toys', 'Masks twist controls'], href: 'daily-roguelike-the-tin-shop-s-masks-2026-11-16/index.html' },
-    { bg: '#FFD23F', ac: '#2DE1C2', emoji: '🕰️', kicker: 'New from the workshop', title: 'The Last Wind',
-      pitch: 'Hold WIND, release in the green — 12 chimes before the candle dies.',
-      meta: ['Timing', 'Release in the green', '12 chimes'], href: 'daily-roguelike-the-last-wind-2026-11-15/index.html' },
-    { bg: '#F4A950', ac: '#E63946', emoji: '🍞', kicker: 'New from the workshop', title: 'The Oven’s Breath',
-      pitch: 'Feed the bellows, keep the flame green, bake 6 loaves before dawn.',
-      meta: ['Flame control', 'Keep the flame green', '6 loaves'], href: 'daily-roguelike-the-oven-s-breath-2026-11-14/index.html' },
-    { bg: '#FF6B4A', ac: '#3BE8FF', emoji: '🧠', kicker: 'New from the workshop', title: 'Arena Recall',
-      pitch: 'Watch the foe’s strike pattern, then repeat it to land your blows.',
-      meta: ['Memory duel', '4 directions', '5 foes'], href: 'arena-recall/index.html' },
-    { bg: '#E8D9FF', ac: '#D6303A', emoji: '🃏', kicker: 'New from the workshop', title: 'Parry Card King',
-      pitch: 'Parry the Shogunate’s strikes from eight directions. Break their guard, spend it on weapons.',
-      meta: ['Card parry', '8 directions', 'The Moon-Eater'], href: 'parry-card-king/index.html' },
-    { bg: '#B8F5D0', ac: '#FF3DA5', emoji: '🍄', kicker: 'New from the workshop', title: 'Shroom Siege',
-      pitch: 'Pop the mushroom mob before it eats your corn. Grab the blaster.',
-      meta: ['Wave defense', 'Pop-corn Blaster', '126 stalks'], href: 'shroom-siege/index.html' },
-    { bg: '#9CD9FF', ac: '#FF3DA5', emoji: '🌙', kicker: 'New from the workshop', title: 'The Moon Ferry',
-      pitch: 'Drag the moon, raise the tide. Clear the reefs, haul the wrecks.',
-      meta: ['Tide control', '6 reaches', '40 glow'], href: 'daily-roguelike-the-moon-ferry-2026-11-13/index.html' },
-    { bg: '#C8F7A0', ac: '#FF8A00', emoji: '🌱', kicker: 'New from the workshop', title: 'The Wishing Field',
-      pitch: 'Plant seeds, hedge the odds. Thirty blooms by day six.',
-      meta: ['Percent chances', 'Hedge your bets', '30 blooms'], href: 'daily-roguelike-the-wishing-field-2026-11-12/index.html' },
-    { bg: '#BFE9FF', ac: '#FF3DA5', emoji: '🪁', kicker: 'New from the workshop', title: 'The Kite Queen’s Mail',
-      pitch: 'Steer the kite through the gusts. Deliver six letters.',
-      meta: ['Arrow steering', 'Gust ladder', '6 skies'], href: 'daily-roguelike-the-kite-queen-s-mail-2026-11-11/index.html' },
-    { bg: '#FFD9A0', ac: '#FF3DA5', emoji: '🔥', kicker: 'New from the workshop', title: 'Ember of the Wishing Tree',
-      pitch: 'Catch the falling embers. Bank forty before the last night.',
-      meta: ['Catch embers', 'Key economy', '6 nights'], href: 'daily-roguelike-ember-of-the-wishing-tree-2026-11-10/index.html' },
-    { bg: '#FFD24D', ac: '#8A4DFF', emoji: '✂️', kicker: 'New from the workshop', title: 'The House Cut',
-      pitch: 'Drop the blade on the gold line. Bank sixty before the night ends.',
-      meta: ['Timing cuts', 'Sacrifice ladder', '60 chips'], href: 'daily-roguelike-the-house-cut-2026-11-09/index.html' },
-    { bg: '#FF9DE2', ac: '#00E5FF', emoji: '🚪', kicker: 'New from the workshop', title: 'Neon Gate',
-      pitch: 'Read the rules, tap the signs that get in. Ten rounds, three strikes.',
-      meta: ['Shape rules', 'Growing grids', '10 rounds'], href: 'neon-gate/index.html' },
-    { bg: '#6BF2D1', ac: '#FF3DA5', emoji: '🛰️', kicker: 'New from the workshop', title: 'Signal Salvage',
-      pitch: 'Bounce the salvage laser off mirrors in 3D space. Lock 60 scrap before the ring goes silent.',
-      meta: ['3D laser aiming', 'Bounce to lock', '60 scrap'], href: 'daily-roguelike-signal-salvage-2026-11-08/index.html' },
-    { bg: '#FFE95E', ac: '#8A4DFF', emoji: '📮', kicker: 'New from the workshop', title: 'The Last Stamp',
-      pitch: 'Stamp the dead\u2019s permits. Pay the rent. Free your soul.',
-      meta: ['Swipe to stamp', 'Soul economy', 'End of shift shop'], href: 'daily-roguelike-the-last-stamp-2026-11-07/index.html' },
-    { bg: '#A9CBFF', ac: '#FF8A00', emoji: '🪐', kicker: 'New from the workshop', title: 'Orbit Gardener',
-      pitch: 'Grow starflowers on a tiny planet, then rocket to the moon. Cozy, slow, and yours.',
-      meta: ['4 worlds', 'Rocket pads', 'Peaceful mode'], href: 'orbit-gardener/index.html' },
-    { bg: '#C6FF4D', ac: '#FF3DA5', emoji: '🐛', kicker: 'New from the workshop', title: 'Alien Bug Inspector',
-      pitch: 'Customs for the weird: find the alien bugs, stamp PASS, and don\u2019t get fired.',
-      meta: ['6 objects to inspect', 'Rarity variants', 'Collection'], href: 'alien-bug-inspector/index.html' },
-    { bg: '#FF9ED2', ac: '#00E5FF', emoji: '🔬', kicker: 'New from the workshop', title: 'Shrink Ray',
-      pitch: 'Hold near, never touch. Shrink critters into the jar before they bounce away.',
-      meta: ['Shrink field', 'Don\u2019t touch it', '3 bounces'], href: 'shrink-ray/index.html' },
-    { bg: '#FFB27A', ac: '#8A4DFF', emoji: '🐂', kicker: 'Featured: first-person maze combat', title: 'The Minotaur\u2019s Maze',
-      pitch: 'You are the new minotaur. Build the maze, parry the intruders, and never let them escape.',
-      meta: ['3D maze-builder', 'Parry / block / deflect', 'Escape meter'], href: 'the-minotaur-s-maze/index.html' },
-    { bg: '#C9A7FF', ac: '#B6FF00', emoji: '👺', kicker: 'Featured: the flagship', title: 'Kill a Billion Goblins',
-      pitch: 'The king set an impossible task: slay one billion goblins to marry the princess. So get slaying.',
-      meta: ['Idle / automation', '1,000,000,000 goblins', 'One wedding'], href: 'kill-a-billion-goblins-to-marry-my-daughter/index.html' }
+      meta: ['Gear puzzle', 'Wake 5 toys', 'Masks twist controls'], href: 'daily-roguelike-the-tin-shop-s-masks-2026-11-16/index.html' }
+  
   ];
   var hero = document.getElementById('hero');
   var elEmoji = document.getElementById('heroEmoji'), elKick = document.getElementById('heroKicker'),
