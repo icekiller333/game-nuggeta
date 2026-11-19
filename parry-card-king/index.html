@@ -62,7 +62,7 @@ button:active{background:#2a1c33}
 #tp{position:fixed;display:none;left:50%;transform:translateX(-50%);width:min(92vw,420px);background:#120c18f2;border:1px solid #f0c24b;border-radius:12px;padding:14px 16px;font-size:15px;line-height:1.45;text-align:center;box-shadow:0 0 30px #000;z-index:7;pointer-events:none}
 #tp button{display:block;width:100%;margin-top:10px;pointer-events:auto}
 #tps{display:block;pointer-events:auto;margin-top:8px;opacity:.55;font-size:11px;text-decoration:underline;cursor:pointer}
-#card.go{box-shadow:0 0 40px var(--c),0 0 90px var(--c)}#card.go::after,#card.sk::after{position:absolute;left:0;right:0;top:44%;text-align:center;font-size:24px;font-weight:bold;letter-spacing:.2em;text-shadow:0 0 14px currentColor}#card.go::after{content:'PLAY';color:#f0c24b}#card.sk::after{content:'SKIP';color:#99a}
+#card.go{box-shadow:0 0 40px var(--c),0 0 90px var(--c)}#card.go::after,#card.sk::after{position:absolute;left:0;right:0;top:44%;text-align:center;font-size:24px;font-weight:bold;letter-spacing:.2em;text-shadow:0 0 14px currentColor}#card.go::after{content:'PLAY';color:#f0c24b}#card.sk::after{content:'DISCARD';color:#99a}
 #ov.tl{background:radial-gradient(circle at 50% 30%,#0000 0,#050408d0 78%)}
 #ov h1{line-height:1.05;animation:flick 5s infinite}@keyframes flick{0%,100%{text-shadow:0 0 30px #d6303a}45%{text-shadow:0 0 52px #ff4a55}50%{text-shadow:0 0 18px #d6303a}}
 .fan{position:relative;height:140px;width:100%}.tc{left:50%;top:0;margin-left:-44px;width:88px;height:124px;padding:6px 4px;transform:translate(var(--x),var(--y)) rotate(var(--r));animation:fl 3.2s ease-in-out infinite}.tc .k{font-size:44px;margin-top:10px}.tc .nm{font-size:10px}@keyframes fl{50%{translate:0 -9px}}
@@ -79,7 +79,7 @@ button.gold{border-color:#f0c24b;color:#f0c24b}
  <div id="bot">
   <div id="pstat"><span>侍</span><div class="bar"><i id="phpb"></i></div><span id="phpt"></span><span id="dk"></span><span id="stk"></span></div>
   <div id="cw"><div class="card pk" id="p2"></div><div class="card pk" id="p1"></div><div class="card" id="card"></div></div>
-  <div id="btns"><button id="bl">◀ SKIP</button><button id="br">PLAY ▶</button></div>
+  <div id="btns"><button id="bl">▼ DISCARD</button><button id="br">PLAY ▶</button></div>
  </div>
 </div>
 <button id="mute" onclick="toggleMute()">🔊</button><div id="hl"></div><div id="tp"><div id="tpt"></div><button id="tpb" onclick="tpb()">CONTINUE</button><small id="tps" onclick="tutDone()">skip tutorial</small></div><div id="ov"></div>
@@ -138,8 +138,8 @@ function titleOld(){screen='title';F=null;ov(`<div class="big">侍</div><h1>PARR
 function start(g){au();tut=null;hideTut();newRun();G.guide=!!g;if(seen.lore){chapter();return}mark('lore');ov(`<h2>序</h2><p style="animation-delay:.2s">The moon fell upon Kōyō and did not set. Under it the dead rose to serve a Hollow Shogunate that rules by the turning of cards.</p>
 <p style="animation-delay:1.2s">You were the Card King's last retainer. His deck is every duel he ever won — each card a kata, a memory of a blade. When the moon drank him, the deck remained. It chose you.</p>
 <p style="animation-delay:2.2s">Read the omens. Turn the cards. Answer every blow — and when a guard breaks, cut.</p><button onclick="chapter()">ENTER THE SUNKEN COURT</button>`)}
-function chapter(){const m=makeMon(G.mi);ov(`<div class="big">${G.mi>=K.RUN?'王':G.mi+1}</div><h2>${m.n}</h2><p style="animation-delay:.3s">${m.sub}</p><p class="s" style="animation-delay:.6s">${G.mi>=K.RUN?'The boss awaits':'Fight '+(G.mi+1)+' of '+K.RUN} · ${tot()} cards · flatfooted ${m.win.toFixed(1)}s · HP ${G.hp}/${G.max}<br>Enemy attack directions: ${G.dirs.map(d=>d===G.nd?'<b style="color:#f0c24b">'+AT[d].k+' NEW</b>':AT[d].k).join(' ')}${gaps()}</p><button onclick="startFight()">FACE IT</button>`)}
-function startFight(){au();const m=tut?TM:makeMon(G.mi);if(!tut)fullShuffle();F={m,hp:m.hp,max:m.hp,pi:0,phase:'idle',t:1.6,dur:1,atk:null,combo:0,flash:0,dying:false,dyp:0,winMax:1};screen='fight';hideOv();$('#enn').textContent=m.n;renderCard();renderOmen();if(m.boss&&!seen.boss){mark('boss');pop=1;showPop('<small style="opacity:.6">BOSS</small><br>The Moon-Eater is flatfooted for only <b>1.5s</b> after a parry, its attacks come faster and hit harder, and attacking it while it is <b>not</b> flatfooted gets you <b>countered</b>.','#top',1)}G.nd=null;if(G.guide&&G.mi===0&&!tut){tut={i:0,hold:true,tap:true,c:0};tutShow()}}
+function chapter(){const m=(G.guide&&G.mi===0)?TM:makeMon(G.mi);ov(`<div class="big">${G.mi>=K.RUN?'王':G.mi+1}</div><h2>${m.n}</h2><p style="animation-delay:.3s">${m.sub}</p><p class="s" style="animation-delay:.6s">${G.mi>=K.RUN?'The boss awaits':'Fight '+(G.mi+1)+' of '+K.RUN} · ${tot()} cards · flatfooted ${m.win.toFixed(1)}s · HP ${G.hp}/${G.max}<br>Enemy attack directions: ${G.dirs.map(d=>d===G.nd?'<b style="color:#f0c24b">'+AT[d].k+' NEW</b>':AT[d].k).join(' ')}${gaps()}</p><button onclick="startFight()">FACE IT</button>`)}
+function startFight(){au();const m=(tut||(G.guide&&G.mi===0))?TM:makeMon(G.mi);if(!tut)fullShuffle();F={m,hp:m.hp,max:m.hp,pi:0,phase:'idle',t:1.6,dur:1,atk:null,combo:0,flash:0,dying:false,dyp:0,winMax:1};screen='fight';hideOv();$('#enn').textContent=m.n;renderCard();renderOmen();if(m.boss&&!seen.boss){mark('boss');pop=1;showPop('<small style="opacity:.6">BOSS</small><br>The Moon-Eater is flatfooted for only <b>1.5s</b> after a parry, its attacks come faster and hit harder, and attacking it while it is <b>not</b> flatfooted gets you <b>countered</b>.','#top',1)}G.nd=null;if(G.guide&&G.mi===0&&!tut){tut={i:0,hold:true,tap:true,c:0};tutShow()}}
 function startTele(){const m=F.m;F.sp=0;F.atk=m.pat[F.pi%m.pat.length];F.dur=F.t=m.tele*(m.t===2&&F.hp<F.max/2?.8:1);F.phase='tele';sfx('warn');renderOmen()}
 function enemyHit(){const m=F.m;G.streak=0;G.hp-=m.dmg;shk=24;freeze=.14;zoom=.09;vib(90);hud('#bot');sfx('hurt');flash('#d6303a',.6);
  slashes.push({x:W/2,y:H*.5,a:.7,l:.3,L:.3,col:AT[F.atk].c,len:Math.max(W,H)*.7});
@@ -164,10 +164,11 @@ function pick(id){if(id){G.disc.push(id);G.added=(G.added||0)+1;if(G.added%2===0
 
 /* ---------- player actions ---------- */
 const canAct=()=>screen==='fight'&&F&&!F.dying&&F.phase!=='dead'&&!(tut&&tut.tap)&&!pop;
-function cycle(tf){if(!canAct())return;au();G.disc.push(G.deck.shift());chk();sfx('flick');fly(-1,tf);renderCard();tutEv('cycle')}
-function play(tf){if(!canAct())return;au();const id=G.deck.shift(),c=CARDS[id];fly(1,tf);spawn(W/2,H*.72,12,c.col,280,.45,500,3);let keep=true;const pa=F.la;F.la=c.kind==='atk';F.ax=id==='axe'?(F.ax||0)+1:0;const dm=c.kind==='atk'?wdmg(id,pa):0;if(id==='fist')G.cnt.fist++;if(id==='mace')G.cnt.mace++;
+function cycle(tf,dir){if(!canAct())return;au();G.disc.push(G.deck.shift());chk();sfx('flick');fly(dir||'L',tf);renderCard();tutEv('cycle')}
+function play(tf,dir){if(!canAct())return;au();const id=G.deck.shift(),c=CARDS[id];fly(dir||'R',tf);spawn(W/2,H*.72,12,c.col,280,.45,500,3);let keep=true;const pa=F.la;F.la=c.kind==='atk';F.ax=id==='axe'?(F.ax||0)+1:0;const dm=c.kind==='atk'?wdmg(id,pa):0;if(id==='fist')G.cnt.fist++;if(id==='mace')G.cnt.mace++;
  if(c.kind==='counter'){
-  if(F.phase==='tele'&&(c.ct==='ANY'||c.ct===F.atk))parry(c);
+  if(F.phase==='tele'&&(c.ct==='ANY'||c.ct===F.atk)&&(!dir||dir===F.atk))parry(c);
+  else if(F.phase==='tele'&&(c.ct==='ANY'||c.ct===F.atk)&&dir&&dir!==F.atk){sfx('whiff');banner('WRONG DIRECTION','#888',24);if(!tut)F.t-=.3}
   else{sfx('whiff');banner(F.phase==='tele'?'WRONG KATA':'NO THREAT','#888',24);if(F.phase==='tele'&&!tut)F.t-=.3}}
  else if(c.kind==='atk'){
   if(F.phase==='tele'&&F.t<=K.SPARKLE&&F.dur<10){F.la=false;sparkle(c)}else if(F.phase==='stagger'){const f=F,b=F.combo+Math.min(3,G.streak>>1);
@@ -185,7 +186,8 @@ function setCard(el,id){el.innerHTML=inner(id);el.style.setProperty('--c',CARDS[
 function renderCard(){if(!G||!G.deck[0])return;setCard($('#card'),G.deck[0]);[1,2].forEach(i=>{const e=$('#p'+i);e.style.display=G.deck[i]?'':'none';if(G.deck[i])setCard(e,G.deck[i])});const c=$('#card');c.classList.remove('pop','go','sk');void c.offsetWidth;c.classList.add('pop');if(!tut)tipCheck()}
 function renderOmen(){if(!F)return;const m=F.m;$('#omen').innerHTML='<span>OMEN</span>'+[0,1,2,3].map(i=>{const a=AT[m.pat[(F.pi+i)%m.pat.length]];return`<div class="chip" style="--c:${a.c}">${a.k}</div>`}).join('')}
 function fly(dir,tf){const c=$('#card'),k=c.cloneNode(true);k.removeAttribute('id');k.classList.remove('pop');k.classList.add('fly');if(tf)k.style.transform=tf;c.parentNode.appendChild(k);
- requestAnimationFrame(()=>{k.style.transform=`translate(${dir*400}px,${dir>0?-60:30}px) rotate(${dir*30}deg)`;k.style.opacity=0});setTimeout(()=>k.remove(),300)}
+ const v={L:[-400,30,-30],R:[400,-60,30],U:[0,-420,0],D:[0,420,0]}[dir]||[400,-60,30];
+ requestAnimationFrame(()=>{k.style.transform=`translate(${v[0]}px,${v[1]}px) rotate(${v[2]}deg)`;k.style.opacity=0});setTimeout(()=>k.remove(),300)}
 let last={};function setT(id,k,v){if(last[id+k]!==v){last[id+k]=v;if(k==='t')$(id).textContent=v;else $(id).style[k]=v}}
 function ui(){if(!F||!G)return;setT('#enn','t',F.m.n+' · '+F.hp+'/'+F.max);setT('#enhp','width',F.hp/F.max*100+'%');setT('#phpb','width',Math.max(0,G.hp)/G.max*100+'%');setT('#phpt','t',Math.max(0,G.hp)+'/'+G.max);setT('#stk','t',G.streak>1?'STREAK x'+G.streak:'');setT('#dk','t','⌘'+G.deck.length+' ↺'+G.disc.length);
  let k='',n='',col='#888',pct=0;
@@ -197,9 +199,9 @@ function ui(){if(!F||!G)return;setT('#enn','t',F.m.n+' · '+F.hp+'/'+F.max);setT
 /* ---------- input ---------- */
 const cw=$('#cw'),card=$('#card');let ds=null;
 cw.addEventListener('pointerdown',e=>{if(screen!=='fight')return;au();ds={x:e.clientX,y:e.clientY};cw.setPointerCapture(e.pointerId);card.style.transition='none'});
-cw.addEventListener('pointermove',e=>{if(!ds)return;const dx=e.clientX-ds.x,dy=e.clientY-ds.y;card.style.transform=`translate(${dx}px,${Math.min(0,dy)*.6}px) rotate(${dx/14}deg)`;const s=swp(dx,dy);card.classList.toggle('go',s>0);card.classList.toggle('sk',s<0)});
+cw.addEventListener('pointermove',e=>{if(!ds)return;const dx=e.clientX-ds.x,dy=e.clientY-ds.y;card.style.transform=`translate(${dx}px,${dy*.6}px) rotate(${dx/14}deg)`;const d=DIR(dx,dy);card.classList.toggle('go',d==='L'||d==='R'||d==='U');card.classList.toggle('sk',d==='D')});
 cw.addEventListener('pointerup',e=>{if(!ds)return;const dx=e.clientX-ds.x,dy=e.clientY-ds.y,tf=card.style.transform;ds=null;card.style.transition='';card.style.transform='';
- const s=swp(dx,dy);if(s>0)play(tf);else if(s<0)cycle(tf)});
+ const d=DIR(dx,dy);if(d==='D')cycle(tf,'D');else if(d)play(tf,d)});
 cw.addEventListener('pointercancel',()=>{ds=null;card.style.transition='';card.style.transform=''});
 $('#bl').onclick=()=>cycle();$('#br').onclick=()=>play();
 addEventListener('keydown',e=>{if(e.repeat)return;const k=e.key.toLowerCase();if(k==='arrowleft'||k==='a')cycle();else if(k==='arrowright'||k==='d'||k==='arrowup'||k==='w'||k===' '){e.preventDefault();play()}});
@@ -272,15 +274,15 @@ const C=(c,t)=>`<b style="color:${c}">${t}</b>`;
 {s:()=>{F.phase='idle';F.t=.8;dk(['cut','dread','side','guard','break','cut','flurry','guard','side'])},t:'Take a hit and a cursed <b>Dread 怖</b> joins your deck. Playing it costs 2 HP and destroys it. Cycle past it, or purge it when it is safe.',hl:'#cw',tap:1},
 {t:'Real speed now. Parry <b>3 attacks</b> to graduate: <b id="tc">0</b>/3',w:'parry',n:3,live:1}];*/
 const TS=[
-{s:()=>{tutTele(0);dk(['pl'],['cut'])},t:'A Hollow Retainer attacks from the <b>LEFT</b>. Enemies strike from the left or right, and you answer with a matching parry. <i>No timer yet.</i>',hl:'#mid',tap:1},
-{t:'You hold one card: <b>Parry Left ←</b>. <b>Swipe it RIGHT or UP</b> to play it.',hl:'#cw',w:'parry'},
+{s:()=>{tutTele(0);dk(['pl'],['cut'])},t:'The Training Wraith attacks from the <b>LEFT</b>. Enemies strike from the left or right, and you answer with a matching parry. <i>No timer yet.</i>',hl:'#mid',tap:1},
+{t:'You hold one card: <b>Parry Left ←</b>. <b>Swipe it LEFT</b> to play it — the swipe must match the attack direction.',hl:'#cw',w:'parry'},
 {s:()=>dk(['cut'],['pl']),t:'<b>PARRY!</b> Parrying leaves the enemy <b>flatfooted</b>. A weapon joins your hand: <b>Sword 剑</b> (5 dmg). Weapons only land while it is flatfooted. Play it!',hl:'#cw',w:'strike'},
-{s:()=>{tutTele(1);dk(['cut','pl'])},t:'Another LEFT attack, but your top card is a strike. <b>Swipe LEFT</b> to skip it to the discard pile.',hl:'#cw',w:'cycle'},
-{t:'Now play <b>Parry Left</b>.',hl:'#cw',w:'parry'},
+{s:()=>{tutTele(1);dk(['cut','pl'])},t:'Another LEFT attack, but your top card is a strike. <b>Swipe DOWN</b> to discard it to the discard pile.',hl:'#cw',w:'cycle'},
+{t:'Now play <b>Parry Left</b> — swipe it LEFT.',hl:'#cw',w:'parry'},
 {s:()=>{tutTele(2);dk(['cut'],['pl'])},t:'Your parry card is in the <b>discard pile</b> (↺ below). When the draw pile (⌘) runs out, the discard is <b>shuffled</b> back in.',hl:'#pstat',tap:1},
-{t:'Swipe <b>LEFT</b> to skip until the shuffle brings Parry Left back, then play it.',hl:'#cw',w:'parry'},
+{t:'Swipe <b>DOWN</b> to discard until the shuffle brings Parry Left back, then play it.',hl:'#cw',w:'parry'},
 {s:()=>{tutTele(3);dk(['pl','pr','cut'])},t:'Attacks can come from the <b>RIGHT</b> too. You need <b>Parry Right →</b>. Match the side!',hl:'#mid',tap:1},
-{t:'Skip to <b>Parry Right</b> and play it.',hl:'#cw',w:'parry'},
+{t:'Swipe <b>DOWN</b> until <b>Parry Right</b> is on top, then swipe it <b>RIGHT</b> to play it.',hl:'#cw',w:'parry'},
 {s:()=>{tutTele(4);dk(['pl','cut','kasane','cut'])},t:'A new weapon: <b>Dagger 短</b> deals 3, but <b>doubles</b> when played directly after another attack. Parry first.',hl:'#cw',w:'parry'},
 {t:'Play <b>Sword 剑</b>, then <b>Dagger 短</b> for double damage!',hl:'#cw',w:'strike',n:2}];
 function hideTut(){$('#tps').style.display='';$('#hl').style.display='none';$('#tp').style.display='none'}
@@ -309,7 +311,7 @@ function removeScreen(cb){after=cb;const all=[...G.deck,...G.disc].sort();ov(`<h
 function rm(id){let i=G.deck.indexOf(id);if(i>=0)G.deck.splice(i,1);else{i=G.disc.indexOf(id);G.disc.splice(i,1)}sfx('whiff');after()}
 function shrine(){screen='shrine';ov(`<div class="big" style="color:#5bc98a">禁</div><h2>A QUIET SHRINE</h2><p class="s" style="opacity:.85">Ten fights behind you. Choose one blessing.</p><button onclick="shr(0)">HEAL TO FULL</button><button onclick="shr(1)">GAIN 1 RANDOM KATA</button><button onclick="shr(2)">FORGET 1 KATA</button>`)}
 function shr(k){if(k===0){G.hp=G.max;sfx('heal');nextFight()}else if(k===1){const id=POOL[Math.random()*POOL.length|0];G.disc.push(id);sfx('heal');ov(`<h2>The shrine gives</h2><div class="row"><div class="card rc" style="--c:${CARDS[id].col}">${inner(id)}</div></div><button onclick="nextFight()">CONTINUE</button>`)}else if(tot()>5)removeScreen(nextFight);else nextFight()}
-TS.length=7;TS.push({t:'<b>OMENS</b>: this row shows the next attacks, so cycle ahead and keep the right block on top. The <b>bar</b> under the monster is your reaction time.',hl:'#top',tap:1},{s:()=>{F.phase='idle';F.t=.8},t:'Now the clock runs for real: parry, then strike. <b>Defeat the Retainer!</b>',hl:'#mid',tap:1});
+TS.push({t:'<b>OMENS</b>: this row shows the next attacks, so cycle ahead and keep the right block on top. The <b>bar</b> under the monster is your reaction time.',hl:'#top',tap:1},{s:()=>{F.phase='idle';F.t=.8},t:'Now the clock runs for real: parry, then strike. <b>Defeat the Wraith!</b>',hl:'#mid',tap:1});
 let Q=[];
 function addDir(d){const l=Object.keys(AT).filter(x=>!G.dirs.includes(x));if(!d||G.dirs.includes(d))d=l[Math.random()*l.length|0];if(d){G.dirs.push(d);G.nd=d}}
 const hasAll=()=>Object.keys(AT).every(x=>[...G.deck,...G.disc].some(c=>CARDS[c].ct===x));
@@ -320,13 +322,13 @@ const hud=s=>{if(!RM)$(s).animate([{transform:'translateX(-7px)'},{transform:'tr
 function speedLines(){const p=1-F.t/F.dur,m=Math.min(W,H);ctx.save();ctx.strokeStyle=AT[F.atk].c;ctx.globalAlpha=.1+p*.3;ctx.lineWidth=2;for(let i=0;i<16;i++){const a=i/16*6.283+T*.3,r1=m*(.28+.04*Math.sin(T*9+i)),r2=r1+m*.35*p;ctx.beginPath();ctx.moveTo(MX()+Math.cos(a)*r1,MY()+Math.sin(a)*r1);ctx.lineTo(MX()+Math.cos(a)*r2,MY()+Math.sin(a)*r2);ctx.stroke()}ctx.restore()}
 function torii(){const x=W*.2,y=H*.56,w=Math.min(W,H)*.2,h=w*1.15;ctx.fillStyle='#0d0610';ctx.fillRect(x-w/2,y-h,w*.07,h);ctx.fillRect(x+w/2-w*.07,y-h,w*.07,h);ctx.fillRect(x-w*.62,y-h*1.02,w*1.24,h*.09);ctx.fillRect(x-w*.5,y-h*.8,w,h*.06)}
 $('#cw').addEventListener('pointerup',()=>card.classList.remove('go','sk'));
-function title(){screen='title';F=null;ov(`<div class="big">侍</div><h1>PARRY<br>CARD KING</h1><p class="s" style="animation-delay:.4s">The moon fell. The dead hold court. You hold the deck.</p><div class="fan">${['pl','cut','pr','kasane','mace'].map((id,i)=>`<div class="card tc" style="--c:${CARDS[id].col};--x:${(i-2)*56}px;--y:${Math.abs(i-2)*9}px;--r:${(i-2)*9}deg;animation-delay:${i*.3}s"><div class="k">${CARDS[id].k}</div><div class="nm">${CARDS[id].n}</div></div>`).join('')}</div><p class="s" style="animation-delay:1s">Read the omen. Parry the blow. Cut while it is flatfooted.<br>Swipe left to skip a card; right or up to play it.</p><button class="pri" onclick="go()">DRAW YOUR BLADE</button><button onclick="start(1)">HOW TO PLAY</button>`);$('#ov').className='tl'}
+function title(){screen='title';F=null;ov(`<div class="big">侍</div><h1>PARRY<br>CARD KING</h1><p class="s" style="animation-delay:.4s">The moon fell. The dead hold court. You hold the deck.</p><div class="fan">${['pl','cut','pr','kasane','mace'].map((id,i)=>`<div class="card tc" style="--c:${CARDS[id].col};--x:${(i-2)*56}px;--y:${Math.abs(i-2)*9}px;--r:${(i-2)*9}deg;animation-delay:${i*.3}s"><div class="k">${CARDS[id].k}</div><div class="nm">${CARDS[id].n}</div></div>`).join('')}</div><p class="s" style="animation-delay:1s">Read the omen. Parry the blow. Cut while it is flatfooted.<br>Swipe down to discard a card; swipe left, right or up to play it in that direction.</p><button class="pri" onclick="go()">DRAW YOUR BLADE</button><button onclick="start(1)">HOW TO PLAY</button>`);$('#ov').className='tl'}
 const truth=()=>{try{return localStorage.pckTrue}catch(e){return 0}};
 const trueKing=()=>![...G.deck,...G.disc].some(x=>CARDS[x].kind==='counter');
 function goTrue(){const k=[...G.deck,...G.disc].filter(x=>CARDS[x].kind!=='counter');if(!k.length)return;G.deck=k;G.disc=[];G.bp=false;addDir();sfx('hurt');flash('#f0c24b',.5);nextFight()}
 function sparkle(c){parry(c);rings.push({x:MX(),y:MY(),r:Math.min(W,H)*.9,l:.7,L:.7,col:'#fff'});banner('SPARKLE PARRY','#fff',40);if(!seen.sparkle){mark('sparkle');try{localStorage.pckTrue=1}catch(e){}pop=1;showPop('<small style="opacity:.6">SECRET FOUND</small><br><b>Sparkle parry!</b> In the last 0.4s before a hit, playing <b>any weapon</b> parries just like the right block. Unlocked: when offered a block, you may <b>discard every parry</b> and walk the True Path, living on pure aggression.','#mid',1)}}
 function sparkles(){const s=MS();ctx.save();ctx.fillStyle='#fff';ctx.shadowColor='#ffe27a';ctx.shadowBlur=16;for(let i=0;i<7;i++){const a=T*3+i*2.4,r=(60+i*14)*s*(1+.2*Math.sin(T*20+i)),x=MX()+Math.cos(a)*r*1.3,y=MY()+Math.sin(a)*r,k=3+9*s*Math.abs(Math.sin(T*25+i*3));ctx.beginPath();ctx.moveTo(x,y-k*2);ctx.lineTo(x+k*.4,y-k*.4);ctx.lineTo(x+k*2,y);ctx.lineTo(x+k*.4,y+k*.4);ctx.lineTo(x,y+k*2);ctx.lineTo(x-k*.4,y+k*.4);ctx.lineTo(x-k*2,y);ctx.lineTo(x-k*.4,y-k*.4);ctx.closePath();ctx.fill()}ctx.restore();if(Math.random()<.4)spawn(MX()+R(-80,80),MY()+R(-80,60),2,'#ffe27a',160,.4,-120,2)}
-const swp=(dx,dy)=>dx<-K.SWIPE&&(dy>-K.SWIPE||-dx>-dy)?-1:(dx>K.SWIPE||dy<-K.SWIPE)?1:0;
+const DIR=(dx,dy)=>{const ax=Math.abs(dx),ay=Math.abs(dy);if(Math.max(ax,ay)<K.SWIPE)return null;return ay>ax?(dy>0?'D':'U'):(dx>0?'R':'L')};
 const gaps=()=>{const m=G.dirs.filter(d=>![...G.deck,...G.disc].some(x=>CARDS[x].ct===d||CARDS[x].ct==='ANY'));return m.length?'<br><span style="color:#ff6a6a">No block for: '+m.map(d=>AT[d].k).join(' ')+'</span>':''};
 function lowHp(){if(G&&screen==='fight'&&G.hp/G.max<.3&&!RM){const g=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.8);g.addColorStop(0,'rgba(214,48,58,0)');g.addColorStop(1,`rgba(214,48,58,${.18+.14*Math.sin(T*6)})`);ctx.fillStyle=g;ctx.fillRect(-30,-30,W+60,H+60)}}
 let muted=false;try{muted=localStorage.pckMute==='1'}catch(e){}
