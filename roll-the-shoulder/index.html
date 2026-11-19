@@ -121,6 +121,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 body.m-loading #dock,body.m-menu #dock{display:none}
 body:not(.m-level) #hud{display:none}
 body:not(.m-hub) #hubhud,body:not(.m-hub) #nodeCard{display:none}
+body.tut #head,body.tut #hubhud,body.tut #nodeCard{display:none}
+body:not(.tut) #tutPanel{display:none}
 body.m-menu #steer,body.m-menu #cockpit,body.m-menu #head,body.m-loading #steer,body.m-loading #cockpit,body.m-loading #head{display:none}
 body.m-level #head{display:none}
 body.m-level #hud{left:14px;top:12px}
@@ -188,6 +190,69 @@ body:not(.m-menu) #menu{display:none}
 #lvlBanner span{display:inline-block;background:var(--warn);color:var(--warn-ink);font-family:var(--display);font-weight:700;font-size:1.1rem;letter-spacing:.12em;text-transform:uppercase;padding:.1rem .7rem;border-radius:4px 4px 0 0}
 #lvlBanner b{display:block;background:#16140a;color:#fff;font-family:var(--display);font-weight:700;font-size:clamp(2rem,7vw,3.4rem);line-height:1;padding:.25rem 1rem .35rem;border-radius:0 6px 6px 6px;box-shadow:0 8px 24px var(--shadow)}
 body:not(.m-level) #lvlBanner{display:none}
+
+/* tutorial panel and control highlights */
+#tutPanel{position:absolute;left:50%;transform:translateX(-50%);top:12px;z-index:3;width:min(30rem,calc(100% - 1.6rem))}
+#tutPanel[hidden]{display:none}
+#tutPanel .card{max-width:none;padding:.7rem .9rem .8rem 1rem}
+#tutPanel h2{font-size:1.45rem}
+#tutPanel p{margin-bottom:.45rem}
+.tutdots{display:flex;gap:.3rem;margin-bottom:.35rem}
+.tutdots i{display:block;height:7px;flex:1;border-radius:4px;background:var(--line)}
+.tutdots i.done{background:#2fa84f}.tutdots i.cur{background:var(--warn)}
+.hint{animation:hintpulse 1s ease-in-out infinite}
+@keyframes hintpulse{0%,100%{box-shadow:0 4px 12px var(--shadow),0 0 0 0 rgba(242,185,15,.0)}50%{box-shadow:0 4px 12px var(--shadow),0 0 0 7px rgba(242,185,15,.85)}}
+.menunote{font-size:.9rem;color:#c4cbd0;margin-top:-.5rem}
+.menunote.warn{color:#ffb4ab}
+@media (prefers-reduced-motion:reduce){.hint{animation:none;outline:4px solid var(--warn)}}
+
+.hazard{flex:none}
+.menuwrap{overflow:auto}
+@media (max-height:700px) and (min-width:860px){.logo h1{font-size:clamp(2.6rem,9vh,4.4rem)}.menuwrap{gap:.8rem}.menubtns{gap:.45rem}.menubtns .btn{padding:.45rem 1rem}.menubtns .btn.primary{font-size:1.5rem}}
+
+/* level select title: big, bold, sign-style */
+body.m-hub #head h1,body.m-hub #head p{text-shadow:none}
+body.m-hub #head h1{display:inline-block;background:#16140a;color:#fff;font-size:clamp(2.2rem,9vw,3.4rem);line-height:1;letter-spacing:.03em;text-transform:uppercase;padding:.18rem .75rem .26rem;border-radius:6px;border-left:10px solid var(--warn);box-shadow:0 6px 18px var(--shadow)}
+body.m-hub #head p{display:block;margin-top:.45rem;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:.3rem .55rem;width:fit-content;max-width:min(30rem,92%);box-shadow:0 3px 10px var(--shadow)}
+body.m-hub #hubhud{top:150px}
+body.m-hub #nodeCard{top:214px}
+@media (min-width:860px){
+  body.m-hub #head h1{font-size:3.6rem}
+  body.m-hub #hubhud{top:18px}
+  body.m-hub #nodeCard{top:auto}
+}
+
+/* decluttered level select screen */
+body.m-hub #dock{display:none}
+body.m-hub #hubhud{left:auto;right:14px;top:12px}
+.chip{min-width:0;padding:.3rem .7rem .3rem .6rem}
+.chip b{font-size:1.5rem;white-space:nowrap}
+.chip svg{width:1.2rem;height:1.2rem;vertical-align:-.15rem}
+#hubMenu{position:absolute;right:14px;top:62px;z-index:3;display:none}
+body.m-hub:not(.tut) #hubMenu{display:block}
+body.m-hub #nodeCard{top:138px}
+#nodeCard .card{position:relative}
+.closex{position:absolute;top:.35rem;right:.4rem;width:44px;height:44px;border:0;background:transparent;font-size:1.25rem;color:var(--mute);border-radius:8px;display:grid;place-items:center}
+.closex:hover,.closex:active{background:var(--panel-2);color:var(--ink)}
+#nodeCard h2{padding-right:2.6rem}
+@media (max-width:480px){body.m-hub #head h1{font-size:1.75rem;border-left-width:8px}body.m-hub #head p{max-width:calc(100% - 7rem)}}
+@media (min-width:860px){
+  body.m-hub #hubhud{right:22px;top:18px}
+  #hubMenu{right:22px;top:72px}
+  body.m-hub #nodeCard{top:auto;bottom:22px}
+}
+
+.chip b{display:flex;align-items:center;gap:.35rem}
+.chip span{display:inline;font-size:inherit;color:inherit;line-height:1}
+
+/* no running commentary in the bottom bar: keep it for screen readers only */
+#status{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;padding:0;margin:-1px}
+#dock{position:relative}
+#dock .row{justify-content:flex-end}
+@media (min-width:860px){#dock{grid-template-columns:1fr}}
+
+.chip b{display:flex;align-items:center;gap:.3rem}
+.chip span{display:inline;font-size:inherit;color:inherit;line-height:1;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -232,10 +297,10 @@ body:not(.m-level) #lvlBanner{display:none}
       <div class="stat"><span>Rolled</span><b id="cov">0%</b></div>
       <div class="stat" id="tmBox"><span id="tmLbl">Time (goal 0:45)</span><b id="tm">0:00</b></div>
     </div>
-    <div id="hubhud" aria-label="Progress">
-      <div class="stat gold"><span>Stars</span><b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4l2.9 6 6.6.9-4.8 4.6 1.2 6.6L12 17.4l-5.9 3.1 1.2-6.6L2.5 9.3l6.6-.9z" stroke-linejoin="round"/></svg> <span id="hubStars" style="display:inline;font-size:inherit;color:inherit">0</span></b></div>
-      <div class="stat"><span id="nextLbl">Next level</span><b id="nextVal">-</b></div>
+    <div id="hubhud" aria-label="Total stars">
+      <div class="stat gold chip"><b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4l2.9 6 6.6.9-4.8 4.6 1.2 6.6L12 17.4l-5.9 3.1 1.2-6.6L2.5 9.3l6.6-.9z" stroke-linejoin="round"/></svg> <span id="hubStars">0 / 30</span></b></div>
     </div>
+    <button class="btn" id="hubMenu">Menu</button>
     <div id="steer">
       <button class="pad" id="bl" aria-label="Steer left"><span>◀<small>Left</small></span></button>
       <button class="pad" id="br" aria-label="Steer right"><span>▶<small>Right</small></span></button>
@@ -248,11 +313,20 @@ body:not(.m-level) #lvlBanner{display:none}
     </div>
     <div id="nodeCard" hidden>
       <div class="card">
+        <button class="closex" id="nClose" aria-label="Close this level card">✕</button>
         <h2 id="nName">Level 1</h2>
         <canvas class="thumb" id="nThumb" width="320" height="120" aria-hidden="true"></canvas>
         <div class="mini" id="nStars"></div>
         <p id="nInfo"></p>
         <button class="btn primary" id="nGo">Roll this shoulder</button>
+      </div>
+    </div>
+    <div id="tutPanel" hidden>
+      <div class="card">
+        <div class="tutdots" id="tutDots" aria-hidden="true"></div>
+        <h2 id="tutT"></h2>
+        <p id="tutD"></p>
+        <div class="btns"><button class="btn primary" id="tutGo" hidden>Start practice strip</button><button class="btn" id="tutSkip">Skip tutorial</button></div>
       </div>
     </div>
     <div id="lvlBanner" aria-hidden="true"><span id="lbNum"></span><b id="lbName"></b></div>
@@ -277,6 +351,7 @@ body:not(.m-level) #lvlBanner{display:none}
         <div class="logo"><span class="kick">A steamroller game</span><h1>Roll the<br><em>Shoulder</em></h1></div>
         <div class="hazard"></div>
         <div class="menustat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4l2.9 6 6.6.9-4.8 4.6 1.2 6.6L12 17.4l-5.9 3.1 1.2-6.6L2.5 9.3l6.6-.9z" stroke-linejoin="round"/></svg> <span id="menuStars">0 of 30 stars</span></div>
+        <div class="menunote" id="menuSave"></div>
         <div class="menubtns">
           <button class="btn primary" id="mPlay">Play</button>
           <button class="btn" id="mHow">How to play</button>
@@ -288,11 +363,11 @@ body:not(.m-level) #lvlBanner{display:none}
       <div class="card" role="dialog" aria-labelledby="hwT">
         <h2 id="hwT">How to play</h2>
         <ul>
-          <li>Drive the roller around the sidewalk hub. Park on a numbered pad and press the button to roll that shoulder.</li>
+          <li>Drive the roller around the sidewalk hub. Park on a numbered pad and press the button to roll that shoulder. The blue ? pad replays the tutorial.</li>
           <li>Steer with the left and right arrow keys (or A and D), or hold the on-screen buttons.</li>
           <li>The travel lever sets speed: up is forward, the middle is neutral, down is reverse. Use the up and down arrow keys (or W and S), or drag it.</li>
           <li>On a shoulder, keep the drum over the strip. Rough spots you miss count against you. Go a full machine width clear of it and the run restarts.</li>
-          <li>Each level has three stars: 80% rolled, 95% rolled, and finishing inside the time goal.</li>
+          <li>Each level has three stars: 90% rolled, 98% rolled, and finishing inside the time goal (45 seconds on most levels).</li>
           <li>Stars unlock new levels. A striped barrier on the sidewalk shows how many you need.</li>
         </ul>
         <div class="btns"><button class="btn primary" id="hwOk">Got it</button></div>
@@ -865,7 +940,7 @@ function buildRoller(THREE){
     {name:'Hairpin Hill',cmds:[['S',20],['L',4.2,180],['S',20]],hills:[[26.6,2.2,7.5]],w:0.82,vreq:0.85,ground:0xaebfa4,tip:'Climb the hill, swing round the hairpin at the top, and come back down.'},
     {name:'Switchback Ridge',cmds:[['S',16],['L',4.2,180],['S',16],['R',4.2,180],['S',16]],hills:[[22.6,1.8,6.5],[52,2.0,6.5]],w:0.86,vreq:0.85,ground:0xc4beb4,tip:'Two hairpins up a ridge, with a hill on each turn.'},
     {name:'Rollercoaster Eight',cmds:[['S',14],['R',5,270],['S',10],['L',5,270]],hills:[[25.8,1.8,4.5],[42.56,1.6,4],[59.3,1.8,4.5]],w:0.90,vreq:0.85,ground:0xb6c3cc,tip:'The figure eight again, now over hills. You cross the top of the middle hill twice.'},
-    {name:'The Grand Tour',cmds:[['S',8],['L',20,30],['R',20,60],['L',20,30],['S',6],['R',5,360],['S',8],['L',5.5,90],['S',10],['L',5.5,90],['S',10],['R',5.5,90],['S',6],['R',5.5,90],['S',8]],hills:[[14,1.1,5.5],[40,1.4,5],[100,1.6,5],[125,1.4,5]],w:0.95,vreq:0.95,ground:0xaab5a0,tip:'An S-bend, a roundabout, zig-zag corners and hills in one long run. The last shoulder.'}
+    {name:'The Grand Tour',goal:120,cmds:[['S',8],['L',20,30],['R',20,60],['L',20,30],['S',6],['R',5,360],['S',8],['L',5.5,90],['S',10],['L',5.5,90],['S',10],['R',5.5,90],['S',6],['R',5.5,90],['S',8]],hills:[[14,1.1,5.5],[40,1.4,5],[100,1.6,5],[125,1.4,5]],w:0.95,vreq:0.95,ground:0xaab5a0,tip:'An S-bend, a roundabout, zig-zag corners and hills in one long run. The last shoulder.'}
   ];
   /* ---------- paths: built from straights and arcs ---------- */
   var DX=0.1,LEAD=5,OUT=6;
@@ -902,12 +977,16 @@ function buildRoller(THREE){
     var thumb=[];for(i=iA;i<=iB;i+=10)thumb.push([cx[i],cw[i]]);
     return {cx:cx,cw:cw,nx:nx,nw:nw,NR:NR,iA:iA,iB:iB,len:len,bumps:bumps,thumb:thumb,th:tp.th};
   }
-  LEVELS.forEach(function(L){L.path=makePath(L);L.len=Math.round(L.path.len);L.limit=Math.ceil((L.path.len+3.7)/L.vreq);});
+  LEVELS.forEach(function(L){L.path=makePath(L);L.len=Math.round(L.path.len);L.limit=L.goal||45;});
+  var TUT={name:'Practice strip',cmds:[['S',6],['L',20,25],['R',20,50],['L',20,25],['S',6]],hills:[],w:0.9,vreq:0.6,ground:0xbcc7b0,tip:'A short, wide, gentle strip to try out everything you just learned.'};
+  TUT.path=makePath(TUT);TUT.len=Math.round(TUT.path.len);TUT.limit=999;
   var UNLOCK=[0,1,3,6,9,12,16,20,24,27];
-  var NEED1=80,NEED2=95,SAVE_KEY='rollTheShoulder.v2';
-  var save={stars:[0,0,0,0,0,0,0,0,0,0],pct:[0,0,0,0,0,0,0,0,0,0]};
-  try{var raw=JSON.parse(localStorage.getItem(SAVE_KEY));if(raw&&raw.stars&&raw.stars.length===10){save=raw;}}catch(e){}
-  function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}}
+  var NEED1=90,NEED2=98,TUT_NEED=80,SAVE_KEY='rollTheShoulder.v2';
+  var save={stars:[0,0,0,0,0,0,0,0,0,0],pct:[0,0,0,0,0,0,0,0,0,0],tut:false},storeOK=true,tutActive=false;
+  try{localStorage.setItem('rts.probe','1');localStorage.removeItem('rts.probe');}catch(e){storeOK=false;}
+  try{var raw=JSON.parse(localStorage.getItem(SAVE_KEY));if(raw&&raw.stars&&raw.stars.length===10){save.stars=raw.stars;if(raw.pct&&raw.pct.length===10)save.pct=raw.pct;save.tut=!!raw.tut||raw.stars.some(function(s){return s>0;});}}catch(e){}
+  function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));storeOK=true;return true;}catch(e){storeOK=false;return false;}}
+  function resetSave(){save={stars:[0,0,0,0,0,0,0,0,0,0],pct:[0,0,0,0,0,0,0,0,0,0],tut:save.tut};return writeSave();}
   function totalStars(){return save.stars.reduce(function(a,b){return a+b;},0);}
   function isUnlocked(i){return totalStars()>=UNLOCK[i];}
   function firstLocked(){for(var i=0;i<10;i++)if(!isUnlocked(i))return i;return -1;}
@@ -915,10 +994,10 @@ function buildRoller(THREE){
 
   /* ---------- engine state ---------- */
   var renderer,scene,camera,hemi,sun,ground,machine,front,parts,byId={},drumF,drumR,beaconMat=[];
-  var hub,courseGroup,hubCurve,hubS=[],nodes=[],barrier,HN=260;
+  var hub,courseGroup,hubCurve,hubS=[],nodes=[],tutNode=null,barrier,HN=260;
   var groundCol=0xbcc7b0;
   var state='loading',view='behind',curLevel=0,lastLevelNode=-1,resets=0,busy=false;
-  var A_=1.3,B_=0.7,VMAX=2.0,VREV=1.2,GMAX=0.6,WIDEN=1.15,DRUMW=1.0*1.15,MACHW=1.18*1.15,DX=0.1;
+  var A_=1.3,B_=0.7,VMAX=5.0,VREV=1.2,GMAX=0.6,WIDEN=1.15,DRUMW=1.0*1.15,MACHW=1.18*1.15,DX=0.1;
   var S={x:0,w:0,th:0,g:0,v:0,lever:0,t:0,moving:false};
   var keys={l:0,r:0,u:0,d:0},btn={l:0,r:0},auto=null,neutralT=0;
   var camHead=0,camPos=null,camTarget=null,camInit=false,menuAng=0;
@@ -1038,8 +1117,8 @@ function buildRoller(THREE){
   }
 
   /* ---------- the sidewalk hub ---------- */
-  var HUB_PTS=[[0,0],[16,0],[30,5],[42,15],[56,22],[70,20],[80,11],[86,-1],[96,-11],[110,-15],[124,-11],[135,-2],[143,10],[154,19],[168,22]];
-  var NODE_T=[0.07,0.165,0.26,0.355,0.45,0.545,0.64,0.735,0.83,0.925];
+  var HUB_PTS=[[0,0],[16,0],[30,5],[42,15],[56,22],[70,20],[80,11],[86,-1],[96,-11],[110,-15],[124,-11],[135,-2],[143,10],[154,19],[168,22]].map(function(p){return [p[0]*0.45,p[1]*0.45];});
+  var NODE_T=[0.16,0.24,0.32,0.4,0.48,0.56,0.64,0.72,0.8,0.88];
   function padTex(i){
     var c=mkCanvas(256,256),x=c.getContext('2d'),un=isUnlocked(i);
     x.fillStyle=un?'#f2b90f':'#8d949a';x.beginPath();x.arc(128,128,124,0,7);x.fill();
@@ -1060,6 +1139,23 @@ function buildRoller(THREE){
     else{drawLock(x,52,138,36,'#5b636a');x.fillStyle='#3a4046';x.font='600 28px '+FONT;x.textAlign='left';x.fillText('Needs',84,124);x.fillText(UNLOCK[i]+' stars',84,154);}
     var t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t;
   }
+  function padTexTut(){
+    var c=mkCanvas(256,256),x=c.getContext('2d');
+    x.fillStyle='#0f62a8';x.beginPath();x.arc(128,128,124,0,7);x.fill();x.lineWidth=14;x.strokeStyle='#0a2a47';x.stroke();
+    x.setLineDash([22,16]);x.lineWidth=8;x.strokeStyle='rgba(255,255,255,.9)';x.beginPath();x.arc(128,128,98,0,7);x.stroke();x.setLineDash([]);
+    x.fillStyle='#fff';x.font='700 150px '+FONT;x.textAlign='center';x.textBaseline='middle';x.fillText('?',128,142);
+    var t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t;
+  }
+  function badgeTexTut(){
+    var c=mkCanvas(320,200),x=c.getContext('2d');
+    x.fillStyle='rgba(255,255,255,.97)';rrect(x,6,6,308,188,22);x.fill();x.lineWidth=6;x.strokeStyle='#0a2a47';x.stroke();
+    x.fillStyle='#0f62a8';rrect(x,6,6,308,52,22);x.fill();
+    x.fillStyle='#fff';x.font='700 38px '+FONT;x.textAlign='center';x.textBaseline='middle';x.fillText('TRAINING',160,33);
+    x.fillStyle='#1c2228';x.font='600 31px '+FONT;x.fillText('Tutorial',160,80);
+    x.fillStyle='#eef1f3';rrect(x,196,96,106,90,12);x.fill();drawThumb(x,TUT,196,96,106,90);
+    x.fillStyle=save.tut?'#1c2228':'#0f62a8';x.font='600 30px '+FONT;x.textAlign='left';x.fillText(save.tut?'Replay any time':'Start here',24,142);
+    var t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t;
+  }
   function stripeTex(){
     var c=mkCanvas(256,48),x=c.getContext('2d');
     for(var i=-2;i<14;i++){x.fillStyle=i%2?'#fff':'#d62c1e';x.beginPath();x.moveTo(i*24,0);x.lineTo(i*24+24,0);x.lineTo(i*24+48,48);x.lineTo(i*24+24,48);x.fill();}
@@ -1078,16 +1174,16 @@ function buildRoller(THREE){
     ribbonPts(hubS,2.4,6.4,0.012,M.road,null,hub);
     ribbonPts(hubS,4.34,4.46,0.02,M.line,function(i){return i%6<3;},hub);
     /* scenery */
-    for(var k=0;k<70;k++){
+    for(var k=0;k<46;k++){
       var i2=Math.floor(rnd()*HN),p2=hubS[i2],side=rnd()<0.7?-1:1,off=side<0?4.5+rnd()*12:8.5+rnd()*8;
       addTree(hub,p2.x+p2.nx*side*off,p2.w+p2.nw*side*off,0.8+rnd()*0.7);
     }
-    for(var h=6;h<HN-4;h+=17){
+    for(var h=8;h<HN-4;h+=34){
       var p3=hubS[h],o=19+rnd()*5,wx=p3.x-p3.nx*o,ww=p3.w-p3.nw*o;
       var hs=new THREE.Mesh(G_.house,M.wallC[h%5]);hs.position.set(wx,1.6,-ww);hs.rotation.y=Math.atan2(p3.nw,p3.nx);hs.castShadow=true;hs.receiveShadow=true;hub.add(hs);
       var rf=new THREE.Mesh(G_.roof,M.roof);rf.position.set(wx,4.1,-ww);rf.rotation.y=Math.atan2(p3.nw,p3.nx)+Math.PI/4;rf.castShadow=true;hub.add(rf);
     }
-    for(var q=4;q<HN-2;q+=13){
+    for(var q=10;q<HN-2;q+=30){
       var p4=hubS[q],lx=p4.x-p4.nx*2.15,lw=p4.w-p4.nw*2.15;
       var po=new THREE.Mesh(G_.pole,M.pole);po.position.set(lx,1.7,-lw);po.castShadow=true;hub.add(po);
       var hd=new THREE.Mesh(G_.head,M.pole);hd.position.set(lx+p4.nx*0.28,3.4,-(lw+p4.nw*0.28));hd.rotation.y=Math.atan2(p4.nw,p4.nx);hub.add(hd);
@@ -1105,6 +1201,17 @@ function buildRoller(THREE){
       node.spr.scale.set(2.7,1.69,1);node.spr.position.set(node.x+nxr*2.1,2.9,-(node.w+nwr*2.1));hub.add(node.spr);
       nodes.push(node);
     }
+    (function(){
+      var tt=0.07,pt=hubCurve.getPointAt(tt),tg=hubCurve.getTangentAt(tt),th=Math.atan2(-tg.z,tg.x);
+      var node={t:tt,x:pt.x,w:-pt.z,th:th,gate:-1};
+      node.pad=new THREE.Mesh(new THREE.CircleGeometry(1.75,48),new THREE.MeshStandardMaterial({map:padTexTut(),roughness:0.8}));
+      node.pad.rotation.x=-Math.PI/2;node.pad.position.set(node.x,0.035,-node.w);node.pad.receiveShadow=true;hub.add(node.pad);
+      var nxr=Math.sin(th),nwr=-Math.cos(th);
+      node.post=new THREE.Mesh(G_.pole,M.pole);node.post.position.set(node.x+nxr*2.1,1.7,-(node.w+nwr*2.1));node.post.castShadow=true;hub.add(node.post);
+      node.spr=new THREE.Sprite(new THREE.SpriteMaterial({map:badgeTexTut(),transparent:true,depthWrite:false}));
+      node.spr.scale.set(2.7,1.69,1);node.spr.position.set(node.x+nxr*2.1,2.9,-(node.w+nwr*2.1));hub.add(node.spr);
+      tutNode=node;
+    })();
     barrier=new THREE.Group();hub.add(barrier);
     var st=stripeTex();st.repeat.set(9,1);
     var bp=new THREE.Mesh(new THREE.PlaneGeometry(13.2,0.55),new THREE.MeshStandardMaterial({map:st,side:THREE.DoubleSide,roughness:0.7}));bp.position.y=1.0;bp.castShadow=true;barrier.add(bp);
@@ -1119,7 +1226,11 @@ function buildRoller(THREE){
       if(n.pad.material.map)n.pad.material.map.dispose();n.pad.material.map=padTex(i);n.pad.material.needsUpdate=true;
       if(n.spr.material.map)n.spr.material.map.dispose();n.spr.material.map=badgeTex(i);n.spr.material.needsUpdate=true;
     }
-    var fl=firstLocked();
+    if(tutNode){
+      if(tutNode.pad.material.map)tutNode.pad.material.map.dispose();tutNode.pad.material.map=padTexTut();tutNode.pad.material.needsUpdate=true;
+      if(tutNode.spr.material.map)tutNode.spr.material.map.dispose();tutNode.spr.material.map=badgeTexTut();tutNode.spr.material.needsUpdate=true;
+    }
+    var fl=tutActive?1:firstLocked();
     if(fl<0)barrier.visible=false;
     else{
       var nd=nodes[fl],p=hubS[Math.max(0,nd.gate)];barrier.visible=true;
@@ -1129,9 +1240,8 @@ function buildRoller(THREE){
   }
   function updateHubHud(){
     $('hubStars').textContent=totalStars()+' / 30';$('menuStars').textContent=totalStars()+' of 30 stars';
-    var fl=firstLocked();
-    if(fl<0){$('nextLbl').textContent='Levels';$('nextVal').textContent='All open';}
-    else{$('nextLbl').textContent='Level '+(fl+1)+' opens at';$('nextVal').textContent=UNLOCK[fl]+(UNLOCK[fl]===1?' star':' stars');}
+    $('menuSave').textContent=storeOK?'Progress saves automatically on this device.':'This browser blocks saving, so progress will be lost when you close the page.';
+    $('menuSave').className=storeOK?'':'warn';
   }
   function nearestIdx(x,w){var bi=0,bd=1e9;for(var i=0;i<=HN;i++){var d=(hubS[i].x-x)*(hubS[i].x-x)+(hubS[i].w-w)*(hubS[i].w-w);if(d<bd){bd=d;bi=i;}}return {i:bi,d:Math.sqrt(bd)};}
 
@@ -1143,11 +1253,11 @@ function buildRoller(THREE){
   function Hfn(x,w){var y=0;for(var i=0;i<curBumps.length;i++){var b=curBumps[i],dx=x-b.x,dw=w-b.w;y+=b.h*Math.exp(-(dx*dx+dw*dw)/b.r2);}return y;}
   function disposeGroup(g){while(g.children.length){var o=g.children.pop();if(o.geometry&&!o.geometry.userData.shared)o.geometry.dispose();}}
   function hfun(base){return function(x,w){return Hfn(x,w)+base;};}
-  function buildCourse(i){
+  function buildCourse(L,seed){
     disposeGroup(courseGroup);
-    LV=LEVELS[i];P=LV.path;curBumps=P.bumps;STRIPW=LV.w;iA=P.iA;iB=P.iB;NR=P.NR;NSR=iB-iA+1;NJ=Math.max(9,Math.round(STRIPW/0.05)+1);NV=NSR*NJ;
+    LV=L;P=LV.path;curBumps=P.bumps;STRIPW=LV.w;iA=P.iA;iB=P.iB;NR=P.NR;NSR=iB-iA+1;NJ=Math.max(9,Math.round(STRIPW/0.05)+1);NV=NSR*NJ;
     vX=new Float32Array(NV);vW=new Float32Array(NV);vY=new Float32Array(NV);pos=new Float32Array(NV*3);col=new Float32Array(NV*3);noise=new Float32Array(NV);jit=new Float32Array(NV);cov=new Uint8Array(NV);
-    rs=100+i*13;
+    rs=100+seed*13;
     for(var r=0;r<NSR;r++){
       var g=iA+r;
       for(var j=0;j<NJ;j++){
@@ -1258,11 +1368,11 @@ function buildRoller(THREE){
   }
   function hubBlock(x0,w0,th0){
     var px=S.x+A_*Math.cos(S.th),pw=S.w+A_*Math.sin(S.th),ph=S.th+S.g,fx=px+B_*Math.cos(ph),fw=pw+B_*Math.sin(ph);
-    var ni=nearestIdx(fx,fw),nr=nearestIdx(S.x,S.w),fl=firstLocked(),gate=fl>=0?nodes[fl].gate:1e9;
+    var ni=nearestIdx(fx,fw),nr=nearestIdx(S.x,S.w),fl=tutActive?1:firstLocked(),gate=fl>=0?nodes[fl].gate:1e9;
     var out=Math.min(ni.d,nr.d)>6.4,gated=ni.i>gate;
     if(out||gated){
       S.x=x0;S.w=w0;S.th=th0;S.v=0;
-      if(gated&&performance.now()-lastGateToast>3500){lastGateToast=performance.now();showToast('Locked: Level '+(fl+1)+' needs '+UNLOCK[fl]+' stars. You have '+totalStars()+'.');}
+      if(gated&&performance.now()-lastGateToast>3500){lastGateToast=performance.now();showToast(tutActive?'Finish the training first.':'Locked: Level '+(fl+1)+' needs '+UNLOCK[fl]+' stars. You have '+totalStars()+'.');}
       return true;
     }
     return false;
@@ -1274,14 +1384,29 @@ function buildRoller(THREE){
     var tc=$('nThumb'),tx=tc.getContext('2d');tx.clearRect(0,0,tc.width,tc.height);drawThumb(tx,L,0,0,tc.width,tc.height);
     $('nStars').innerHTML=[0,1,2].map(function(k){return STAR_SVG.replace('%C',save.stars[i]>k?'on':'');}).join('');
     $('nInfo').textContent=L.len+' m of '+(L.path.bumps.length?'hilly ':'')+'shoulder, '+L.w.toFixed(2)+' m wide. Time goal '+fmt(L.limit)+'.'+(save.pct[i]?' Your best: '+save.pct[i]+'% rolled.':'');
+    $('nGo').textContent='Roll this shoulder';
     $('nodeCard').hidden=false;
   }
+  function showTutNode(){
+    parked=-2;
+    $('nName').textContent='Training: Tutorial';
+    var tc=$('nThumb'),tx=tc.getContext('2d');tx.clearRect(0,0,tc.width,tc.height);drawThumb(tx,TUT,0,0,tc.width,tc.height);
+    $('nStars').innerHTML='';
+    $('nInfo').textContent='A short guided lesson on the lever, steering and reversing, then a practice strip. About two minutes. Replay it any time.';
+    $('nGo').textContent='Start tutorial';
+    $('nodeCard').hidden=false;
+  }
+  var dismissed=-9;
   function hideNode(){parked=-1;parkT=0;$('nodeCard').hidden=true;}
+  function dismissNode(){if(parked!==-1)dismissed=parked;hideNode();}
   function hubNodes(dt){
+    if(tutActive)return;
+    if(Math.abs(S.v)>0.35)dismissed=-9;
     var ox=S.x+Math.cos(S.th),ow=S.w+Math.sin(S.th),best=-1,bd=1e9;
     for(var i=0;i<10;i++){var d=Math.hypot(nodes[i].x-ox,nodes[i].w-ow);if(d<bd){bd=d;best=i;}}
-    if(bd<2.2&&Math.abs(S.v)<0.3&&isUnlocked(best)){parkT+=dt;if(parkT>0.3&&parked!==best)showNode(best);}
-    else{parkT=0;if(parked>=0&&(bd>3.2||Math.abs(S.v)>0.7))hideNode();}
+    if(tutNode){var td=Math.hypot(tutNode.x-ox,tutNode.w-ow);if(td<bd){bd=td;best=-2;}}
+    if(bd<2.2&&Math.abs(S.v)<0.3&&(best===-2||isUnlocked(best))){parkT+=dt;if(parkT>0.3&&parked!==best&&dismissed!==best){if(best===-2)showTutNode();else showNode(best);}}
+    else{parkT=0;if(parked!==-1&&(bd>3.2||Math.abs(S.v)>0.7))hideNode();if(bd>3.2)dismissed=-9;}
   }
   function update(dt){
     var play=state==='play',drive=play||state==='hub';
@@ -1353,66 +1478,121 @@ function buildRoller(THREE){
   }
   function card(title,text,small,btns,thumbLevel){
     var tc=$('cThumb');
-    if(thumbLevel!==undefined){tc.hidden=false;var tx=tc.getContext('2d');tx.clearRect(0,0,tc.width,tc.height);drawThumb(tx,LEVELS[thumbLevel],0,0,tc.width,tc.height);}else tc.hidden=true;
+    if(thumbLevel!==undefined){tc.hidden=false;var tx=tc.getContext('2d');tx.clearRect(0,0,tc.width,tc.height);drawThumb(tx,typeof thumbLevel==='number'?LEVELS[thumbLevel]:thumbLevel,0,0,tc.width,tc.height);}else tc.hidden=true;
     $('cTitle').textContent=title;$('cText').innerHTML=text;$('cSmall').innerHTML=small||'';
     ['cB1','cB2','cB3'].forEach(function(id,i){var b=$(id),d=btns[i];if(d){b.hidden=false;b.textContent=d[0];b.onclick=d[1];}else b.hidden=true;});
     $('award').hidden=true;$('cUnlock').hidden=true;overlay.hidden=false;
   }
+  function setView(v){view=v;var vb=$('viewBtn');vb.textContent='View: '+v;vb.setAttribute('aria-pressed',v==='above'?'true':'false');camInit=false;}
   function enterMenu(){
-    $('lvlBanner').classList.remove('show');curBumps=[];setScene('hub');setMode('menu');state='menu';overlay.hidden=true;hideNode();setWet(false);
+    setView('behind');tutActive=false;$('tutPanel').hidden=true;setHint([]);$('lvlBanner').classList.remove('show');curBumps=[];setScene('hub');setMode('menu');state='menu';overlay.hidden=true;hideNode();setWet(false);
     groundCol=0xbcc7b0;applyTheme();placeOnPath(0.03);refreshHub();camInit=false;
   }
   function enterHub(ni){
-    $('lvlBanner').classList.remove('show');curBumps=[];setScene('hub');setMode('hub');state='hub';overlay.hidden=true;toastEl.hidden=true;setWet(false);
-    groundCol=0xbcc7b0;applyTheme();placeOnPath(ni>=0?nodes[ni].t:0.02);refreshHub();hideNode();camInit=false;
-    $('hTitle').textContent='Sidewalk hub';
-    $('hHint').innerHTML='<span class="touch-only">Drive to a numbered pad and stop on it to pick a level.</span><span class="mouse-only">Drive to a numbered pad and stop on it to pick a level. A striped barrier blocks levels you have not unlocked yet.</span>';
-    setStatus('Drive to a numbered pad and stop on it to choose a level.');
+    setView('behind');dismissed=-9;tutActive=false;$('tutPanel').hidden=true;setHint([]);$('lvlBanner').classList.remove('show');curBumps=[];setScene('hub');setMode('hub');state='hub';overlay.hidden=true;toastEl.hidden=true;setWet(false);
+    groundCol=0xbcc7b0;applyTheme();placeOnPath(ni>=0?nodes[ni].t:0.0);refreshHub();hideNode();camInit=false;
+    $('hTitle').textContent='Level select';
+    $('hHint').textContent='Drive to a numbered pad and stop on it to pick a level.';
   }
   function setLevelHud(){
-    $('tmLbl').textContent='Time (goal '+fmt(LV.limit)+')';$('tmBox').classList.remove('late');
-    $('hTitle').textContent='Level '+(curLevel+1)+': '+LV.name;$('hHint').textContent='';
+    var tut=curLevel<0;
+    $('tmLbl').textContent=tut?'Time':'Time (goal '+fmt(LV.limit)+')';$('tmBox').classList.remove('late');
+    $('hTitle').textContent=tut?'Practice strip':'Level '+(curLevel+1)+': '+LV.name;$('hHint').textContent='';
+    $('bHub').textContent=tut?'Quit training':'Back to hub';
   }
   function showIntro(){
     var L=LV;
-    card('Level '+(curLevel+1)+': '+L.name,L.tip,'The strip is <b>'+L.w.toFixed(2)+' m</b> wide and <b>'+L.len+' m</b> long. Stars: <b>80%</b> rolled, <b>95%</b> rolled, and finish in under <b>'+fmt(L.limit)+'</b>.',
+    if(curLevel<0){
+      card('Training: '+L.name,L.tip,'The strip is <b>'+L.w.toFixed(2)+' m</b> wide and <b>'+L.len+' m</b> long. Roll at least <b>80%</b> of it to finish training. There is no time limit.',[['Start rolling',begin],['Quit training',backToHub]],L);
+      setStatus('Training: practice strip. Press Start rolling when you are ready.');return;
+    }
+    card('Level '+(curLevel+1)+': '+L.name,L.tip,'The strip is <b>'+L.w.toFixed(2)+' m</b> wide and <b>'+L.len+' m</b> long. Stars: <b>'+NEED1+'%</b> rolled, <b>'+NEED2+'%</b> rolled, and finish in under <b>'+fmt(L.limit)+'</b>.',
       [['Start rolling',begin],['Back to hub',backToHub]],curLevel);
     setStatus('Level '+(curLevel+1)+': '+L.name+'. Press Start rolling when you are ready.');
   }
   function openLevelNow(i){
-    hideNode();curLevel=i;lastLevelNode=i;buildCourse(i);setScene('level');setMode('level');state='intro';
-    resetSim(-3.2,0,0);resetStrip();primeTrack();setWet(false);camInit=false;setLevelHud();showIntro();
+    hideNode();curLevel=i;lastLevelNode=i;buildCourse(LEVELS[i],i);setScene('level');setMode('level');state='intro';
+    resetSim(-3.2,0,0);resetStrip();primeTrack();setWet(false);camInit=false;setLevelHud();begin();
+  }
+  function openTutorialStrip(){
+    hideNode();tutActive=false;$('tutPanel').hidden=true;setHint([]);curLevel=-1;buildCourse(TUT,99);setScene('level');setMode('level');state='intro';
+    resetSim(-3.2,0,0);resetStrip();primeTrack();setWet(false);camInit=false;setLevelHud();begin();
   }
   var bannerT=0;
   function showBanner(){
-    var el=$('lvlBanner');$('lbNum').textContent='Level '+(curLevel+1);$('lbName').textContent=LV.name;
+    var el=$('lvlBanner');$('lbNum').textContent=curLevel<0?'Training':'Level '+(curLevel+1);$('lbName').textContent=LV.name;
     el.classList.add('show');clearTimeout(bannerT);bannerT=setTimeout(function(){el.classList.remove('show');},2600);
   }
   function begin(){
     resets=0;toastEl.hidden=true;resetSim(-3.2,0,0);resetStrip();primeTrack();setWet(true);state='play';overlay.hidden=true;camInit=false;setLevelHud();lastTm='';
-    setStatus('Raise the <b>lever</b> to go forward, lower it below the middle to reverse. Stars: 80% rolled, 95% rolled, under <b>'+fmt(LV.limit)+'</b>.');
+    setStatus(curLevel<0?'Raise the <b>lever</b> to roll the practice strip. Roll at least 80% of it to finish training.':'Raise the <b>lever</b> to go forward, lower it below the middle to reverse. Stars: '+NEED1+'% rolled, '+NEED2+'% rolled, under <b>'+fmt(LV.limit)+'</b>.');
     showBanner();
   }
-  function backToHub(){curtainRun(function(){enterHub(curLevel);});}
+  function backToHub(){curtainRun(function(){if(curLevel<0)enterMenu();else enterHub(curLevel);});}
   function finish(){
-    state='done';setLever(0);
+    state='done';setLever(0);$('lvlBanner').classList.remove('show');
     var pct=Math.round(covered/NV*100),lm=0,rm=0,mid=(NJ-1)/2;
     for(var k=0;k<NV;k++)if(!cov[k]){var j=k%NJ;if(j>mid)lm++;else if(j<mid)rm++;}
+    if(curLevel<0){finishTutorial(pct,lm,rm);return;}
     var earned=[pct>=NEED1,pct>=NEED2,S.t<LV.limit],n=earned.filter(Boolean).length;
     var before=[];for(var i=0;i<10;i++)before.push(isUnlocked(i));
-    save.stars[curLevel]=Math.max(save.stars[curLevel],n);save.pct[curLevel]=Math.max(save.pct[curLevel],pct);writeSave();
+    save.stars[curLevel]=Math.max(save.stars[curLevel],n);save.pct[curLevel]=Math.max(save.pct[curLevel],pct);var saved=writeSave();
     var newly=[];for(var u=0;u<10;u++)if(!before[u]&&isUnlocked(u))newly.push(u+1);
     var title=n===3?'Three stars':pct>=96?'Smooth all the way':pct>=88?'Nicely rolled':pct>=72?'A few rough patches':'Mostly still rough';
     var hint=pct>=100?'Not a spot missed.':(lm>1.6*rm?'Most of what you missed was on the left edge.':rm>1.6*lm?'Most of what you missed was on the right edge.':'You missed spots on both edges.');
     var btns=[['Roll again',begin]];
     if(curLevel<9&&isUnlocked(curLevel+1))btns.push(['Next level',function(){curtainRun(function(){openLevelNow(curLevel+1);});}]);
     btns.push(['Back to hub',backToHub]);
-    card('Level '+(curLevel+1)+': '+title,'<b>'+pct+'%</b> of the shoulder rolled, in <b>'+fmt(S.t)+'</b>'+(resets?', after <b>'+resets+'</b> restart'+(resets>1?'s':''):'')+'.',hint+(earned[2]?'':' You took '+fmt(S.t)+'; the time star needs under '+fmt(LV.limit)+'.'),btns);
+    card('Level '+(curLevel+1)+': '+title,'<b>'+pct+'%</b> of the shoulder rolled, in <b>'+fmt(S.t)+'</b>'+(resets?', after <b>'+resets+'</b> restart'+(resets>1?'s':''):'')+'.',hint+(earned[2]?'':' You took '+fmt(S.t)+'; the time star needs under '+fmt(LV.limit)+'.')+(saved?' Progress saved.':' This browser blocked saving, so this result will be lost when you close the page.'),btns);
     $('award').hidden=false;$('awardName').textContent=n+' of 3 stars'+(save.stars[curLevel]>n?' (your best: '+save.stars[curLevel]+')':'');
     var labs=[NEED1+'% rolled',NEED2+'% rolled','Under '+fmt(LV.limit)];
     for(var s=0;s<3;s++){var el=$('st'+(s+1));el.classList.toggle('on',earned[s]);el.querySelector('span').textContent=labs[s];el.setAttribute('aria-label',labs[s]+(earned[s]?': earned':': not earned'));}
     if(newly.length){var um=$('cUnlock');um.hidden=false;um.textContent=newly.length>1?'Levels '+newly.join(' and ')+' unlocked!':'Level '+newly[0]+' unlocked!';}
-    setStatus('Finished. <b>'+pct+'%</b> rolled in <b>'+fmt(S.t)+'</b>. <b>'+n+' of 3</b> stars. Total <b>'+totalStars()+' / 30</b>.');
+    setStatus('Finished. <b>'+pct+'%</b> rolled in <b>'+fmt(S.t)+'</b>. <b>'+n+' of 3</b> stars. Total <b>'+totalStars()+' / 30</b>.'+(saved?' Progress saved.':''));
+    $('cB1').focus({preventScroll:true});
+  }
+
+  /* ---------- tutorial ---------- */
+  var TUT_STEPS=[
+    {t:'Move forward',d:'Push the speed lever up, or press the <b>up arrow</b>, to roll forward.',need:0.7,hint:['cockpit'],ok:function(){return S.v>0.4;}},
+    {t:'Steer left',d:'While rolling, hold the <b>left button</b> or the <b>left arrow</b>.',need:0.7,hint:['bl'],ok:function(){return S.g>0.3&&S.v>0.2;}},
+    {t:'Steer right',d:'Now hold the <b>right button</b> or the <b>right arrow</b>.',need:0.7,hint:['br'],ok:function(){return S.g<-0.3&&S.v>0.2;}},
+    {t:'Reverse',d:'Pull the lever down below the middle mark (<b>N</b>), or press the <b>down arrow</b>, to back up.',need:0.7,hint:['cockpit'],ok:function(){return S.v<-0.3;}},
+    {t:'Stop',d:'Bring the lever back to the middle mark (<b>N</b>) and let the roller come to a stop.',need:0.5,hint:['cockpit'],ok:function(){return Math.abs(S.lever)<0.06&&Math.abs(S.v)<0.05;}}
+  ];
+  var tutStep=0,tutProg=0;
+  function setHint(ids){['cockpit','bl','br'].forEach(function(id){$(id).classList.toggle('hint',ids.indexOf(id)>=0);});}
+  function showTutStep(){
+    var n=TUT_STEPS.length,dots='';
+    for(var i=0;i<=n;i++)dots+='<i class="'+(i<tutStep?'done':i===tutStep?'cur':'')+'"></i>';
+    $('tutDots').innerHTML=dots;$('tutPanel').hidden=false;
+    if(tutStep<n){
+      var s=TUT_STEPS[tutStep];$('tutT').textContent='Step '+(tutStep+1)+' of '+(n+1)+': '+s.t;$('tutD').innerHTML=s.d;$('tutGo').hidden=true;setHint(s.hint);
+      setStatus('Training, step '+(tutStep+1)+' of '+(n+1)+': '+s.t+'.');
+    }else{
+      $('tutT').textContent='Step '+(n+1)+' of '+(n+1)+': Roll a strip';$('tutD').textContent='You have all the controls. Now roll a short practice strip. Roll at least 80% of it to finish training.';$('tutGo').hidden=false;setHint([]);
+      setStatus('Training: controls done. Start the practice strip when you are ready.');
+    }
+  }
+  function enterTutorial(){
+    setView('behind');curBumps=[];$('lvlBanner').classList.remove('show');setScene('hub');setMode('hub');body.classList.add('tut');state='hub';overlay.hidden=true;toastEl.hidden=true;setWet(false);
+    groundCol=0xbcc7b0;applyTheme();tutActive=true;tutStep=0;tutProg=0;placeOnPath(0.0);refreshHub();hideNode();camInit=false;showTutStep();
+  }
+  function tutTick(dt){
+    if(!tutActive||state!=='hub'||tutStep>=TUT_STEPS.length)return;
+    var s=TUT_STEPS[tutStep];
+    if(s.ok())tutProg+=dt;else tutProg=Math.max(0,tutProg-dt*2);
+    if(tutProg>=s.need){tutStep++;tutProg=0;showToast(tutStep>=TUT_STEPS.length?'Controls done!':'Nice!',true);showTutStep();}
+  }
+  function skipTut(){save.tut=true;writeSave();tutActive=false;curtainRun(function(){enterHub(-1);});}
+  function finishTutorial(pct,lm,rm){
+    var ok=pct>=TUT_NEED,saved=true;
+    if(ok){save.tut=true;saved=writeSave();}
+    var hint=lm>1.6*rm?'Most of what you missed was on the left edge.':rm>1.6*lm?'Most of what you missed was on the right edge.':'You missed spots on both edges.';
+    card(ok?'Training complete':'Not quite yet','<b>'+pct+'%</b> of the practice strip rolled, in <b>'+fmt(S.t)+'</b>.',
+      ok?'You are ready for the real shoulders. Next up is the level select screen.'+(saved?' Progress saved.':''):'You need 80% to finish training. '+hint,
+      ok?[['Go to level select',function(){curtainRun(function(){enterHub(-1);showToast('Training complete! Pick a level.',true);});}],['Practice again',begin]]:[['Try again',begin],['Skip tutorial',skipTut]]);
+    setStatus(ok?'Training complete. <b>'+pct+'%</b> rolled.':'Training: <b>'+pct+'%</b> rolled, 80% needed.');
     $('cB1').focus({preventScroll:true});
   }
 
@@ -1430,6 +1610,7 @@ function buildRoller(THREE){
       else if(state==='hub'&&!$('nodeCard').hidden){e.preventDefault();$('nGo').click();}
       else if(state==='menu'&&$('howto').hidden){e.preventDefault();$('mPlay').click();}
     }
+    if(v&&k==='Escape'&&state==='hub'&&!$('nodeCard').hidden)dismissNode();
   }
   function hold(id,name){
     var el=$(id);
@@ -1448,19 +1629,23 @@ function buildRoller(THREE){
     leverEl.addEventListener('pointerdown',function(e){e.preventDefault();drag=true;try{leverEl.setPointerCapture(e.pointerId);}catch(_){}leverFrom(e);});
     leverEl.addEventListener('pointermove',function(e){if(drag)leverFrom(e);});
     leverEl.addEventListener('pointerup',function(){drag=false;});leverEl.addEventListener('pointercancel',function(){drag=false;});
-    $('viewBtn').addEventListener('click',function(){view=view==='behind'?'above':'behind';this.textContent='View: '+view;this.setAttribute('aria-pressed',view==='above'?'true':'false');camInit=false;});
+    $('viewBtn').addEventListener('click',function(){setView(view==='behind'?'above':'behind');});
     $('bRestart').addEventListener('click',function(){if(state==='intro'||state==='play'||state==='done')begin();});
     $('bHub').addEventListener('click',backToHub);
     $('bMenu').addEventListener('click',function(){curtainRun(enterMenu);});
-    $('nGo').addEventListener('click',function(){if(parked>=0){var i=parked;curtainRun(function(){openLevelNow(i);});}});
-    $('mPlay').addEventListener('click',function(){curtainRun(function(){enterHub(-1);});});
+    $('hubMenu').addEventListener('click',function(){curtainRun(enterMenu);});
+    $('nClose').addEventListener('click',dismissNode);
+    $('nGo').addEventListener('click',function(){if(parked>=0){var i=parked;curtainRun(function(){openLevelNow(i);});}else if(parked===-2){curtainRun(enterTutorial);}});
+    $('mPlay').addEventListener('click',function(){curtainRun(function(){if(save.tut||totalStars()>0)enterHub(-1);else enterTutorial();});});
+    $('tutGo').addEventListener('click',function(){curtainRun(openTutorialStrip);});
+    $('tutSkip').addEventListener('click',skipTut);
     $('mHow').addEventListener('click',function(){$('howto').hidden=false;$('hwOk').focus({preventScroll:true});});
     $('hwOk').addEventListener('click',function(){$('howto').hidden=true;});
     var rt=0;
     $('mReset').addEventListener('click',function(){
       var b=this;
       if(!rt){b.textContent='Tap again to erase all stars';rt=setTimeout(function(){rt=0;b.textContent='Reset progress';},3200);return;}
-      clearTimeout(rt);rt=0;save={stars:[0,0,0,0,0,0,0,0,0,0],pct:[0,0,0,0,0,0,0,0,0,0]};writeSave();refreshHub();b.textContent='Progress erased';setTimeout(function(){b.textContent='Reset progress';},1600);
+      clearTimeout(rt);rt=0;resetSave();refreshHub();b.textContent='Progress erased';setTimeout(function(){b.textContent='Reset progress';},1600);
     });
     if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);
     window.addEventListener('resize',resize);
@@ -1471,7 +1656,7 @@ function buildRoller(THREE){
   /* ---------- loop ---------- */
   var last=performance.now(),clock=0,lastCov='',lastKmh='',lastTm='';
   function tick(dt){
-    clock+=dt;update(dt);updateCamera(dt);
+    clock+=dt;update(dt);tutTick(dt);updateCamera(dt);
     var bi=0.35+0.5*(Math.sin(clock*6)>0?1:0.1);
     beaconMat.forEach(function(m){if(m.emissive&&m.color.r>0.9)m.emissiveIntensity=bi;});
     if(state==='play'||state==='intro'||state==='done'){
@@ -1506,7 +1691,8 @@ function buildRoller(THREE){
   window.__game={S:S,tick:tick,setLever:setLever,setAuto:function(f){auto=f;},LEVELS:LEVELS,
     openNow:function(i){openLevelNow(i);begin();},aheadPt:aheadPt,cov:function(){return NV?covered/NV:0;},
     state:function(){return state;},resets:function(){return resets;},save:function(){return save;},
-    setSave:function(stars){save.stars=stars.slice();writeSave();if(nodes.length)refreshHub();},
+    setSave:function(stars,tut){save.stars=stars.slice();save.tut=tut===undefined?true:tut;writeSave();if(nodes.length)refreshHub();},
+    enterTutorial:enterTutorial,tutNodeObj:function(){return tutNode;},tutState:function(){return {step:tutStep,active:tutActive};},openTutStrip:openTutorialStrip,begin:begin,saveObj:function(){return JSON.parse(JSON.stringify(save));},storeOK:function(){return storeOK;},
     enterHub:function(i){enterHub(i===undefined?-1:i);},enterMenu:enterMenu,nodes:function(){return nodes;},
     totalStars:totalStars,isUnlocked:isUnlocked,placeOnPath:placeOnPath,hubS:function(){return hubS;},render:function(){renderer.render(scene,camera);}};
   boot();
