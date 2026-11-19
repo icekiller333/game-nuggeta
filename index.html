@@ -71,7 +71,7 @@
 
   /* ================= marquee ================= */
   .mq { background: var(--ink); color: var(--lime); border-bottom: 4px solid var(--ink); overflow: hidden; }
-  .mq-track { display: flex; width: max-content; animation: mq 34s linear infinite; }
+  .mq-track { display: flex; width: max-content; animation: mq 68s linear infinite; }
   .mq-set { display: flex; align-items: center; flex: none; }
   .mq-item { font: 400 14px/1 var(--display); padding: 11px 0; white-space: nowrap; }
   .sp { width: 14px; height: 14px; margin: 0 16px; flex: none; background: var(--hot); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); }
@@ -393,7 +393,7 @@
     *, *::before, *::after { animation: none !important; transition: none !important; }
     html { scroll-behavior: auto; }
     .seg.on i { transform: scaleX(1); }
-    .mq-set:nth-child(2) { display: none; }
+    .mq-set:nth-child(n+2) { display: none; }
     .mq { overflow-x: auto; }
     .js .card:not(.in) { opacity: 1; }
   }
@@ -449,6 +449,7 @@
       <button class="seg" data-i="5" type="button" aria-label="Down to the Last Penny"><i></i></button>
       <button class="seg" data-i="6" type="button" aria-label="The Foxglove Derby"><i></i></button>
       <button class="seg" data-i="7" type="button" aria-label="The Tin Shop’s Masks"><i></i></button>
+      <button class="pz" id="pz" type="button" aria-label="Pause or resume auto-advance"><svg class="ic-pause" viewBox="0 0 14 14"><path d="M1 0h4v14H1zM9 0h4v14H9z"/></svg><svg class="ic-play" viewBox="0 0 14 14"><path d="M2 0l11 7-11 7z"/></svg></button>
     </div>
   </div>
 </section>
@@ -512,6 +513,13 @@
       <a class="card p-cow" href="spot-the-cow/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🐄</span></span><span class="cbody"><h3>Spot the Cow</h3><p class="blurb">One cow in the crowd. Spot it.</p></span><span class="cfoot"><span class="tag">Graduated demo</span><span class="go" aria-hidden="true"></span></span></a>
     </div>
   </section>
+
+  <section class="sec wrap" id="retired" aria-labelledby="retired-h">
+    <div class="sec-head"><h2 id="retired-h">Retired Demos</h2><span class="count" aria-hidden="true">0</span><p>Done being worked on, but they never graduated. Still playable.</p></div>
+    <!-- ORDER: newest first. When a game is retired, move its card here, at the FRONT of this row. -->
+    <div class="grid">
+    </div>
+  </section>
 </main>
 
 <footer class="end">
@@ -525,6 +533,7 @@
   <a href="#dev" data-t="dev" style="--c:#B6FF00">In dev</a>
   <a href="#daily" data-t="daily" style="--c:#00E5FF">Daily</a>
   <a href="#demos" data-t="demos" style="--c:#FF7AC8">Demos</a>
+  <a href="#retired" data-t="retired" style="--c:#C9A7FF">Retired</a>
   <button class="dice" id="dice" type="button" aria-label="Surprise me with a random game">
     <svg viewBox="0 0 28 28" aria-hidden="true"><rect x="2" y="2" width="24" height="24" fill="#fff" stroke="#000" stroke-width="3"/><rect x="6" y="6" width="5" height="5"/><rect x="17" y="6" width="5" height="5"/><rect x="11.5" y="11.5" width="5" height="5"/><rect x="6" y="17" width="5" height="5"/><rect x="17" y="17" width="5" height="5"/></svg>
   </button>
@@ -584,7 +593,7 @@
     }).join('');
     var html = set;
     var track = document.getElementById('mqTrack');
-    track.innerHTML = '<div class="mq-set">' + html + '</div><div class="mq-set">' + html + '</div>';
+    track.innerHTML = '<div class="mq-set">' + html + '</div><div class="mq-set">' + html + '</div><div class="mq-set">' + html + '</div><div class="mq-set">' + html + '</div>';
   })();
 
   /* ---------- hero ---------- */
@@ -710,13 +719,13 @@
 
   /* ---------- dock: scrollspy ---------- */
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.dock a'));
-  var spy = ['dev', 'daily', 'demos'].map(function (id) { return document.getElementById(id); });
+  var spy = ['dev', 'daily', 'demos', 'retired'].map(function (id) { return document.getElementById(id); });
   var ticking = false;
   function spyNow() {
     ticking = false;
     var line = window.innerHeight * 0.42, active = 'top';
     spy.forEach(function (s) { if (s.getBoundingClientRect().top < line) active = s.id; });
-    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) active = 'demos';
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) active = 'retired';
     tabs.forEach(function (t) { t.classList.toggle('on', t.getAttribute('data-t') === active); });
   }
   window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(spyNow); } }, { passive: true });
