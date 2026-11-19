@@ -396,7 +396,7 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .l1 .rp{ font-size:16px; padding:2px 8px 2px 4px; }
 .l1 .rp svg{ width:19px; height:19px; }
 .l1 #objective{ max-width:min(calc(100vw - 246px), 330px); min-width:132px; }
-.fl.crystal{ color:#9be8ff; }
+.fl.crystal{ color:#9be8ff; } .fl.nut{ color:#e3b07a; }
 .fl.scrap{ color:#c9d4e0; }
 #talk{ position:absolute; z-index:31; left:50%; transform:translateX(-50%); bottom:calc(var(--safe-b) + 154px); width:min(74vw,280px); padding:6px 8px; display:flex; gap:10px; align-items:center; }
 #talk.in{ animation:cardIn .25s cubic-bezier(.2,.9,.3,1.2); }
@@ -729,7 +729,7 @@ var UPG = (function () { var u = (loadSave().upg) || {}; return { loot: u.loot |
 function upgTotal() { return UPG.loot + UPG.speed + UPG.head + UPG.magnet + UPG.turret; }
 function writeSave(o) { try { var c = loadSave(); for (var k in o) c[k] = o[k]; localStorage.setItem(SAVE_KEY, JSON.stringify(c)); } catch (e) {} }
 (function () { var sv = loadSave(); ["sound", "music", "shake", "vib", "memos", "assist"].forEach(function (k) { if (typeof sv[k] === "boolean") S[k] = sv[k]; }); })();
-var RES_KEYS = ["stone", "wood", "gold", "crystal", "scrap", "gear", "slime"], inv = {}, seen = {}, GATH = {};
+var RES_KEYS = ["stone", "wood", "gold", "crystal", "scrap", "gear", "slime", "nut"], inv = {}, seen = {}, GATH = {};
 RES_KEYS.forEach(function (k) { inv[k] = 0; seen[k] = false; GATH[k] = 0; });
 /* per-level gravity: 1 = normal. A level sets "gravity" in its config. Everything below returns 1 at LG = 1. */
 var LG = 1;
@@ -1380,6 +1380,7 @@ PK_GEO.scrap = new THREE.BoxGeometry(.3, .14, .22); PK_MAT.scrap = toon(0xaab8c8
 PK_GEO.slime = new THREE.SphereGeometry(.2, 8, 6); PK_MAT.slime = toon(0xb98aff, { emissive: 0x4a2a80 });
 PK_GEO.gear = new THREE.CylinderGeometry(.24, .2, .12, 8); PK_MAT.gear = toon(0xff9f43, { emissive: 0x4a2000 });
 PK_GEO.crystal = new THREE.OctahedronGeometry(.21, 0); PK_MAT.crystal = toon(0x7fe3ff, { emissive: 0x15405a });
+PK_GEO.nut = new THREE.SphereGeometry(.17, 8, 6); PK_MAT.nut = toon(0xc98a4b, { emissive: 0x3a2008 });
 function dropItems(type, n, pos, dir) {
   for (var i = 0; i < n; i++) {
     var m = new THREE.Mesh(PK_GEO[type], PK_MAT[type]); outline(m, .035); scene.add(m);
@@ -1414,6 +1415,7 @@ function updatePickups(dt) {
 }
 function collect(k, i) {
   scene.remove(k.m); pickups.splice(i, 1);
+  if (k.type === "nut") once("nutGot", function () { say("A nut. Keep a few. Some jobs and some buildings want them.", 0); });
   inv[k.type]++; GATH[k.type] = (GATH[k.type] || 0) + 1; seen[k.type] = true; if (k.type === "crystal") P.sparkle = 4; G.lastProgress = G.time;
   coinChain = (G.time - lastCoin < .4) ? coinChain + 1 : 0; lastCoin = G.time; snd.coin(coinChain);
   updateRes(k.type);
@@ -1583,10 +1585,9 @@ function hitTarget(tg, L) {
   if (tg.kind === "raider") { hitRaider(tg, L, hp); return; }
   if (tg.kind === "lvlnode") { hubHit(tg, L, hp); return; }
   if (tg.kind === "egg") { hitEgg(tg, L, hp); return; }
-  if (tg.kind === "squirrel") { launchSquirrel(tg); return; }
+  if (tg.kind === "critter") { hitCritter(tg, L, hp, toP); stepEvents(); return; }
   if (tg.kind === "crate") { hitCrate(tg, L, hp, toP); stepEvents(); return; }
   if (tg.kind === "tower") { hitTower(tg, L, hp, toP); stepEvents(); return; }
-  if (tg.kind === "tree" && G.level === 1 && !squirrelOut() && G.time > (G.sqCool || 0) && Math.random() < .1) spawnSquirrel(tg);
   if (tg.kind === "sheep") { G.sheepHits = (G.sheepHits || 0) + 1; if (G.sheepHits % 5 === 0) say("Cut that out. Gary is not a stress ball. Gary has a family.", 1); launchGary(L); return; }
   if (tg.kind === "boss") { hitBoss(tg, L, hp); return; }
   if (tg.kind === "statue") { tg.wob = 1; snd.dong(); floater(hp, "DONGGG", "bw big", 1.4); once("statueBonk", function () { say("I said don’t bonk the monument.", 1); }); return; }
@@ -1617,6 +1618,7 @@ function hitTarget(tg, L) {
     tg.sway = 1;
     if (tg.hp > 0 && Math.random() < .2) spawnCoconut();
   }
+  maybeSpawnCritter(tg);
   if (tg.hp <= 0) breakTarget(tg, L, toP);
   stepEvents();
 }
@@ -1821,43 +1823,237 @@ function updateEggs(dt) {
   }
 }
 
-/* ---------- Forest Easter egg: bonk a tree and an angry squirrel may run out. Bonk the squirrel and it flies away. ---------- */
-function squirrelOut() { for (var i = 0; i < T.length; i++) if (T[i].kind === "squirrel" && T[i].lvl === G.level) return true; return false; }
-function spawnSquirrel(tree) {
-  var x = tree.g.position.x, z = tree.g.position.z, g = sub(scene, x, 0, z), body = sub(g, 0, 0, 0), fur = toon(0xb5651d), cream = toon(0xf2d9b0);
+/* ---------- critters: bonk a node and something may pop out. Bonk it for loot before it wanders off. ---------- */
+var CRIT = {
+  squirrel: { drop: ["nut", 1], chance: .25, pity: 5, cool: 10, life: 26, move: "dart", sp: 4.2, cry: "CHITTER!", fly: "SQUEEEE!", col: 0xb5651d,
+    tip: "A squirrel. It is furious. You bonked its tree. Bonk it back and it drops a nut." },
+  crab: { drop: ["stone", 2], chance: .15, pity: 8, cool: 14, life: 24, move: "side", sp: 3.0, cry: "CLICK!", fly: "CLACK!", col: 0x8f99a5,
+    tip: "A pebble crab. It faces you and shuffles sideways. Bonk it for bonus stone." },
+  beetle: { drop: ["gold", 1], chance: .15, pity: 8, cool: 14, life: 24, move: "orbit", sp: 3.4, cry: "BZZT!", fly: "BZZZ!", col: 0xf5b921,
+    tip: "A gilded beetle, circling the gold like it owns it. Bonk it for a bonus nugget." },
+  moth: { drop: ["crystal", 1], chance: .15, pity: 8, cool: 14, life: 24, move: "float", sp: 2.6, cry: "FLUTTER!", fly: "FWIP!", col: 0x9be8ff,
+    tip: "A glimmer moth. It drifts in loops and never hurries. Bonk it for a crystal." },
+  mite: { drop: ["scrap", 2], chance: .15, pity: 8, cool: 14, life: 24, move: "flee", sp: 4.4, cry: "EEP!", fly: "EEEK!", col: 0xaab8c8,
+    tip: "A scrap mite. It bolts when you get close. Wait for it to stop, then bonk it for scrap." },
+  pup: { drop: ["scrap", 3], chance: .15, pity: 8, cool: 14, life: 24, move: "patrol", sp: 2.6, cry: "WOOF!", fly: "YIP!", col: 0xff5a36,
+    tip: "A vendo-pup. It patrols. It wags. It pays out in scrap." },
+  cog: { drop: ["gear", 1], chance: .15, pity: 8, cool: 14, life: 24, move: "roll", sp: 3.0, cry: "CLANK!", fly: "CLANG!", col: 0xff9f43,
+    tip: "A cog critter. It rolls in big loops. Bonk it for a gear." },
+  blob: { drop: ["slime", 2], chance: .15, pity: 8, cool: 14, life: 24, move: "hop", sp: 3.6, cry: "BLORP!", fly: "SPLORT!", col: 0xb98aff,
+    tip: "A slime blob. It hops. Bonk it just after it lands." }
+};
+function critterFor(tg) {   // which critter lives in which kind of node
+  if (tg.kind === "tree") return "squirrel";
+  if (tg.kind === "gold") return "beetle";
+  if (tg.kind === "crystal") return "moth";
+  if (tg.name === "vending") return "pup";
+  if (tg.name === "machine") return "cog";
+  if (tg.name === "gloop") return "blob";
+  if (tg.res === "scrap") return "mite";
+  if (tg.res === "stone") return "crab";
+  return null;
+}
+function critterCount() { var n = 0; for (var i = 0; i < T.length; i++) if (T[i].kind === "critter" && T[i].lvl === G.level) n++; return n; }
+function critterOut(sp) { for (var i = 0; i < T.length; i++) if (T[i].kind === "critter" && T[i].sp === sp && T[i].lvl === G.level) return true; return false; }
+function maybeSpawnCritter(tg) {   // called on every hit that damages a node: a chance, plus a guarantee after a run of misses
+  if (G.level < 1 || G.cine || !LR || tg.kind === "critter") return;
+  var sp = critterFor(tg); if (!sp) return; var C = CRIT[sp];
+  G.critCool = G.critCool || {}; G.critMiss = G.critMiss || {};
+  if (critterCount() >= 2 || critterOut(sp) || G.time < (G.critCool[sp] || 0)) return;
+  G.critMiss[sp] = (G.critMiss[sp] || 0) + 1;
+  if (Math.random() < C.chance || G.critMiss[sp] >= C.pity) { G.critMiss[sp] = 0; G.critCool[sp] = G.time + C.cool; spawnCritter(sp, tg); }
+}
+function bSquirrel(body) {
+  var fur = toon(0xb5651d), cream = toon(0xf2d9b0);
   var b = M(body, new THREE.SphereGeometry(.34, 10, 8), fur, 0, .38, 0, .035); b.scale.set(1, .9, 1.25);
   M(body, new THREE.SphereGeometry(.22, 10, 8), fur, 0, .66, .3, .03); M(body, new THREE.SphereGeometry(.09, 6, 5), cream, 0, .6, .5, false);
   [-.1, .1].forEach(function (ex) { M(body, new THREE.SphereGeometry(.06, 6, 5), toon(0xd42a1e), ex, .72, .46, false); var br = M(body, boxG(.14, .04, .04), toon(0x221407), ex, .8, .46, false); br.rotation.z = ex > 0 ? .5 : -.5; });
   var tail = M(body, new THREE.SphereGeometry(.28, 8, 6), fur, 0, .62, -.5, .03); tail.scale.set(.7, 1.5, .7); tail.rotation.x = -.5;
+  return { anim: function (q) { tail.rotation.x = -.5 + Math.sin(q.t * 9) * .25; } };
+}
+function bCrab(body) {
+  var shell = toon(0x8f99a5), dark = toon(0x5d6772), clawM = toon(0xd9792a), white = toon(0xffffff), ink = toon(0x221407);
+  var b = M(body, new THREE.SphereGeometry(.38, 10, 8), shell, 0, .3, 0, .035); b.scale.set(1.15, .65, 1);
+  M(body, new THREE.SphereGeometry(.2, 8, 6), dark, 0, .5, -.05, .03).scale.set(1.3, .7, 1.1);
+  [-.16, .16].forEach(function (ex) { M(body, new THREE.CylinderGeometry(.025, .025, .16, 5), dark, ex, .42, .3, false); M(body, new THREE.SphereGeometry(.07, 6, 5), white, ex, .52, .3, false); M(body, new THREE.SphereGeometry(.035, 5, 4), ink, ex, .52, .35, false); });
+  var cl = [-1, 1].map(function (sx) { var c = M(body, new THREE.SphereGeometry(.15, 8, 6), clawM, sx * .5, .28, .32, .03); c.scale.set(1, .8, 1.3); return c; });
+  [-1, 1].forEach(function (sx) { [-.15, .05, .25].forEach(function (lz) { M(body, boxG(.22, .04, .04), dark, sx * .42, .1, lz, false); }); });
+  return { anim: function (q) { cl[0].position.z = .32 + Math.sin(q.t * 6) * .05; cl[1].position.z = .32 - Math.sin(q.t * 6) * .05; } };
+}
+function bBeetle(body) {
+  var gold = toon(0xf5b921, { emissive: 0x5a3a00 }), dark = toon(0x3a2a10), white = toon(0xffffff);
+  var b = M(body, new THREE.SphereGeometry(.3, 10, 8), gold, 0, .25, 0, .035); b.scale.set(1, .7, 1.35);
+  M(body, boxG(.03, .18, .6), dark, 0, .27, -.02, false);
+  M(body, new THREE.SphereGeometry(.16, 8, 6), dark, 0, .24, .38, .03);
+  [-.08, .08].forEach(function (ex) { M(body, new THREE.SphereGeometry(.04, 5, 4), white, ex, .3, .5, false); });
+  var legs = []; [-1, 1].forEach(function (sx) { [-.15, .05, .22].forEach(function (lz) { legs.push(M(body, boxG(.2, .03, .03), dark, sx * .3, .08, lz, false)); }); });
+  return { anim: function (q) { legs.forEach(function (l, i) { l.rotation.y = Math.sin(q.t * 20 + i) * .3; }); } };
+}
+function bMoth(body) {
+  var wingM = toon(0x9be8ff, { emissive: 0x15405a }), bodyM = toon(0xe9f7ff);
+  var b = M(body, new THREE.SphereGeometry(.14, 8, 6), bodyM, 0, 0, 0, .03); b.scale.set(.7, .7, 1.4);
+  M(body, new THREE.SphereGeometry(.09, 8, 6), bodyM, 0, .02, .22, .03);
+  [-.04, .04].forEach(function (ex) { var an = M(body, new THREE.CylinderGeometry(.012, .012, .2, 4), bodyM, ex, .12, .3, false); an.rotation.x = .5; });
+  var wl = sub(body, -.08, .03, 0), wr = sub(body, .08, .03, 0);
+  M(wl, new THREE.SphereGeometry(.34, 8, 6), wingM, -.3, 0, 0, .03).scale.set(1, .12, .75);
+  M(wr, new THREE.SphereGeometry(.34, 8, 6), wingM, .3, 0, 0, .03).scale.set(1, .12, .75);
+  return { anim: function (q) { var f = Math.sin(q.t * 22) * .7; wl.rotation.z = f; wr.rotation.z = -f; } };
+}
+function bMite(body) {
+  var steel = toon(0xaab8c8), dark = toon(0x5a6678);
+  M(body, boxG(.46, .26, .5), steel, 0, .1, 0, .035); M(body, boxG(.3, .14, .3), dark, 0, .34, -.02, .03);
+  M(body, new THREE.SphereGeometry(.1, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff3b3b }), 0, .26, .26, false);
+  var an = M(body, new THREE.CylinderGeometry(.015, .015, .3, 4), dark, .1, .55, -.05, false); an.rotation.z = -.3;
+  [-1, 1].forEach(function (sx) { [-.15, .15].forEach(function (lz) { M(body, new THREE.CylinderGeometry(.03, .03, .12, 5), dark, sx * .26, .04, lz, false); }); });
+  return { anim: function (q) { an.rotation.z = -.3 + Math.sin(q.t * 12) * .25; } };
+}
+function bPup(body) {
+  var red = toon(0xff5a36), cream = toon(0xfdf3df), ink = toon(0x221407);
+  M(body, boxG(.5, .42, .38), red, 0, .1, 0, .035); M(body, boxG(.3, .22, .02), cream, 0, .2, .2, false);
+  [-.07, .07].forEach(function (ex) { M(body, new THREE.SphereGeometry(.03, 5, 4), ink, ex, .34, .22, false); });
+  [-1, 1].forEach(function (sx) { var ear = M(body, boxG(.1, .2, .06), ink, sx * .2, .44, .02, false); ear.rotation.z = sx * .4; });
+  var tail = M(body, new THREE.CylinderGeometry(.03, .03, .26, 5), ink, 0, .36, -.2, false); tail.rotation.x = -.6;
+  [-1, 1].forEach(function (sx) { [-1, 1].forEach(function (sz) { M(body, boxG(.08, .1, .08), ink, sx * .16, 0, sz * .12, false); }); });
+  return { anim: function (q) { tail.rotation.z = Math.sin(q.t * 14) * .6; } };
+}
+function bCog(body) {
+  var orange = toon(0xff9f43, { emissive: 0x4a2000 }), white = toon(0xffffff), ink = toon(0x221407);
+  var wheel = sub(body, 0, .46, 0);
+  var hub = M(wheel, new THREE.CylinderGeometry(.38, .38, .16, 12), orange, 0, 0, 0, .035); hub.rotation.z = Math.PI / 2;
+  for (var k = 0; k < 8; k++) { var a = k / 8 * Math.PI * 2, tb = M(wheel, new THREE.BoxGeometry(.16, .14, .12), orange, 0, Math.cos(a) * .46, Math.sin(a) * .46, .03); tb.rotation.x = a; }
+  [-1, 1].forEach(function (sx) { M(body, new THREE.SphereGeometry(.1, 8, 6), white, sx * .13, .46, .02, false); M(body, new THREE.SphereGeometry(.05, 6, 5), ink, sx * .19, .46, .02, false); });
+  return { wheel: wheel, anim: function (q, dt) { wheel.rotation.x += CRIT.cog.sp / .46 * dt; } };
+}
+function bBlob(body) {
+  var jelly = toon(0xb98aff, { emissive: 0x4a2a80 }), white = toon(0xffffff), ink = toon(0x221407);
+  var b = M(body, new THREE.SphereGeometry(.36, 12, 9), jelly, 0, .3, 0, .035); b.scale.set(1, .85, 1);
+  [-.12, .12].forEach(function (ex) { M(body, new THREE.SphereGeometry(.08, 6, 5), white, ex, .4, .28, false); M(body, new THREE.SphereGeometry(.04, 5, 4), ink, ex, .4, .34, false); });
+  return {};
+}
+var CRIT_BUILD = { squirrel: bSquirrel, crab: bCrab, beetle: bBeetle, moth: bMoth, mite: bMite, pup: bPup, cog: bCog, blob: bBlob };
+function spawnCritter(sp, node) {
+  var C = CRIT[sp], x = node.g.position.x, z = node.g.position.z, g = sub(scene, x, 0, z), body = sub(g, 0, 0, 0), parts = CRIT_BUILD[sp](body);
   blob(g, .7);
   var si = islandOf(x, z), isl = si >= 0 ? LR.islands[si] : { x: x, z: z, r: 8 };
-  var q = { kind: "squirrel", g: g, body: body, radius: .55, hp: 99, max: 99, hard: 0, alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, noShrink: true, lvl: G.level, state: "run", isl: isl, tx: x, tz: z, timer: 0, chat: 1.2, sp: 5.4, life: 26 };
-  T.push(q); G.sqCool = G.time + 25; puff(g.position.clone().setY(.4), 1.2, 0xe8e0d0, .5, .5); snd.pop();
-  floater(g.position.clone().setY(1.6), "CHITTER!", "bw", 1.2);
-  once("squirrel_tip", function () { say("A squirrel. It is furious. You bonked its tree. Bonk it back.", 1); });
+  var q = { kind: "critter", sp: sp, g: g, body: body, parts: parts, radius: .55, hp: 99, max: 99, hard: 0, alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, noShrink: true, noCol: true, lvl: G.level,
+    state: "move", isl: isl, hx: x, hz: z, t: 0, ft: 0, timer: .5, chat: 1.2, life: C.life, dir: Math.random() < .5 ? 1 : -1, mode: "rest", ang: Math.random() * 6.283 };
+  if (C.move === "orbit") { q.rad = .8; q.timer = rnd(3, 5); }
+  if (C.move === "float") q.ph = Math.random() * 6.283;
+  if (C.move === "patrol") { q.ux = Math.cos(q.ang); q.uz = Math.sin(q.ang); q.mode = "run"; q.timer = rnd(1.8, 2.8); }
+  if (C.move === "roll") { q.turn = (Math.random() < .5 ? -1 : 1) * 1.1; q.timer = rnd(3, 5); }
+  T.push(q); puff(g.position.clone().setY(.4), 1.2, 0xe8e0d0, .5, .5); snd.pop();
+  floater(g.position.clone().setY(1.6), C.cry, "bw", 1.2);
+  once("crit_" + sp, function () { say(C.tip, 1); });
 }
-function launchSquirrel(q) {
+function critStep(q, nx, nz) { if (!walkable(nx, nz)) return false; q.g.position.x = nx; q.g.position.z = nz; return true; }
+function critFace(q, vx, vz, dt) { if (vx * vx + vz * vz > 1e-6) q.g.rotation.y += angDiff(q.g.rotation.y, Math.atan2(vx, vz)) * (1 - Math.exp(-12 * dt)); }
+function mvDart(q, dt, p, C) {   // squirrel: short furious dashes, then a pause; spooked, it dashes away from you
+  q.timer -= dt;
+  if (q.mode !== "run") {
+    q.body.position.y = Math.abs(Math.sin(q.t * 9)) * .05;
+    if (q.timer <= 0) {
+      var a = Math.random() * 6.283, pd = Math.hypot(P.pos.x - p.x, P.pos.z - p.z);
+      if (pd < 5) a = Math.atan2(p.z - P.pos.z, p.x - P.pos.x) + rnd(-.9, .9);
+      q.tx = p.x + Math.cos(a) * rnd(4, 7); q.tz = p.z + Math.sin(a) * rnd(4, 7); q.mode = "run"; q.timer = rnd(.7, 1.1);
+    }
+    return;
+  }
+  var dx = q.tx - p.x, dz = q.tz - p.z, dd = Math.hypot(dx, dz) || 1, ux = dx / dd, uz = dz / dd, zz = Math.sin(q.t * 11) * .7;
+  var vx = (ux - uz * zz) * C.sp, vz = (uz + ux * zz) * C.sp;
+  if (!critStep(q, p.x + vx * dt, p.z + vz * dt)) { q.mode = "rest"; q.timer = .3; }
+  critFace(q, vx, vz, dt); q.body.position.y = Math.abs(Math.sin(q.t * 18)) * .12;
+  if (q.timer <= 0 || dd < .5) { q.mode = "rest"; q.timer = rnd(.45, .9); }
+}
+function mvSide(q, dt, p, C) {   // pebble crab: always faces you, shuffles sideways, backs off if you crowd it
+  q.timer -= dt;
+  var fx = P.pos.x - p.x, fz = P.pos.z - p.z, fd = Math.hypot(fx, fz) || 1;
+  critFace(q, fx, fz, dt);
+  if (q.mode === "rest") { if (q.timer <= 0) { q.mode = "run"; q.timer = rnd(.9, 1.5); if (Math.random() < .5) q.dir = -q.dir; } return; }
+  var back = fd < 2.2 ? -.8 : 0;
+  var vx = (-fz / fd * q.dir + fx / fd * back) * C.sp, vz = (fx / fd * q.dir + fz / fd * back) * C.sp;
+  if (!critStep(q, p.x + vx * dt, p.z + vz * dt)) q.dir = -q.dir;
+  q.body.position.y = Math.abs(Math.sin(q.t * 16)) * .04;
+  if (q.timer <= 0) { q.mode = "rest"; q.timer = rnd(.5, .9); }
+}
+function mvOrbit(q, dt, p, C) {   // gilded beetle: circles its node, and speeds up when you come near
+  q.timer -= dt; if (q.timer <= 0) { q.dir = -q.dir; q.timer = rnd(3, 5); }
+  q.rad += (2.4 - q.rad) * Math.min(1, dt * 2);
+  var sp = C.sp * (Math.hypot(P.pos.x - q.hx, P.pos.z - q.hz) < 3.6 ? 1.5 : 1);
+  var na = q.ang + q.dir * sp / q.rad * dt, nx = q.hx + Math.cos(na) * q.rad, nz = q.hz + Math.sin(na) * q.rad;
+  if (critStep(q, nx, nz)) { q.ang = na; critFace(q, -Math.sin(na) * q.dir, Math.cos(na) * q.dir, dt); } else { q.rad = Math.max(1.2, q.rad - dt * 1.5); q.dir = -q.dir; }
+  q.body.position.y = Math.abs(Math.sin(q.t * 20)) * .03;
+}
+function mvFloat(q, dt, p, C) {   // glimmer moth: a slow figure-eight above the node
+  var u = q.t * .8 + q.ph, nx = q.hx + (Math.sin(u) - Math.sin(q.ph)) * 3.2, nz = q.hz + (Math.sin(u * 2) - Math.sin(q.ph * 2)) * 1.8;
+  if (critStep(q, nx, nz)) critFace(q, Math.cos(u) * 3.2 * .8, Math.cos(u * 2) * 1.8 * 1.6, dt);
+  q.body.position.y = 1.0 + Math.sin(q.t * 2.2) * .25;
+}
+function mvFlee(q, dt, p, C) {   // scrap mite: sits still, bolts when you get close, then stops to catch its breath
+  q.timer -= dt;
+  var fx = p.x - P.pos.x, fz = p.z - P.pos.z, pd = Math.hypot(fx, fz) || 1;
+  if (q.mode === "bolt") {
+    if (!critStep(q, p.x + q.vx * dt, p.z + q.vz * dt)) { var tx = -q.vz, tz = q.vx; q.vx = tx; q.vz = tz; q.timer = Math.min(q.timer, .35); }
+    critFace(q, q.vx, q.vz, dt); q.body.position.y = Math.abs(Math.sin(q.t * 24)) * .05;
+    if (q.timer <= 0) { q.mode = "rest"; q.timer = rnd(.5, .9); }
+    return;
+  }
+  q.body.position.y = Math.abs(Math.sin(q.t * 7)) * .02; critFace(q, -fx, -fz, dt);
+  if (pd < 4.5 && q.timer <= 0) { var a = Math.atan2(fz, fx) + rnd(-.7, .7); q.vx = Math.cos(a) * C.sp; q.vz = Math.sin(a) * C.sp; q.mode = "bolt"; q.timer = rnd(.7, 1.0); }
+  else if (q.timer <= 0) { var sa = Math.random() * 6.283; q.vx = Math.cos(sa) * C.sp * .3; q.vz = Math.sin(sa) * C.sp * .3; q.mode = "bolt"; q.timer = rnd(.4, .7); }   // idle shuffle
+}
+function mvPatrol(q, dt, p, C) {   // vendo-pup: trots back and forth along a line
+  q.timer -= dt;
+  if (q.mode === "rest") { q.body.position.y = 0; if (q.timer <= 0) { q.mode = "run"; q.timer = rnd(1.8, 2.8); q.dir = -q.dir; } return; }
+  var vx = q.ux * q.dir * C.sp, vz = q.uz * q.dir * C.sp;
+  if (!critStep(q, p.x + vx * dt, p.z + vz * dt)) { q.mode = "rest"; q.timer = rnd(.4, .8); }
+  critFace(q, vx, vz, dt); q.body.position.y = Math.abs(Math.sin(q.t * 14)) * .06;
+  if (q.timer <= 0) { q.mode = "rest"; q.timer = rnd(.6, 1.0); }
+}
+function mvRoll(q, dt, p, C) {   // cog critter: rolls in big loops, bouncing off the island edge
+  q.timer -= dt; if (q.timer <= 0) { q.turn = -q.turn; q.timer = rnd(3, 5); }
+  q.ang += q.turn * dt;
+  var vx = Math.cos(q.ang) * C.sp, vz = Math.sin(q.ang) * C.sp;
+  if (!critStep(q, p.x + vx * dt, p.z + vz * dt)) q.ang += Math.PI * .6;
+  critFace(q, vx, vz, dt);
+}
+function mvHop(q, dt, p, C) {   // slime blob: hop, land, squash, hop
+  q.timer -= dt;
+  if (q.mode === "air") {
+    q.hopT += dt; var u = q.hopT / .55;
+    if (u >= 1) { q.mode = "rest"; q.timer = rnd(.35, .6); q.body.position.y = 0; puff(p.clone().setY(.1), .5, 0xd9c2ff, .3, .2); return; }
+    critStep(q, p.x + q.vx * dt, p.z + q.vz * dt);
+    var s = Math.sin(u * Math.PI); q.body.position.y = s * 1.0; q.body.scale.set(1 - .12 * s, 1 + .25 * s, 1 - .12 * s);
+    return;
+  }
+  q.body.scale.set(1 + Math.sin(q.t * 8) * .04, 1 - Math.sin(q.t * 8) * .06, 1 + Math.sin(q.t * 8) * .04);
+  if (q.timer <= 0) {
+    var a = Math.random() * 6.283, tries = 0, reach = C.sp * .55 * 1.2;
+    while (tries++ < 6 && !walkable(p.x + Math.cos(a) * reach, p.z + Math.sin(a) * reach)) a += 1.1;
+    q.vx = Math.cos(a) * C.sp; q.vz = Math.sin(a) * C.sp; q.mode = "air"; q.hopT = 0; q.g.rotation.y = Math.atan2(q.vx, q.vz);
+  }
+}
+var CRIT_MOVE = { dart: mvDart, side: mvSide, orbit: mvOrbit, float: mvFloat, flee: mvFlee, patrol: mvPatrol, roll: mvRoll, hop: mvHop };
+function hitCritter(q, L, hp, toP) {
   if (q.state === "fly") return;
-  q.state = "fly"; q.t = 0; q.vx = P.face.x * 11; q.vz = P.face.z * 11; q.vy = 9; q.spin = rnd(8, 12);
-  floater(q.g.position.clone().setY(1.6), "SQUEEEE!", "bw big", 1.4); burst(q.g.position.clone().setY(.8), 0xb5651d, 10, 5, 5, 1, .8); snd.baa(); shake(.2);
-  once("squirrel_fly", function () { later(1.4, function () { say("The squirrel has left the island. It has filed a complaint with HR.", 0); }); });
+  bonkFeel(L); if (!L.perfect) snd.bonk(L.kind === "charged" ? .6 : .3);
+  var C = CRIT[q.sp], res = C.drop[0], n = C.drop[1] + (L.perfect ? 1 : 0), gp = q.g.position.clone();
+  q.state = "fly"; q.noHit = true; q.ft = 0; q.vx = P.face.x * 11; q.vz = P.face.z * 11; q.vy = 9; q.spin = rnd(8, 12);
+  dropItems(res, n, gp, toP); stats.critters = (stats.critters || 0) + 1;
+  floater(gp.clone().setY(2.3), "+" + n + " " + res, "num " + res, 1.6); floater(gp.clone().setY(1.6), C.fly, "bw big", 1.4);
+  burst(gp.clone().setY(.8), C.col, 10, 5, 5, 1, .8); shake(.2); if (q.sp === "squirrel") snd.baa(); else snd.pop();
+  once("crit_fly", function () { later(1.4, function () { say("It has left the island. It has filed a complaint with HR.", 0); }); });
 }
-function updateSquirrels(dt) {
+function updateCritters(dt) {
   for (var i = T.length - 1; i >= 0; i--) {
-    var q = T[i]; if (q.kind !== "squirrel" || q.lvl !== G.level) continue;
-    var p = q.g.position;
+    var q = T[i]; if (q.kind !== "critter" || q.lvl !== G.level) continue;
+    var p = q.g.position, C = CRIT[q.sp];
     if (q.state === "fly") {
-      q.t += dt; q.vy -= 26 * dt; p.x += q.vx * dt; p.z += q.vz * dt; p.y += q.vy * dt; q.body.rotation.z += q.spin * dt; q.body.rotation.x += q.spin * .4 * dt;
-      if (q.t > 1.7) { scene.remove(q.g); T.splice(i, 1); }
+      q.ft += dt; q.vy -= 26 * dt; p.x += q.vx * dt; p.z += q.vz * dt; p.y += q.vy * dt; q.body.rotation.z += q.spin * dt; q.body.rotation.x += q.spin * .4 * dt;
+      if (q.ft > 1.7) { scene.remove(q.g); T.splice(i, 1); }
       continue;
     }
-    q.timer -= dt;
-    if (q.timer <= 0 || Math.hypot(q.tx - p.x, q.tz - p.z) < .5) { var a = Math.random() * 6.283, d = Math.sqrt(Math.random()) * Math.max(2, q.isl.r - 3); q.tx = q.isl.x + Math.cos(a) * d; q.tz = q.isl.z + Math.sin(a) * d; q.timer = rnd(1.2, 2.6); }
-    var dx = q.tx - p.x, dz = q.tz - p.z, dd = Math.hypot(dx, dz) || 1, nx = p.x + dx / dd * q.sp * dt, nz = p.z + dz / dd * q.sp * dt;
-    if (walkable(nx, nz)) { p.x = nx; p.z = nz; } else q.timer = 0;
-    q.g.rotation.y += angDiff(q.g.rotation.y, Math.atan2(dx, dz)) * (1 - Math.exp(-10 * dt));
-    q.body.position.y = Math.abs(Math.sin(G.time * 18)) * .12;
-    q.chat -= dt; if (q.chat <= 0) { q.chat = rnd(2.5, 4.5); floater(p.clone().setY(1.5), pick(["CHITTER!", "!!!", "GRRR."]), "bw", 1.0); }
+    q.t += dt; CRIT_MOVE[C.move](q, dt, p, C); if (q.parts.anim) q.parts.anim(q, dt);
+    if (q.sp === "squirrel") { q.chat -= dt; if (q.chat <= 0) { q.chat = rnd(2.5, 4.5); floater(p.clone().setY(1.5), pick(["CHITTER!", "!!!", "GRRR."]), "bw", 1.0); } }
     q.life -= dt; if (q.life <= 0) { puff(p.clone().setY(.4), 1.0, 0xe8e0d0, .5, .5); scene.remove(q.g); T.splice(i, 1); }
   }
 }
@@ -2039,7 +2235,7 @@ function updateTargets(dt) {
     if (t.kind === "tree") t.g.rotation.z = Math.sin(G.time * 1.2 + t.g.position.x) * .012 + k * .14 * (t.sway ? 1 : 0);
     if (t.kind === "statue") { var sh = 1 + .03 * k; t.g.scale.set(sh, 1 - .03 * k, sh); }
   }
-  updateGary(dt); updateEggs(dt); updateSquirrels(dt); updateProps(dt);
+  updateGary(dt); updateEggs(dt); updateCritters(dt); updateProps(dt);
 }
 
 /* =====================================================================
@@ -2054,6 +2250,7 @@ var ICO = {
 ICO.crystal = '<svg viewBox="0 0 24 24" stroke="#221407" stroke-width="2" stroke-linejoin="round"><path d="M12 2l6 7-6 13-6-13z" fill="#7fe3ff"/><path d="M6 9h12M12 2l-2.4 7L12 22l2.4-13z" fill="none" stroke-width="1.5"/></svg>';
 ICO.scrap = '<svg viewBox="0 0 24 24" stroke="#221407" stroke-width="2" stroke-linejoin="round"><path d="M7 3h10l5 9-5 9H7L2 12z" fill="#aab8c8"/><circle cx="12" cy="12" r="3.2" fill="#5a6678"/></svg>';
 ICO.gear = '<svg viewBox="0 0 24 24" stroke="#221407" stroke-width="2" stroke-linejoin="round"><g fill="#ff9f43"><rect x="10" y="1.5" width="4" height="21" rx="1"/><rect x="10" y="1.5" width="4" height="21" rx="1" transform="rotate(45 12 12)"/><rect x="10" y="1.5" width="4" height="21" rx="1" transform="rotate(90 12 12)"/><rect x="10" y="1.5" width="4" height="21" rx="1" transform="rotate(135 12 12)"/></g><circle cx="12" cy="12" r="7.5" fill="#ff9f43"/><circle cx="12" cy="12" r="3" fill="#5a6678"/></svg>';
+ICO.nut = '<svg viewBox="0 0 24 24" stroke="#221407" stroke-width="2" stroke-linejoin="round"><path d="M12 8c-4 0-6 3-6 7a6 6 0 0012 0c0-4-2-7-6-7z" fill="#d8a05c"/><path d="M5.5 10c0-4 3-6.5 6.5-6.5s6.5 2.5 6.5 6.5z" fill="#8a5a33"/><path d="M12 3.5V1.5" stroke-linecap="round"/></svg>';
 ICO.slime = '<svg viewBox="0 0 24 24" stroke="#221407" stroke-width="2" stroke-linejoin="round"><path d="M12 2C9 8 5 11 5 16a7 7 0 0014 0c0-5-4-8-7-14z" fill="#b98aff"/><circle cx="9.5" cy="15" r="1.6" fill="#e4d0ff" stroke="none"/></svg>';
 var ART = {
   hr: '<svg viewBox="0 0 100 100" stroke="#221407" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><rect width="100" height="100" fill="#cfeaf7" stroke="none"/><path d="M50 22 V8"/><circle cx="50" cy="7" r="4.5" fill="#5fd8ff"/><circle cx="50" cy="54" r="34" fill="#c3ccd9"/><rect x="20" y="40" width="60" height="26" rx="13" fill="#2a2f3a"/><circle cx="50" cy="53" r="10" fill="#ff3b3b"/><circle cx="54" cy="49" r="3" fill="#fff" stroke="none"/><path d="M30 80 Q50 90 70 80" fill="none" stroke-width="3"/></svg>',
@@ -3135,7 +3332,7 @@ function questTarget() {
   if (Q.state !== "active") return LV.talkAnywhere ? null : { pos: LR.house.pos, h: 3.9 };
   if (q.type === "build") { var p = plots[q.plot]; return p.built ? null : { pos: p.pos, h: p.isBridge ? 2.2 : 4.2, plot: true }; }
   var t;
-  if (q.type === "gain") { t = nearestQ(function (o) { return o.res === q.res; }); }
+  if (q.type === "gain") { t = nearestQ(function (o) { return q.res === "nut" ? o.kind === "tree" : o.res === q.res; }); }
   else if (q.type === "vend") { t = nearestQ(function (o) { return o.name === "vending"; }); }
   else if (q.type === "robot") { t = nearestQ(function (o) { return o.kind === "robot"; }); }
   else if (q.type === "boss") { return LR.boss ? { pos: new V3(LR.boss.x, 0, LR.boss.z), h: 4.6 } : null; }
@@ -3381,10 +3578,10 @@ LEVELS[1] = {
   bridges: [
     { id: "l1_bN", name: "Plank Bridge North", blurb: "To the Quarry. Rocks as far as the eye can see.", cost: { wood: 8, stone: 4 }, x: 0, z: -16, len: 8.6, alongZ: true, a: 0, b: 2 },
     { id: "l1_bE", name: "Plank Bridge East", blurb: "To the Forest. Trees drop things. So does the sky.", cost: { wood: 10, stone: 6 }, x: 17, z: 0, len: 10.6, a: 0, b: 1 },
-    { id: "l1_bC", name: "Crystal Crossing", blurb: "Shiny rocks ahead. The bridge is a little sparkly too.", cost: { wood: 10, stone: 8 }, x: 15.75, z: -30, len: 12.1, a: 2, b: 3 },
+    { id: "l1_bC", name: "Crystal Crossing", blurb: "Shiny rocks ahead. The bridge is a little sparkly too. It also wants two nuts.", cost: { wood: 10, stone: 8, nut: 2 }, x: 15.75, z: -30, len: 12.1, a: 2, b: 3 },
     { id: "l1_bG", name: "Golden Gangway", blurb: "The final bridge. Mabel says it\u2019s probably safe.", cost: { wood: 12, stone: 6, crystal: 4 }, x: 47.5, z: 0, len: 11.6, a: 1, b: 4 }
   ],
-  final: { id: "l1_statue", name: "Statue of Dunk\u2019s Forehead", blurb: "A tribute to the hardest-working part of Dunk.", cost: { gold: 6, stone: 8, crystal: 2 }, pos: [62, -3], col: 2.3, ring: 3.0, build: "statue" },
+  final: { id: "l1_statue", name: "Statue of Dunk\u2019s Forehead", blurb: "A tribute to the hardest-working part of Dunk.", cost: { gold: 6, stone: 8, crystal: 2, nut: 3 }, pos: [62, -3], col: 2.3, ring: 3.0, build: "statue" },
   memos: [
     "Welcome to the Legacy Terrain Preserve. All trees are ethically sourced.",
     "Nature\u2122 is proudly brought to you by Synergy Holdings.",
@@ -3416,9 +3613,13 @@ LEVELS[1] = {
       offer: "There is a rubber duck on this island. I do not know where it came from. I do not want to know. Bonk it. For science.",
       accept: "A rubber duck. Home island. Bonk it.", hint: "Home island. Yellow. Smug. Squeaky.",
       ready: "Squeak confirmed. Science is a beautiful thing.", reward: { note: "A deeper understanding of ducks" } },
-    { id: "bridgeC", title: "Crystal Crossing", type: "build", plot: "l1_bC", obj: "Build the Crystal Bridge", goal: "Build the bridge from the Quarry east to Crystal Isle.",
-    offer: "Past the Quarry, something sparkles. I want it. Build the crossing from the Quarry\u2019s east side.",
-    accept: "Cross the Quarry to its east edge. Blue outline.", hint: "The crystal bridge starts on the Quarry\u2019s east side.",
+    { id: "nutJob", title: "Nut Job", type: "gain", turnIn: true, res: "nut", n: 3, obj: "Turn in nuts", goal: "Bonk trees until a squirrel pops out. Bonk the squirrel. It drops a nut. Turn in 3 nuts.",
+    offer: "HR-9000 has requested nuts. Do not ask why. The squirrels have nuts. The squirrels live in the trees. Bonk a tree and one may come out, furious. Bonk it back. Three nuts.",
+    accept: "Three nuts. Bonk trees. Squirrels come out. Bonk them.", hint: "Three nuts. Bonk trees until a squirrel pops out, then bonk the squirrel.",
+    ready: "Nuts. Excellent. I will not be telling the squirrels where they went.", reward: { note: "A squirrel feud" } },
+  { id: "bridgeC", title: "Crystal Crossing", type: "build", plot: "l1_bC", obj: "Build the Crystal Bridge", goal: "Build the bridge from the Quarry east to Crystal Isle.",
+    offer: "Past the Quarry, something sparkles. I want it. Build the crossing from the Quarry\u2019s east side. Wood, stone and two nuts. You know a squirrel.",
+    accept: "Cross the Quarry to its east edge. Blue outline.", hint: "The crystal bridge starts on the Quarry\u2019s east side. Wood, stone and two nuts.",
     ready: "Ooh, shiny. And the bridge is nice too.", reward: { note: "A very sparkly island" } },
   { id: "crystal", title: "Gem Fever", type: "gain", turnIn: true, res: "crystal", n: 6, obj: "Turn in crystals", goal: "Turn in 6 crystals. They\u2019re tough: perfect bonks, or wear the Miner\u2019s Helmet.",
     offer: "Crystals are tougher than rocks. Plain charged bonks bounce off. Perfect bonks work. So does the helmet. Bring me six.",
@@ -3437,8 +3638,8 @@ LEVELS[1] = {
     accept: "Eight gold. Go be rich.", hint: "Eight gold. Gold rocks have the yellow shiny bits.",
     ready: "Eight gold! Dunk, you\u2019re the best employee I\u2019ve ever supervised. You\u2019re also the only one. Take this crown.", reward: { hat: "crown" } },
   { id: "statue", title: "The Monument", type: "build", plot: "l1_statue", obj: "Build the Statue", goal: "Build the Statue of Dunk\u2019s Forehead on Gold Isle.",
-    offer: "One last job. A statue of the part of you that did all the work. Gold, stone and a crystal or two. HR-9000 will file it under \u2018employee recognition\u2019.",
-    accept: "The plot is on Gold Isle. Go big.", hint: "Statue: gold, stone and crystal. If you\u2019re short, the quarries regrow.",
+    offer: "One last job. A statue of the part of you that did all the work. Gold, stone, a crystal or two and three nuts, for morale. HR-9000 will file it under \u2018employee recognition\u2019.",
+    accept: "The plot is on Gold Isle. Go big.", hint: "Statue: gold, stone, crystal and three nuts. If you\u2019re short, the quarries regrow. So do the squirrels.",
     ready: "", reward: {} }
 ]
 };
@@ -4754,7 +4955,7 @@ LEVELS[5] = {
     l5bridge("l5_b0", "Elevator Lobby Walkway", "To Floor 1. Mind the belts. The belts mind everything.", { wood: 4, stone: 4 }, 0, 1),
     gearBr(l5bridge("l5_b1", "Logistics Lift", "To Floor 2. Built from a row of turning gears. It lifts. It does not lift morale.", { scrap: 4, gear: 6 }, 1, 2)),
     l5bridge("l5_b2", "Bounce Floor Skybridge", "To Floor 3. Wipe your feet. Then your head.", { slime: 5, crystal: 3 }, 2, 3),
-    l5bridge("l5_b3", "Executive Elevator", "To the Review Floor. Mabel says the music is lovely. The music is ominous.", { gold: 4, scrap: 4, gear: 3 }, 3, 4)
+    l5bridge("l5_b3", "Executive Elevator", "To the Review Floor. Mabel says the music is lovely. The music is ominous.", { gold: 4, scrap: 4, gear: 3, nut: 3 }, 3, 4)
   ],
   final: { id: "l5_statue", name: "Statue of Dunk\u2019s Forehead (Orbital)", blurb: "Employee of the Month. Pay unchanged.", cost: {}, pos: [0, -67], col: 2.2, ring: 0, build: "orbitStatue" },
   customFinale: l5Finale,
@@ -4810,8 +5011,8 @@ LEVELS[5] = {
       accept: "Three gold. Charge up. Watch the grates.", hint: "Three gold. Gold rocks have yellow bits. Grates glow before they steam.",
       ready: "Gold! HR-9000 will pretend it\u2019s not interested. It is.", reward: { note: "Gold, at last" } },
     { id: "executive", title: "Executive Elevator", type: "build", plot: "l5_b3", obj: "Build the Executive Elevator", goal: "Build the bridge north to the Review Floor.",
-      offer: "The Review Floor is up north. Build the Executive Elevator. It wants gold, scrap and gears. Then come back, I\u2019ll be on the intercom. I\u2019ll say something encouraging. It will be wrong.",
-      accept: "North edge of Floor 3. Gold, scrap, gears.", hint: "Executive Elevator: gold, scrap and gears. North edge of Floor 3.",
+      offer: "The Review Floor is up north. Build the Executive Elevator. It wants gold, scrap, gears and three nuts. Executives love a snack. Then come back, I\u2019ll be on the intercom. I\u2019ll say something encouraging. It will be wrong.",
+      accept: "North edge of Floor 3. Gold, scrap, gears, nuts.", hint: "Executive Elevator: gold, scrap, gears and three nuts. North edge of Floor 3.",
       ready: "The elevator is open. I\u2019m nervous. Don\u2019t tell the pigeon part of me.", reward: { note: "Access to the top floor" } },
     { id: "review", title: "The Performance Review", type: "boss", n: 1, obj: "Pass the Performance Review", goal: "Go to the Review Floor. When HR-9000\u2019s core glows green, land a perfect bonk. Three phases. Unlimited retries.",
       offer: "This is it. Go up. HR-9000\u2019s core opens in a rhythm: when it glows green, land a perfect bonk. Three phases. Checkpoints between each. Unlimited retries. If you struggle, the menu has an assist that widens the green zone. No shame. Just forehead.",
@@ -5162,7 +5363,7 @@ function resetTargets(n) {
   for (var i = T.length - 1; i >= 0; i--) {
     var t = T[i]; if ((t.lvl || 0) !== n || t.hub !== undefined) continue;
     if (t.kind === "raider") { scene.remove(t.g); T.splice(i, 1); continue; }
-    if (t.kind === "statue" || t.kind === "squirrel") { if (t.kind === "squirrel") scene.remove(t.g); T.splice(i, 1); continue; }
+    if (t.kind === "statue" || t.kind === "critter") { if (t.kind === "critter") scene.remove(t.g); T.splice(i, 1); continue; }
     if (t.reset) { t.reset(t); continue; }
     t.alive = true; t.hp = t.max; t.pop = 1; t.respawn = 0; t.wob = 0; t.g.visible = true; t.g.scale.set(1, 1, 1);
     if (t.kind === "tree") { t.canopy.forEach(function (c) { c.visible = true; }); t.trunk.scale.y = 1; }
@@ -5360,7 +5561,7 @@ function saveLevel() {
   var n = G.level, pre = "l" + n + "_", built = [], o = {};
   Object.keys(plots).forEach(function (id) { if (id.indexOf(pre) === 0 && plots[id].built) built.push(id); });
   var hats = HAT_ORDER.filter(function (k) { return UNL[k]; });
-  o["l" + n] = { q: Q.idx, st: Q.state, snap: Q.snap, hats: hats, eq: P.hatId, eq2: P.hat2, built: built, inv: copyI(), gath: copyG(), bp: (LR.boss ? LR.boss.phase : 0), t: G.playTime,
+  o["l" + n] = { q: Q.idx, qid: (QUESTS[Q.idx] || {}).id, st: Q.state, snap: Q.snap, hats: hats, eq: P.hatId, eq2: P.hat2, built: built, inv: copyI(), gath: copyG(), bp: (LR.boss ? LR.boss.phase : 0), t: G.playTime,
     st2: { bonks: stats.bonks, perfects: stats.perfects, dizzy: stats.dizzy, bestStreak: stats.bestStreak, bigs: stats.bigs, builds: stats.builds, coconuts: stats.coconuts, sheep: stats.sheep, ouch: stats.ouch || 0, crystals: stats.crystals, vends: stats.vends || 0, shoved: stats.shoved || 0, robots: stats.robots || 0, squashed: stats.squashed || 0, dodges: stats.dodges || 0, beltT: stats.beltT || 0, pads: stats.pads || 0, gooT: stats.gooT || 0, spored: stats.spored || 0 } };
   o.hats = hats; o.eq = P.hatId; o.eq2 = P.hat2;
   writeSave(o);
@@ -5372,7 +5573,10 @@ function instantBuild(p) {
 }
 function restoreLevel(sv) {
   LR.restoring = true;
-  Q.idx = sv.q || 0; Q.state = sv.st || "offer"; Q.snap = sv.snap || null;
+  Q.idx = sv.q || 0;
+  if (sv.qid) { for (var qk = 0; qk < QUESTS.length; qk++) if (QUESTS[qk].id === sv.qid) { Q.idx = qk; break; } }
+  else if (G.level === 1 && Q.idx >= 6) Q.idx++;   // saves from before Nut Job existed
+  Q.state = sv.st || "offer"; Q.snap = sv.snap || null;
   (sv.hats || []).forEach(function (h) { if (h in UNL) UNL[h] = true; });
   for (var k in inv) inv[k] = (sv.inv && sv.inv[k]) || 0;
   for (var g in GATH) GATH[g] = (sv.gath && sv.gath[g]) || 0;
