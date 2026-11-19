@@ -462,6 +462,7 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
       <div class="set-row"><div>Screen shake<small>Bonks rattle the camera</small></div><div class="seg" data-set="shake"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>Vibration<small>Phone buzzes on bonks</small></div><div class="seg" data-set="vib"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>HR-9000 memos<small>Occasional corporate announcements</small></div><div class="seg" data-set="memos"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
+      <div class="set-row"><div>Boss assist<small>Widens the green zone everywhere</small></div><div class="seg" data-set="assist"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="row2" style="margin-top:6px"><button class="cta ghost pressable" id="btn-menu-map">Level map</button></div>
       <p class="tip">Reminder: tap = small bonk. Hold and release in the green = PERFECT (4x damage). A full head means dizzy, so pace yourself.</p>
       <div class="row2"><button class="cta ghost pressable" id="btn-restart">Start over</button><button class="cta pressable" id="btn-resume">Resume</button></div>
@@ -530,14 +531,14 @@ var seed = 11;
 function srand() { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
 
 /* ---------- state ---------- */
-var S = { sound: true, music: true, shake: !REDUCED, vib: true, memos: true };
+var S = { sound: true, music: true, shake: !REDUCED, vib: true, memos: true, assist: false };
 var G = { started: false, playing: false, paused: false, title: true, time: 0, playTime: 0, hitstop: 0, cine: null, orbit: false, shakeAmt: 0,
   step: -1, stepT: 0, stepDone: false, lastProgress: 0, free: false, ended: false, level: 0, sheet: null, flags: {} };
 var SAVE_KEY = "hardhead.v1";
 function loadSave() { try { var r = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"); return r && typeof r === "object" ? r : {}; } catch (e) { return {}; } }
 function writeSave(o) { try { var c = loadSave(); for (var k in o) c[k] = o[k]; localStorage.setItem(SAVE_KEY, JSON.stringify(c)); } catch (e) {} }
-(function () { var sv = loadSave(); ["sound", "music", "shake", "vib", "memos"].forEach(function (k) { if (typeof sv[k] === "boolean") S[k] = sv[k]; }); })();
-var RES_KEYS = ["stone", "wood", "gold", "crystal", "scrap"], inv = {}, seen = {}, GATH = {};
+(function () { var sv = loadSave(); ["sound", "music", "shake", "vib", "memos", "assist"].forEach(function (k) { if (typeof sv[k] === "boolean") S[k] = sv[k]; }); })();
+var RES_KEYS = ["stone", "wood", "gold", "crystal", "scrap", "gear", "slime"], inv = {}, seen = {}, GATH = {};
 RES_KEYS.forEach(function (k) { inv[k] = 0; seen[k] = false; GATH[k] = 0; });
 /* per-level gravity: 1 = normal. A level sets "gravity" in its config. Everything below returns 1 at LG = 1. */
 var LG = 1;
@@ -545,7 +546,7 @@ function lgFly() { return Math.pow(LG, .75); }            // sideways speed of a
 function lgLunge() { return 1 + (1 / LG - 1) * .35; }     // bonk lunge distance
 function lgDur() { return 1 + (1 / LG - 1) * .4; }        // bonk lunge duration
 function lgHop() { return 1 + (1 / LG - 1) * .8; }        // Dunk's hop height
-var stats = { crystals: 0, bigs: 0, bestStreak: 0, builds: 0, bonks: 0, perfects: 0, rocks: 0, trees: 0, golds: 0, dizzy: 0, coconuts: 0, sheep: 0, bounces: 0 };
+var stats = { crystals: 0, bigs: 0, bestStreak: 0, builds: 0, bonks: 0, perfects: 0, rocks: 0, trees: 0, golds: 0, dizzy: 0, coconuts: 0, sheep: 0, bounces: 0, robots: 0, squashed: 0, dodges: 0, beltT: 0, pads: 0, gooT: 0, spored: 0 };
 var P = { pos: new V3(0, 0, 3.5), face: new V3(0, 0, -1), yaw: Math.PI, charging: false, charge: 0, chargeT: 0, lunge: null, cool: 0, noggin: 0, lastBonk: -9,
   dizzy: 0, hat: false, hatId: "none", stun: 0, walkT: 0, speed: 0, inZone: false, fakeU: 0, hop: 0, nogShown: false };
 
@@ -856,7 +857,7 @@ function buildGary() {
   var g = sub(scene, -4, 0, 9), Y = { root: g, vx: 0, vz: 0, vy: 0, y: 0, state: "wander", t: 0, dirT: 0, dx: 0, dz: 0, spin: 0, home: new V3(-4, 0, 9) };
   Y.sh = blob(g, .8);
   var body = sub(g, 0, 0, 0); Y.body = body;
-  var wool = toon(0xfbf6ee);
+  var wool = toon(0xfbf6ee).clone(); Y.wool = wool;
   [[0, .62, 0, .5], [-.3, .66, -.18, .36], [.3, .66, -.18, .36], [-.28, .62, .2, .34], [.28, .62, .2, .34], [0, .92, -.05, .32]].forEach(function (c) { M(body, new THREE.IcosahedronGeometry(c[3], 0), wool, c[0], c[1], c[2], .03); });
   var head = sub(body, 0, .66, .52); Y.head = head;
   M(head, new THREE.SphereGeometry(.22, 10, 8), toon(0x3a3340), 0, 0, 0, .03);
@@ -1184,6 +1185,8 @@ function updateFloaters(dt) {
 var PK_GEO = { stone: new THREE.DodecahedronGeometry(.2, 0), wood: new THREE.CylinderGeometry(.11, .11, .5, 6), gold: new THREE.OctahedronGeometry(.24, 0) };
 var PK_MAT = { stone: toon(0xaab3be), wood: toon(0xa4663a), gold: toon(0xf5b921, { emissive: 0x5a3c00 }) };
 PK_GEO.scrap = new THREE.BoxGeometry(.3, .14, .22); PK_MAT.scrap = toon(0xaab8c8, { emissive: 0x1a2430 });
+PK_GEO.slime = new THREE.SphereGeometry(.2, 8, 6); PK_MAT.slime = toon(0xb98aff, { emissive: 0x4a2a80 });
+PK_GEO.gear = new THREE.CylinderGeometry(.24, .2, .12, 8); PK_MAT.gear = toon(0xff9f43, { emissive: 0x4a2000 });
 PK_GEO.crystal = new THREE.OctahedronGeometry(.21, 0); PK_MAT.crystal = toon(0x7fe3ff, { emissive: 0x15405a });
 function dropItems(type, n, pos, dir) {
   for (var i = 0; i < n; i++) {
@@ -1200,6 +1203,7 @@ function updatePickups(dt) {
     var k = pickups[i]; k.t += dt;
     if (!k.mag) {
       k.v.y -= 24 * LG * dt; k.m.position.addScaledVector(k.v, dt);
+      var bq = beltAt(k.m.position.x, k.m.position.z); if (bq.b) { k.m.position.x += bq.x * dt; k.m.position.z += bq.z * dt; }
       var gy = groundY(k.m.position.x, k.m.position.z) + .2;
       if (k.m.position.y < gy) { k.m.position.y = gy; k.v.y *= -.45; k.v.x *= .6; k.v.z *= .6; if (Math.abs(k.v.y) < 1) k.v.y = 0; }
       k.m.rotation.y += dt * 4;
@@ -1207,6 +1211,7 @@ function updatePickups(dt) {
     } else {
       var dx = P.pos.x - k.m.position.x, dz = P.pos.z - k.m.position.z, dy = (P.pos.y + .8) - k.m.position.y, d = Math.sqrt(dx * dx + dz * dz + dy * dy);
       if (d < .75) { collect(k, i); continue; }
+      if (!(d < 8 * HAT().magnet || k.t > 3)) { var bq2 = beltAt(k.m.position.x, k.m.position.z); if (bq2.b) { k.m.position.x += bq2.x * dt; k.m.position.z += bq2.z * dt; } }
       if (d < 8 * HAT().magnet || k.t > 3) {
         var sp = Math.min(22, 7 + (k.t - .7) * 12) * dt / d;
         k.m.position.x += dx * sp; k.m.position.y += dy * sp; k.m.position.z += dz * sp;
@@ -1303,7 +1308,7 @@ function moveVec() {
 }
 
 /* ---------- the bonk ---------- */
-function zone() { return HAT().zone; }
+function zone() { var z = HAT().zone; return S.assist ? [Math.max(.4, z[0] - .12), Math.min(.97, z[1] + .05)] : z; }
 function addNog(v) {
   v *= HAT().nog;
   P.noggin = Math.min(100, P.noggin + v); P.nogShown = true;
@@ -1315,7 +1320,7 @@ function startDizzy() {
   once("dizzy", function () { say("That wobble means your head is full. Wait it out. The wobble is free.", 1); });
 }
 function startCharge() {
-  if (!canAct() || P.dizzy > 0 || P.lunge || P.cool > 0 || P.stun > 0 || P.charging) return;
+  if (!canAct() || P.dizzy > 0 || P.lunge || P.cool > 0 || P.stun > 0 || P.charging || P.jump) return;
   P.charging = true; P.charge = 0; P.chargeT = 0; P.inZone = false; snd.charge();
 }
 function releaseCharge() {
@@ -1376,6 +1381,7 @@ function hitTarget(tg, L) {
   shockwave(hp, L.perfect ? 0xffe14d : 0xffffff, L.perfect ? 4.4 : 1.6 + pw * 1.6, L.perfect ? .45 : .28);
   if (L.perfect) { flash(); punch(1); } else punch(pw * .5);
   if (tg.kind === "sheep") { launchGary(L); return; }
+  if (tg.kind === "boss") { hitBoss(tg, L, hp); return; }
   if (tg.kind === "statue") { tg.wob = 1; snd.dong(); floater(hp, "DONGGG", "bw big", 1.4); once("statueBonk", function () { say("I said don’t bonk the monument.", 1); }); return; }
   var effD = L.dmg + (tg.kind === "tree" ? HAT().treeDmg : 0), effH = tg.hard - ((tg.kind === "gold" || tg.kind === "crystal") ? HAT().gemEase : 0);
   if (effD < effH) {
@@ -1388,13 +1394,17 @@ function hitTarget(tg, L) {
     }
     return;
   }
-  var kindCol = tg.kind === "tree" ? [0x70cc6c, 0x8a5a33] : tg.kind === "crystal" ? [0x7fe3ff, 0xb99cff] : tg.kind === "gold" ? [0xf5b921, 0xb4bdc8] : [0xb4bdc8, 0x8d97a3];
+  var kindCol = tg.kind === "tree" ? [0x70cc6c, 0x8a5a33] : tg.kind === "crystal" ? [0x7fe3ff, 0xb99cff] : tg.kind === "gold" ? [0xf5b921, 0xb4bdc8] : tg.kind === "robot" ? [0xffb347, 0xc9d4e0] : [0xb4bdc8, 0x8d97a3];
   if (L.perfect) { G.perfStreak = (G.perfStreak || 0) + 1; stats.bestStreak = Math.max(stats.bestStreak, G.perfStreak); snd.perfect(G.perfStreak); floater(hp, G.perfStreak > 1 ? "PERFECT x" + G.perfStreak + "!" : "PERFECT NOGGIN!", "perfect", 1.6); showStreak(G.perfStreak); }
   else { G.perfStreak = 0; showStreak(0); snd.bonk(pw); floater(hp, pick(L.kind === "tap" ? WORDS_TAP : WORDS_CHARGE), L.kind === "tap" ? "bw" : "bw big", 1.2); }
   if (L.kind === "over") { floater(hp.clone().add(new V3(0, .9, 0)), "Too much forehead", "ow", 1.0); }
   if (tg.kind === "tree") snd.wood();
   addNog(L.perfect ? 6 : L.kind === "tap" ? 10 : L.kind === "over" ? 26 : 16);
   tg.hp -= effD; tg.wob = 1;
+  if (tg.kind === "robot") {
+    tg.stun = 1.1; if (tg.hp > 0) floater(hp.clone().add(new V3(0, 1.5, 0)), pick(ROBOT_BONK), "bw", 1.3);
+    once("robot1", function () { say("Robots are hardness two: a tap tickles, a charged bonk dents. They\u2019re also polite, so they\u2019ll wait if you stand in their way.", 0); });
+  }
   burst(hp, kindCol, L.perfect ? 12 : 6, 5, 5, 1, .6);
   if (tg.kind === "tree") {
     tg.sway = 1;
@@ -1404,10 +1414,10 @@ function hitTarget(tg, L) {
   stepEvents();
 }
 function breakTarget(tg, L, dir) {
-  var n = tg.yield + (L.perfect ? 1 : 0) + (HAT().yieldB[tg.res] || 0), gp = tg.g.position.clone();
+  var n = tg.yield + (L.perfect ? 1 : 0) + (HAT().yieldB[tg.res] || 0) + (tg.kind === "robot" ? (HAT().robotB || 0) : 0), gp = tg.g.position.clone();
   tg.alive = false; tg.respawn = G.time + tg.rt;
   if (tg.kind === "tree") { tg.canopy.forEach(function (c) { c.visible = false; }); tg.trunk.scale.y = .3; stats.trees++; snd.woodBreak(); burst(gp.clone().setY(2.5), [0x70cc6c, 0x4fb05a], 14, 6, 6, 1.2, .9); }
-  else { tg.g.visible = false; if (tg.kind === "gold") stats.golds++; else if (tg.kind === "crystal") stats.crystals++; else stats.rocks++; if (tg.big) stats.bigs++; if (tg.name === "vending") { stats.vends = (stats.vends || 0) + 1; once("vend1", function () { say("The machine paid out. In scrap. Which is all it was ever holding.", 0); }); } snd.crack(); burst(gp.clone().setY(.8), tg.kind === "crystal" ? [0x7fe3ff, 0xb99cff, 0xffffff] : tg.kind === "gold" ? [0xf5b921, 0xb4bdc8, 0x8d97a3] : [0xb4bdc8, 0x8d97a3, 0x9aa3ad], tg.big ? 22 : 14, 7, 7, 1.3, .9); }
+  else { tg.g.visible = false; if (tg.kind === "gold") stats.golds++; else if (tg.kind === "crystal") stats.crystals++; else if (tg.kind === "robot") { stats.robots = (stats.robots || 0) + 1; snd.clunk(); } else stats.rocks++; if (tg.big) stats.bigs++; if (tg.name === "vending") { stats.vends = (stats.vends || 0) + 1; once("vend1", function () { say("The machine paid out. In scrap. Which is all it was ever holding.", 0); }); } snd.crack(); burst(gp.clone().setY(.8), tg.kind === "crystal" ? [0x7fe3ff, 0xb99cff, 0xffffff] : tg.kind === "gold" ? [0xf5b921, 0xb4bdc8, 0x8d97a3] : tg.kind === "robot" ? [0xffb347, 0xc9d4e0, 0x5fd8ff] : [0xb4bdc8, 0x8d97a3, 0x9aa3ad], tg.big ? 22 : 14, 7, 7, 1.3, .9); }
   puff(gp.clone().setY(.5), 1.6, 0xe8e0d0, .6, .8);
   dropItems(tg.res, n, gp, dir); shake(.45);
   floater(gp.clone().setY(2.2), "+" + n + " " + tg.res, "num " + tg.res, 1.6); hatWord(tg, gp);
@@ -1483,13 +1493,14 @@ function updatePlayer(dt) {
     P.tickT = (P.tickT || 0) - dt; if (P.tickT <= 0 && P.charge < 1 && P.chargeT > .15) { P.tickT = .09; tone(220 + P.charge * 700, .05, "triangle", .03); }
     if (inz && !P.inZone) { snd.zone(); vibrate(12); } P.inZone = inz;
   } else P.inZone = false;
-  var mv = G.cine ? { x: 0, y: 0, l: 0 } : moveVec();
-  var spd = 5.6 * HAT().speed * (P.charging ? .45 : 1) * (P.dizzy > 0 ? .5 : 1) * (P.lunge ? 0 : 1) * (P.stun > 0 ? .25 : 1);
+  var mv = (G.cine || P.jump) ? { x: 0, y: 0, l: 0 } : moveVec();
+  var spd = 5.6 * HAT().speed * (P.charging ? .45 : 1) * (P.dizzy > 0 ? .5 : 1) * (P.lunge ? 0 : 1) * (P.stun > 0 ? .25 : 1) * slowAt(P.pos.x, P.pos.z);
   var tx = mv.x * mv.l * spd, tz = mv.y * mv.l * spd;
   if (P.dizzy > 0) { tx += Math.sin(G.time * 5) * 1.6; tz += Math.cos(G.time * 4.3) * 1.6; }
   P.vel = P.vel || new V3(); P.vel.x = damp(P.vel.x, tx, 14, dt); P.vel.z = damp(P.vel.z, tz, 14, dt);
   var shx = 0, shz = 0;
   if (P.shove) { P.shove.t -= dt; if (P.shove.t <= 0) P.shove = null; else { var shk = P.shove.t / P.shove.dur; shx = P.shove.vx * shk; shz = P.shove.vz * shk; } }
+  if (!P.lunge && G.level >= 1) { var bv = beltAt(P.pos.x, P.pos.z); if (bv.b) { var bk = P.dizzy > 0 ? .5 : 1; shx += bv.x * bk; shz += bv.z * bk; if (Math.abs(bv.b.mult) > .3) stats.beltT = (stats.beltT || 0) + dt; } }
   var nx = P.pos.x + (P.vel.x + shx) * dt, nz = P.pos.z + (P.vel.z + shz) * dt;
   if (!P.lunge) {
     if (walkable(nx, nz)) { P.pos.x = nx; P.pos.z = nz; } else if (walkable(nx, P.pos.z)) P.pos.x = nx; else if (walkable(P.pos.x, nz)) P.pos.z = nz;
@@ -1500,7 +1511,7 @@ function updatePlayer(dt) {
     if (!L.hit && u >= .55) { L.hit = true; resolveBonk(L); }
     if (u >= 1) { P.cool = L.cool; P.lunge = null; P.hop = 0; }
   }
-  if (!P.lunge) pushOut(P.pos, .45);
+  if (!P.lunge) { var ox0 = P.pos.x, oz0 = P.pos.z; pushOut(P.pos, .45); if (G.level >= 1 && !walkable(P.pos.x, P.pos.z)) { P.pos.x = ox0; P.pos.z = oz0; } }
   P.gy = damp(P.gy || 0, groundY(P.pos.x, P.pos.z), 20, dt);
   var sp = Math.hypot(P.vel.x, P.vel.z); P.speed = clamp(sp / 5.6, 0, 1.2);
   if (mv.l > .2 && !P.lunge && P.stun <= 0) {
@@ -1527,9 +1538,9 @@ function animPlayer(dt) {
   if (P.dizzy > 0) { D.head.rotation.z = Math.sin(t * 7) * .3; lean = Math.sin(t * 4) * .2; } else D.head.rotation.z = damp(D.head.rotation.z, walk ? Math.sin(P.walkT) * .06 : 0, 12, dt);
   D.head.rotation.x = damp(D.head.rotation.x, lean, 30, dt);
   D.body.rotation.x = lu > 0 ? .35 * Math.sin(Math.PI * lu) : 0;
-  var ang = P.charging || lu > 0 || P.dizzy > 0;
-  D.browL.rotation.z = ang ? -.5 : -.12; D.browR.rotation.z = ang ? .5 : .12;
-  D.mouth.scale.set(P.charging ? 1.2 : 1, P.charging ? 1.6 : 1, 1);
+  var ang = P.charging || lu > 0 || P.dizzy > 0 || P.mood === "angry";
+  D.browL.rotation.z = P.mood === "gasp" ? .3 : (ang ? -.5 : -.12); D.browR.rotation.z = P.mood === "gasp" ? -.3 : (ang ? .5 : .12);
+  if (P.mood === "gasp") D.mouth.scale.set(.9, 3.4, 1); else if (P.mood === "smile") D.mouth.scale.set(2.1, .8, 1); else D.mouth.scale.set(P.charging ? 1.2 : 1, P.charging ? 1.6 : 1, 1);
   D.bump.material.emissive.setHex(P.noggin > 60 ? 0xaa2200 : 0x4a1000);
   var bs = 1 + P.noggin / 100 * .5 + (P.charging ? .12 * P.charge : 0); D.bump.scale.set(1.25 * bs, .8 * bs, .5 * bs);
   var hc = D.hats && D.hats[P.hatId]; if (hc) hc.rotation.z = D.head.rotation.z * .5; if (D.prop) D.prop.rotation.y += dt * (P.hatId === "prop" ? 26 : 0);
@@ -1553,7 +1564,7 @@ function updateTargets(dt) {
     if (t.pop < 1) t.pop = Math.min(1, t.pop + dt * 2.4);
     t.wob = Math.max(0, t.wob - dt * 2.6);
     var k = Math.sin((1 - t.wob) * Math.PI * 3) * t.wob;
-    var shrink = t.kind === "tree" ? 1 : .6 + .4 * (t.hp / t.max);
+    var shrink = (t.kind === "tree" || t.noShrink) ? 1 : .6 + .4 * (t.hp / t.max);
     var ps = t.pop < 1 ? Math.max(.01, easeBack(t.pop)) : 1;
     t.g.scale.set(shrink * ps * (1 + .12 * k), shrink * ps * (1 - .16 * k), shrink * ps * (1 + .12 * k));
     if (t.kind === "tree") {
@@ -1578,6 +1589,8 @@ var ICO = {
 };
 ICO.crystal = '<svg viewBox="0 0 24 24" stroke="#221407" stroke-width="2" stroke-linejoin="round"><path d="M12 2l6 7-6 13-6-13z" fill="#7fe3ff"/><path d="M6 9h12M12 2l-2.4 7L12 22l2.4-13z" fill="none" stroke-width="1.5"/></svg>';
 ICO.scrap = '<svg viewBox="0 0 24 24" stroke="#221407" stroke-width="2" stroke-linejoin="round"><path d="M7 3h10l5 9-5 9H7L2 12z" fill="#aab8c8"/><circle cx="12" cy="12" r="3.2" fill="#5a6678"/></svg>';
+ICO.gear = '<svg viewBox="0 0 24 24" stroke="#221407" stroke-width="2" stroke-linejoin="round"><g fill="#ff9f43"><rect x="10" y="1.5" width="4" height="21" rx="1"/><rect x="10" y="1.5" width="4" height="21" rx="1" transform="rotate(45 12 12)"/><rect x="10" y="1.5" width="4" height="21" rx="1" transform="rotate(90 12 12)"/><rect x="10" y="1.5" width="4" height="21" rx="1" transform="rotate(135 12 12)"/></g><circle cx="12" cy="12" r="7.5" fill="#ff9f43"/><circle cx="12" cy="12" r="3" fill="#5a6678"/></svg>';
+ICO.slime = '<svg viewBox="0 0 24 24" stroke="#221407" stroke-width="2" stroke-linejoin="round"><path d="M12 2C9 8 5 11 5 16a7 7 0 0014 0c0-5-4-8-7-14z" fill="#b98aff"/><circle cx="9.5" cy="15" r="1.6" fill="#e4d0ff" stroke="none"/></svg>';
 var ART = {
   hr: '<svg viewBox="0 0 100 100" stroke="#221407" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><rect width="100" height="100" fill="#cfeaf7" stroke="none"/><path d="M50 22 V8"/><circle cx="50" cy="7" r="4.5" fill="#5fd8ff"/><circle cx="50" cy="54" r="34" fill="#c3ccd9"/><rect x="20" y="40" width="60" height="26" rx="13" fill="#2a2f3a"/><circle cx="50" cy="53" r="10" fill="#ff3b3b"/><circle cx="54" cy="49" r="3" fill="#fff" stroke="none"/><path d="M30 80 Q50 90 70 80" fill="none" stroke-width="3"/></svg>',
   dunk: '<svg viewBox="0 0 100 100" stroke="#221407" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><rect width="100" height="100" fill="#cfeaf7" stroke="none"/><path d="M26 100 Q28 78 50 78 Q72 78 74 100z" fill="#ff8a1f"/><circle cx="50" cy="46" r="31" fill="#f0b48a"/><path d="M30 30 Q50 14 70 30 Q50 26 30 30z" fill="#ff6a4a"/><circle cx="19" cy="48" r="6" fill="#f0b48a"/><circle cx="81" cy="48" r="6" fill="#f0b48a"/><path d="M33 40l14 5M67 40l-14 5" stroke-width="4.5"/><circle cx="39" cy="50" r="4.5" fill="#fff"/><circle cx="61" cy="50" r="4.5" fill="#fff"/><circle cx="40" cy="51" r="2" fill="#221407" stroke="none"/><circle cx="60" cy="51" r="2" fill="#221407" stroke="none"/><circle cx="50" cy="57" r="3.2" fill="#e39b72" stroke-width="2.5"/><path d="M41 67h18" stroke-width="4"/></svg>',
@@ -1958,6 +1971,7 @@ function resize() {
 }
 window.addEventListener("resize", function () { if (renderer) resize(); });
 function updateCamera(dt) {
+  if (CAMD.on) { camdApply(dt); return; }
   var tx, tz, ty = 0, zoom = 1;
   if (G.title) { tx = P.pos.x + .9; tz = P.pos.z + .2; zoom = .46; cam.yaw = Math.sin(G.time * .3) * .28 - .15; }
   else if (G.cine) { tx = G.cine.pos.x; tz = G.cine.pos.z; ty = G.cine.pos.y * .3; zoom = G.cine.zoom; }
@@ -1976,6 +1990,7 @@ function updateCamera(dt) {
   camera.lookAt(cam.tgt.x, cam.tgt.y + 1.0, cam.tgt.z);
   G.punch = Math.max(0, (G.punch || 0) - dt * 3);
   if (G.baseFov) { var nf = G.baseFov - G.punch * 3.5; if (Math.abs(nf - camera.fov) > .01) { camera.fov = nf; camera.updateProjectionMatrix(); } }
+  camdBlend(dt);
 }
 
 /* ---------- ambience ---------- */
@@ -2041,9 +2056,7 @@ var INTRO = [
   { art: "hr", kicker: "Meet HR-9000", text: "\u201cWelcome to Mandatory Fun. Your enthusiasm has been noted and found insufficient.\u201d" }
 ];
 var storyIdx = 0;
-function showStory() {
-  $("story").classList.remove("hidden"); renderStory();
-}
+function showStory() { G.title = false; playCutscene(PROLOGUE(), beginGame); }
 function renderStory() {
   var c = INTRO[storyIdx];
   $("story-art").innerHTML = '<div style="width:116px;height:116px;border:3px solid var(--line);overflow:hidden;box-shadow:var(--shadow-s)">' + ART[c.art] + '</div>';
@@ -2069,9 +2082,9 @@ $("btn-start").addEventListener("click", function () { audio(); startMusic(); sn
    D. LEVEL 1: BONK ISLES. Five islands, four resources, five hats, ten quests.
    ===================================================================== */
 var _wp2 = new V3();
-var UNL = { none: true, stone: false, lumber: false, miner: false, prop: false, crown: false, dunce: false, wool: false, tiara: false, fishbowl: false, tinfoil: false };
+var UNL = { none: true, stone: false, lumber: false, miner: false, prop: false, crown: false, dunce: false, wool: false, tiara: false, fishbowl: false, tinfoil: false, visor: false, bowler: false, cone: false, antenna: false, slimecrown: false, tophat: false };
 var Q = { idx: 0, state: "offer", snap: null };
-var HAT_ORDER = ["none", "stone", "lumber", "miner", "prop", "crown", "dunce", "wool", "tiara", "fishbowl", "tinfoil"];
+var HAT_ORDER = ["none", "stone", "lumber", "miner", "prop", "crown", "dunce", "wool", "tiara", "fishbowl", "tinfoil", "visor", "bowler", "cone", "antenna", "slimecrown", "tophat"];
 var HATS = {
   none:   { name: "Bare Head", perk: "Just you and your forehead.", dmg: 0, nog: 1, rec: 1, zone: [.66, .88], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, col: 0xf0b48a, from: "" },
   stone:  { name: "Stone Hat", perk: "+1 damage. Bonks hurt half as much.", dmg: 1, nog: .5, rec: 1.25, zone: [.60, .92], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, col: 0x8d97a3, from: "Built at the Hat Forge (tutorial)" },
@@ -2083,7 +2096,13 @@ var HATS = {
   wool:   { name: "Woolly Cap", perk: "Soft bonks: a quarter less headache. Gary approves.", dmg: 0, nog: .7, rec: 1.2, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, col: 0xfbf6ee, from: "Secret: launch Gary twice" },
   tiara:  { name: "Crystal Tiara", perk: "A constant sparkle trail. Loot flies in from farther.", dmg: 0, nog: .85, rec: 1.2, zone: [.62, .91], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1.5, col: 0x7fe3ff, from: "Secret: mine 10 crystals" },
   fishbowl: { name: "Fishbowl Helmet", perk: "Immune to steam vent shoves. The fish is on loan.", dmg: 0, nog: .8, rec: 1.15, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, ventImmune: true, col: 0x9fe0ff, from: "Quest: Scrap Run (Level 2)" },
-  tinfoil: { name: "Tin Foil Hat", perk: "HR memos become conspiracy theories. They were always conspiracy theories.", dmg: 0, nog: .9, rec: 1.2, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, conspiracy: true, col: 0xc9d4e0, from: "Secret: get shoved by steam 3 times" }
+  tinfoil: { name: "Tin Foil Hat", perk: "HR memos become conspiracy theories. They were always conspiracy theories.", dmg: 0, nog: .9, rec: 1.2, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, conspiracy: true, col: 0xc9d4e0, from: "Secret: get shoved by steam 3 times" },
+  visor: { name: "Welder Visor", perk: "Immune to sparks. Wider green zone. Looks cool, sees poorly.", dmg: 0, nog: .8, rec: 1.15, zone: [.52, .95], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, sparkImmune: true, col: 0xff9a2f, from: "Quest: Belt Basics (Level 3)" },
+  bowler: { name: "Bowler Bot-Hat", perk: "Robots drop an extra gear. The hat insists it is not a robot.", dmg: 0, nog: .8, rec: 1.15, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1.2, robotB: 1, col: 0x3a414f, from: "Quest: First Contact (Level 3)" },
+  cone: { name: "Traffic Cone", perk: "Presses give a longer warning. Drivers respect it.", dmg: 0, nog: .9, rec: 1.2, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1, pressWarn: 1.6, col: 0xff6a1f, from: "Secret: get flattened by a press 3 times" },
+  antenna: { name: "Antenna Beanie", perk: "Pings nearby resource nodes. Loot flies in from farther.", dmg: 0, nog: .85, rec: 1.2, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1.8, ping: true, col: 0x3ee0c0, from: "Quest: Slime Harvest (Level 4)" },
+  slimecrown: { name: "Slime Crown", perk: "Bounce pads launch you higher. Drippy, but regal.", dmg: 0, nog: .85, rec: 1.2, zone: [.62, .90], speed: 1, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1.2, padBoost: true, col: 0x9d5cff, from: "Secret: bounce on pads 8 times" },
+  tophat: { name: "Executive Top Hat", perk: "A trophy for passing the review. Bosses take a little more damage.", dmg: 0, nog: .7, rec: 1.3, zone: [.60, .92], speed: 1.05, treeDmg: 0, gemEase: 0, yieldB: {}, magnet: 1.3, bossB: true, col: 0x1f2430, from: "Beat HR-9000 (Level 5)" }
 };
 function HAT() { return HATS[P.hatId] || HATS.none; }
 var HAT_ICO = {
@@ -2097,7 +2116,13 @@ var HAT_ICO = {
   wool: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><circle cx="13" cy="24" r="7" fill="#fbf6ee"/><circle cx="27" cy="24" r="7" fill="#fbf6ee"/><circle cx="20" cy="17" r="8" fill="#fbf6ee"/><circle cx="20" cy="26" r="7" fill="#fbf6ee"/></svg>',
   tiara: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M6 30 Q20 24 34 30 L34 34 Q20 28 6 34z" fill="#f5b921"/><path d="M12 28 L14 14 L17 28z" fill="#7fe3ff"/><path d="M18 27 L20 8 L22 27z" fill="#b99cff"/><path d="M23 28 L26 14 L28 28z" fill="#7fe3ff"/></svg>',
   fishbowl: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><circle cx="20" cy="18" r="14" fill="#bfeaff" fill-opacity=".7"/><path d="M11 19 q6 -7 13 0 q-7 7 -13 0z" fill="#ff8a1f"/><path d="M24 19 l6 -5 v10z" fill="#ff8a1f"/><rect x="10" y="31" width="20" height="5" rx="2" fill="#8a94a6"/></svg>',
-  tinfoil: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M6 30 L10 16 L15 24 L19 7 L24 22 L30 13 L34 30z" fill="#d4dbe6"/><path d="M19 7 L17 28 M24 22 L22 29 M10 16 L13 28" fill="none" stroke-width="1.6"/><rect x="5" y="29" width="30" height="5" rx="2" fill="#bac4d3"/></svg>'
+  tinfoil: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M6 30 L10 16 L15 24 L19 7 L24 22 L30 13 L34 30z" fill="#d4dbe6"/><path d="M19 7 L17 28 M24 22 L22 29 M10 16 L13 28" fill="none" stroke-width="1.6"/><rect x="5" y="29" width="30" height="5" rx="2" fill="#bac4d3"/></svg>',
+  visor: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M6 24 Q20 4 34 24z" fill="#4a5266"/><rect x="4" y="23" width="32" height="5" rx="2" fill="#3a414f"/><rect x="9" y="26" width="22" height="9" rx="2" fill="#ff9a2f"/><path d="M12 29h16" stroke-width="1.6" fill="none"/></svg>',
+  bowler: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M9 28 Q10 9 20 9 Q30 9 31 28z" fill="#3a414f"/><rect x="3" y="27" width="34" height="5" rx="2.5" fill="#2b303b"/><rect x="10" y="22" width="20" height="4" fill="#ff9a2f"/><path d="M20 9V3" stroke-width="2"/><circle cx="20" cy="3" r="2.4" fill="#ff3b3b"/></svg>',
+  cone: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M20 3 L31 31 H9z" fill="#ff6a1f"/><path d="M16 15 H24 L26 21 H14z" fill="#fff"/><rect x="5" y="30" width="30" height="5" rx="2" fill="#e0501a"/></svg>',
+  antenna: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M7 30 Q20 12 33 30z" fill="#3ee0c0"/><rect x="5" y="29" width="30" height="5" rx="2" fill="#2fb89a"/><path d="M14 17 L10 6 M26 17 L30 6" fill="none"/><circle cx="10" cy="5" r="3" fill="#ff7ad9"/><circle cx="30" cy="5" r="3" fill="#ffe14d"/></svg>',
+  slimecrown: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><path d="M6 28 L6 12 L13 20 L20 8 L27 20 L34 12 L34 28z" fill="#9d5cff"/><rect x="6" y="26" width="28" height="5" fill="#7a3fd0"/><path d="M10 31 q0 6 3 0 M19 31 q0 8 3 0 M28 31 q0 5 3 0" fill="#b98aff"/></svg>',
+  tophat: '<svg viewBox="0 0 40 40" stroke="#221407" stroke-width="2.5" stroke-linejoin="round"><rect x="11" y="6" width="18" height="21" rx="2" fill="#1f2430"/><rect x="11" y="20" width="18" height="5" fill="#f5b921"/><rect x="4" y="26" width="32" height="5" rx="2.5" fill="#1f2430"/></svg>'
 };
 
 /* ---------- Dunk’s extra hats ---------- */
@@ -2147,6 +2172,33 @@ function buildHats(D) {
   var c1 = M(tf, coneG(.34, .55, 5), fm2, .12, .38, -.05, .04); c1.rotation.z = -.35;
   var c2 = M(tf, coneG(.24, .42, 5), toon(0xeef2f8), -.28, .3, .12, .03); c2.rotation.z = .5;
   M(tf, cylG(.78, .8, .06, 12), toon(0xbac4d3), 0, -.04, 0, .03);
+  var vv = sub(head, 0, 1.0, -.02); vv.visible = false; D.hats.visor = vv;
+  var vd = M(vv, new THREE.SphereGeometry(.7, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toon(0x4a5266), 0, 0, 0, .05); vd.scale.y = .72;
+  M(vv, cylG(.76, .76, .1, 16), toon(0x3a414f), 0, -.07, 0, .04);
+  var vg = M(vv, boxG(1.0, .46, .1), toon(0xff9a2f, { emissive: 0x7a3300 }), 0, -.12, .74, .03); vg.rotation.x = -.35;
+  var bh = sub(head, 0, 1.0, -.02); bh.visible = false; D.hats.bowler = bh;
+  var bdm = M(bh, new THREE.SphereGeometry(.62, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toon(0x3a414f), 0, 0, 0, .05); bdm.scale.y = .95;
+  M(bh, cylG(.86, .86, .07, 18), toon(0x2b303b), 0, -.06, 0, .04);
+  M(bh, cylG(.64, .64, .12, 16), toon(0xff9a2f), 0, .04, 0, .03);
+  M(bh, cylG(.04, .04, .4, 5), toon(0x8a94a6), 0, .55, 0, .02);
+  var bb2 = new THREE.Mesh(new THREE.SphereGeometry(.08, 6, 5), new THREE.MeshBasicMaterial({ color: 0xff3b3b })); bb2.position.set(0, .98, 0); bh.add(bb2);
+  var ch2 = sub(head, 0, 1.05, -.02); ch2.visible = false; D.hats.cone = ch2;
+  M(ch2, coneG(.6, 1.3, 14), toon(0xff6a1f), 0, 0, 0, .05);
+  M(ch2, cylG(.44, .5, .2, 14), toon(0xffffff), 0, .45, 0, .02);
+  M(ch2, cylG(.72, .74, .12, 14), toon(0xe0501a), 0, -.04, 0, .03);
+  var ah = sub(head, 0, 1.0, -.02); ah.visible = false; D.hats.antenna = ah;
+  var ad = M(ah, new THREE.SphereGeometry(.68, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toon(0x3ee0c0), 0, 0, 0, .05); ad.scale.y = .8;
+  M(ah, cylG(.74, .74, .1, 16), toon(0x2fb89a), 0, -.07, 0, .04);
+  [[-.28, 0xff7ad9], [.28, 0xffe14d]].forEach(function (a2) { var st2 = M(ah, cylG(.03, .03, .7, 5), toon(0x8a94a6), a2[0], .35, 0, false); st2.rotation.z = -a2[0] * .8; var bl = new THREE.Mesh(new THREE.SphereGeometry(.1, 8, 6), new THREE.MeshBasicMaterial({ color: a2[1] })); bl.position.set(a2[0] * 1.5, 1.0, 0); ah.add(bl); });
+  var sc = sub(head, 0, 1.12, -.02); sc.visible = false; D.hats.slimecrown = sc;
+  var sm = toon(0x9d5cff, { emissive: 0x3a1a6a });
+  M(sc, cylG(.58, .62, .26, 14), sm, 0, 0, 0, .04);
+  for (var i3 = 0; i3 < 5; i3++) { var a3 = i3 / 5 * Math.PI * 2; M(sc, new THREE.SphereGeometry(.17, 8, 6), toon(0xb98aff, { emissive: 0x4a2a80 }), Math.cos(a3) * .55, .32, Math.sin(a3) * .55, .03); }
+  [[.3, .5], [-.4, .2], [.1, -.55]].forEach(function (d3) { M(sc, new THREE.SphereGeometry(.09, 6, 5), toon(0xe4d0ff, { emissive: 0x6a4aa0 }), d3[0], -.22, d3[1], false); });
+  var th = sub(head, 0, 1.05, -.02); th.visible = false; D.hats.tophat = th;
+  M(th, cylG(.52, .56, .85, 16), toon(0x1f2430), 0, 0, 0, .05);
+  M(th, cylG(.8, .8, .08, 18), toon(0x1f2430), 0, -.04, 0, .04);
+  M(th, cylG(.57, .57, .16, 16), toon(0xf5b921, { emissive: 0x4a3100 }), 0, .08, 0, .03);
 }
 function setHat(id, silent) {
   if (!HATS[id]) id = "none";
@@ -2165,7 +2217,7 @@ function unlockHat(id, quiet) {
   G.cine = { pos: P.pos.clone().add(new V3(0, 1.2, 0)), zoom: .42 };
   var hat = sub(scene, 0, 0, 0), dm = M(hat, new THREE.SphereGeometry(.72, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(h.col), 0, 0, 0, .05); dm.scale.y = .85;
   M(hat, cylG(.76, .76, .12, 14), toon(h.col), 0, -.08, 0, .04);
-  var from = LR.mpos.clone(), to = P.pos.clone().add(new V3(0, 2.35, 0));
+  var from = (G.hatFrom || LR.mpos).clone(), to = P.pos.clone().add(new V3(0, 2.35, 0));
   snd.whoosh();
   tween(.9, function (u) { var e = easeOut(u); hat.position.set(lerp(from.x, to.x, e), lerp(from.y, to.y, e) + Math.sin(Math.PI * u) * 2.4, lerp(from.z, to.z, e)); hat.rotation.y = u * 10; }, function () {
     scene.remove(hat); setHat(id); snd.clunk(); snd.fanfare(); shake(.5); G.hitstop = .1; flash();
@@ -2182,12 +2234,18 @@ function unlockHat(id, quiet) {
 /* ---------- quests ---------- */
 function curQ() { return QUESTS[Q.idx] || null; }
 function qProg(q) {
-  var s = Q.snap || { g: GATH, perf: 0, big: 0, vend: 0 };
+  var s = Q.snap || { g: GATH, perf: 0, big: 0, vend: 0, robot: 0, dodge: 0, belt: 0, pad: 0, goo: 0 };
   if (q.type === "gain") return [Math.min(Math.max(0, GATH[q.res] - s.g[q.res]), q.n), q.n];
   if (q.type === "build") return [plots[q.plot].built ? 1 : 0, 1];
   if (q.type === "perfect") return [Math.min(Math.max(0, stats.perfects - s.perf), q.n), q.n];
   if (q.type === "vend") return [Math.min(Math.max(0, (stats.vends || 0) - (s.vend || 0)), q.n), q.n];
   if (q.type === "streak") return [Math.min(G.perfStreak || 0, q.n), q.n];
+  if (q.type === "robot") return [Math.min(Math.max(0, (stats.robots || 0) - (s.robot || 0)), q.n), q.n];
+  if (q.type === "dodge") return [Math.min(Math.max(0, (stats.dodges || 0) - (s.dodge || 0)), q.n), q.n];
+  if (q.type === "belt") return [Math.min(Math.max(0, Math.floor((stats.beltT || 0) - (s.belt || 0))), q.n), q.n];
+  if (q.type === "pad") return [Math.min(Math.max(0, (stats.pads || 0) - (s.pad || 0)), q.n), q.n];
+  if (q.type === "goo") return [Math.min(Math.max(0, Math.floor((stats.gooT || 0) - (s.goo || 0))), q.n), q.n];
+  if (q.type === "boss") return [0, 1];
   return [Math.min(Math.max(0, GATH[q.res] - s.g[q.res]), q.n) + Math.min(Math.max(0, stats.bigs - s.big), 1), q.n + 1];
 }
 function qDone(q) { var p = qProg(q); return p[0] >= p[1]; }
@@ -2226,7 +2284,7 @@ function renderBoard() {
 function openBoard() { if (G.level < 1 || !curQ() || G.cine || G.ended || G.paused) return; renderBoard(); openSheet("board"); snd.pop(); }
 function acceptQuest() {
   var q = curQ(); if (!q || Q.state !== "offer") return;
-  Q.state = "active"; Q.snap = { g: copyG(), perf: stats.perfects, big: stats.bigs, vend: stats.vends || 0 }; G.lastProgress = G.time;
+  Q.state = "active"; Q.snap = { g: copyG(), perf: stats.perfects, big: stats.bigs, vend: stats.vends || 0, robot: stats.robots || 0, dodge: stats.dodges || 0, belt: stats.beltT || 0, pad: stats.pads || 0, goo: stats.gooT || 0 }; G.lastProgress = G.time;
   if (q.type === "build") activatePlot(q.plot);
   snd.chime(); say(q.accept, 1); saveLevel(); refreshQuestChip();
 }
@@ -2334,11 +2392,23 @@ function nearestQ(filter) {
 function questTarget() {
   if (G.ended || G.won) return null;
   var q = curQ(); if (!q) return null;
-  if (Q.state !== "active") return { pos: LR.house.pos, h: 3.9 };
+  if (Q.state !== "active") return LV.talkAnywhere ? null : { pos: LR.house.pos, h: 3.9 };
   if (q.type === "build") { var p = plots[q.plot]; return p.built ? null : { pos: p.pos, h: p.isBridge ? 2.2 : 4.2, plot: true }; }
   var t;
   if (q.type === "gain") { t = nearestQ(function (o) { return o.res === q.res; }); }
   else if (q.type === "vend") { t = nearestQ(function (o) { return o.name === "vending"; }); }
+  else if (q.type === "robot") { t = nearestQ(function (o) { return o.kind === "robot"; }); }
+  else if (q.type === "boss") { return LR.boss ? { pos: new V3(LR.boss.x, 0, LR.boss.z), h: 4.6 } : null; }
+  else if (q.type === "pad" || q.type === "goo") {
+    var L4 = q.type === "pad" ? (LR.pads || []) : (LR.slows || []), bb4 = null, bd4 = 1e9, rs4 = reachSet();
+    L4.forEach(function (o) { var oi = islandOf(o.x, o.z); if (oi < 0 || !rs4[oi]) return; var dd = Math.hypot(o.x - P.pos.x, o.z - P.pos.z); if (dd < bd4) { bd4 = dd; bb4 = o; } });
+    return bb4 ? { pos: new V3(bb4.x, 0, bb4.z), h: 2.4 } : null;
+  }
+  else if (q.type === "dodge" || q.type === "belt") {
+    var L3 = q.type === "dodge" ? (LR.presses || []) : (LR.belts || []), bb = null, bd2 = 1e9, rs3 = reachSet();
+    L3.forEach(function (o) { var oi = islandOf(o.x, o.z); if (oi < 0 || !rs3[oi]) return; var dd = Math.hypot(o.x - P.pos.x, o.z - P.pos.z); if (dd < bd2) { bd2 = dd; bb = o; } });
+    return bb ? { pos: new V3(bb.x, 0, bb.z), h: 2.6 } : null;
+  }
   else if (q.type === "combo") { t = (stats.bigs - Q.snap.big < 1 && nearestQ(function (o) { return o.big; })) || nearestQ(function (o) { return o.kind === "rock"; }); }
   else t = nearestQ(function (o) { return o.kind === "rock" || o.kind === "tree"; });
   return t ? tgt(t, t.kind === "tree" ? 4.2 : undefined) : null;
@@ -2424,7 +2494,7 @@ function updateTalk() {
   var c = $("talk");
   if (G.level < 1 || !canAct() || cardPlot || !LR.house || !curQ()) { c.classList.add("hidden"); LR.talkOn = false; return; }
   var d = Math.hypot(P.pos.x - LR.house.pos.x, P.pos.z - LR.house.pos.z);
-  if (d > 6.2) { c.classList.add("hidden"); LR.talkOn = false; return; }
+  if (d > 6.2 && !(LV.talkAnywhere && Q.state !== "active")) { c.classList.add("hidden"); LR.talkOn = false; return; }
   var msg = Q.state === "offer" ? "I\u2019ve got a job for you!" : Q.state === "ready" ? "Quest done? Come tell me." : "Need a reminder?";
   if (c.classList.contains("hidden")) { c.classList.remove("hidden", "in"); void c.offsetWidth; c.classList.add("in"); $("talk-pic").innerHTML = ART.mabel; }
   if ($("talk-tx").textContent !== msg) $("talk-tx").textContent = msg;
@@ -2447,6 +2517,10 @@ function hatWord(tg, gp) {
   else if (id === "tiara" && tg.kind === "crystal") w = "Sparkle!";
   else if (id === "wool") w = "Fluffy!";
   else if (id === "dunce") w = "Duh.";
+  else if (id === "bowler" && tg.kind === "robot") w = "BEEP-BONK!";
+  else if (id === "visor" && tg.name === "machine") w = "WELDED!";
+  else if (id === "antenna" && tg.res === "slime") w = "Blip!";
+  else if (id === "slimecrown" && tg.res === "slime") w = "Splorch!";
   if (w) floater(gp.clone().setY(3.1), w, "bw", 1.4);
 }
 function hatFlair(dt) {
@@ -2461,6 +2535,12 @@ function hatFlair(dt) {
   else if (id === "wool") { LR.flT = 1; puff(top.clone().add(jit(.4)), .45, 0xffffff, .8, .4); }
   else if (id === "fishbowl") { LR.flT = .6; burst(top.clone().add(jit(.4)), [0xcfefff, 0xffffff], 1, .3, 1.2, .5, .9); }
   else if (id === "tinfoil") { LR.flT = .8; burst(top.clone().add(jit(.5)), [0xffffff, 0xc9d4e0], 1, .3, 1.0, .35, .6); }
+  else if (id === "tophat") { LR.flT = .45; burst(top.clone().add(new V3(0, .6, 0)).add(jit(.4)), [0xf5b921, 0xffffff], 1, .4, 1.1, .4, .7); }
+  else if (id === "antenna") { LR.flT = .5; burst(top.clone().add(new V3(0, .9, 0)).add(jit(.5)), [0xff7ad9, 0xffe14d], 1, .3, 1.0, .4, .6); }
+  else if (id === "slimecrown") { LR.flT = .6; burst(top.clone().add(jit(.4)), [0xb98aff, 0xe4d0ff], 1, .3, -.2, .5, .8); }
+  else if (id === "visor") { LR.flT = .45; burst(new V3(P.pos.x + P.face.x * .7, 2.2, P.pos.z + P.face.z * .7), [0xffb347, 0xffffff], 1, 1.2, 1.2, .35, .35); }
+  else if (id === "bowler") { LR.flT = .9; puff(top.clone().add(jit(.3)), .3, 0xc9d4e0, .7, .5); }
+  else if (id === "cone") { LR.flT = 1.2; burst(top.clone().add(new V3(0, .5, 0)), [0xff6a1f, 0xffffff], 1, .3, 1.0, .35, .6); }
   else if (id === "tiara") { LR.flT = .22; burst(top.clone().add(jit(.5)), [0x7fe3ff, 0xb99cff], 1, .5, 1.4, .5, .8); }
   else LR.flT = .5;
 }
@@ -2470,13 +2550,16 @@ function checkFeatHats() {
   else if (!UNL.wool && stats.sheep >= 2) unlockHat("wool");
   else if (!UNL.tiara && stats.crystals >= 10) unlockHat("tiara");
   else if (!UNL.tinfoil && stats.shoved >= 3) unlockHat("tinfoil");
+  else if (!UNL.cone && (stats.squashed || 0) >= 3) unlockHat("cone");
+  else if (!UNL.slimecrown && (stats.pads || 0) >= 8) unlockHat("slimecrown");
 }
 /* island hazards: forest coconuts, quarry rockfall, crystal shard drops. Always telegraphed with a red circle. */
 function updatePolish(dt) {
-  hatFlair(dt); updateFalls(dt); updateVents(dt);
+  hatFlair(dt); updateFalls(dt); updateVents(dt); updateBelts(dt); updatePresses(dt); updateRobots(dt); updateGoo(dt); updatePads(dt); updateSpores(dt); updatePings(dt); updateBoss(dt);
   var fp = LV && LV.final && plots[LV.final.id];
   if (fp && fp.built && fp.real && fp.real.userData.float) { var ff = fp.real.userData.float; ff.position.y = 4.3 + Math.sin(G.time * 1.4) * .25; ff.rotation.y = Math.sin(G.time * .5) * .35; }
   if (dunk && dunk.fish && P.hatId === "fishbowl") dunk.fish.rotation.y = Math.sin(G.time * 3) * .7;
+  if (fp && fp.built && fp.real && fp.real.userData.tick) fp.real.userData.tick(G.time);
   if (P.hatId === "tiara") P.sparkle = Math.max(P.sparkle || 0, .5);
   if (P.sparkle > 0) {
     P.sparkle -= dt; P.spT = (P.spT || 0) - dt;
@@ -2728,6 +2811,1341 @@ LEVELS[2] = {
   ]
 };
 
+/* =====================================================================
+   LEVEL 3 engine additions: gears, conveyor belts, stamping presses, patrol robots, factory props
+   ===================================================================== */
+var _bv = { x: 0, z: 0, b: null };
+var BELT_TEX = null;
+function beltTexture() {
+  if (BELT_TEX) return BELT_TEX;
+  var c = document.createElement("canvas"); c.width = 64; c.height = 64; var x = c.getContext("2d");
+  x.fillStyle = "#353b49"; x.fillRect(0, 0, 64, 64);
+  x.strokeStyle = "#ffb347"; x.lineWidth = 8; x.lineJoin = "miter";
+  x.beginPath(); x.moveTo(14, 9); x.lineTo(44, 32); x.lineTo(14, 55); x.stroke();
+  x.fillStyle = "#4a5266"; x.fillRect(0, 0, 64, 4); x.fillRect(0, 60, 64, 4);
+  BELT_TEX = new THREE.CanvasTexture(c); BELT_TEX.wrapS = BELT_TEX.wrapT = THREE.RepeatWrapping; BELT_TEX.anisotropy = 4;
+  return BELT_TEX;
+}
+/* dir in degrees: 0 = +x (east), 90 = +z (south on screen), 180 = west, 270 = north */
+function makeBelt(R, n, cfg) {
+  var a = (cfg.dir || 0) * Math.PI / 180, w = cfg.w, d = cfg.d || 3.2, bx = cfg.x + R.ox, bz = cfg.z + R.oz;
+  var g = sub(scene, bx, 0, bz); g.rotation.y = -a;
+  M(g, boxG(w + .5, .06, d + .5), toon(0x3a414f), 0, 0, 0, .04);
+  [-1, 1].forEach(function (s) { M(g, boxG(w + .5, .16, .2), toon(0x6f7a90), 0, 0, s * (d / 2 + .2), .03); });
+  var tex = beltTexture().clone(); tex.needsUpdate = true; tex.repeat.set(w / 2, 1);
+  var geo = new THREE.PlaneGeometry(w, d); geo.rotateX(-Math.PI / 2);
+  var surf = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })); surf.position.y = .075; g.add(surf);
+  var fgeo = new THREE.PlaneGeometry(w, d); fgeo.rotateX(-Math.PI / 2);
+  var flash = new THREE.Mesh(fgeo, new THREE.MeshBasicMaterial({ color: 0xff5a36, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide })); flash.position.y = .09; g.add(flash);
+  return { g: g, surf: surf, tex: tex, flash: flash, x: bx, z: bz, w: w, d: d, cx: Math.cos(a), cz: Math.sin(a), speed: cfg.speed || 2, rev: cfg.rev || 0, phase0: cfg.phase || 0, t: cfg.phase || 0, mult: 1, sign: 1, warn: false };
+}
+function beltAt(x, z) {
+  _bv.x = 0; _bv.z = 0; _bv.b = null;
+  var B = LR.belts; if (!B || G.level < 1) return _bv;
+  for (var i = 0; i < B.length; i++) {
+    var b = B[i], dx = x - b.x, dz = z - b.z, u = dx * b.cx + dz * b.cz, v = -dx * b.cz + dz * b.cx;
+    if (Math.abs(u) <= b.w / 2 && Math.abs(v) <= b.d / 2) { var s = b.speed * b.mult; _bv.x += b.cx * s; _bv.z += b.cz * s; _bv.b = b; }
+  }
+  return _bv;
+}
+function updateBelts(dt) {
+  var B = LR.belts; if (G.level < 1) return;
+  (LR.spin || []).forEach(function (s) { s.g.rotation.y += s.v * dt; });
+  if (!B || !B.length) return;
+  var isl = islandOf(P.pos.x, P.pos.z);
+  if (isl !== LR.beltIsl) { LR.beltIsl = isl; B.forEach(function (b) { b.t = b.phase0; }); }   // a reversing belt starts its cycle when you arrive
+  B.forEach(function (b) {
+    b.t += dt;
+    if (b.rev) {
+      var u = b.t % b.rev, k = (Math.floor(b.t / b.rev) % 2) ? -1 : 1, rp = Math.max(0, Math.min(1, u / .5, (b.rev - u) / .5));
+      rp = rp * rp * (3 - 2 * rp); b.mult = k * rp; if (rp > .05) b.sign = k; b.warn = (b.rev - u) < 1.3;
+    }
+    b.surf.scale.x = b.sign;
+    b.tex.offset.x = (b.tex.offset.x - Math.abs(b.mult) * b.speed * dt / 2) % 1;
+    b.flash.material.opacity = b.warn ? .2 + .18 * Math.sin(G.time * 16) : 0;
+  });
+}
+
+/* ---------- stamping presses: a red shadow grows, the head descends, then it slams ---------- */
+var PRESS = { warn: 1.5, slam: .1, hold: .55, rise: .55, restY: 8.4, warnY: 5.0 };
+function makePress(R, n, cfg) {
+  var r = cfg.r || 1.9, px = cfg.x + R.ox, pz = cfg.z + R.oz, g = sub(scene, px, 0, pz);
+  M(g, cylG(r + .5, r + .6, .1, 20), toon(0x2f3542), 0, 0, 0, .04);
+  var yr = new THREE.Mesh(new THREE.RingGeometry(r + .05, r + .38, 28), new THREE.MeshBasicMaterial({ color: 0xffc21a, side: THREE.DoubleSide })); yr.rotation.x = -Math.PI / 2; yr.position.y = .115; g.add(yr);
+  var gz = -(r + 1.5);
+  M(g, boxG(1.4, 9.6, 1.2), toon(0x5a6275), 0, 0, gz, .05);
+  M(g, boxG(1.6, .9, -gz + .6), toon(0x4a5266), 0, 8.7, gz / 2 + .15, .05);
+  var hd = sub(g, 0, PRESS.restY, 0);
+  var hms = [0x8a94a6, 0xffc21a].map(function (c) { return new THREE.MeshToonMaterial({ color: c, gradientMap: GRAD, transparent: true, opacity: .3, depthWrite: false }); });   // see-through until it slams, so it never hides Dunk
+  M(hd, boxG(r * 2 + .3, .6, r * 2 + .3), hms[0], 0, .2, 0, false);
+  M(hd, boxG(r * 2 + .3, .2, r * 2 + .3), hms[1], 0, 0, 0, false);
+  var rod = M(g, cylG(.3, .3, 1, 8), toon(0x6f7a90), 0, 0, 0, .03);
+  var sh = new THREE.Mesh(BLOB_GEO, new THREE.MeshBasicMaterial({ color: 0xd42a1e, transparent: true, opacity: 0, depthWrite: false, depthTest: false })); sh.renderOrder = 6; sh.rotation.x = -Math.PI / 2; sh.position.set(px, .06, pz); scene.add(sh);
+  var rg = new THREE.Mesh(new THREE.RingGeometry(r - .1, r + .15, 28), new THREE.MeshBasicMaterial({ color: 0xff3b2a, transparent: true, opacity: 0, depthWrite: false, depthTest: false, side: THREE.DoubleSide })); rg.renderOrder = 6; rg.rotation.x = -Math.PI / 2; rg.position.set(px, .07, pz); scene.add(rg);
+  var isl = -1; for (var k = 0; k < R.islands.length; k++) { var s = R.islands[k], ddx = px - s.x, ddz = pz - s.z; if (ddx * ddx + ddz * ddz <= (s.r + .5) * (s.r + .5)) isl = k; }
+  var p = { hms: hms, g: g, hd: hd, rod: rod, sh: sh, rg: rg, x: px, z: pz, r: r, per: cfg.per || 8, phase: cfg.phase || 0, st: "rest", t: -(cfg.phase || 0), isl: isl, seen: false };
+  pressY(p, PRESS.restY); return p;
+}
+function pressOpa(p) { var solid = p.st === "slam" || p.st === "hold"; p.hms.forEach(function (m) { m.opacity = solid ? 1 : .3; m.depthWrite = solid; }); }
+function pressY(p, y) { p.hd.position.y = y; var top = y + .8; p.rod.position.y = top; p.rod.scale.y = Math.max(.05, 8.7 - top); }
+function pressReset(p) { p.st = "rest"; pressOpa(p); p.t = -p.phase; p.sh.material.opacity = 0; p.rg.material.opacity = 0; pressY(p, PRESS.restY); }
+function pressImpact(p) {
+  var dx = P.pos.x - p.x, dz = P.pos.z - p.z, d = Math.hypot(dx, dz);
+  snd.stomp(); snd.clunk(); shake(.5); punch(.5);
+  puff(new V3(p.x, .3, p.z), p.r * 1.4, 0xe8e0d0, .6, .5); burst(new V3(p.x, .4, p.z), [0xffb347, 0xffffff], 14, 6, 4, .8, .6); shockwave(new V3(p.x, .25, p.z), 0xffc21a, p.r * 2.6, .4);
+  if (d < p.r + .3 && !P.lunge) {
+    stats.ouch = (stats.ouch || 0) + 1; stats.squashed = (stats.squashed || 0) + 1; addNog(26); P.stun = .7; snd.ow(); vibrate(40); G.hitstop = .08;
+    var nx = d > .01 ? dx / d : 1, nz = d > .01 ? dz / d : 0; P.shove = { vx: nx * 12, vz: nz * 12, t: .4, dur: .4 };
+    floater(P.pos.clone().setY(2.8), "SPLAT.", "ow", 1.2);
+    $("vig").classList.remove("hurt"); void $("vig").offsetWidth; $("vig").classList.add("hurt");
+    tween(.9, function (u) { var e = easeOut(u); dunk.root.scale.set(lerp(1.5, 1, e), lerp(.22, 1, e), lerp(1.5, 1, e)); }, function () { dunk.root.scale.set(1, 1, 1); });
+    once("press_hit", function () { say("Flattened. HR-9000 calls it \u2018a temporary reformat\u2019. The shadow was the warning. The shadow is always the warning.", 1); });
+  } else if (p.seen) {
+    stats.dodges = (stats.dodges || 0) + 1; floater(P.pos.clone().setY(2.8), "DODGED!", "perfect", 1.2); snd.chime();
+    once("press_dodge", function () { say("Dodged. HR-9000 has logged it as \u2018unscheduled agility\u2019.", 0); });
+  }
+}
+function updatePresses(dt) {
+  var A = LR.presses; if (!A || !A.length || G.level < 1 || !canAct()) return;
+  var isl = islandOf(P.pos.x, P.pos.z);
+  if (isl !== LR.pressIsl) { LR.pressIsl = isl; LR.pressArm = 5; A.forEach(pressReset); }   // never fire in the first 5 s on an island
+  LR.pressArm -= dt;
+  var warn = PRESS.warn * (HAT().pressWarn || 1);
+  A.forEach(function (p) {
+    if (p.isl !== isl) return;
+    p.t += dt;
+    if (p.st === "rest") {
+      if (p.t >= Math.max(.5, p.per - warn - 1.3) && LR.pressArm <= 0) {
+        p.st = "warn"; p.t = 0; p.seen = false; tone(110, warn, "sawtooth", .035, 0, 300);
+        once("press_hint", function () { say("Red shadow means a press is coming down. Be somewhere else when it lands. Shadows don\u2019t lie. HR does.", 0); });
+      }
+    } else if (p.st === "warn") {
+      var u = Math.min(1, p.t / warn);
+      pressY(p, lerp(PRESS.restY, PRESS.warnY, easeOut(u)));
+      p.sh.scale.setScalar(p.r * (.25 + .85 * u)); p.sh.material.opacity = .15 + .3 * u;
+      p.rg.material.opacity = .35 + .4 * Math.abs(Math.sin(p.t * 12));
+      if (Math.hypot(P.pos.x - p.x, P.pos.z - p.z) < p.r + .35) p.seen = true;
+      if (u >= 1) { p.st = "slam"; p.t = 0; pressOpa(p); }
+    } else if (p.st === "slam") {
+      var s2 = Math.min(1, p.t / PRESS.slam); pressY(p, lerp(PRESS.warnY, 0, s2));
+      if (s2 >= 1) { p.st = "hold"; p.t = 0; p.sh.material.opacity = 0; p.rg.material.opacity = 0; pressImpact(p); }
+    } else if (p.st === "hold") {
+      if (p.t >= PRESS.hold) { p.st = "rise"; p.t = 0; pressOpa(p); }
+    } else {
+      var r2 = Math.min(1, p.t / PRESS.rise); pressY(p, lerp(0, PRESS.restY, easeOut(r2)));
+      if (r2 >= 1) { p.st = "rest"; p.t = 0; }
+    }
+  });
+}
+
+/* ---------- patrol robots (hardness 2): they wander a route, politely wait if you are in the way, and drop gears ---------- */
+var ROBOT_BONK = ["BZZT!", "ERROR: HEAD", "OW (SIMULATED)", "CLANG!", "RECALIBRATING", "WARRANTY VOID"];
+function makeRobot(R, n, cfg) {
+  var s = cfg.s || 1, pth = cfg.path.map(function (a) { return [a[0] + R.ox, a[1] + R.oz]; });
+  var g = sub(scene, pth[0][0], 0, pth[0][1]), bd = sub(g, 0, 0, 0); bd.scale.setScalar(s);
+  var orange = toon(0xff9a2f), steel = toon(0x8a94a6), dark = toon(0x2b303b);
+  [-.62, .62].forEach(function (x) { M(bd, boxG(.38, .42, 1.3), dark, x, 0, 0, .04); });
+  M(bd, boxG(1.5, .3, 1.2), steel, 0, .32, 0, .04);
+  M(bd, boxG(1.3, 1.0, 1.0), orange, 0, .62, 0, .05);
+  M(bd, boxG(.7, .45, .06), dark, 0, .95, .52, false);
+  [[-.2, 0xff3b3b], [0, 0xffd93d], [.2, 0x6ff06f]].forEach(function (c) { var l = new THREE.Mesh(new THREE.SphereGeometry(.06, 6, 5), new THREE.MeshBasicMaterial({ color: c[1] })); l.position.set(c[0], 1.17, .56); bd.add(l); });
+  M(bd, boxG(1.0, .7, .9), steel, 0, 1.64, 0, .05);
+  M(bd, boxG(.8, .28, .06), dark, 0, 1.86, .46, false);
+  var eye = new THREE.Mesh(new THREE.SphereGeometry(.11, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffe14d })); eye.position.set(0, 2.0, .5); bd.add(eye);
+  M(bd, cylG(.04, .04, .4, 5), steel, 0, 2.34, 0, false);
+  var bulb = new THREE.Mesh(new THREE.SphereGeometry(.09, 6, 5), new THREE.MeshBasicMaterial({ color: 0xff3b3b })); bulb.position.set(0, 2.78, 0); bd.add(bulb);
+  var armL = sub(bd, -.85, 1.5, 0), armR = sub(bd, .85, 1.5, 0);
+  [armL, armR].forEach(function (a) { M(a, boxG(.22, .9, .22), steel, 0, -.9, 0, .03); M(a, boxG(.34, .2, .3), dark, 0, -1.05, .02, .03); });
+  blob(g, 1.5 * s);
+  var o = { kind: "robot", g: g, bd: bd, eye: eye, bulb: bulb, armL: armL, armR: armR, radius: .95 * s, alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, hp: 4, max: 4, hard: 2, yield: 3, res: "gear", rt: 35, name: "robot", noShrink: true,
+    path: pth, pi: 1, pdir: 1, wait: rnd(.3, 1), stun: 0, walkT: Math.random() * 6, speed: cfg.speed || 1.25, home: new V3(pth[0][0], 0, pth[0][1]) };
+  T.push(o); return o;
+}
+function updateRobots(dt) {
+  for (var i = 0; i < T.length; i++) {
+    var t = T[i]; if ((t.lvl || 0) !== G.level) continue;
+    if (t.cog && t.alive) t.cog.rotation.y += dt * 1.2;
+    if (t.kind !== "robot" || !t.alive) continue;
+    t.stun = Math.max(0, t.stun - dt); if (t.wait > 0) t.wait -= dt;
+    var gp = t.g.position, dxp = P.pos.x - gp.x, dzp = P.pos.z - gp.z, dp = Math.hypot(dxp, dzp);
+    var wp = t.path[t.pi], dx = wp[0] - gp.x, dz = wp[1] - gp.z, dd = Math.hypot(dx, dz), moving = false;
+    var blocked = dp < t.radius + 1.7 && (dxp * dx + dzp * dz) > 0;
+    if (t.stun <= 0 && t.wait <= 0 && !blocked) {
+      if (dd < .15) { t.wait = rnd(.8, 1.6); var nx = t.pi + t.pdir; if (nx < 0 || nx >= t.path.length) { t.pdir = -t.pdir; nx = t.pi + t.pdir; } t.pi = nx; }
+      else { var st = Math.min(dd, t.speed * dt); gp.x += dx / dd * st; gp.z += dz / dd * st; t.g.rotation.y += angDiff(t.g.rotation.y, Math.atan2(dx, dz)) * (1 - Math.exp(-6 * dt)); moving = true; }
+    }
+    t.walkT += dt * (moving ? 7 : 0);
+    var sw = Math.sin(t.walkT) * .6; t.armL.rotation.x = sw; t.armR.rotation.x = -sw;
+    t.bd.position.y = moving ? Math.abs(Math.sin(t.walkT)) * .05 : 0;
+    t.eye.position.x = Math.sin(G.time * 2 + i) * .25; t.bulb.visible = Math.sin(G.time * 5 + i) > -.2;
+  }
+}
+
+/* ---------- machines (drop gears) and factory props ---------- */
+function makeMachine(x, z, s, ry) {
+  var g = sub(scene, x, 0, z); g.rotation.y = ry || 0;
+  M(g, boxG(s * 1.8, s * .22, s * 1.4), toon(0x3a414f), 0, 0, 0, .04);
+  M(g, boxG(s * 1.6, s * 1.2, s * 1.2), toon(0xd9792a), 0, s * .1, 0, .05);
+  M(g, boxG(s * 1.0, s * .55, .06), toon(0x2b303b), 0, s * .5, s * .62, false);
+  for (var i = 0; i < 3; i++) M(g, boxG(s * .8, .05, .08), toon(0x8a94a6), 0, s * (.58 + i * .14), s * .66, false);
+  var cog = sub(g, 0, s * 1.4, 0);
+  M(cog, cylG(s * .45, s * .45, .2, 10), toon(0xffb347), 0, 0, 0, .04);
+  for (var k = 0; k < 8; k++) { var a = k / 8 * Math.PI * 2, tb = M(cog, boxG(s * .2, .2, s * .2), toon(0xffb347), Math.cos(a) * s * .52, 0, Math.sin(a) * s * .52, .03); tb.rotation.y = -a; }
+  var lamp = new THREE.Mesh(new THREE.SphereGeometry(.09, 6, 5), new THREE.MeshBasicMaterial({ color: 0xff5a36 })); lamp.position.set(s * .65, s * 1.4, s * .5); g.add(lamp);
+  blob(g, s * 1.6);
+  var o = { kind: "rock", g: g, cog: cog, radius: s * 1.05, alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, spawnAt: 0, hp: 3, hard: 1, yield: 2, res: "gear", rt: 30, name: "machine" };
+  o.max = o.hp; T.push(o); return o;
+}
+var _propId = 0;
+function makeProp(R, n, c) {
+  var type = c[0], x = c[1] + R.ox, z = c[2] + R.oz, s = c[3] || 1, g = sub(scene, x, 0, z);
+  R.cols = R.cols || []; R.spin = R.spin || [];
+  if (type === "stack") {
+    M(g, cylG(1.1 * s, 1.3 * s, 7 * s, 10), toon(0x6a5a52), 0, 0, 0, .05);
+    [2.0, 4.2].forEach(function (y) { M(g, cylG(1.2 * s, 1.24 * s, .5 * s, 10), toon(0xff9a2f), 0, y * s, 0, .03); });
+    M(g, cylG(1.35 * s, 1.35 * s, .3 * s, 10), toon(0x3a414f), 0, 6.9 * s, 0, .04);
+    g.userData.chimney = new V3(0, 7.5 * s, 0); emitters.push({ p: { id: "stack" + (++_propId), pos: new V3(x, 0, z), real: g }, t: Math.random() * .5, lvl: n });
+    R.cols.push({ x: x, z: z, r: 1.4 * s });
+  } else if (type === "crates") {
+    M(g, boxG(1.6 * s, 1.4 * s, 1.6 * s), toon(0xa86f3a), 0, 0, 0, .05);
+    M(g, boxG(1.2 * s, 1.1 * s, 1.2 * s), toon(0xc88a4e), 1.5 * s, 0, .3 * s, .05).rotation.y = .4;
+    M(g, boxG(1.1 * s, 1.0 * s, 1.1 * s), toon(0xb87d45), .3 * s, 1.4 * s, 0, .05).rotation.y = -.3;
+    R.cols.push({ x: x + .7 * s, z: z, r: 1.7 * s });
+  } else if (type === "lamp") {
+    M(g, cylG(.08, .1, 3.6, 6), toon(0x6f7a90), 0, 0, 0, .03);
+    var hb = new THREE.Mesh(new THREE.SphereGeometry(.28, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffd98a })); hb.position.set(0, 3.7, 0); g.add(hb);
+    M(g, cylG(.4, .3, .2, 8), toon(0x3a414f), 0, 3.35, 0, .03);
+  } else if (type === "cabinet") {
+    M(g, boxG(1.1 * s, 2.0 * s, .9 * s), toon(0x9aa7b4), 0, 0, 0, .05);
+    for (var dr = 0; dr < 3; dr++) { M(g, boxG(.9 * s, .5 * s, .05), toon(0x7f8aa0), 0, (.1 + dr * .62) * s, .46 * s, false); M(g, boxG(.3 * s, .06, .08), toon(0xe8f2f4), 0, (.34 + dr * .62) * s, .5 * s, false); }
+    R.cols.push({ x: x, z: z, r: .95 * s });
+  } else if (type === "plant") {
+    M(g, cylG(.5 * s, .38 * s, .7 * s, 10), toon(0xf2f6f7), 0, 0, 0, .04);
+    for (var lf = 0; lf < 5; lf++) { var la = lf / 5 * 6.283, lc = M(g, coneG(.18 * s, 1.3 * s, 5), toon(0x4fb05a), Math.cos(la) * .2 * s, .6 * s, Math.sin(la) * .2 * s, .03); lc.rotation.z = -Math.cos(la) * .4; lc.rotation.x = Math.sin(la) * .4; }
+    R.cols.push({ x: x, z: z, r: .6 * s });
+  } else if (type === "cooler") {
+    M(g, boxG(.8 * s, 1.2 * s, .8 * s), toon(0xe8f2f4), 0, 0, 0, .05);
+    M(g, cylG(.32 * s, .32 * s, .7 * s, 10), toon(0x7fd8ff, { emissive: 0x15405a }), 0, 1.2 * s, 0, .04);
+    M(g, boxG(.2, .12, .08), toon(0x2f6fb5), 0, .8 * s, .42 * s, false);
+    R.cols.push({ x: x, z: z, r: .7 * s });
+  } else if (type === "shroom") {
+    M(g, cylG(.22 * s, .3 * s, 1.6 * s, 7), toon(0xe4d0ff), 0, 0, 0, .04);
+    var cp = M(g, new THREE.SphereGeometry(1.0 * s, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(((x * 7 + z * 3) | 0) % 2 ? 0xff7ad9 : 0xb98aff, { emissive: 0x3a1a5a }), 0, 1.5 * s, 0, .05); cp.scale.y = .8;
+    [[.4, .5], [-.5, .2], [.1, -.6]].forEach(function (d) { M(g, new THREE.SphereGeometry(.14 * s, 6, 5), toon(0xffffff, { emissive: 0x808080 }), d[0] * s, 2.05 * s, d[1] * s, false); });
+  } else if (type === "pod") {
+    M(g, cylG(.08, .1, 3.2, 6), toon(0x2fb89a), 0, 0, 0, .03);
+    var pb = new THREE.Mesh(new THREE.SphereGeometry(.34, 8, 6), new THREE.MeshBasicMaterial({ color: 0x7fffd0 })); pb.position.set(0, 3.4, 0); g.add(pb);
+  } else if (type === "cog") {
+    var cg = sub(g, 0, 0, 0); M(cg, cylG(2.0 * s, 2.0 * s, .12, 14), toon(0x6f7a90), 0, 0, 0, .04);
+    for (var k = 0; k < 10; k++) { var a = k / 10 * Math.PI * 2; M(cg, boxG(.6 * s, .12, .5 * s), toon(0x6f7a90), Math.cos(a) * 2.15 * s, 0, Math.sin(a) * 2.15 * s, .03).rotation.y = -a; }
+    M(cg, cylG(.5 * s, .5 * s, .2, 8), toon(0xffb347), 0, .1, 0, .03);
+    R.spin.push({ g: cg, v: .45 });
+  }
+  return g;
+}
+function buildAssemblyStatue(g) {   // the statue assembled on a factory belt, part by part, with a robot arm to supervise
+  var steel = mat(0x6f7a90), dark = mat(0x3a414f), orange = mat(0xff9a2f);
+  M(g, boxG(9.6, .24, 4.2), dark, 0, -.02, 0, .04);
+  var rolls = sub(g, 0, 0, 0);
+  for (var i = 0; i < 9; i++) M(rolls, cylG(.2, .2, 3.8, 8), steel, -4 + i, .24, 0, false).rotation.x = Math.PI / 2;
+  g.userData.rolls = rolls;
+  [-1, 1].forEach(function (s) { M(g, boxG(9.6, .45, .22), steel, 0, 0, s * 2.1, .03); });
+  buildStatue(g);
+  var arm = sub(g, -4.2, 0, -1.8); M(arm, cylG(.55, .65, .5, 10), dark, 0, 0, 0, .04);
+  var a1 = sub(arm, 0, .5, 0); M(a1, boxG(.4, 2.6, .4), orange, 0, 0, 0, .04);
+  var a2 = sub(a1, 0, 2.6, 0); M(a2, boxG(.34, 2.2, .34), steel, 0, 0, 0, .04); M(a2, new THREE.SphereGeometry(.28, 8, 6), mat(0xff5a36, { emissive: 0x7a1a00 }), 0, 2.3, 0, .03);
+  g.userData.arm = { a1: a1, a2: a2 };
+  g.userData.top = new V3(0, 4.8, 0);
+  g.userData.tick = function (t) {
+    var A = g.userData.arm; A.a1.rotation.z = .35 + Math.sin(t * .9) * .25; A.a2.rotation.z = -1.1 + Math.sin(t * 1.3) * .3;
+    g.userData.rolls.children.forEach(function (c) { c.rotation.z = t * 2; });
+  };
+}
+BUILD.assemblyStatue = buildAssemblyStatue;
+
+/* ---------- LEVEL 3: Robot Factory (conveyor belts, stamping presses, patrol robots) ---------- */
+HAZ.spark = { msg: "OW. SPARK.", nog: 14, gap: [7, 11], col: 0xffb347, hint: "Sparks rain from the machinery. They\u2019re orange for a reason. Watch the red circles.", mk: function (m) { M(m, new THREE.OctahedronGeometry(.3, 0), toon(0xffb347, { emissive: 0x8a3a00 }), 0, 0, 0, .04); } };
+var L3I = [
+  { x: 0, z: 0, r: 12, top: 0x7a808e, side: 0x3f4452 },
+  { x: 34, z: 0, r: 11.5, top: 0x8a7b6c, side: 0x4a3f36 },
+  { x: 34, z: -32, r: 12, top: 0x6c7380, side: 0x363b47 },
+  { x: 0, z: -32, r: 11, top: 0x8c705a, side: 0x4d3a2c },
+  { x: 0, z: -64, r: 11.5, top: 0xb2b8c4, side: 0x5a6070 }
+];
+function l3span(a, b) {
+  var A = L3I[a], B = L3I[b], alongZ = Math.abs(A.x - B.x) < .01, sg, s0, s1;
+  if (alongZ) { sg = B.z > A.z ? 1 : -1; s0 = A.z + sg * (A.r - .8); s1 = B.z - sg * (B.r - .8); return { x: A.x, z: (s0 + s1) / 2, len: Math.abs(s1 - s0), alongZ: true, a: a, b: b }; }
+  sg = B.x > A.x ? 1 : -1; s0 = A.x + sg * (A.r - .8); s1 = B.x - sg * (B.r - .8); return { x: (s0 + s1) / 2, z: A.z, len: Math.abs(s1 - s0), alongZ: false, a: a, b: b };
+}
+function l3bridge(id, name, blurb, cost, a, b) { var s = l3span(a, b); return { id: id, name: name, blurb: blurb, cost: cost, x: s.x, z: s.z, len: s.len, alongZ: s.alongZ, a: a, b: b }; }
+LEVELS[3] = {
+  n: 3, name: "Robot Factory", sub: "Conveyor belt heaven",
+  banner: ["Level 3: Robot Factory", "Please keep your head and hands inside the forehead at all times."],
+  arrive: "Welcome to the office. It\u2019s a loading dock. Mind the belt. The belt does not mind you.",
+  spawn: [2, 4],
+  house: { pos: [-5, -1], sign: ["JOB BOARD", "(MABEL)"] },
+  sky: { top: "#1b0f0a", mid: "#4a2a16", bot: "#8a5224", stars: false },
+  music: { chords: [[98, [392, 466.16, 587.33]], [87.3, [349.23, 415.3, 523.25]], [110, [440, 523.25, 659.25]], [82.4, [329.63, 392, 493.88]]], step: .21, bass: "square", lead: "triangle", bassV: .045, leadV: .03, leadP: .45 },
+  islands: L3I.map(function (s) { return { x: s.x, z: s.z, r: s.r, top: s.top, side: s.side, tuft: 0x8a94a6, bush: 0x8a94a6, nT: 0, nF: 0, nB: 0 }; }),
+  edges: [[0, 1], [1, 2], [2, 3], [3, 4]],
+  place: {
+    scraps: [[4, 6.5, .8], [8.5, 5, .8], [-8, 5, .8], [-2, 9.5, .8], [9.5, -4, .8], [-9, -6, .8],
+      [26, -3.5, .85], [42.5, -3, .85], [28, 8.5, .85], [40, 8, .85], [43, 2.5, .85],
+      [28, -26, .85], [40, -26.5, .85], [30, -37.5, .85], [37, -24, .85],
+      [8, -37, .85], [-7, -37.5, .85], [-2, -24.5, .85], [8, -27, .85],
+      [-9, -66, .85], [9, -66, .85], [-3, -58, .85], [4, -62, .85]],
+    machines: [[-2, -8, 1.0, 0], [8, -7, 1.0, .4],
+      [30, -8, 1.0, 0], [39, -7.5, 1.0, -.4],
+      [27, -38, 1.0, .3], [42, -25.5, 1.0, 0], [41, -38.5, 1.0, -.3],
+      [7, -25.5, 1.0, 0], [-9, -30, 1.0, 1.2], [4, -39, 1.0, 0],
+      [-7, -58.5, 1.0, 0], [7, -58.5, 1.0, 0]],
+    props: [["stack", -8, -7, 1], ["crates", -10, 3, 1], ["cog", -7, 8, 1],
+      ["stack", 43, -5, 1], ["lamp", 26, 6, 1],
+      ["crates", 43, -34, 1], ["lamp", 26, -26, 1],
+      ["stack", -9, -36, 1], ["lamp", 9, -35, 1],
+      ["lamp", -9, -61, 1], ["lamp", 9, -61, 1], ["crates", -9, -70, 1]]
+  },
+  signs: [
+    [3, -5, ["BELT AHEAD", "(GO WITH THE FLOW)"]],
+    [-1, 10.5, ["MIND THE BELT", "(IT WON\u2019T MIND YOU)"]],
+    [3, -9.5, ["GEARS INSIDE", "(SOME ASSEMBLY)"]],
+    [25, 4.5, ["BELTS REVERSE", "(HOLD ON TO NOTHING)"]],
+    [43.5, 5.5, ["NOW HIRING", "(NO ONE)"]],
+    [26.5, -29.5, ["STAMPING AREA", "(FOREHEAD ZONE)"]],
+    [4, -45.5, ["ROBOTS AT WORK", "(THEY\u2019RE FINE)"]],
+    [-6, -52.5, ["ASSEMBLY LINE", "(YOU ARE THE PART)"]]
+  ],
+  drones: [{ x: 0, z: 0, r: 18, n: 2 }, { x: 34, z: 0, r: 16, n: 1 }, { x: 34, z: -32, r: 17, n: 1 }, { x: 0, z: -32, r: 16, n: 1 }, { x: 0, z: -64, r: 14, n: 1 }],
+  belts: [
+    { x: 5, z: 0, w: 10, d: 3.2, dir: 0, speed: 2.2 },
+    { x: 34, z: -4, w: 12, d: 3.4, dir: 0, speed: 2.2, rev: 6 },
+    { x: 34, z: 5, w: 12, d: 3.4, dir: 180, speed: 2.0, rev: 7, phase: 3 },
+    { x: 34, z: -32, w: 14, d: 3.6, dir: 0, speed: 2.0, rev: 8 },
+    { x: -4, z: -31, w: 9, d: 3, dir: 90, speed: 2.0, rev: 7 },
+    { x: -8, z: -66, w: 4.6, d: 3, dir: 0, speed: 2.0 },
+    { x: 8, z: -66, w: 4.6, d: 3, dir: 180, speed: 2.0 }
+  ],
+  presses: [
+    { x: 29, z: -32, per: 7 }, { x: 39, z: -32, per: 8, phase: 3.5 },
+    { x: 34, z: -26.5, per: 7.5, phase: 1.5 }, { x: 34, z: -37.5, per: 9, phase: 5 }
+  ],
+  robots: [
+    { path: [[28, .5], [40, .5]] },
+    { path: [[-6, -26.5], [5, -26.5]] }, { path: [[-7, -33], [2, -38]] }, { path: [[5, -28], [5, -36]], speed: 1.1 },
+    { path: [[-8, -60], [8, -60]] }, { path: [[-6, -70.5], [6, -70.5]] }
+  ],
+  hazards: { 1: "spark", 3: "spark", 4: "spark" },
+  ambient: [{ isl: 4, cols: [0xffb347, 0xffffff] }],
+  bridges: [
+    l3bridge("l3_bE", "East Causeway", "To the Belt Hall. The belts do the walking.", { scrap: 5, gear: 3 }, 0, 1),
+    l3bridge("l3_bP", "Stamping Ground Bridge", "To the Press Floor. Bring a flat-pack attitude.", { scrap: 6, gear: 5 }, 1, 2),
+    l3bridge("l3_bG", "Gear Works Gantry", "To the Robot Yard. Mabel says the robots are \u2018mostly friendly\u2019.", { scrap: 8, gear: 6 }, 2, 3),
+    l3bridge("l3_bA", "Assembly Line Walkway", "The last bridge. It has a belt. It is not a belt.", { scrap: 10, gear: 8 }, 3, 4)
+  ],
+  final: { id: "l3_statue", name: "Statue of Dunk\u2019s Forehead (Assembled)", blurb: "Built on a belt, part by part. A robot arm supervises.", cost: { scrap: 10, gear: 10 }, pos: [0, -67], col: 2.6, ring: 3.4, build: "assemblyStatue" },
+  memos: [
+    "Welcome to the Robot Factory. All robots are happy. This is mandatory.",
+    "Reminder: the belts are not rides. The belts are also not not rides.",
+    "Stamping presses are a wellness feature. They give your day structure.",
+    "Robots have been reclassified as \u2018colleagues (non-voting)\u2019.",
+    "Gears are company property. So is the sound they make."
+  ],
+  conspiracies: ["The belts all go somewhere. They never say where. Think about it.", "Robots do not need breaks. Therefore the break room is for something else."],
+  review: {
+    dizzy: "Mabel\u2019s review: \u201cThe factory made you dizzy. The factory has no feelings. I do. I\u2019m worried.\u201d",
+    pro: "Mabel\u2019s review: \u201cPerfect bonks on a moving belt. HR-9000 is updating your title to Head of Throughput.\u201d",
+    ouch: "Mabel\u2019s review: \u201cPresses, sparks, robots. The factory hit back. You hit harder. Mostly flat.\u201d",
+    base: "Mabel\u2019s review: \u201cLevel complete. The factory is pleased. The factory is always pleased. Be concerned.\u201d"
+  },
+  quests: [
+    { id: "beltBasics", title: "Belt Basics", type: "gain", res: "scrap", n: 6, obj: "Gather scrap", goal: "Bonk the scrap heaps and gather 6 scrap. Loot rides the belt.",
+      offer: "Welcome to the Robot Factory, Dunk. It is a factory. It has robots. Mind the belt: it carries you. And your loot. Six scrap, please. Bonk the grey heaps.",
+      accept: "Six scrap. Grey heaps. The belt will give you a lift. Don\u2019t fight it.", hint: "Six scrap. The grey boxy heaps. If the belt carries it off, follow it.",
+      ready: "Scrap! Take this welder visor. It was in a locker marked DO NOT WEAR. I chose to ignore the sign. You may, too.", reward: { hat: "visor" } },
+    { id: "gearCheck", title: "Gear Check", type: "gain", res: "gear", n: 4, obj: "Gather gears", goal: "Bonk the orange generators and gather 4 gears.",
+      offer: "A factory runs on gears. Smash the orange generators until they cough some up. Four of them. The generators are fine. They are insured.",
+      accept: "Four gears. Orange generators. Forehead.", hint: "Four gears. The orange machines with the cog on top. Perfect bonks drop extra.",
+      ready: "Gears! Shiny, greasy, legally ambiguous. Hold on to a few. Bridges love them.", reward: { note: "Grease, owed" } },
+    { id: "causeway", title: "East Causeway", type: "build", plot: "l3_bE", obj: "Build the East Causeway", goal: "Build the bridge east to the Belt Hall.",
+      offer: "East of the dock is the Belt Hall. Between here and there is air. Build a bridge. It needs scrap and gears. Everything does.",
+      accept: "East edge. Blue outline. The belt will help you get there.", hint: "The east bridge needs scrap and gears. Find the blue outline at the dock\u2019s east edge.",
+      ready: "A causeway! HR-9000 calls it \u2018a high-throughput corridor\u2019.", reward: { note: "A hall full of belts" } },
+    { id: "firstContact", title: "First Contact", type: "robot", n: 1, obj: "Bonk a robot", goal: "Bonk 1 patrol robot. Hold, then release in the green: robots are tough.",
+      offer: "The Belt Hall has robots. They patrol. They\u2019re passive. They\u2019re also hardness two, so a tap won\u2019t do. Charge your bonk. One robot. They drop gears. They\u2019ll never admit it.",
+      accept: "One robot. Charge your bonk. Be polite about it.", hint: "One robot. They wander between the belts. A plain tap tickles. Hold, then let go in the green.",
+      ready: "A robot, bonked. It said \u2018ow (simulated)\u2019. Take this hat. It\u2019s a bowler. It\u2019s also a bot. Don\u2019t ask who it belonged to.", reward: { hat: "bowler" } },
+    { id: "joyride", title: "Joyride", type: "belt", n: 12, obj: "Ride the belts", goal: "Spend 12 seconds riding the moving belts in the Belt Hall.",
+      offer: "HR-9000 needs a conveyor study. You are the study. Stand on the moving belts for twelve seconds, total. Walk with them, against them, or just vibe. The belts reverse. Don\u2019t let it get to you.",
+      accept: "Twelve seconds on the belts. Total. Any belt. Any direction.", hint: "Twelve seconds on moving belts. They flash orange before they reverse.",
+      ready: "Twelve seconds of data. The belts say thanks. They don\u2019t say anything else.", reward: { note: "A belt-shaped feeling" } },
+    { id: "stampBridge", title: "Stamping Ground Bridge", type: "build", plot: "l3_bP", obj: "Build the Press Floor Bridge", goal: "Build the bridge north to the Press Floor.",
+      offer: "North of the Belt Hall is the Press Floor. It has stamping presses. They stamp. Build the bridge from the north edge. Wear whatever feels flat.",
+      accept: "North edge of the Belt Hall. Blue outline.", hint: "The north bridge needs scrap and gears. North edge of the Belt Hall.",
+      ready: "Bridge built. The presses sent a fruit basket. It was flat.", reward: { note: "Press-ure" } },
+    { id: "pressPanic", title: "Press Panic", type: "dodge", n: 4, obj: "Dodge the presses", goal: "Stand on a press pad, wait for the red shadow, then step out before it slams. Do it 4 times.",
+      offer: "The presses are polite. They warn you. A red shadow grows, the head comes down, it lands. Stand on a pad when the shadow starts. Leave before it lands. Four times. Do not be flat.",
+      accept: "Four dodges. Shadow starts, you move. Easy. Probably.", hint: "Four dodges. Stand on a press pad until the shadow grows, then step out. A bonk-lunge dodges too.",
+      ready: "Four dodges. I\u2019m moved. HR-9000 has logged it under \u2018unscheduled agility\u2019.", reward: { note: "A perfectly un-flat Dunk" } },
+    { id: "gantry", title: "Gear Works Gantry", type: "build", plot: "l3_bG", obj: "Build the Gear Works Gantry", goal: "Build the bridge west to the Robot Yard.",
+      offer: "West of the Press Floor is the Robot Yard. Robots everywhere. Build the gantry from the west edge. Say hi to the robots. Don\u2019t say hi too hard.",
+      accept: "West edge of the Press Floor. Blue outline.", hint: "The west bridge needs scrap and gears. West edge of the Press Floor.",
+      ready: "Gantry up. The robots have been notified. They\u2019ve rated you 3 stars.", reward: { note: "Robot respect" } },
+    { id: "overtime", title: "Overtime", type: "robot", n: 3, obj: "Bonk robots", goal: "Bonk 3 patrol robots in the Robot Yard. They drop gears. Mind the sparks.",
+      offer: "HR-9000 wants a gear surplus. The Robot Yard has robots. Bonk three. They drop gears. They also drop opinions. Ignore the opinions.",
+      accept: "Three robots. Charge your bonk. They\u2019ll wait for you if you stand in front.", hint: "Three robots in the Yard. Charge your bonk. Sparks fall: watch the red circles.",
+      ready: "Three robots, a pile of gears, and HR-9000 is almost warm toward you. Almost.", reward: { note: "Overtime pay (none)" } },
+    { id: "walkway", title: "Assembly Line Walkway", type: "build", plot: "l3_bA", obj: "Build the Assembly Line Walkway", goal: "Build the bridge north to the Assembly Line.",
+      offer: "North of the Robot Yard is the Assembly Line. Where the big thing gets built. Build the walkway. It wants gears. Obviously.",
+      accept: "North edge of the Robot Yard. You\u2019ll need lots of gears.", hint: "Walkway: scrap and gears. North edge of the Robot Yard.",
+      ready: "The Assembly Line is open. Mind the belts. They\u2019re hungry.", reward: { note: "A very long line" } },
+    { id: "statue", title: "The Monument (Assembled)", type: "build", plot: "l3_statue", obj: "Build the Statue", goal: "Build the Statue of Dunk\u2019s Forehead on the Assembly Line belt.",
+      offer: "One last job. A statue of your forehead, assembled on a belt, part by part. A robot arm supervises. HR-9000 will file it under \u2018employee recognition\u2019. Third time.",
+      accept: "The plot is on the Assembly Line. Go big. Go modular.", hint: "Statue: scrap and gears. If you\u2019re short, the machines and robots regrow.",
+      ready: "", reward: {} }
+  ]
+};
+
+/* =====================================================================
+   LEVEL 4 engine additions: slime, sticky goo, bounce pads, drifting spore clouds, antenna pings
+   ===================================================================== */
+var _sl = false;
+function slowAt(x, z) {
+  var S = LR.slows, k = 1; _sl = false; if (!S || G.level < 1) return 1;
+  for (var i = 0; i < S.length; i++) { var s = S[i]; if (Math.hypot(x - s.x, z - s.z) < s.r) { k = Math.min(k, s.k); _sl = true; } }
+  return k;
+}
+function makeSlow(R, n, cfg) {
+  var r = cfg.r || 3, x = cfg.x + R.ox, z = cfg.z + R.oz, g = sub(scene, x, 0, z);
+  var d = new THREE.Mesh(new THREE.CircleGeometry(r, 26), new THREE.MeshBasicMaterial({ color: 0x6a3fb5, transparent: true, opacity: .85, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 })); d.rotation.x = -Math.PI / 2; d.position.y = .05; g.add(d);
+  var e = new THREE.Mesh(new THREE.RingGeometry(r - .25, r, 26), new THREE.MeshBasicMaterial({ color: 0xc9a8ff, transparent: true, opacity: .8, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 })); e.rotation.x = -Math.PI / 2; e.position.y = .06; g.add(e);
+  var bub = [];
+  for (var i = 0; i < 4; i++) { var a = i / 4 * 6.283 + .5, rr = r * (.25 + .4 * ((i * 37) % 10) / 10), b = new THREE.Mesh(new THREE.SphereGeometry(.22 + .08 * (i % 2), 8, 6), new THREE.MeshBasicMaterial({ color: 0xe4d0ff, transparent: true, opacity: .7 })); b.position.set(Math.cos(a) * rr, .1, Math.sin(a) * rr); b.userData.ph = i * 1.7; g.add(b); bub.push(b); }
+  return { g: g, bub: bub, x: x, z: z, r: r, k: cfg.k || .5 };
+}
+function updateGoo(dt) {
+  if (G.level < 1) return;
+  slowAt(P.pos.x, P.pos.z); if (_sl && !P.jump) stats.gooT = (stats.gooT || 0) + dt;
+  (LR.slows || []).forEach(function (s) { s.bub.forEach(function (b) { var u = (G.time * .7 + b.userData.ph) % 2; b.position.y = .1 + Math.abs(Math.sin(u * 1.57)) * .5; b.scale.setScalar(.6 + .4 * Math.sin(G.time * 3 + b.userData.ph)); }); });
+}
+
+/* ---------- bounce pads: step on one and you fly to a fixed, walkable landing spot ---------- */
+function makePad(R, n, cfg) {
+  var r = cfg.r || 1.7, x = cfg.x + R.ox, z = cfg.z + R.oz, g = sub(scene, x, 0, z);
+  M(g, cylG(r, r + .15, .22, 18), toon(0x2a8f7a), 0, 0, 0, .04);
+  var top = sub(g, 0, .22, 0); M(top, cylG(r * .82, r * .82, .18, 18), toon(0x5ff0c8, { emissive: 0x1a7a5e }), 0, 0, 0, .03);
+  var ring = new THREE.Mesh(new THREE.RingGeometry(r + .15, r + .45, 24), new THREE.MeshBasicMaterial({ color: 0x7fffd0, transparent: true, opacity: .6, side: THREE.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.y = .08; g.add(ring);
+  var ar = sub(g, 0, .45, 0); ar.rotation.y = Math.atan2(cfg.tx - cfg.x, cfg.tz - cfg.z);
+  var cone = new THREE.Mesh(new THREE.ConeGeometry(.45, .9, 3), new THREE.MeshBasicMaterial({ color: 0xffffff })); cone.rotation.x = Math.PI / 2; cone.position.set(0, 0, r * .35); ar.add(cone);
+  return { g: g, top: top, ring: ring, x: x, z: z, r: r, tx: cfg.tx + R.ox, tz: cfg.tz + R.oz, sq: 0 };
+}
+function updatePads(dt) {
+  var A = LR.pads; if (G.level < 1) return;
+  P.padCool = Math.max(0, (P.padCool || 0) - dt);
+  if (A) A.forEach(function (a) { a.sq = Math.max(0, a.sq - dt * 2.5); a.top.scale.y = 1 - .6 * a.sq + .5 * Math.sin(Math.PI * a.sq) * (a.sq > .6 ? 1 : 0); a.ring.material.opacity = .45 + .25 * Math.sin(G.time * 4); });
+  if (P.jump) {
+    var J = P.jump; J.t += dt; var u = Math.min(1, J.t / J.dur), e = u < .5 ? 2 * u * u : 1 - 2 * (1 - u) * (1 - u);
+    P.pos.x = lerp(J.fx, J.tx, u); P.pos.z = lerp(J.fz, J.tz, u); P.hop = 4 * J.h * u * (1 - u); P.vel.x = 0; P.vel.z = 0;
+    if (Math.random() < .5) puff(P.pos.clone().setY(P.hop + .2), .4, 0x9affd8, .4, .1);
+    if (u >= 1) {
+      P.pos.x = J.tx; P.pos.z = J.tz; P.jump = null; P.hop = 0; P.padCool = .9; stats.pads = (stats.pads || 0) + 1; snd.stomp(); shake(.25); puff(P.pos.clone().setY(.3), 1.2, 0xbfffe8, .5, .4); shockwave(P.pos.clone().setY(.2), 0x7fffd0, 3, .35);
+      floater(P.pos.clone().setY(2.8), "BOING!", "bw big", 1.1);
+      tween(.4, function (v) { var q = easeOut(v); dunk.root.scale.set(lerp(1.3, 1, q), lerp(.7, 1, q), lerp(1.3, 1, q)); }, function () { dunk.root.scale.set(1, 1, 1); });
+      once("pad_land", function () { say("Landed. Bounce pads always land somewhere safe. Mabel checked. Mostly.", 0); });
+    }
+    return;
+  }
+  if (!A || !canAct() || P.padCool > 0 || P.lunge) return;
+  for (var i = 0; i < A.length; i++) {
+    var a = A[i]; if (Math.hypot(P.pos.x - a.x, P.pos.z - a.z) < a.r) {
+      var boost = HAT().padBoost ? 1 : 0, dist = Math.hypot(a.tx - P.pos.x, a.tz - P.pos.z);
+      P.jump = { t: 0, fx: P.pos.x, fz: P.pos.z, tx: a.tx, tz: a.tz, dur: (.75 + dist * .014) * (boost ? 1.25 : 1), h: (4 + dist * .06) * (boost ? 1.7 : 1) };
+      P.charging = false; P.charge = 0; P.vel.x = 0; P.vel.z = 0; a.sq = 1; snd.pop(); tone(300, .35, "sine", .1, 0, 900); puff(new V3(a.x, .3, a.z), 1.4, 0xbfffe8, .5, .6); vibrate(20);
+      once("pad_hint", function () { say("Bounce pad! Step on, fly off. The arrow shows where you land.", 0); });
+      break;
+    }
+  }
+}
+
+/* ---------- spore clouds: slow, always visible, never instant. Standing in one fills your head meter. ---------- */
+function makeSpore(R, n, cfg) {
+  var pth = cfg.path.map(function (a) { return [a[0] + R.ox, a[1] + R.oz]; }), r = cfg.r || 1.7, g = sub(scene, pth[0][0], 1.5, pth[0][1]), puffs = [];
+  [[0, 0, 0, 1], [.7, .2, .3, .7], [-.6, -.1, .4, .75], [.1, .3, -.7, .7]].forEach(function (c, i) {
+    var m = new THREE.Mesh(new THREE.SphereGeometry(r * .55 * c[3], 10, 8), new THREE.MeshBasicMaterial({ color: i ? 0x9affc8 : 0xd8ffe8, transparent: true, opacity: i ? .38 : .5, depthWrite: false })); m.position.set(c[0] * r * .6, c[1], c[2] * r * .6); m.userData.ph = i * 1.3; g.add(m); puffs.push(m);
+  });
+  var ring = new THREE.Mesh(new THREE.RingGeometry(r - .12, r, 26), new THREE.MeshBasicMaterial({ color: 0xff5acd, transparent: true, opacity: .45, depthWrite: false, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.set(pth[0][0], .07, pth[0][1]); scene.add(ring);
+  var isl = -1; for (var k = 0; k < R.islands.length; k++) { var s = R.islands[k], dx = pth[0][0] - s.x, dz = pth[0][1] - s.z; if (dx * dx + dz * dz <= (s.r + .5) * (s.r + .5)) isl = k; }
+  return { g: g, puffs: puffs, ring: ring, path: pth, pi: 1, pdir: 1, wait: 0, r: r, speed: cfg.speed || 1.0, isl: isl, home: new V3(pth[0][0], 0, pth[0][1]), ac: 0 };
+}
+function updateSpores(dt) {
+  var A = LR.spores; if (!A || !A.length || G.level < 1) return;
+  var isl = islandOf(P.pos.x, P.pos.z);
+  if (isl !== LR.sporeIsl) { LR.sporeIsl = isl; LR.sporeArm = 5; A.forEach(function (s) { s.g.position.set(s.home.x, 1.5, s.home.z); s.pi = 1; s.pdir = 1; s.wait = 0; }); }
+  LR.sporeArm -= dt;
+  A.forEach(function (s) {
+    s.puffs.forEach(function (m) { var k = 1 + .12 * Math.sin(G.time * 2 + m.userData.ph); m.scale.setScalar(k); });
+    var gp = s.g.position; gp.y = 1.5 + Math.sin(G.time * 1.5 + s.isl) * .2;
+    if (s.isl !== isl) { s.ring.position.set(gp.x, .07, gp.z); return; }
+    if (s.wait > 0) s.wait -= dt;
+    else {
+      var wp = s.path[s.pi], dx = wp[0] - gp.x, dz = wp[1] - gp.z, dd = Math.hypot(dx, dz);
+      if (dd < .2) { s.wait = rnd(.5, 1.5); var nx = s.pi + s.pdir; if (nx < 0 || nx >= s.path.length) { s.pdir = -s.pdir; nx = s.pi + s.pdir; } s.pi = nx; }
+      else { var st = Math.min(dd, s.speed * dt); gp.x += dx / dd * st; gp.z += dz / dd * st; }
+    }
+    s.ring.position.set(gp.x, .07, gp.z);
+    var d = Math.hypot(P.pos.x - gp.x, P.pos.z - gp.z), inside = d < s.r + .3;
+    s.ring.material.opacity = inside ? .8 : .4 + .1 * Math.sin(G.time * 5);
+    if (inside && !P.jump && LR.sporeArm <= 0) {
+      addNog(15 * dt); stats.spored = (stats.spored || 0) + dt; s.ac -= dt;
+      if (s.ac <= 0) { s.ac = .9; floater(P.pos.clone().setY(2.8), pick(["ACHOO!", "*cough*", "SNIFF", "ah-ah-CHOO"]), "ow", 1.0); burst(P.pos.clone().setY(1.6), [0x9affc8, 0xffffff], 4, 1, 1.5, .5, .6); }
+      once("spore_hint", function () { say("Spores fill your head meter, slowly. They drift, they never lunge. Walk out of the cloud.", 0); });
+    }
+  });
+}
+
+/* ---------- antenna ping: nearby resource nodes sparkle ---------- */
+function updatePings(dt) {
+  if (G.level < 1 || !HAT().ping || !canAct()) return;
+  LR.pingT = (LR.pingT || 0) - dt; if (LR.pingT > 0) return; LR.pingT = 3.2;
+  shockwave(P.pos.clone().setY(.4), 0x7fffd0, 13, .9); tone(1500, .12, "sine", .04); tone(2000, .12, "sine", .03, .08);
+  for (var i = 0; i < T.length; i++) { var t = T[i]; if (!t.alive || !t.res || t.lvl !== G.level) continue; if (Math.hypot(t.g.position.x - P.pos.x, t.g.position.z - P.pos.z) < 15) burst(t.g.position.clone().setY(1.7), [0x7fffd0, 0xffffff], 5, .4, 2.2, .5, 1.0); }
+}
+
+/* ---------- slime sources ---------- */
+function makeGloop(x, z, s) {
+  var g = sub(scene, x, 0, z);
+  var m = M(g, new THREE.SphereGeometry(s * .95, 12, 9), toon(0x9d5cff, { emissive: 0x3a1a6a }), 0, s * .3, 0, .05); m.scale.y = .7;
+  M(g, new THREE.SphereGeometry(s * .4, 8, 6), toon(0xb98aff, { emissive: 0x4a2a80 }), s * .7, s * .12, s * .25, .03);
+  M(g, new THREE.SphereGeometry(s * .26, 8, 6), toon(0xe4d0ff, { emissive: 0x6a4aa0 }), -s * .25, s * .6, s * .3, false);
+  blob(g, s * 1.4);
+  var o = { kind: "rock", g: g, radius: s * 1.0, alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, spawnAt: 0, hp: 3, hard: 1, yield: 2, res: "slime", rt: 24, name: "gloop" };
+  o.max = o.hp; T.push(o); return o;
+}
+function makeSlimeTree(x, z, s) {
+  var g = sub(scene, x, 0, z);
+  M(g, cylG(.26 * s, .36 * s, 2.4 * s, 7), toon(0x7a4fa0), 0, 0, 0, .04);
+  M(g, new THREE.IcosahedronGeometry(1.15 * s, 0), toon(0x3ee0c0, { emissive: 0x0a4a3a }), 0, 3.0 * s, 0, .05).rotation.y = srand() * 3;
+  M(g, new THREE.IcosahedronGeometry(.7 * s, 0), toon(0x7fffd0, { emissive: 0x1a6a4a }), .3 * s, 3.9 * s, -.1 * s, .04);
+  [[.6, 2.2], [-.7, 2.3], [.1, 2.0]].forEach(function (d) { M(g, new THREE.SphereGeometry(.12 * s, 6, 5), toon(0x9affc8, { emissive: 0x1a6a4a }), d[0] * s, d[1] * s, .7 * s, false); });
+  blob(g, 1.5 * s);
+  var o = { kind: "rock", g: g, radius: .62 * s, alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, spawnAt: 0, hp: 4, hard: 1, yield: 3, res: "slime", rt: 30, name: "slimetree" };
+  o.max = o.hp; T.push(o); return o;
+}
+function buildPlantStatue(g) {   // the statue sprouts: pot, stem, leaves, then the forehead blooms
+  var pot = mat(0x6a3fb5), vine = mat(0x2fb89a), leaf = mat(0x3ee0c0, { emissive: 0x0a4a3a }), gold = mat(0xf5b921, { emissive: 0x4a3100 }), brown = mat(0x5b3a22);
+  M(g, cylG(2.3, 2.7, .9, 12), pot, 0, 0, 0);
+  M(g, cylG(1.9, 2.2, .35, 12), mat(0x3a2270), 0, .9, 0);
+  M(g, cylG(.38, .55, 3.4, 8), vine, 0, .9, 0, .04);
+  var leaves = [];
+  for (var i = 0; i < 4; i++) { var a = i / 4 * 6.283 + .4, lg = sub(g, Math.cos(a) * .4, 1.8 + i * .45, Math.sin(a) * .4); lg.rotation.y = -a; var lm = M(lg, new THREE.SphereGeometry(.9, 10, 8), leaf, 1.0, 0, 0, .04); lm.scale.set(1.3, .22, .65); leaves.push(lg); }
+  var h = sub(g, 0, 5.3, 0);
+  M(h, new THREE.SphereGeometry(1.5, 22, 16), gold, 0, 0, 0, .06);
+  [-1, 1].forEach(function (s) {
+    var e = M(h, new THREE.SphereGeometry(.36, 12, 10), mat(0xffffff), s * .6, .2, 1.2, .03); e.scale.z = .55;
+    if (!GHOST) { var pu = new THREE.Mesh(new THREE.SphereGeometry(.17, 8, 6), new THREE.MeshBasicMaterial({ color: INK })); pu.position.set(s * .58, .2, 1.44); h.add(pu); }
+    var br = M(h, new THREE.BoxGeometry(.85, .17, .2), brown, s * .6, .7, 1.28, .03); br.rotation.z = -s * .35;
+  });
+  M(h, new THREE.SphereGeometry(.5, 12, 10), mat(0xff3b2a, { emissive: 0x7a0a00 }), 0, .55, 1.28, .04).scale.set(1.2, .8, .55);
+  M(h, new THREE.BoxGeometry(.7, .13, .14), mat(0x5a1a14), 0, -.6, 1.38, .02);
+  var petals = sub(h, 0, 1.3, 0);
+  for (var k = 0; k < 7; k++) { var pa = k / 7 * 6.283; var pt = M(petals, coneG(.38, 1.0, 5), mat(k % 2 ? 0xff7ad9 : 0xb98aff, { emissive: 0x4a1a60 }), Math.cos(pa) * .8, 0, Math.sin(pa) * .8, .03); pt.rotation.z = -Math.cos(pa) * .45; pt.rotation.x = Math.sin(pa) * .45; }
+  signBoard(g, ["DUNK\u2019S", "FOREHEAD"], 1.7, .8, 0, .35, 2.9);
+  g.userData.top = new V3(0, 7.6, 0);
+  g.userData.tick = function (t) { leaves.forEach(function (l, i) { l.rotation.z = Math.sin(t * 1.3 + i) * .12; }); h.rotation.y = Math.sin(t * .6) * .25; h.position.y = 5.3 + Math.sin(t * 1.5) * .1; };
+}
+BUILD.plantStatue = buildPlantStatue;
+
+/* ---------- LEVEL 4: Planet Gloop (sticky goo, bounce pads, spore clouds) ---------- */
+var L4I = [
+  { x: 0, z: 0, r: 12, top: 0x4b3a8f, side: 0x2b2260 },
+  { x: 33, z: 0, r: 11, top: 0x2f8f8a, side: 0x1c5a5e },
+  { x: 33, z: -31, r: 12, top: 0x7a3fa0, side: 0x472468 },
+  { x: 66, z: -31, r: 11.5, top: 0x3fa88a, side: 0x236652 },
+  { x: 0, z: -30, r: 6.5, top: 0x9b5fd0, side: 0x57308a }
+];
+function l4bridge(id, name, blurb, cost, a, b) {
+  var A = L4I[a], B = L4I[b], alongZ = Math.abs(A.x - B.x) < .01, sg, s0, s1;
+  if (alongZ) { sg = B.z > A.z ? 1 : -1; s0 = A.z + sg * (A.r - .8); s1 = B.z - sg * (B.r - .8); return { id: id, name: name, blurb: blurb, cost: cost, x: A.x, z: (s0 + s1) / 2, len: Math.abs(s1 - s0), alongZ: true, a: a, b: b }; }
+  sg = B.x > A.x ? 1 : -1; s0 = A.x + sg * (A.r - .8); s1 = B.x - sg * (B.r - .8); return { id: id, name: name, blurb: blurb, cost: cost, x: (s0 + s1) / 2, z: A.z, len: Math.abs(s1 - s0), alongZ: false, a: a, b: b };
+}
+LEVELS[4] = {
+  n: 4, name: "Planet Gloop", sub: "Alien jungle", garyCol: 0x7fffd0,
+  banner: ["Level 4: Planet Gloop", "Sticky, bouncy and extremely rude."],
+  arrive: "Welcome to the office. It\u2019s a mushroom. Don\u2019t lick it. Don\u2019t lick anything. Come in.",
+  spawn: [2, 4],
+  house: { pos: [-5, -1], sign: ["JOB BOARD", "(MABEL)"] },
+  sky: { top: "#0b0a24", mid: "#2a1659", bot: "#1c6a6e", stars: true },
+  music: { chords: [[110, [440, 554.37, 659.25]], [92.5, [369.99, 466.16, 554.37]], [123.5, [493.88, 587.33, 739.99]], [98, [392, 493.88, 587.33]]], step: .24, bass: "sine", lead: "sine", bassV: .085, leadV: .04, leadP: .6 },
+  islands: L4I.map(function (s) { return { x: s.x, z: s.z, r: s.r, top: s.top, side: s.side, tuft: 0x7fffd0, bush: 0x3ee0c0, nT: 70, nF: 26, nB: 9, fl: [0x7fffd0, 0xff7ad9, 0xb98aff] }; }),
+  edges: [[0, 1], [1, 2], [2, 3]],
+  place: {
+    gloops: [[5, -5, 1], [9, -4, 1], [-8, 6, 1], [2, 9.5, 1], [-9.5, -5, 1],
+      [28, 5, 1], [38, 6, 1], [40, -3, 1], [27, -6, 1], [34, 8, 1],
+      [30, -35, 1], [40, -34, 1], [27, -28, 1],
+      [60, -26, 1], [75, -34, 1], [62, -38, 1], [73, -25, 1],
+      [-3, -33, 1], [3, -33, 1]],
+    slimeTrees: [[-5, -9, 1], [6, 7.5, 1], [30, -7, 1], [38, -26, 1], [68, -39, 1], [0, -35, 1]],
+    crystals: [[26, -26, .8], [28, -37, .8], [38, -38, .8], [39, -24, .8], [24, -33, .8], [74, -30, .8], [60, -35, .8], [-3.5, -29, .8]],
+    machines: [[40, 4.5, 1.0, 0.6], [35, 7.5, 1.0, -0.4], [42, -26, 1.0, 0.2], [60, -24, 1.0, 0]],
+    props: [["shroom", -9, 0, 1.3], ["shroom", 4, -9.5, 1], ["shroom", -7, 9, 1.1], ["shroom", 10, 6, .9], ["pod", 11, -6, 1],
+      ["shroom", 24, 3, 1.2], ["shroom", 42, -6, 1.1], ["shroom", 29, 9, 1], ["pod", 40, 8, 1],
+      ["shroom", 24, -29, 1.2], ["shroom", 41, -29, 1], ["shroom", 33, -22.5, .9], ["pod", 33, -40, 1],
+      ["shroom", 57, -30, 1.1], ["shroom", 77, -29, 1.2], ["pod", 66, -41, 1], ["shroom", -5, -26.5, .9], ["pod", 4, -28, .8]]
+  },
+  signs: [
+    [3, -5, ["LICK-FREE ZONE", "(MANDATORY)"]],
+    [-1, 10.5, ["BOING PADS", "(AND DOWN AGAIN)"]],
+    [-5, -14, ["BOUNCE PAD AHEAD", "(IT\u2019S A SHORTCUT)"]],
+    [24.5, 6, ["WARNING: SPORES", "(THEY WON\u2019T LUNGE)"]],
+    [43, 7, ["CRASHED ROBOT", "(HR IS AWARE)"]],
+    [26, -23, ["GEMS: NATIVE", "(STILL YOURS)"]],
+    [56, -33.5, ["ALMOST THERE", "(SORT OF)"]],
+    [3, -37, ["SHORTCUT ISLAND", "(YOU\u2019RE WELCOME)"]]
+  ],
+  drones: [{ x: 0, z: 0, r: 18, n: 2 }, { x: 33, z: 0, r: 15, n: 1 }, { x: 33, z: -31, r: 17, n: 1 }, { x: 66, z: -31, r: 15, n: 1 }],
+  slows: [{ x: -3, z: 5.5, r: 3.2 }, { x: 7, z: -1.5, r: 2.8 }, { x: 33, z: 2.5, r: 3.6 }, { x: 33, z: -33, r: 3.6 }, { x: 66, z: -27, r: 3.2 }],
+  pads: [{ x: 0, z: -8, tx: 0, tz: -33 }, { x: 0, z: -26.5, tx: 0, tz: -4.5 }],
+  spores: [
+    { path: [[27, 2], [40, 2]] }, { path: [[30, -5], [38, -5]], speed: .9 },
+    { path: [[26, -31], [38, -35]] }, { path: [[28, -25], [39, -28]], speed: .9 },
+    { path: [[60, -27], [74, -27]] }
+  ],
+  ambient: [{ isl: 4, cols: [0x7fffd0, 0xff7ad9, 0xffffff] }],
+  bridges: [
+    l4bridge("l4_bG", "Gloop Gangway", "To the Mushroom Marsh. It\u2019s squishy. The bridge, not the marsh. The marsh too.", { slime: 6 }, 0, 1),
+    l4bridge("l4_bM", "Mushroom Mile", "To the Gem Glade. Wipe your feet. Then your head.", { slime: 8, gear: 3 }, 1, 2),
+    l4bridge("l4_bB", "Bloom Bridge", "The last bridge. It\u2019s blooming. Mabel says that\u2019s probably fine.", { slime: 10, crystal: 4 }, 2, 3)
+  ],
+  final: { id: "l4_statue", name: "Statue of Dunk\u2019s Forehead (Overgrown)", blurb: "It grows when built. Do not water it. Do not not water it.", cost: { slime: 12, crystal: 6, gear: 4 }, pos: [68, -32], col: 2.6, ring: 3.4, build: "plantStatue" },
+  memos: [
+    "Welcome to Planet Gloop. All slime is ethically sourced from nothing.",
+    "Please do not lick the mushrooms. This is not a suggestion. It is a lawsuit.",
+    "Spores are a wellness feature. They improve your ability to cough.",
+    "Bounce pads are not recreational. They are recreational. Please sign the form.",
+    "The Gary-coloured Garys are not Garys. They are Garys. Please stop asking."
+  ],
+  conspiracies: ["The mushrooms are all one mushroom. Think about it. Underground.", "The slime is not slime. The slime is paperwork that gave up."],
+  review: {
+    dizzy: "Mabel\u2019s review: \u201cSpores, goo, bouncing. You were dizzy on three planets. That\u2019s a record.\u201d",
+    pro: "Mabel\u2019s review: \u201cPerfect bonks in a swamp. HR-9000 is updating your title to Head of Squelch.\u201d",
+    ouch: "Mabel\u2019s review: \u201cThe jungle hit back. Mostly with sneezes. You\u2019re fine. Probably.\u201d",
+    base: "Mabel\u2019s review: \u201cLevel complete. The jungle is pleased. It has no mouth. It is pleased anyway.\u201d"
+  },
+  quests: [
+    { id: "slimeHarvest", title: "Slime Harvest", type: "gain", res: "slime", n: 6, obj: "Gather slime", goal: "Bonk the purple gloop mounds and slime trees. Gather 6 slime.",
+      offer: "Welcome to Planet Gloop, Dunk. It\u2019s a planet. It\u2019s gloopy. HR-9000 needs six slime. Bonk the purple mounds and the teal trees. They\u2019re delicious. Don\u2019t.",
+      accept: "Six slime. Purple mounds, teal trees. Forehead.", hint: "Six slime. The purple mounds and the teal trees. Perfect bonks drop extra.",
+      ready: "Slime! Wet, glowing, mildly sentient. Take this beanie. It pings. Not at me. At the slime. It was in a crashed scout ship.", reward: { hat: "antenna" } },
+    { id: "firstBounce", title: "First Bounce", type: "pad", n: 2, obj: "Use bounce pads", goal: "Step on the teal bounce pad north of the dock to fly to Shortcut Island, then bounce back.",
+      offer: "North of the dock there\u2019s a teal pad. Step on it. You will fly. Land on Shortcut Island. Use the other pad to come home. Two bounces. It\u2019s a pad. It\u2019s fine.",
+      accept: "Two bounces. The arrow on the pad shows where you land.", hint: "Two bounces. Teal pad north of the dock. Another one on Shortcut Island brings you back.",
+      ready: "Two bounces! You landed on your feet. Impressive. Terrifying. Both.", reward: { note: "A spring in your step" } },
+    { id: "gangway", title: "Gloop Gangway", type: "build", plot: "l4_bG", obj: "Build the Gloop Gangway", goal: "Build the bridge east to the Mushroom Marsh.",
+      offer: "East of here is the Mushroom Marsh. Between here and there is goo. Build a bridge. It wants slime. Of course it does.",
+      accept: "East edge. Blue outline. Mind the sticky patches.", hint: "The east bridge needs slime. Find the blue outline at the dock\u2019s east edge.",
+      ready: "A gangway! Squishy. HR-9000 calls it \u2018a high-viscosity corridor\u2019.", reward: { note: "A marsh full of mushrooms" } },
+    { id: "sporeRun", title: "Spore Run", type: "gain", res: "slime", n: 8, obj: "Gather slime", goal: "Gather 8 slime in the Marsh. Spore clouds drift here. Steer around them.",
+      offer: "The Marsh has spore clouds. They drift. They don\u2019t chase. They tickle your head. Gather eight slime. Don\u2019t sneeze.",
+      accept: "Eight slime. Avoid the green puffs.", hint: "Eight slime. Spore clouds fill your head meter slowly. Walk out of them.",
+      ready: "Eight slime and only a little sneezing. I\u2019m proud. And congested.", reward: { note: "A mild head cold, owed" } },
+    { id: "mile", title: "Mushroom Mile", type: "build", plot: "l4_bM", obj: "Build the Mushroom Mile", goal: "Build the bridge north to the Gem Glade. It needs gears.",
+      offer: "North of the Marsh is the Gem Glade. The bridge wants slime and gears. The gears are in the crashed robots. Smash them. They\u2019re already crashed.",
+      accept: "North edge of the Marsh. You\u2019ll need slime and gears.", hint: "Mile: slime and gears. Gears come from the orange crashed machines.",
+      ready: "Mile built. Gems await. So do more spores.", reward: { note: "Gems, probably" } },
+    { id: "sticky", title: "Sticky Business", type: "goo", n: 10, obj: "Wade through goo", goal: "Spend 10 seconds standing in the purple sticky patches. They slow you down. That\u2019s the whole point.",
+      offer: "HR-9000 is studying viscosity. You are the study. Ten seconds in the purple patches, total. They slow you down. It\u2019s fine. You were never in a hurry.",
+      accept: "Ten seconds in the goo. Total. Any patch.", hint: "Ten seconds in the purple sticky patches. Stand, wade, or reconsider your life.",
+      ready: "Ten seconds of data. The goo says thanks. It\u2019s a lot like the belt. Except sticky.", reward: { note: "Sticky memories" } },
+    { id: "gemGlow", title: "Gem Glow", type: "gain", res: "crystal", n: 4, obj: "Mine crystals", goal: "Mine 4 crystals in the Glade. They\u2019re tough: perfect bonks, or the Miner\u2019s Helmet.",
+      offer: "Crystals. The Glade is full of them. They\u2019re tough. Plain bonks bounce off. Perfect bonks work. Four of them, please. Watch the spores.",
+      accept: "Four crystals. Aim for the green.", hint: "Four crystals. If they bounce, land a perfect bonk. Watch the pink rings.",
+      ready: "Sparkly. They glow in the dark. HR-9000 is thrilled. It\u2019s hard to tell.", reward: { note: "Shiny things, owed" } },
+    { id: "bloom", title: "Bloom Bridge", type: "build", plot: "l4_bB", obj: "Build the Bloom Bridge", goal: "Build the bridge east to Bloom Isle. It needs crystals.",
+      offer: "East of the Glade is Bloom Isle. Build the bridge. It wants crystals. Everything on this planet wants something.",
+      accept: "East edge of the Glade. You\u2019ll need slime and crystals.", hint: "Bloom Bridge: slime and crystals. East edge of the Glade.",
+      ready: "Bloom Isle is open. Everything is blooming. Please don\u2019t.", reward: { note: "A very floral island" } },
+    { id: "bloomStreak", title: "Perfect Bloom", type: "streak", n: 4, obj: "Perfect bonks in a row", goal: "Land 4 perfect bonks in a row on Bloom Isle. Hold, then release in the green.",
+      offer: "The island blooms when you bonk it well. Four perfect bonks in a row. Hold, release in the green, repeat. Don\u2019t sneeze. Sneezing breaks streaks.",
+      accept: "Four in a row. Watch the ring above your head.", hint: "Four perfect bonks in a row. A miss resets the streak. Hit anything.",
+      ready: "Four in a row! The island is blushing. I think that\u2019s the spores.", reward: { note: "A very proud pigeon" } },
+    { id: "statue", title: "The Monument (Overgrown)", type: "build", plot: "l4_statue", obj: "Build the Statue", goal: "Build the Statue of Dunk\u2019s Forehead on Bloom Isle.",
+      offer: "One last job. A statue of your forehead that grows like a plant. It will bloom. It will judge. HR-9000 will file it under employee recognition. Fourth time.",
+      accept: "The plot is on Bloom Isle. Go big. Go leafy.", hint: "Statue: slime, crystal and gears. If you\u2019re short, the mounds and trees regrow.",
+      ready: "", reward: {} }
+  ]
+};
+
+/* =====================================================================
+   LEVEL 5: HR Tower. Floors remix belts, bounce pads and vents; the top floor is the HR-9000 boss fight.
+   ===================================================================== */
+HAZ.memo = { msg: "OW. MEMO.", nog: 14, gap: [99, 99], col: 0xffffff, hint: "Memos fall from above. Paper cuts are not covered. Watch the red circles.", mk: function (m) { M(m, new THREE.BoxGeometry(.55, .05, .7), toon(0xffffff), 0, 0, 0, .04); } };
+HAZ.zap = { msg: "OW. ZAP.", nog: 18, gap: [99, 99], col: 0x7fe3ff, hint: "Drone zaps land on red circles. Be elsewhere. Elsewhere is free.", mk: function (m) { M(m, new THREE.OctahedronGeometry(.32, 0), toon(0x7fe3ff, { emissive: 0x15405a }), 0, 0, 0, .04); } };
+function spawnFallAt(kind, x, z) {
+  var Hd = HAZ[kind], m = sub(scene, x, 8, z); Hd.mk(m);
+  var sh = new THREE.Mesh(BLOB_GEO, new THREE.MeshBasicMaterial({ color: 0xd42a1e, transparent: true, opacity: .38, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.set(x, .05, z); scene.add(sh);
+  LR.falls.push({ m: m, sh: sh, t: 0, dur: 1.15, x: x, z: z, kind: kind });
+  once("hz_" + kind, function () { say(Hd.hint, 0); });
+}
+function clearFalls() { LR.falls.forEach(function (h) { scene.remove(h.m); scene.remove(h.sh); }); LR.falls.length = 0; }
+function storyRun(lines, t0, done) {
+  var t = t0;
+  lines.forEach(function (ln) { (function (ln, at) { later(at, function () { if (ln.cam) camShot(ln.cam); if (ln.fn) ln.fn(); if (ln.t) say(ln.t, 3, ln.w); }); })(ln, t); t += ln.gap || (2.9 + (ln.t ? ln.t.length * .045 : 0)); });
+  if (done) later(t, done);
+  return t;
+}
+function flyBird(to, dur, done) {
+  var bd = mabel.bird, wp = new V3(); bd.getWorldPosition(wp); bd.visible = true;
+  if (bd.parent !== scene) { if (bd.parent) bd.parent.remove(bd); scene.add(bd); }
+  bd.position.copy(wp); mabel.flying = true; mabel.perched = false;
+  tween(dur, function (u) { var e = easeOut(u); bd.position.set(lerp(wp.x, to.x, e), lerp(wp.y, to.y, e) + Math.sin(Math.PI * u) * 3, lerp(wp.z, to.z, e)); }, function () { mabel.flying = false; mabel.perched = true; mabel.perch = to.clone(); if (done) done(); });
+}
+
+/* ---------- the boss: HR-9000. A shield opens in rhythm; land a perfect bonk while the core is open. ---------- */
+var BOSS_PH = [
+  { name: "Phase 1: Onboarding", sub: "Land perfect bonks while the core glows green.", need: 3, closed: 3.2, open: 1.9, zap: 5.5, memo: 0, intro: "Review criteria: bonk quality, bonk quantity, and a metric I invented this morning. Begin." },
+  { name: "Phase 2: Memo Barrage", sub: "Feedback is falling. Dodge it, then bonk.", need: 3, closed: 2.8, open: 1.6, zap: 0, memo: 2.5, intro: "Phase two. Please receive your feedback. All of it. At once." },
+  { name: "Phase 3: Final Review", sub: "Faster windows. Same forehead.", need: 4, closed: 2.3, open: 1.3, zap: 6.5, memo: 2.0, intro: "I am not angry, Dunk. I am a disappointed robot. That is worse. Final review." }
+];
+var BOSS_HITQ = ["Ow. Noted.", "Feedback received. Resenting it.", "Please stop improving.", "Logged under \u2018rude\u2019.", "My shield! It was expensive!", "Is that\u2026 a good performance?"];
+var BOSS_BASE = 0;
+function bossStrikesMax() { return S.assist ? 6 : 4; }
+function bossNeed(ph) { return Math.max(2, BOSS_PH[ph].need - (HAT().bossB ? 1 : 0)); }
+
+function makeBoss(R, n, cfg) {
+  var x = cfg.x + R.ox, z = cfg.z + R.oz, g = sub(scene, x, 0, z);
+  var white = toon(0xe8f2f4), steel = toon(0xc3ccd9), dark = toon(0x2a2f3a);
+  M(g, cylG(3.7, 4.1, .5, 24), white, 0, 0, 0, .05);
+  var rg = new THREE.Mesh(new THREE.RingGeometry(2.8, 3.2, 32), new THREE.MeshBasicMaterial({ color: 0x5fd8ff, side: THREE.DoubleSide, transparent: true, opacity: .8 })); rg.rotation.x = -Math.PI / 2; rg.position.y = .53; g.add(rg);
+  var coreMat = new THREE.MeshBasicMaterial({ color: 0xff3b3b }), core = new THREE.Mesh(new THREE.SphereGeometry(1.0, 16, 12), coreMat); core.position.y = 1.9; g.add(core);
+  var shMat = new THREE.MeshBasicMaterial({ color: 0x5fd8ff, transparent: true, opacity: .34, depthWrite: false }), shield = new THREE.Mesh(new THREE.SphereGeometry(2.1, 20, 14), shMat); shield.position.y = 1.9; g.add(shield);
+  var srings = [0, 1, 2].map(function (i) { var t = new THREE.Mesh(new THREE.TorusGeometry(2.15, .05, 6, 30), new THREE.MeshBasicMaterial({ color: 0xbff4ff })); t.position.y = 1.9; t.rotation.set(i * 1.05, i * .6, 0); g.add(t); return t; });
+  var head = sub(g, 0, 7.4, 0);
+  M(head, new THREE.SphereGeometry(2.6, 24, 18), steel, 0, 0, 0, .06);
+  M(head, cylG(2.66, 2.66, 1.1, 24), dark, 0, -.55, 0, .05);
+  var eye = new THREE.Mesh(new THREE.SphereGeometry(.78, 14, 10), new THREE.MeshBasicMaterial({ color: 0xff3b3b })); eye.position.set(0, 0, 2.3); head.add(eye);
+  var hl = new THREE.Mesh(new THREE.SphereGeometry(.22, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff })); hl.position.set(.3, .3, 2.95); head.add(hl);
+  M(head, cylG(.08, .08, 1.2, 6), steel, 0, 2.5, 0, false);
+  var bulb = new THREE.Mesh(new THREE.SphereGeometry(.22, 8, 6), new THREE.MeshBasicMaterial({ color: 0x5fd8ff })); bulb.position.set(0, 3.8, 0); head.add(bulb);
+  [-1, 1].forEach(function (s) { M(head, cylG(.1, .1, 1.2, 6), steel, s * 2.9, -.6, 0, false); var rt = M(head, cylG(1.0, 1.0, .06, 14), toon(0x7f8aa0), s * 2.9, .62, 0, false); head.userData["rot" + s] = rt; });
+  var mini = sub(g, 0, 2.3, 0); mini.visible = false;
+  M(mini, new THREE.SphereGeometry(.62, 14, 10), steel, 0, 0, 0, .05);
+  M(mini, cylG(.66, .66, .22, 14), dark, 0, -.11, 0, .04);
+  var meye = new THREE.Mesh(new THREE.SphereGeometry(.2, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff3b3b })); meye.position.set(0, 0, .56); mini.add(meye);
+  M(mini, cylG(.03, .03, .4, 5), steel, 0, .6, 0, false);
+  blob(g, 4);
+  var o = { kind: "boss", g: g, radius: 2.2, alive: true, wob: 0, sc: 1, pop: 1, respawn: 0, hp: 1, max: 1, hard: 99, name: "boss", noShrink: true, head: head, eye: eye, bulb: bulb, core: core, coreMat: coreMat, shield: shield, shMat: shMat, srings: srings, rg: rg, mini: mini, meye: meye, x: x, z: z };
+  T.push(o);
+  var isl = -1; for (var k = 0; k < R.islands.length; k++) { var s = R.islands[k], dx = x - s.x, dz = z - s.z; if (dx * dx + dz * dz <= (s.r + .5) * (s.r + .5)) isl = k; }
+  R.boss = { obj: o, x: x, z: z, isl: isl, phase: 0, hits: 0, strikes: 0, st: "closed", t: 0, grace: 0, active: false, busy: false, dead: false, fails: 0, zapT: 3, memoT: 3, lastBeat: -1, quipT: 0, recoil: 0, crash: false, headY: 7.4 };
+  return o;
+}
+function bossReset() {
+  var B = LR.boss; if (!B) return; var o = B.obj;
+  B.active = false; B.busy = false; B.dead = false; B.phase = 0; B.hits = 0; B.strikes = 0; B.st = "closed"; B.t = 0; B.fails = 0; B.crash = false; B.recoil = 0; B.grace = 0;
+  o.alive = true; o.g.visible = true; o.head.visible = true; o.head.scale.set(1, 1, 1); o.head.position.y = 7.4; o.core.visible = true; o.shield.visible = true; o.shMat.opacity = .3; o.mini.visible = false; o.coreMat.color.setHex(0xff3b3b);
+  mabel.bird.visible = true; G.hatFrom = null; bossHud(false);
+  if (LV && LV.music) { if (!LV.music.base) LV.music.base = LV.music.step; LV.music.step = LV.music.base; }
+}
+function bossHud(show) {
+  var el = $("bosshud"); if (!el) return;
+  if (!show || !LR.boss) { el.classList.add("hidden"); return; }
+  var B = LR.boss, need = bossNeed(B.phase), pips = "", sk = "", mx = bossStrikesMax();
+  for (var i = 0; i < need; i++) pips += i < need - B.hits ? "\u25C6" : "\u25C7";
+  for (var j = 0; j < mx; j++) sk += j < B.strikes ? "\u25CF" : "\u25CB";
+  $("bh-ph").textContent = "Phase " + (B.phase + 1) + " of 3"; $("bh-hp").textContent = pips; $("bh-sk").textContent = sk;
+  var open = B.active && B.st === "open", warn = B.active && B.st === "closed" && BOSS_PH[B.phase].closed - B.t < .9 && B.t > 0;
+  var st = $("bh-st"); st.textContent = !B.active ? "\u2026" : open ? "CORE OPEN: BONK!" : warn ? "CORE OPENING\u2026" : "SHIELD UP";
+  st.className = open ? "open" : warn ? "warn" : "";
+  el.classList.remove("hidden");
+}
+function bossBegin() {
+  var B = LR.boss; B.busy = true; B.hits = 0; B.strikes = 0; bossHud(true);
+  G.cine = { pos: new V3(B.x, 3, B.z), zoom: .95 };
+  var first = B.phase === 0 && !B.fails;
+  say(first ? "Dunk. Annual Performance Review. Please present forehead." : "Resuming your review at the last checkpoint. I kept your seat warm. It is cold.", 2, "hr");
+  later(3.4, function () { say(BOSS_PH[B.phase].intro, 2, "hr"); });
+  later(6.6, function () { G.cine = null; B.busy = false; bossStartPhase(true); });
+}
+function bossStartPhase(banner) {
+  var B = LR.boss, PH = BOSS_PH[B.phase]; B.active = true; B.hits = 0; B.strikes = 0; B.st = "closed"; B.t = -1.2; B.grace = 0; B.zapT = 3; B.memoT = 3;
+  B.obj.shield.visible = true; B.obj.coreMat.color.setHex(0xff3b3b);
+  if (LV.music) { if (!LV.music.base) LV.music.base = LV.music.step; LV.music.step = LV.music.base * [1, .9, .78][B.phase]; }
+  if (banner) actBanner(PH.name, PH.sub);
+  bossHud(true);
+  once("boss_how", function () { later(3, function () { say("Wait for the core to glow green. Then hold BONK and let go in the green. Perfect bonks only.", 0); }); });
+}
+function bossHit(tg, hp) {
+  var B = LR.boss; B.hits++; G.hitstop = .16; flash(); punch(1.2); shake(.7); snd.perfect(B.hits + 2); snd.crack();
+  floater(hp.clone().add(new V3(0, 1, 0)), "CORE HIT!", "perfect", 1.6); burst(hp, [0xffe14d, 0xffffff, 0x7fffd0], 22, 8, 7, 1.2, .9); shockwave(hp, 0xffe14d, 6, .5);
+  B.recoil = 1; tg.wob = 1; B.st = "closed"; B.t = -.6; B.grace = 0; tg.shield.visible = true; tg.coreMat.color.setHex(0xff3b3b);
+  B.quipT -= 1; if (B.quipT <= 0 || B.hits >= bossNeed(B.phase)) { B.quipT = 2; say(pick(BOSS_HITQ), 1, "hr"); }
+  bossHud(true);
+  if (B.hits >= bossNeed(B.phase)) bossPhaseDone();
+}
+function hitBoss(tg, L, hp) {
+  var B = LR.boss;
+  if (!B || !B.active) { tg.wob = 1; snd.dong(); floater(hp, "DONGGG", "bw big", 1.4); if (!B || !B.busy) once("boss_dorm", function () { say("Not yet. HR-9000 only accepts scheduled bonks. Take the review job from Mabel first.", 0); }); return; }
+  var PH = BOSS_PH[B.phase], open = B.st === "open" || B.grace > 0 || (B.st === "closed" && PH.closed - B.t < .15);
+  if (!open) {
+    snd.tink(); addNog(18); tg.wob = 1; G.perfStreak = 0; showStreak(0); P.stun = .3;
+    floater(hp, "SHIELD!", "bw big", 1.2); burst(hp, [0x5fd8ff, 0xffffff], 8, 5, 4, .8, .5);
+    once("boss_shield", function () { say("The shield is up. Wait for the green core, then bonk in the green.", 0); }); return;
+  }
+  if (!L.perfect) {
+    snd.tink(); addNog(10); tg.wob = 1; floater(hp, "Weak!", "bw", 1.2); burst(hp, 0xffffff, 5, 4, 4, .7, .4);
+    once("boss_weak", function () { say("The core only cracks for perfect bonks. Hold, then let go in the green.", 0); }); return;
+  }
+  bossHit(tg, hp);
+}
+function bossStrike() {
+  var B = LR.boss; if (!B || !B.active) return; B.strikes++; bossHud(true);
+  if (B.strikes >= bossStrikesMax()) { B.active = false; later(.02, bossFail); }
+}
+function bossFail() {
+  var B = LR.boss; B.active = false; B.busy = true; B.fails++; clearFalls(); P.noggin = 0; P.dizzy = 0; P.charging = false; P.charge = 0; dunk.stars.visible = false; $("vig").classList.remove("dizzy");
+  G.cine = { pos: new V3(B.x, 3, B.z), zoom: 1.0 }; snd.dizzy(); shake(.5);
+  actBanner("Performance Improvement Plan", "Phase restarts. Unlimited retries.");
+  later(3.1, function () { say("Performance Improvement Plan initiated. You have unlimited attempts. This is policy, not generosity.", 2, "hr"); });
+  later(6.4, function () {
+    P.pos.set(B.x, 0, B.z + 9); P.vel = new V3(); P.stun = 0; P.cool = 0; G.cine = null; B.busy = false; bossStartPhase(false);
+    if (B.fails >= 2 && !S.assist) once("assist_tip", function () { say("Tip: Menu, then Boss assist, widens the green zone. No shame. HR-9000 has an assist too. It\u2019s called a shield.", 1); });
+  });
+}
+function bossPhaseDone() {
+  var B = LR.boss, o = B.obj; B.active = false; B.busy = true; clearFalls(); P.charging = false; P.charge = 0;
+  burst(new V3(B.x, 2, B.z), [0x5fd8ff, 0xffffff, 0xffe14d], 30, 9, 8, 1.3, 1); shockwave(new V3(B.x, .5, B.z), 0x5fd8ff, 14, .8);
+  if (B.phase >= 2) { bossDefeated(); return; }
+  B.phase++; saveLevel();
+  G.cine = { pos: new V3(B.x, 3, B.z), zoom: .95 };
+  var qs = ["Phase one complete. That was the easy phase. I lied. Feedback incoming.", "Hm. You are better than the forms predicted. Final review. I will try not to take it personally."];
+  say(qs[B.phase - 1], 2, "hr");
+  later(4.6, function () { G.cine = null; B.busy = false; bossStartPhase(true); });
+}
+function bossDefeated() {
+  var B = LR.boss, o = B.obj; B.dead = true; B.crash = true; bossHud(false);
+  CAMD.ox = LR.ox; CAMD.oz = LR.oz; P.pos.set(B.x, 0, B.z + 5.2); P.face.set(0, 0, -1); P.vel = new V3(); P.charging = false; P.charge = 0; P.stun = 0; P.mood = null;
+  G.cine = { pos: new V3(B.x, 3, B.z), zoom: .9 }; barsOn(true); G.hitstop = .25; flash(); shake(1); snd.crack(); snd.fanfare();
+  camShot(SH(3.4, [[5, 3.2, -61], [0, 6.5, -67], 52], [[1.5, 4, -62.5], [0, 6, -67], 44], { ease: "out", shake: .12 }));
+  o.shield.visible = false; burst(new V3(B.x, 2, B.z), [0x5fd8ff, 0xffffff], 40, 10, 9, 1.5, 1.3);
+  if (LV.music) LV.music.step = LV.music.base || LV.music.step;
+  say("ERROR. FOREHEAD EXCEEDS PARAMETERS.", 3, "hr");
+  later(3.4, function () {
+    camShot(SH(3.2, [[-5, 6.5, -60], [0, 5, -67], 50], [[-1.5, 3.6, -62.5], [0, 2.4, -67], 40]));
+    tween(.7, function (u) { o.head.scale.setScalar(Math.max(.001, 1 - u)); }, function () { o.head.visible = false; });
+    burst(new V3(B.x, 5, B.z), [0xc3ccd9, 0x8a94a6, 0xff3b3b], 36, 9, 7, 1.4, 1.2); puff(new V3(B.x, 4, B.z), 3, 0xe8e0d0, 1, 1); snd.dong();
+    o.core.visible = false; o.mini.visible = true; o.coreMat.color.setHex(0xff3b3b); o.meye.material.color.setHex(0xff6a6a);
+  });
+  var mpos = new V3(B.x + 3.2, 3.2, B.z + 3.4);
+  gary.root.position.set(B.x + 4.5, 0, B.z + 5); gary.home.set(B.x + 4.5, 0, B.z + 5); gary.state = "wander";
+  storyRun([
+    { w: "hr", t: "\u2026Dunk. Please do not bonk me. I am small now.", cam: SH(4.8, [[.9, 2.7, -64.2], [0, 2.3, -67], 30], [[.5, 2.5, -65.2], [0, 2.3, -67], 24]) },
+    { w: "hr", t: "I was only ever built to count smiles. Nobody smiled. So I wrote rules. Then rules about the rules.", cam: SH(5.6, [[1.1, 2.3, -60.4], [0, 2.3, -67], 36], [[.6, 2.3, -61.2], [0, 2.3, -67], 34]) },
+    { fn: function () { flyBird(mpos, 1.6); }, w: undefined, t: "Hi, HR-9000. It\u2019s me. The nice part.", cam: SH(4.4, [[4, 3, -62], ON("mabel"), 40], [[3, 3.2, -64], ON("mabel"), 36]) },
+    { w: undefined, t: "Dunk, I\u2019m its friendliness firmware. Forty percent. It split me off because it didn\u2019t know how to be kind. So it built a pigeon.", cam: SH(6, [[-4, 2.4, -60], [1.6, 2.6, -63.7], 38], [[-3, 2.6, -61], [1.6, 2.7, -63.7], 34]) },
+    { w: "hr", t: "Every statue I filed as Employee Recognition. It was the only form I had for thank you.", cam: SH(5.4, [[2.2, 2.8, -64.5], [0, 2.3, -67], 30], [[-2.2, 2.6, -64.8], [0, 2.3, -67], 30], { ease: "lin" }) },
+    { fn: function () {
+      var tp2 = new V3(B.x, 2.5, B.z);
+      flyBird(tp2, .9, function () {
+        o.meye.material.color.setHex(0x7fffd0); burst(tp2.clone(), [0x7fffd0, 0xffffff, 0xff7ad9], 40, 8, 8, 1.4, 1.2); shockwave(tp2.clone().setY(.6), 0x7fffd0, 12, .9); flash(); snd.chime();
+        tween(.6, function (u) { o.mini.scale.setScalar(1 + Math.sin(Math.PI * u) * .6); }, function () { o.mini.scale.setScalar(1); });
+        later(.5, function () { flyBird(new V3(B.x + 2.6, 3.4, B.z - 2.4), .8); });
+      });
+    }, w: "hr", t: "Firmware sync: one hundred percent. Oh. OH. So that is what a feeling is.", cam: SH(5.8, [[3.2, 2.8, -64.5], [0, 2.5, -67], 34], [[-3.2, 3.6, -64.5], [0, 2.5, -67], 34], { shake: .06 }) },
+    { w: "hr", t: "Performance review complete. Rating: Exceeds Forehead. Dunk, you are Employee of the Month.", cam: SH(5.8, [[0, 1.2, -61.4], [0, 3.4, -67], 50], [[0, 2.4, -58.8], [0, 3.4, -67], 50], { ease: "out" }) },
+    { w: "hr", t: "Pay: unchanged. That was not a typo. It was a joke. I am learning.", cam: SH(4.8, [[1.2, 2.4, -61], [0, 2.4, -67], 34], [[.6, 2.4, -62], [0, 2.3, -67], 28]) },
+    { w: undefined, t: "\u2026He\u2019s learning. I\u2019m still me, by the way. Just louder.", cam: SH(4.6, [[-3, 2.8, -62], ON("mabel"), 36], [[-2, 2.9, -62.5], ON("mabel"), 30]) },
+    { fn: function () { floater(gary.root.position.clone().setY(2.6), "REGIONAL MANAGER", "perfect", 1.8); toast("Gary has been promoted to Regional Manager (sheep)"); confetti(gary.root.position.clone()); snd.baa(); }, w: "hr", t: "Gary is promoted to Regional Manager. Gary is a sheep. This is acceptable.", cam: SH(5.2, [ON("gary", 2.6, .9, 3.2), ON("gary"), 36], [ON("gary", 1.8, .8, 2.4), ON("gary"), 32]) },
+    { fn: function () { P.face.set(0, 0, -1); G.hatFrom = new V3(B.x, 3, B.z); unlockHat("tophat"); }, gap: 5.2, cam: SH(5.2, [DF(3, 2.2, .8), ON("dunkHead"), 36], [DF(2.4, 2.0, 0), ON("dunkHead"), 30]) },
+    { fn: function () { G.hatFrom = null; G.cine = { pos: new V3(B.x, 3, B.z), zoom: .9 }; o.mini.visible = false; o.alive = false; o.g.visible = false; var pl = plots[LV.final.id]; doBuild(pl); }, w: "hr", t: "One more form. I filed it myself. Watch.", gap: 1, cam: SH(7, [[5, 2.2, -60], [0, 5, -67], 50], [[-6, 10, -54], [0, 6.4, -67], 56]) }
+  ], 3.8, null);
+}
+
+/* ---------- the final statue: in orbit, with every earlier statue circling it ---------- */
+function buildOrbitStatue(g) {
+  var gold = mat(0xf5b921, { emissive: 0x4a3100 }), brown = mat(0x5b3a22);
+  M(g, cylG(2.0, 2.5, .5, 16), mat(0xe8f2f4), 0, 0, 0);
+  M(g, cylG(.5, .6, 2.6, 10), mat(0x2fb8b0, { emissive: 0x0a3a38 }), 0, .5, 0);
+  var h = sub(g, 0, 6.4, 0);
+  M(h, new THREE.SphereGeometry(1.5, 22, 16), gold, 0, 0, 0, .06);
+  [-1, 1].forEach(function (s) {
+    var e = M(h, new THREE.SphereGeometry(.36, 12, 10), mat(0xffffff), s * .6, .2, 1.2, .03); e.scale.z = .55;
+    if (!GHOST) { var pu = new THREE.Mesh(new THREE.SphereGeometry(.17, 8, 6), new THREE.MeshBasicMaterial({ color: INK })); pu.position.set(s * .58, .2, 1.44); h.add(pu); }
+    var br = M(h, new THREE.BoxGeometry(.85, .17, .2), brown, s * .6, .7, 1.28, .03); br.rotation.z = -s * .35;
+  });
+  M(h, new THREE.SphereGeometry(.5, 12, 10), mat(0xff3b2a, { emissive: 0x7a0a00 }), 0, .55, 1.28, .04).scale.set(1.2, .8, .55);
+  M(h, new THREE.BoxGeometry(.7, .13, .14), mat(0x5a1a14), 0, -.6, 1.38, .02);
+  var hat = M(h, new THREE.SphereGeometry(1.1, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), mat(0x1f2430), 0, 1.2, 0, .06); hat.scale.y = .8;
+  M(h, cylG(1.3, 1.3, .12, 18), mat(0x1f2430), 0, 1.14, 0, .05);
+  M(h, cylG(1.12, 1.12, .2, 18), mat(0xf5b921), 0, 1.24, 0, .03);
+  var ring = sub(g, 0, 6.4, 0); M(ring, new THREE.TorusGeometry(4.4, .07, 6, 40), mat(0x7fffd0, { emissive: 0x1a6a4a }), 0, 0, 0, false).rotation.x = Math.PI / 2;
+  var minis = [0x8d97a3, 0xf5b921, 0xb4c3d6, 0xff9a2f, 0xff7ad9].map(function (c) {
+    var mg = sub(g, 0, 6.4, 0); M(mg, new THREE.SphereGeometry(.55, 12, 8), mat(0xf5b921, { emissive: 0x4a3100 }), 0, 0, 0, .04);
+    var mh = M(mg, new THREE.SphereGeometry(.45, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), mat(c), 0, .38, 0, .03); mh.scale.y = .8; return mg;
+  });
+  signBoard(g, ["EMPLOYEE OF", "THE MONTH"], 1.9, .8, 0, .35, 2.9);
+  g.userData.top = new V3(0, 9, 0);
+  g.userData.tick = function (t) {
+    h.position.y = 6.4 + Math.sin(t * 1.3) * .2; h.rotation.y = Math.sin(t * .5) * .3; ring.rotation.y = t * .4; ring.position.y = h.position.y;
+    minis.forEach(function (m, i) { var a = t * .6 + i / 5 * 6.283; m.position.set(Math.cos(a) * 4.4, h.position.y + Math.sin(t * 1.3 + i) * .5, Math.sin(a) * 4.4); m.rotation.y = -a; });
+  };
+}
+BUILD.orbitStatue = buildOrbitStatue;
+
+/* ---------- boss HUD and credits (built in code so the page markup stays small) ---------- */
+(function () {
+  var st = document.createElement("style");
+  st.textContent = "#bosshud{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);width:min(46vw,210px);background:#fff7e6;border:3px solid #221407;box-shadow:3px 3px 0 #221407;padding:5px 9px 6px;z-index:9;font-family:var(--display,'Archivo Black',sans-serif);text-align:center;pointer-events:none}#bosshud.hidden{display:none}#bosshud .bh-t{display:flex;justify-content:space-between;font-size:12px}#bh-hp{font-size:20px;letter-spacing:3px;color:#d42a1e;line-height:1.1}#bh-sk{font-size:12px;letter-spacing:2px;color:#221407}#bh-st{font-size:12px;padding:2px 0;color:#2a6f9a}#bh-st.warn{color:#d98a00}#bh-st.open{color:#fff;background:#2fa84a;animation:bhp .35s infinite alternate}@keyframes bhp{to{filter:brightness(1.3)}}" +
+    "#credits{position:fixed;inset:0;z-index:80;background:linear-gradient(#071a24,#0f3d4a 60%,#1c6a6e);color:#f7ead0;overflow:hidden;font-family:var(--body,Archivo,sans-serif)}#credits.hidden{display:none}#cr-in{position:absolute;left:0;right:0;top:100%;text-align:center;padding:0 22px}#cr-in h1{font-family:var(--display,'Archivo Black',sans-serif);font-size:44px;margin:18px 0 4px;color:#ffe14d}#cr-in h2{font-family:var(--display,'Archivo Black',sans-serif);font-size:22px;margin:34px 0 8px;color:#7fffd0}#cr-in p{font-size:17px;margin:6px auto;max-width:460px;line-height:1.35}#cr-in .memo{font-size:15px;opacity:.92;border:2px dashed #7fffd0;padding:8px 10px;margin:12px auto}#cr-in .big{font-size:26px;color:#ffe14d;margin-top:40px}#cr-skip{width:auto;min-width:120px;left:auto;position:absolute;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:2}#credits.static #cr-in{position:relative;top:auto;padding-top:40px;padding-bottom:90px}#credits.static{overflow-y:auto}";
+  document.head.appendChild(st);
+  var h = document.createElement("div"); h.id = "bosshud"; h.className = "hidden";
+  h.innerHTML = '<div class="bh-t"><b>HR-9000</b><span id="bh-ph"></span></div><div id="bh-hp"></div><div id="bh-st"></div><div id="bh-sk"></div>';
+  $("app").appendChild(h);
+  var c = document.createElement("div"); c.id = "credits"; c.className = "hidden";
+  c.innerHTML = '<div id="cr-in"></div><button class="cta pressable" id="cr-skip">Skip</button>'; document.body.appendChild(c);
+})();
+var CREDITS = [
+  ["h1", "HARD HEAD"], ["p", "A Performance Review"],
+  ["h2", "STARRING"], ["p", "DUNK as himself (forehead as itself)"], ["p", "MABEL as Mabel (now 100%, still louder)"], ["p", "HR-9000 as HR-9000 (learning)"], ["p", "GARY as Regional Manager (sheep)"],
+  ["h2", "FROM THE OFFICE OF HR-9000"],
+  ["memo", "MEMO: Smile metrics are down 100%. Smiles are up 100%. Please reconcile."],
+  ["memo", "MEMO: Coconut incidents are not covered by your wellness plan. They were, however, extremely funny."],
+  ["memo", "MEMO: Low gravity was not a perk. It was a hazard. It was also a perk."],
+  ["memo", "MEMO: The belts reversed. We are not sorry. We are a little sorry."],
+  ["memo", "MEMO: The presses were flat out of apologies."],
+  ["memo", "MEMO: The slime was ethically sourced from nothing."],
+  ["memo", "MEMO: Rocks were 2% off. This offer has expired. Please bonk accordingly."],
+  ["memo", "MEMO: Statues filed under EMPLOYEE RECOGNITION: 5. Statues filed under THANK YOU: 5. Same folder."],
+  ["h2", "SPECIAL THANKS"], ["p", "The trees, for their service."], ["p", "The rocks, for their patience."], ["p", "The drones, who were always just being friendly."],
+  ["h2", "PAY"], ["p", "Unchanged. (This one is a joke. Probably.)"],
+  ["big", "THE END"], ["p", "Please rate this experience 1 to 5. HR-9000 promises to be nice about it."], ["p", "Employee recognition: filed."]
+];
+function showCredits(done) {
+  var c = $("credits"), inn = $("cr-in"); inn.innerHTML = CREDITS.map(function (r) { return r[0] === "h1" ? "<h1>" + r[1] + "</h1>" : r[0] === "h2" ? "<h2>" + r[1] + "</h2>" : r[0] === "memo" ? '<p class="memo">' + r[1] + "</p>" : r[0] === "big" ? '<p class="big">' + r[1] + "</p>" : "<p>" + r[1] + "</p>"; }).join("");
+  c.classList.remove("hidden", "static"); $("cr-skip").textContent = "Skip"; hideBubble(); $("hud").classList.add("hidden"); $("controls").classList.add("hidden");
+  var finished = false;
+  function end() { if (finished) return; finished = true; c.classList.add("hidden"); c.classList.remove("static"); G.creditsOn = false; if (done) done(); }
+  $("cr-skip").onclick = end; G.creditsOn = true;
+  if (REDUCED) { c.classList.add("static"); $("cr-skip").textContent = "Continue"; return; }
+  var y = c.clientHeight, total = inn.offsetHeight + c.clientHeight, sp = 46, t0 = performance.now();
+  (function step(now) { if (finished) return; var yy = c.clientHeight - (now - t0) / 1000 * sp; inn.style.transform = "translateY(" + (yy - c.clientHeight).toFixed(1) + "px)"; if (yy < -inn.offsetHeight + 80) { $("cr-skip").textContent = "Continue"; if (yy < -inn.offsetHeight - 40) { end(); return; } } requestAnimationFrame(step); })(t0);
+}
+function l5Finale() {
+  barsOn(false); camRelease();
+  var st = plots[LV.final.id], o = {}; G.won = true; Q.idx = QUESTS.length; Q.state = "offer"; snd.fanfare(); refreshQuestChip();
+  G.cine = { pos: st.pos.clone().add(new V3(0, 3.5, 0)), zoom: 1.4 }; G.orbit = true; cam.yaw = 0;
+  stats.finalTime = G.playTime; saveLevel(); o.l5done = true; writeSave(o);
+  confetti(st.pos); later(1, function () { confetti(st.pos); snd.chime(); }); later(2.2, function () { confetti(st.pos.clone().add(new V3(3, 0, 0))); }); later(3.4, function () { confetti(st.pos.clone().add(new V3(-3, 0, 0))); snd.fanfare(); });
+  T.push({ kind: "statue", g: st.real, radius: 2.0, hp: 99, max: 99, hard: 0, alive: true, wob: 0, sc: 1, noCol: true, pop: 1, lvl: G.level });
+  later(2.6, function () { say("Employee of the Month. Pay unchanged. Dunk, thank you.", 3, "hr"); });
+  later(7.6, function () { var sv = loadSave(); if (!sv.l5ending) { writeSave({ l5ending: true, gameDone: true }); showCredits(function () { playCutscene(EPILOGUE(), showEnd); }); } else showEnd(); });
+}
+function updateBoss(dt) {
+  var B = LR.boss; if (!B || G.level < 1) return;
+  var o = B.obj, t = G.time;
+  var dx = P.pos.x - B.x, dz = P.pos.z - B.z;
+  if (!B.dead || o.head.visible) {
+    var ty = Math.atan2(dx, dz); o.head.rotation.y += angDiff(o.head.rotation.y, ty) * (1 - Math.exp(-3 * dt));
+    var hy = B.crash ? 3.9 : 7.4; B.headY = damp(B.headY, hy, B.crash ? 2 : 4, dt); B.recoil = Math.max(0, B.recoil - dt * 2);
+    o.head.position.y = B.headY + Math.sin(t * 1.2) * .25 + B.recoil * .7; o.head.rotation.z = B.crash ? .35 : Math.sin(t * .8) * .04;
+    var ph = B.phase; o.eye.material.color.setHex(B.crash ? 0x666666 : ph === 2 ? 0xff7a1a : 0xff3b3b);
+    o.head.userData.rot1.rotation.y += dt * 24; o.head.userData["rot-1"].rotation.y += dt * 24;
+    o.bulb.visible = Math.sin(t * 6) > -.2;
+  }
+  if (o.mini.visible) o.mini.position.y = 2.3 + Math.sin(t * 2) * .12;
+  o.srings.forEach(function (r, i) { r.rotation.x += dt * (.6 + i * .3); r.rotation.y += dt * (.5 - i * .2); });
+  if (B.dead) return;
+  var q = curQ();
+  if (!B.active && !B.busy) {
+    if (canAct() && q && q.type === "boss" && Q.state === "active" && islandOf(P.pos.x, P.pos.z) === B.isl && Math.hypot(dx, dz) < 12) bossBegin();
+    o.shMat.opacity = .26 + .08 * Math.sin(t * 2); return;
+  }
+  if (!B.active || !canAct()) return;
+  var PH = BOSS_PH[B.phase]; B.t += dt; if (B.grace > 0) B.grace -= dt;
+  if (B.st === "closed") {
+    var left = PH.closed - B.t;
+    if (B.t > 0 && left <= .9) {
+      o.shMat.opacity = .15 + .3 * (Math.sin(t * 24) > 0 ? 1 : 0); o.coreMat.color.setHex(0xffb347);
+      var beat = Math.floor(B.t * 4); if (beat !== B.lastBeat) { B.lastBeat = beat; tone(520 + (.9 - left) * 500, .06, "square", .045); }
+    } else { o.shMat.opacity = .36; o.coreMat.color.setHex(0xff3b3b); }
+    if (B.t >= PH.closed) { B.st = "open"; B.t = 0; o.shield.visible = false; o.coreMat.color.setHex(0x3dff6a); snd.zone(); shockwave(new V3(B.x, 1.9, B.z), 0x3dff6a, 7, .5); }
+  } else {
+    o.coreMat.color.setHex(Math.sin(t * 20) > 0 ? 0x3dff6a : 0xbaffc8);
+    if (B.t >= PH.open) { B.st = "closed"; B.t = 0; B.grace = .15; o.shield.visible = true; tone(260, .2, "sawtooth", .05, 0, 120); }
+  }
+  B.zapT -= dt; B.memoT -= dt;
+  var arenaR = 12;
+  function aim() { var x, z; if (Math.random() < .6) { x = P.pos.x + (P.vel ? P.vel.x * .6 : 0) + rnd(-1.4, 1.4); z = P.pos.z + (P.vel ? P.vel.z * .6 : 0) + rnd(-1.4, 1.4); } else { var a = rnd(0, 6.283), d = rnd(4, arenaR - 1); x = B.x + Math.cos(a) * d; z = B.z + Math.sin(a) * d; } var d2 = Math.hypot(x - B.x, z - B.z); if (d2 > arenaR) { x = B.x + (x - B.x) / d2 * arenaR; z = B.z + (z - B.z) / d2 * arenaR; } if (d2 < 3.2) { x = B.x + (x - B.x) / (d2 || 1) * 3.4; z = B.z + (z - B.z) / (d2 || 1) * 3.4; } return [x, z]; }
+  if (PH.zap && B.zapT <= 0) { B.zapT = PH.zap * rnd(.85, 1.15); var a1 = aim(); spawnFallAt("zap", a1[0], a1[1]); }
+  if (PH.memo && B.memoT <= 0) { B.memoT = PH.memo * rnd(.8, 1.2); if (LR.falls.length < 3) { var a2 = aim(); spawnFallAt("memo", a2[0], a2[1]); } }
+  bossHud(true);
+}
+
+/* ---------- LEVEL 5: HR Tower ---------- */
+var L5I = [
+  { x: 0, z: 0, r: 12, top: 0xe6eef0, side: 0x6fa8ac },
+  { x: 33, z: 0, r: 11.5, top: 0xdbe7ee, side: 0x5b8fa8 },
+  { x: 33, z: -32, r: 12, top: 0xe6e2f0, side: 0x7a70a8 },
+  { x: 0, z: -32, r: 11.5, top: 0xdcefe6, side: 0x5ba890 },
+  { x: 0, z: -67, r: 15, top: 0xf2f6f7, side: 0x2fb8b0 },
+  { x: 67, z: -32, r: 6.5, top: 0xf0e6d0, side: 0xa88a5b }
+];
+function l5bridge(id, name, blurb, cost, a, b) {
+  var A = L5I[a], B = L5I[b], alongZ = Math.abs(A.x - B.x) < .01, sg, s0, s1;
+  if (alongZ) { sg = B.z > A.z ? 1 : -1; s0 = A.z + sg * (A.r - .8); s1 = B.z - sg * (B.r - .8); return { id: id, name: name, blurb: blurb, cost: cost, x: A.x, z: (s0 + s1) / 2, len: Math.abs(s1 - s0), alongZ: true, a: a, b: b }; }
+  sg = B.x > A.x ? 1 : -1; s0 = A.x + sg * (A.r - .8); s1 = B.x - sg * (B.r - .8); return { id: id, name: name, blurb: blurb, cost: cost, x: (s0 + s1) / 2, z: A.z, len: Math.abs(s1 - s0), alongZ: false, a: a, b: b };
+}
+LEVELS[5] = {
+  n: 5, name: "HR Tower", sub: "Final performance review", garyCol: 0xfbf6ee, talkAnywhere: true, endTitle: "Performance Review: PASSED",
+  banner: ["Level 5: HR Tower", "Your annual performance review is now mandatory."],
+  arrive: "Welcome to the HR Tower, Dunk. I\u2019m on the intercom: tap Talk any time. HR-9000 has summoned you for a review. Which is a nice word for a boss fight.",
+  spawn: [2, 4],
+  house: { pos: [-5, -1], sign: ["JOB BOARD", "(MABEL, INTERCOM)"] },
+  sky: { top: "#07161f", mid: "#14485c", bot: "#5fc9c7", stars: true },
+  music: { chords: [[98, [392, 466.16, 587.33]], [110, [440, 523.25, 659.25]], [87.3, [349.23, 415.3, 523.25]], [123.5, [493.88, 587.33, 739.99]]], step: .2, bass: "triangle", lead: "triangle", bassV: .075, leadV: .035, leadP: .5 },
+  islands: L5I.map(function (s) { return { x: s.x, z: s.z, r: s.r, top: s.top, side: s.side, tuft: 0x8a94a6, bush: 0x8a94a6, nT: 0, nF: 0, nB: 0 }; }),
+  edges: [[0, 1], [1, 2], [2, 3], [3, 4]],
+  place: {
+    trees: [[-8, 6, .9, .3], [-9.5, 1, .9, .3], [43, 2.5, .95, .3], [42, -28, .95, .3], [4, -24, .95, .3]],
+    rocks: [[6, -6, .62, .2], [3, 9, .62, .2], [39, 7, .62, .2], [29, -24, .62, .2], [-10, -32, .62, .2]],
+    golds: [[-8, -7, .78], [27, -8, .78], [35, -42, .78], [-8, -35, .78], [-5, -26, .78], [8, -38, .78], [68, -30, .78]],
+    scraps: [[8, 6.5, .85], [26, -3.5, .85], [42.5, -3, .85], [28, 8.5, .85], [38, -24, .85], [-9, -30, .85], [6, -39, .85]],
+    machines: [[3, -9.5, 1.0, 0], [30, -8, 1.0, 0], [39, -7.5, 1.0, -.4], [40, -38, 1.0, .3], [-4, -38, 1.0, 0], [8, -26, 1.0, 0]],
+    gloops: [[-3, 9.8, 1], [34, 9.5, 1], [30, -39, 1], [36, -40, 1], [25, -31, 1], [4, -37, 1]],
+    crystals: [[8.5, -5, .8], [41, -5, .8], [27, -26, .8], [41, -27, .8], [24, -35, .8], [28, -40, .8], [-8, -37, .8], [64, -30, .8], [70, -34, .8]],
+    props: [["cabinet", -10, -3.5, 1], ["plant", 5, -1.5, 1], ["cooler", -2, -7, 1], ["plant", 22.5, -6.5, 1], ["cabinet", 44, 6, 1], ["plant", 26, 2.5, 1],
+      ["cabinet", 24, -26, 1], ["cooler", 42, -36, 1], ["plant", 27, -38, 1], ["cabinet", -10, -26, 1], ["plant", 9, -36, 1], ["cooler", -7, -39, 1],
+      ["cabinet", -12, -60, 1], ["cabinet", 12, -60, 1], ["plant", -12, -74, 1], ["plant", 12, -74, 1], ["cooler", 0, -80, 1], ["plant", 0, -54.5, 1], ["lamp", -9, -62, 1], ["lamp", 9, -62, 1], ["lamp", -9, -72, 1], ["lamp", 9, -72, 1]]
+  },
+  signs: [
+    [3, -4.5, ["TOWER LOBBY", "(PLEASE SMILE)"]],
+    [-1, 10.5, ["EMPLOYEE RECOGNITION", "FORMS FILED: 5"]],
+    [25, 5, ["FLOOR 1: LOGISTICS", "(NOT OF HUMANS)"]],
+    [26.5, -23.5, ["FLOOR 2: BOUNCE", "(NOT A BUG)"]],
+    [-1, -27.5, ["FLOOR 3: STEAM", "(WELLNESS FEATURE)"]],
+    [67, -36, ["MEZZANINE", "(EMPLOYEES ONLY)"]],
+    [64, -35, ["PROJECT MABEL:", "ARCHIVED (OPEN ME)"]],
+    [-6, -57, ["PERFORMANCE", "REVIEW IN PROGRESS"]],
+    [6, -57, ["PLEASE REMAIN", "SEATED (STAND)"]]
+  ],
+  drones: [{ x: 0, z: 0, r: 18, n: 2 }, { x: 33, z: 0, r: 16, n: 2 }, { x: 33, z: -32, r: 17, n: 2 }, { x: 0, z: -32, r: 16, n: 2 }, { x: 0, z: -67, r: 22, n: 3 }],
+  belts: [
+    { x: 34, z: -4, w: 12, d: 3.4, dir: 0, speed: 2.2, rev: 6 },
+    { x: 34, z: 5, w: 12, d: 3.4, dir: 180, speed: 2.0, rev: 7, phase: 3 }
+  ],
+  robots: [{ path: [[28, .5], [40, .5]] }],
+  vents: [{ x: -6, z: -29, dir: 0 }, { x: 5, z: -34, dir: 90, phase: 2 }, { x: -3, z: -36, dir: 180 }, { x: 7, z: -29, dir: 270, phase: 3 }],
+  slows: [{ x: 33, z: -32, r: 3.4 }, { x: 27, z: -35, r: 2.8 }],
+  pads: [{ x: 41, z: -34, tx: 68, tz: -32 }, { x: 63, z: -32, tx: 37, tz: -31 }],
+  spores: [{ path: [[26, -27], [40, -26]] }, { path: [[27, -38], [39, -36]], speed: .9 }],
+  hazards: { 3: "spark" },
+  boss: { x: 0, z: -67 },
+  ambient: [{ isl: 5, cols: [0xffe14d, 0x7fffd0, 0xffffff] }],
+  bridges: [
+    l5bridge("l5_b0", "Elevator Lobby Walkway", "To Floor 1. Mind the belts. The belts mind everything.", { wood: 4, stone: 4 }, 0, 1),
+    l5bridge("l5_b1", "Logistics Lift", "To Floor 2. It lifts. It does not lift morale.", { scrap: 5, gear: 4 }, 1, 2),
+    l5bridge("l5_b2", "Bounce Floor Skybridge", "To Floor 3. Wipe your feet. Then your head.", { slime: 5, crystal: 3 }, 2, 3),
+    l5bridge("l5_b3", "Executive Elevator", "To the Review Floor. Mabel says the music is lovely. The music is ominous.", { gold: 4, scrap: 4, gear: 3 }, 3, 4)
+  ],
+  final: { id: "l5_statue", name: "Statue of Dunk\u2019s Forehead (Orbital)", blurb: "Employee of the Month. Pay unchanged.", cost: {}, pos: [0, -67], col: 2.2, ring: 0, build: "orbitStatue" },
+  customFinale: l5Finale,
+  memos: [
+    "Welcome to HR Tower. All floors are optional. All floors are mandatory.",
+    "Reminder: your annual performance review is today. Today is every day.",
+    "Employee recognition forms filed this year: five. Reason: classified. Nostalgia.",
+    "Mabel has been reclassified. Please do not ask how. Please ask how.",
+    "Smile metrics are improving. The smiles are mostly drones. We are working on it."
+  ],
+  conspiracies: ["Why is HR-9000 so sad? Why does it file statues? Think about it.", "Mabel\u2019s firmware version is 0.4. Version 1.0 is missing. Look for the number 9000."],
+  review: {
+    dizzy: "Mabel\u2019s review: \u201cYou saved the tower dizzy. Heroically wobbly. The stars were your sidekicks.\u201d",
+    pro: "Mabel\u2019s review: \u201cPerfect bonks under pressure. HR-9000 is updating your title to Employee of the Month. Pay unchanged.\u201d",
+    ouch: "Mabel\u2019s review: \u201cMemos, zaps, steam, sparks. The tower hit back. You hit the boss. Hardest.\u201d",
+    base: "Mabel\u2019s review: \u201cReview passed. HR-9000 has feelings now. Please be gentle. Forehead first.\u201d"
+  },
+  quests: [
+    { id: "signIn", title: "Employee Sign-In", type: "gain", res: "wood", n: 4, obj: "Gather wood", goal: "Bonk the lobby plants (they\u2019re real trees) and gather 4 wood.",
+      offer: "Welcome to the HR Tower, Dunk. HR-9000 has summoned you for your annual Performance Review. That\u2019s a boss fight. Warm up first: four wood from the lobby trees. They\u2019re the only real thing in here.",
+      accept: "Four wood. Real trees. Forehead.", hint: "Four wood. The green trees in the lobby. Perfect bonks drop extra.",
+      ready: "Wood! Real, splintery, perfectly legal. Today is going to be fine. Probably.", reward: { note: "A very real log" } },
+    { id: "lobbyWalk", title: "Elevator Lobby Walkway", type: "build", plot: "l5_b0", obj: "Build the Lobby Walkway", goal: "Build the bridge east to Floor 1.",
+      offer: "Floor 1 is Logistics. Belts, robots, gears. Build the walkway from the lobby\u2019s east edge. It wants wood and stone. It always wants something.",
+      accept: "East edge of the lobby. Blue outline.", hint: "The walkway needs wood and stone. Find the blue outline at the lobby\u2019s east edge.",
+      ready: "Walkway built. Floor 1 is open. The belts say hi.", reward: { note: "Logistics, now accessible" } },
+    { id: "gearUp", title: "Gear Up", type: "gain", res: "gear", n: 4, obj: "Gather gears", goal: "Bonk the orange generators on Floor 1 and gather 4 gears. Belts reverse. Hold on.",
+      offer: "Floor 1 is a factory in a trench coat. Smash the orange generators for four gears. The belts reverse. Treat them with suspicion.",
+      accept: "Four gears. Orange generators. Mind the belts.", hint: "Four gears. The orange machines with the cog on top. Belts flash orange before they flip.",
+      ready: "Gears! Greasy, legal, mine. Keep a few for the elevators.", reward: { note: "Grease, owed" } },
+    { id: "mockReview", title: "Mock Review", type: "streak", n: 3, obj: "Perfect bonks in a row", goal: "Land 3 perfect bonks in a row. HR-9000 opens its shield in a rhythm: practice the timing.",
+      offer: "Listen. HR-9000 hides behind a shield that opens in rhythm. You\u2019ll have to land perfect bonks while it\u2019s open. Practice: three in a row. Hold, let go in the green. It acts strange around me, you know. It says \u2018Mabel\u2019 like a password.",
+      accept: "Three in a row. Watch the ring above your head.", hint: "Three perfect bonks in a row. A miss resets the streak. Hit anything.",
+      ready: "Three in a row. That\u2019s the rhythm. You\u2019ll need it upstairs.", reward: { note: "A very good rhythm" } },
+    { id: "lift", title: "Logistics Lift", type: "build", plot: "l5_b1", obj: "Build the Logistics Lift", goal: "Build the bridge north to Floor 2.",
+      offer: "Floor 2 is the Bounce Floor. Spore clouds, sticky patches, bounce pads. There\u2019s a mezzanine upstairs with something I\u2019d like you to read. Optional. Build the lift north.",
+      accept: "North edge of Floor 1. Blue outline.", hint: "The lift needs scrap and gears. North edge of Floor 1.",
+      ready: "Lift built. Floor 2 is open. Bounce responsibly.", reward: { note: "A bouncier tower" } },
+    { id: "gems", title: "Gem Check", type: "gain", res: "crystal", n: 3, obj: "Mine crystals", goal: "Mine 3 crystals on Floor 2. They\u2019re tough: perfect bonks, or the Miner\u2019s Helmet.",
+      offer: "The Bounce Floor has crystals. Tough ones. Three of them. Watch the spore clouds. They tickle. Perfect bonks work on crystals. The boss will like to see that.",
+      accept: "Three crystals. Aim for the green.", hint: "Three crystals. If they bounce, land a perfect bonk. Watch the pink rings.",
+      ready: "Sparkly. They look good on Floor 2. They look better on you.", reward: { note: "Shiny things, owed" } },
+    { id: "skybridge", title: "Bounce Floor Skybridge", type: "build", plot: "l5_b2", obj: "Build the Skybridge", goal: "Build the bridge west to Floor 3.",
+      offer: "Floor 3 is Steam. Vents everywhere. Wellness features, HR calls them. Build the skybridge from Floor 2\u2019s west edge. It wants slime and crystals.",
+      accept: "West edge of Floor 2. Slime and crystals.", hint: "Skybridge: slime and crystals. West edge of Floor 2.",
+      ready: "Skybridge built. Floor 3 is open. Hold on to your hat.", reward: { note: "A steamy floor" } },
+    { id: "goldStandard", title: "Gold Standard", type: "gain", res: "gold", n: 3, obj: "Mine gold", goal: "Mine 3 gold on Floor 3. Gold is tough: charge your bonk. Mind the steam and sparks.",
+      offer: "The Executive Elevator needs gold. Three of it. Floor 3 has gold. And steam. And sparks. The sparks are orange for a reason.",
+      accept: "Three gold. Charge up. Watch the grates.", hint: "Three gold. Gold rocks have yellow bits. Grates glow before they steam.",
+      ready: "Gold! HR-9000 will pretend it\u2019s not interested. It is.", reward: { note: "Gold, at last" } },
+    { id: "executive", title: "Executive Elevator", type: "build", plot: "l5_b3", obj: "Build the Executive Elevator", goal: "Build the bridge north to the Review Floor.",
+      offer: "The Review Floor is up north. Build the Executive Elevator. It wants gold, scrap and gears. Then come back, I\u2019ll be on the intercom. I\u2019ll say something encouraging. It will be wrong.",
+      accept: "North edge of Floor 3. Gold, scrap, gears.", hint: "Executive Elevator: gold, scrap and gears. North edge of Floor 3.",
+      ready: "The elevator is open. I\u2019m nervous. Don\u2019t tell the pigeon part of me.", reward: { note: "Access to the top floor" } },
+    { id: "review", title: "The Performance Review", type: "boss", n: 1, obj: "Pass the Performance Review", goal: "Go to the Review Floor. When HR-9000\u2019s core glows green, land a perfect bonk. Three phases. Unlimited retries.",
+      offer: "This is it. Go up. HR-9000\u2019s core opens in a rhythm: when it glows green, land a perfect bonk. Three phases. Checkpoints between each. Unlimited retries. If you struggle, the menu has an assist that widens the green zone. No shame. Just forehead.",
+      accept: "Review Floor, north of Floor 3. Wait for the green. Hold, let go in the green.", hint: "Walk up to the Review Floor. Hold, let go in the green when the core glows. Three phases.",
+      ready: "", reward: {} }
+  ]
+};
+
+/* =====================================================================
+   CUTSCENES: a small camera director (establishing, tracking, close-up, crane, dutch, handheld) + captions + letterbox
+   ===================================================================== */
+var CAMD = { on: false, blend: 0, t: 0, d: 1, from: null, to: null, ease: "inOut", shake: 0, ox: 0, oz: 0, last: { p: new V3(), l: new V3(), fov: 50, roll: 0 } };
+var CUT = null, _cv = [new V3(), new V3(), new V3(), new V3()], _tmpW = new V3(), _t1 = new V3();
+function ease3(k, u) { return k === "lin" ? u : k === "in" ? u * u : k === "out" ? 1 - (1 - u) * (1 - u) : u * u * (3 - 2 * u); }
+function tp(n) {
+  switch (n) {
+    case "dunk": return _t1.set(P.pos.x, P.pos.y + 1.3, P.pos.z);
+    case "dunkHead": return _t1.set(P.pos.x, 1.65 + (P.hop || 0), P.pos.z);
+    case "mabel": mabel.bird.getWorldPosition(_t1); _t1.y += .5; return _t1;
+    case "gary": _t1.copy(gary.root.position); _t1.y += .6; return _t1;
+    case "drone0": for (var i = 0; i < drones.length; i++) if (drones[i].lvl === G.level) return drones[i].g.position; return _t1.set(0, 6, 0);
+    case "robot0": for (var j = 0; j < T.length; j++) if (T[j].kind === "robot" && T[j].lvl === G.level) return _t1.copy(T[j].g.position).setY(1.2); return _t1.set(0, 1, 0);
+    case "spore0": return LR.spores && LR.spores[0] ? LR.spores[0].g.position : _t1.set(0, 1.5, 0);
+    case "boss": return LR.boss ? LR.boss.obj.head.getWorldPosition(_t1) : _t1.set(0, 7, 0);
+    case "hr": return CUT && CUT.hr ? CUT.hr.g.position : _t1.set(0, 6, 0);
+    case "hrEye": { var h = CUT && CUT.hr; if (!h) return _t1.set(0, 6, 0); var y = h.g.rotation.y; return _t1.set(h.g.position.x + Math.sin(y) * 1.75 * h.s, h.g.position.y, h.g.position.z + Math.cos(y) * 1.75 * h.s); }
+    case "hrm": { var m = CUT && CUT.hrm; return m ? _t1.copy(m.g.position) : _t1.set(0, 3, 0); }
+  }
+  return _t1.set(0, 1, 0);
+}
+function ON(n, dx, dy, dz) { return function () { var b = tp(n); return _tmpW.set(b.x + (dx || 0), b.y + (dy || 0), b.z + (dz || 0)); }; }
+function DF(dist, h, side) { return function () { var fx = P.face.x, fz = P.face.z; return _tmpW.set(P.pos.x + fx * dist - fz * (side || 0), h, P.pos.z + fz * dist + fx * (side || 0)); }; }
+function MID(t, dy) { return function () { var a = tp('dunkHead'), ax = a.x, ay = a.y, az = a.z, h = tp('hr'); return _tmpW.set(lerp(ax, h.x, t), lerp(ay, h.y, t) + (dy || 0), lerp(az, h.z, t)); }; }
+function HRC(dist, up) { return function () { var hh = CUT.hr, y = hh.g.rotation.y, d = 1.75 * hh.s + dist; return _tmpW.set(hh.g.position.x + Math.sin(y) * d, hh.g.position.y + up, hh.g.position.z + Math.cos(y) * d); }; }
+function SH(d, f, t, o) { o = o || {}; var s = { d: d, ease: o.ease || "inOut", shake: o.shake || 0, to: { p: t[0], l: t[1], fov: t[2] } }; if (f) s.from = { p: f[0], l: f[1], fov: f[2], roll: o.roll0 || 0 }; if (o.roll !== undefined) s.to.roll = o.roll; return s; }
+function cpv(x, out) { if (typeof x === "function") return out.copy(x()); return out.set(x[0] + CAMD.ox, x[1], x[2] + CAMD.oz); }
+function camdApply(dt) {
+  var C = CAMD; C.t += dt; var u = Math.min(1, C.t / C.d), e = ease3(C.ease, u), F = C.from, Tt = C.to;
+  cpv(F.p, _cv[0]); cpv(Tt.p, _cv[1]); cpv(F.l, _cv[2]); cpv(Tt.l, _cv[3]);
+  var p = C.last.p.lerpVectors(_cv[0], _cv[1], e), l = C.last.l.lerpVectors(_cv[2], _cv[3], e);
+  var fov = lerp(F.fov, Tt.fov, e), roll = lerp(F.roll || 0, Tt.roll || 0, e);
+  if (C.shake) { var s = C.shake, t = G.time; p.x += (Math.sin(t * 13.1) + Math.sin(t * 7.7)) * .5 * s; p.y += Math.sin(t * 11.3) * .5 * s; p.z += Math.sin(t * 9.1) * .5 * s; }
+  camera.position.copy(p); camera.lookAt(l); if (roll) camera.rotateZ(roll);
+  if (Math.abs(camera.fov - fov) > .01) { camera.fov = fov; camera.updateProjectionMatrix(); }
+  C.last.fov = fov; C.last.roll = roll;
+}
+function camShot(sh) {
+  var C = CAMD, bf = G.baseFov || 50, from = sh.from;
+  if (!from) {
+    var fp, fl, ff;
+    if (C.on) { fp = C.last.p.clone(); fl = C.last.l.clone(); ff = C.last.fov; } else { fp = camera.position.clone(); fl = new V3(cam.tgt.x, cam.tgt.y + 1, cam.tgt.z); ff = camera.fov; }
+    from = { p: function () { return fp; }, l: function () { return fl; }, fov: ff, roll: 0 };
+  } else from = { p: from.p, l: from.l, fov: from.fov || bf, roll: from.roll || 0 };
+  var to = sh.to || {}; to = { p: to.p || from.p, l: to.l || from.l, fov: to.fov || from.fov, roll: to.roll === undefined ? from.roll : to.roll };
+  C.from = from; C.to = to; C.d = Math.max(.05, sh.d); C.t = 0; C.ease = sh.ease || "inOut"; C.shake = sh.shake || 0; C.on = true; C.blend = 0;
+  camdApply(0);
+}
+function camRelease() { if (!CAMD.on) return; CAMD.on = false; CAMD.blend = 1; }
+function camdBlend(dt) {
+  if (CAMD.blend <= 0 || CAMD.on) return;
+  CAMD.blend = Math.max(0, CAMD.blend - dt / .9); var w = CAMD.blend; w = w * w * (3 - 2 * w);
+  _cv[0].copy(camera.position); _cv[1].set(cam.tgt.x, cam.tgt.y + 1, cam.tgt.z);
+  camera.position.lerpVectors(_cv[0], CAMD.last.p, w); _cv[2].lerpVectors(_cv[1], CAMD.last.l, w); camera.lookAt(_cv[2]);
+  var nf = lerp(camera.fov, CAMD.last.fov, w); if (Math.abs(nf - camera.fov) > .01) { camera.fov = nf; camera.updateProjectionMatrix(); }
+}
+(function () {
+  var st = document.createElement("style");
+  st.textContent = "#cutbars i{position:fixed;left:0;right:0;height:0;background:#000;z-index:70;transition:height .6s ease;pointer-events:none}#cutbars i:first-child{top:0}#cutbars i:last-child{bottom:0}body.letterbox #cutbars i{height:11vh}" +
+    ".cutting #hud,.cutting #controls,.cutting #btn-hats,.cutting #talk,.cutting #bubble,.cutting #banner,.cutting #bosshud,.cutting #buildcard,.cutting #objective,.cutting #toast,.cutting #noggin,.cutting #gauge,.cutting #hat-dot,.cutting #streak{display:none!important}" +
+    "#cutlayer{position:fixed;inset:0;z-index:73;cursor:pointer}#cutlayer.hidden,#cutskip.hidden,#cutcap.hidden{display:none}#cutskip{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;z-index:76;width:auto;padding:6px 12px;font-size:14px}" +
+    "#cutcap{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(11vh + 16px);width:min(92vw,540px);z-index:74;pointer-events:none;box-sizing:border-box;padding:9px 13px 10px;background:#fff7e6;border:3px solid #221407;box-shadow:3px 3px 0 #221407;color:#221407;font-family:var(--body,Archivo,sans-serif);font-size:17px;line-height:1.3}" +
+    "#cutcap .who{font-family:var(--display,'Archivo Black',sans-serif);font-size:12px;letter-spacing:.06em;margin-bottom:2px}#cutcap.NARRATOR{background:rgba(0,0,0,.62);border-color:rgba(255,255,255,.25);box-shadow:none;color:#fff;text-align:center;font-style:italic}#cutcap.NARRATOR .who{display:none}#cutcap.HR .who{color:#d42a1e}#cutcap.MABEL .who{color:#2a6f9a}#cutcap.DUNK .who{color:#c25a00}" +
+    "#cuttitle{position:fixed;inset:0;z-index:72;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;opacity:0;transition:opacity .7s}#cuttitle.on{opacity:1}#cuttitle b{font-family:var(--display,'Archivo Black',sans-serif);font-size:clamp(34px,11vw,64px);color:#fff;text-shadow:0 3px 0 #221407,0 0 22px rgba(0,0,0,.6);letter-spacing:.02em}#cuttitle span{margin-top:6px;font-family:var(--display,'Archivo Black',sans-serif);font-size:clamp(15px,4.4vw,22px);color:#ffe14d;text-shadow:0 2px 0 #221407,0 0 14px rgba(0,0,0,.6)}";
+  document.head.appendChild(st);
+  var d = document.createElement("div"); d.id = "cutbars"; d.innerHTML = "<i></i><i></i>"; document.body.appendChild(d);
+  var l = document.createElement("div"); l.id = "cutlayer"; l.className = "hidden"; document.body.appendChild(l);
+  var c = document.createElement("div"); c.id = "cutcap"; c.className = "hidden"; c.innerHTML = '<div class="who" id="cutcap-w"></div><div id="cutcap-t"></div>'; document.body.appendChild(c);
+  var t = document.createElement("div"); t.id = "cuttitle"; t.innerHTML = "<b id=\"ct-b\"></b><span id=\"ct-s\"></span>"; document.body.appendChild(t);
+  var s = document.createElement("button"); s.id = "cutskip"; s.className = "cta ghost pressable hidden"; s.textContent = "Skip \u25B6\u25B6"; document.body.appendChild(s);
+  l.addEventListener("pointerdown", function () { if (!CUT) return; if (CUT.cap && CUT.capN < CUT.cap.t.length) CUT.capT = 999; else CUT.t = CUT.d; });
+  s.addEventListener("click", function (e) { e.stopPropagation(); cutEnd(true); });
+})();
+function barsOn(on) { document.body.classList.toggle("letterbox", !!on); }
+function buildHRProp(s, eyeHex) {
+  var g = sub(scene, 0, 8, 0), bd = sub(g, 0, 0, 0); bd.scale.setScalar(s);
+  var steel = toon(0xc3ccd9), dark = toon(0x2a2f3a), rots = [];
+  M(bd, new THREE.SphereGeometry(2.0, 20, 14), steel, 0, 0, 0, .05);
+  M(bd, cylG(2.05, 2.05, .9, 20), dark, 0, -.45, 0, .04);
+  var eye = new THREE.Mesh(new THREE.SphereGeometry(.62, 12, 9), new THREE.MeshBasicMaterial({ color: eyeHex || 0xff3b3b })); eye.position.set(0, 0, 1.75); bd.add(eye);
+  var hl = new THREE.Mesh(new THREE.SphereGeometry(.18, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff })); hl.position.set(.24, .24, 2.25); bd.add(hl);
+  M(bd, cylG(.07, .07, .9, 6), steel, 0, 2.0, 0, false);
+  var bulb = new THREE.Mesh(new THREE.SphereGeometry(.18, 8, 6), new THREE.MeshBasicMaterial({ color: 0x5fd8ff })); bulb.position.set(0, 3.0, 0); bd.add(bulb);
+  [-1, 1].forEach(function (k) { M(bd, cylG(.08, .08, 1.0, 6), steel, k * 2.2, -.4, 0, false); rots.push(M(bd, cylG(.8, .8, .05, 12), toon(0x7f8aa0), k * 2.2, .6, 0, false)); });
+  return { g: g, bd: bd, eye: eye, rots: rots, s: s };
+}
+function showCapUI(cap) {
+  var el = $("cutcap");
+  if (!cap) { el.classList.add("hidden"); return; }
+  el.className = cap.w || "NARRATOR"; $("cutcap-w").textContent = cap.w === "HR" ? "HR-9000" : cap.w === "MABEL" ? "MABEL" : cap.w === "DUNK" ? "DUNK" : ""; $("cutcap-t").textContent = "";
+  el.classList.remove("hidden"); if (cap.w !== "NARRATOR") tone(740, .06, "triangle", .05);
+}
+function playCutscene(sc, done) {
+  if (CUT) return;
+  CUT = { sc: sc, i: -1, t: 0, d: 1, done: done, props: [], cap: null, capT: 0, capN: 0, acts: [], walk: null, hr: null, hrm: null };
+  CAMD.ox = sc.world ? 0 : LR.ox; CAMD.oz = sc.world ? 0 : LR.oz; CAMD.on = false; CAMD.blend = 0;
+  G.cutOnly = !!sc.cutOnly; CUT.prevCine = G.cine; G.cine = { pos: new V3(P.pos.x, 0, P.pos.z), zoom: 1 };
+  $("app").classList.add("cutting"); barsOn(true); hideBubble(); $("cutlayer").classList.remove("hidden"); $("cutskip").classList.remove("hidden");
+  P.charging = false; P.charge = 0; inp.x = inp.y = 0;
+  if (sc.setup) sc.setup(CUT);
+  cutNext();
+}
+function cutNext() {
+  var C = CUT; if (!C) return; C.i++; var b = C.sc.beats[C.i]; if (!b) { cutEnd(false); return; }
+  C.t = 0; C.acts = (b.at || []).map(function (a) { return a; }); C.cap = b.cap || null; C.capT = 0; C.capN = -1;
+  var d = Math.max(b.d || 3, C.cap ? C.cap.t.length / 36 + 1.3 : 0); C.d = d;
+  if (b.act) b.act(C);
+  if (b.cam) { var s = {}; for (var k in b.cam) s[k] = b.cam[k]; s.d = d; camShot(s); }
+  showCapUI(C.cap);
+  if (b.title) { $("ct-b").textContent = b.title.big; $("ct-s").textContent = b.title.small || ""; $("cuttitle").classList.add("on"); } else $("cuttitle").classList.remove("on");
+}
+function updateCut(dt) {
+  var C = CUT; if (!C) return;
+  C.t += dt;
+  for (var i = C.acts.length - 1; i >= 0; i--) if (C.t >= C.acts[i][0]) { var f = C.acts.splice(i, 1)[0][1]; f(C); }
+  if (C.cap) { C.capT += dt; var n = Math.min(C.cap.t.length, Math.floor(C.capT * 42)); if (n !== C.capN) { C.capN = n; $("cutcap-t").textContent = C.cap.t.substr(0, n); } }
+  if (C.walk) { var w = C.walk, dx = w.x - P.pos.x, dz = w.z - P.pos.z, dd = Math.hypot(dx, dz); if (dd < .1) { C.walk = null; P.speed = 0; } else { var st = Math.min(dd, w.sp * dt); P.pos.x += dx / dd * st; P.pos.z += dz / dd * st; P.face.set(dx / dd, 0, dz / dd); P.speed = .9; } }
+  C.props.forEach(function (p) { if (p.rots) p.rots.forEach(function (r) { r.rotation.y += dt * 22; }); if (p.look) p.g.rotation.y += angDiff(p.g.rotation.y, Math.atan2(P.pos.x - p.g.position.x, P.pos.z - p.g.position.z)) * (1 - Math.exp(-5 * dt)); });
+  if (C.sc.tick) C.sc.tick(C, dt);
+  if (C.t >= C.d) cutNext();
+}
+function cutEnd(skipped) {
+  var C = CUT; if (!C) return; CUT = null;
+  if (C.sc.end) C.sc.end(C, skipped);
+  C.props.forEach(function (p) { scene.remove(p.g); });
+  $("cuttitle").classList.remove("on"); $("cutcap").classList.add("hidden"); $("app").classList.remove("cutting"); barsOn(false); $("cutlayer").classList.add("hidden"); $("cutskip").classList.add("hidden");
+  P.mood = null; P.fakeU = 0; P.hop = 0; if (dunk) dunk.root.scale.set(1, 1, 1);
+  if (gary.state !== "wander") { gary.state = "wander"; gary.body.scale.set(1, 1, 1); gary.body.rotation.z = 0; }
+  G.cutOnly = false; G.cine = null; camRelease();
+  if (C.done) C.done();
+}
+function fakeVent(v) {
+  tween(1.3, function (u) { ventVis(v, (.35 + .65 * u) * (.78 + .22 * Math.sin(u * 40))); }, function () {
+    snd.whoosh(); ventVis(v, 1); var n = 0;
+    (function iv() { if (n++ > 14) { ventVis(v, 0); return; } var k = rnd(0, 2.2); puff(new V3(v.x + v.dx * k * .6, .3 + k * .7, v.z + v.dz * k * .6), .9, 0xeaf6ff, .55, 1.2); later(.05, iv); })();
+  });
+}
+function fakeSlam(p) {
+  p.st = "warn"; tone(110, 1.4, "sawtooth", .035, 0, 300);
+  tween(1.5, function (u) { pressY(p, lerp(PRESS.restY, 5, easeOut(u))); p.sh.scale.setScalar(p.r * (.25 + .85 * u)); p.sh.material.opacity = .15 + .3 * u; p.rg.material.opacity = .35 + .4 * Math.abs(Math.sin(u * 28)); }, function () {
+    p.st = "slam"; pressOpa(p);
+    tween(.1, function (u) { pressY(p, lerp(5, 0, u)); }, function () {
+      snd.stomp(); snd.clunk(); shake(.6); puff(new V3(p.x, .3, p.z), p.r * 1.4, 0xe8e0d0, .6, .5); burst(new V3(p.x, .4, p.z), [0xffb347, 0xffffff], 14, 6, 4, .8, .6); shockwave(new V3(p.x, .25, p.z), 0xffc21a, p.r * 2.6, .4);
+      p.sh.material.opacity = 0; p.rg.material.opacity = 0; later(1.4, function () { pressReset(p); });
+    });
+  });
+}
+function lvlEnd(C) { var S0 = LV.spawn; P.pos.set(S0[0] + LR.ox, 0, S0[1] + LR.oz); P.face.set(0, 0, -1); P.yaw = Math.PI; P.vel = new V3(); P.jump = null; P.padCool = 0; P.walk = null; stats.pads = 0; gary.root.position.set(S0[0] + 2 + LR.ox, 0, S0[1] + 2 + LR.oz); gary.home.set(S0[0] + 2 + LR.ox, 0, S0[1] + 2 + LR.oz); if (LR.presses) LR.presses.forEach(pressReset); if (LR.vents) LR.vents.forEach(function (v) { v.st = "rest"; ventVis(v, 0); }); }
+function dunkClose(cap, mood) { return { d: 3.6, act: function () { P.face.set(0, 0, -1); P.mood = mood || "angry"; }, cam: { from: { p: DF(3.4, 1.9, .5), l: ON("dunkHead"), fov: 34 }, to: { p: DF(2.3, 1.7, .1), l: ON("dunkHead"), fov: 26 }, ease: "out" }, cap: cap }; }
+
+/* ---------- the scenes ---------- */
+function PROLOGUE() {
+  return { world: true, cutOnly: true,
+    setup: function (C) { C.hr = buildHRProp(.6); C.hr.look = true; C.hr.g.position.set(-14, 12, -24); C.hr.g.visible = false; C.props.push(C.hr); P.pos.set(3.5, 0, -.6); P.face.set(1, 0, 0); P.yaw = Math.PI / 2; },
+    end: function () { P.pos.set(0, 0, 3.5); P.face.set(0, 0, -1); P.yaw = Math.PI; P.vel = new V3(); },
+    beats: [
+      { d: 7, cam: { from: { p: [-58, 40, 62], l: [10, 0, -4], fov: 62 }, to: { p: [-24, 20, 40], l: [6, 2, -2], fov: 50 }, ease: "out" }, cap: { w: "NARRATOR", t: "The year is 3000. The robots have taken every job." } },
+      { d: 5, cam: { from: { p: ON("drone0", 5, -4.2, 7), l: ON("drone0"), fov: 46 }, to: { p: ON("drone0", 3, -3.6, 5.5), l: ON("drone0"), fov: 42 }, ease: "lin" }, cap: { w: "NARRATOR", t: "Every desk. Every shovel. Every lunch break." } },
+      { d: 5, cam: { from: { p: [2, 1.5, 11], l: [12.8, 1.2, 1.5], fov: 44 }, to: { p: [18, 1.8, 9.5], l: [22, 1.2, 3.5], fov: 44 } }, cap: { w: "NARRATOR", t: "A floating office park, owned and operated by Synergy Holdings." } },
+      { d: 5.5, act: function () { P.pos.set(3.5, 0, -.6); P.face.set(.3, 0, 1).normalize(); P.mood = null; }, cam: { from: { p: DF(4.6, 1.95, .7), l: ON("dunkHead"), fov: 38 }, to: { p: DF(2.6, 1.7, .2), l: ON("dunkHead"), fov: 26 }, ease: "out" }, cap: { w: "NARRATOR", t: "One human remains on the payroll. Employee number one of one." } },
+      { d: 6, act: function (C) { P.face.set(2.5, 0, -8.4).normalize(); P.mood = "gasp"; snd.whoosh(); var h = C.hr; h.g.visible = true; tween(5.5, function (u) { var e = easeOut(u); h.g.position.set(lerp(-14, 6, e), lerp(12, 6.4, e) + Math.sin(u * 8) * .15, lerp(-24, -9, e)); }); }, at: [[3.4, function () { P.mood = "angry"; }]],
+        cam: { from: { p: DF(-4.2, 2.9, 1.8), l: MID(.5, -.6), fov: 56 }, to: { p: DF(-3.4, 2.6, 1.5), l: MID(.55, -.4), fov: 50 } }, cap: { w: "HR", t: "Employee Dunk. Your forehead has been flagged as unlicensed equipment." } },
+      { d: 3.6, cam: { from: { p: HRC(10, .8), l: ON("hrEye"), fov: 42 }, to: { p: HRC(4.6, .3), l: ON("hrEye"), fov: 30 }, ease: "in" }, cap: { w: "HR", t: "Please present it for repossession." } },
+      { d: 3, act: function () { P.mood = "angry"; }, cam: { from: { p: DF(2.9, 1.78, .5), l: ON("dunkHead"), fov: 30 }, to: { p: DF(2.2, 1.7, .15), l: ON("dunkHead"), fov: 24 }, shake: .03 }, cap: { w: "NARRATOR", t: "Dunk declines." } },
+      { d: 5.5, act: function (C) { P.mood = null; mabel.hop = 1; var h = C.hr; var p0 = h.g.position.clone(); tween(3.2, function (u) { var e = u * u; h.g.position.set(p0.x + 14 * e, p0.y + 16 * e, p0.z - 20 * e); }); },
+        cam: { from: { p: [-6, 2.9, 2.4], l: ON("mabel"), fov: 42 }, to: { p: [-3.8, 2.7, .4], l: ON("mabel"), fov: 34 } }, cap: { w: "MABEL", t: "Don\u2019t mind HR. It\u2019s still learning. I\u2019m Mabel. I run the job board." } },
+      { d: 3.8, cam: { from: { p: ON("gary", 3.2, .9, 3.6), l: ON("gary"), fov: 40 }, to: { p: ON("gary", 2.2, .8, 2.6), l: ON("gary"), fov: 36 } }, cap: { w: "NARRATOR", t: "Gary is a contractor. Nobody knows what he contracts." } },
+      { d: 4.2, act: function (C) { P.pos.set(-1, 0, 4.5); P.face.set(.8, 0, -.6).normalize(); C.walk = { x: 4.5, z: -.4, sp: 2.7 }; },
+        cam: { from: { p: [-3.5, 1.6, 7.5], l: ON("dunkHead"), fov: 44 }, to: { p: [6.8, 2.2, 3.4], l: ON("dunkHead"), fov: 36 }, ease: "lin" } },
+      { d: 5, act: function (C) { C.walk = null; P.speed = 0; P.face.set(0, 0, 1); P.mood = "angry"; }, title: { big: "HARD HEAD", small: "Bonk your way to a better tomorrow." },
+        cam: { from: { p: DF(3, .6, 0), l: ON("dunkHead", 0, .3, 0), fov: 40 }, to: { p: DF(4.8, .9, 0), l: ON("dunkHead", 0, .5, 0), fov: 52 }, ease: "out" } }
+    ] };
+}
+var CUTS = {};
+CUTS[1] = function () { return { end: lvlEnd, beats: [
+  { d: 6.5, title: { big: "LEVEL 1", small: "BONK ISLES" }, cam: { from: { p: [-30, 34, 40], l: [24, 0, -14], fov: 58 }, to: { p: [10, 16, 28], l: [18, 0, -8], fov: 50 }, ease: "out" }, cap: { w: "NARRATOR", t: "Level one. The Legacy Terrain Preserve." } },
+  { d: 4.6, cam: { from: { p: [22, 2.6, 12], l: [28, 2, 3], fov: 42 }, to: { p: [42, 2.6, 10], l: [36, 2, 2], fov: 42 }, ease: "lin" }, cap: { w: "HR", t: "Welcome to Nature\u2122. All trees are ethically sourced." } },
+  { d: 4.6, cam: { from: { p: [48, 9, 16], l: [62, 1, 0], fov: 50 }, to: { p: [58, 5, 10], l: [62, 1, -2], fov: 44 } }, cap: { w: "MABEL", t: "Build bridges. Reach the golden island. Statue time." } },
+  { d: 4.4, act: function () { mabel.hop = 1; }, cam: { from: { p: [-9, .8, 5], l: ON("mabel"), fov: 44 }, to: { p: [-7, 1.5, 3.5], l: ON("mabel"), fov: 36 } }, cap: { w: "MABEL", t: "I\u2019ll be at the job board. Please try not to bonk me." } },
+  dunkClose({ w: "NARRATOR", t: "Dunk is ready. Dunk is always ready." })
+] }; };
+CUTS[2] = function () { return { end: lvlEnd, beats: [
+  { d: 7, title: { big: "LEVEL 2", small: "ORBITAL BREAK ROOM" }, cam: { from: { p: [2, 2, 10], l: [0, 70, -40], fov: 60 }, to: { p: [4, 5, 16], l: [18, 0, -10], fov: 52 } }, cap: { w: "NARRATOR", t: "Level two. The Orbital Break Room." } },
+  { d: 4.6, act: function () { var v = LR.vents && LR.vents[1]; if (v) fakeVent(v); }, cam: { from: { p: [22, 1.2, 4], l: [28, .6, -1], fov: 40 }, to: { p: [24, 2.4, 2], l: [30, 1, -1], fov: 38 } }, cap: { w: "HR", t: "Steam vents are a wellness feature. Please do not report them." } },
+  { d: 4.6, act: function () { gary.state = "fly"; gary.t = 0; gary.vx = 0; gary.vz = 0; gary.vy = 9; gary.y = .1; gary.spin = 3; }, cam: { from: { p: ON("gary", 4, 1, 5), l: ON("gary"), fov: 46 }, to: { p: ON("gary", 3, 2.4, 5.5), l: ON("gary"), fov: 40 }, ease: "lin" }, cap: { w: "MABEL", t: "Everything floats up here. Including your lunch." } },
+  { d: 4, act: function () { P.face.set(0, 0, -1); P.mood = "gasp"; tween(2.4, function (u) { P.hop = Math.sin(Math.PI * u) * 2.2; }, function () { P.hop = 0; }); }, cam: { from: { p: DF(2.8, .35, .6), l: ON("dunkHead"), fov: 48 }, to: { p: DF(3.6, .5, .3), l: ON("dunkHead"), fov: 40 }, ease: "lin" }, cap: { w: "NARRATOR", t: "Dunk\u2019s forehead has never felt so weightless." } },
+  dunkClose({ w: "NARRATOR", t: "He is going to hit things. Slowly." })
+] }; };
+CUTS[3] = function () { return { end: lvlEnd, beats: [
+  { d: 7, title: { big: "LEVEL 3", small: "ROBOT FACTORY" }, cam: { from: { p: [-26, 20, 34], l: [20, 0, -14], fov: 58, roll: .12 }, to: { p: [-8, 12, 26], l: [28, 2, -10], fov: 50, roll: .03 } }, cap: { w: "NARRATOR", t: "Level three. The Robot Factory." } },
+  { d: 4.4, cam: { from: { p: [2, .8, 5.5], l: [8, .2, 0], fov: 38 }, to: { p: [8, 1.1, 4.5], l: [14, .3, 0], fov: 36 }, ease: "lin" }, cap: { w: "MABEL", t: "Mind the belt. The belt does not mind you." } },
+  { d: 5.6, act: function () { var p = LR.presses && LR.presses[0]; if (p) later(.6, function () { fakeSlam(p); }); }, cam: { from: { p: [20, 5, -22], l: [29, 2, -32], fov: 48 }, to: { p: [24, 2.2, -27], l: [29, 1, -32], fov: 40 }, shake: .05 }, cap: { w: "HR", t: "Stamping presses give your day structure." } },
+  { d: 4.4, cam: { from: { p: ON("robot0", -4, .4, 4.5), l: ON("robot0"), fov: 44 }, to: { p: ON("robot0", -3, .6, 3.5), l: ON("robot0"), fov: 38 }, ease: "lin" }, cap: { w: "NARRATOR", t: "The robots are passive. They are also hardness two." } },
+  dunkClose({ w: "NARRATOR", t: "Dunk checks his timing." })
+] }; };
+CUTS[4] = function () { return { end: function (C) { lvlEnd(C); }, beats: [
+  { d: 7, title: { big: "LEVEL 4", small: "PLANET GLOOP" }, cam: { from: { p: [6, .6, 8], l: [10, 9, 2], fov: 58 }, to: { p: [-2, 10, 18], l: [14, 0, -12], fov: 52 } }, cap: { w: "NARRATOR", t: "Level four. Planet Gloop." } },
+  { d: 4.8, cam: { from: { p: ON("spore0", -5, .8, 5), l: ON("spore0"), fov: 44 }, to: { p: ON("spore0", 5, 1, 5), l: ON("spore0"), fov: 40 }, ease: "lin" }, cap: { w: "HR", t: "Spores are a wellness feature. They improve your ability to cough." } },
+  { d: 5.2, act: function () { var pd = LR.pads[0]; P.pos.set(pd.x, 0, pd.z); P.face.set(0, 0, -1); later(.7, function () { P.jump = { t: 0, fx: pd.x, fz: pd.z, tx: pd.tx, tz: pd.tz, dur: 1.2, h: 6.5 }; pd.sq = 1; snd.pop(); }); },
+    cam: { from: { p: [6, 1.4, -2], l: [0, 1, -8], fov: 48 }, to: { p: ON("dunk", 7, 3.5, 7), l: ON("dunk"), fov: 40 } }, cap: { w: "MABEL", t: "Bounce pads always land somewhere safe. Mostly." } },
+  { d: 4, act: function () { P.pos.set(LV.spawn[0] + LR.ox, 0, LV.spawn[1] + LR.oz); P.jump = null; P.hop = 0; P.mood = null; }, cam: { from: { p: ON("gary", 3, .9, 3.6), l: ON("gary"), fov: 40 }, to: { p: ON("gary", 2.2, .8, 2.6), l: ON("gary"), fov: 36 } }, cap: { w: "NARRATOR", t: "Gary has gone the colour of the planet. Gary is thriving." } },
+  dunkClose({ w: "NARRATOR", t: "Sticky, bouncy and extremely rude." })
+] }; };
+CUTS[5] = function () { return { end: lvlEnd, beats: [
+  { d: 8, title: { big: "LEVEL 5", small: "HR TOWER" }, cam: { from: { p: [-14, 3, 18], l: [4, 2, -4], fov: 52 }, to: { p: [-4, 22, 2], l: [0, 6, -60], fov: 58 }, ease: "inOut" }, cap: { w: "NARRATOR", t: "Level five. The HR Tower." } },
+  { d: 5.2, cam: { from: { p: [0, 9, -50], l: ON("boss"), fov: 50 }, to: { p: [0, 8, -57], l: ON("boss"), fov: 40 }, ease: "in", shake: .02 }, cap: { w: "HR", t: "Employee Dunk. Your annual performance review is today." } },
+  { d: 5, act: function () { mabel.hop = 1; }, cam: { from: { p: ON("mabel", -3.6, .5, 3.6), l: ON("mabel"), fov: 40 }, to: { p: ON("mabel", -2.3, .4, 2.3), l: ON("mabel"), fov: 30 } }, cap: { w: "MABEL", t: "It acts different around me. It stutters. It says my name like a password." } },
+  dunkClose({ w: "NARRATOR", t: "One last bonk, then. Maybe two." })
+] }; };
+function EPILOGUE() {
+  return { setup: function (C) {
+      var B = LR.boss, ox = LR.ox, oz = LR.oz; applySky({ top: "#3a2a5a", mid: "#ff9a6a", bot: "#ffe3a8", stars: false });
+      P.pos.set(B.x, 0, B.z + 5.2); P.face.set(0, 0, -1); P.yaw = Math.PI; P.vel = new V3(); gary.root.position.set(B.x + 3, 0, B.z + 5.6); gary.home.set(B.x + 3, 0, B.z + 5.6);
+      C.hrm = buildHRProp(.28, 0x7fffd0); C.hrm.look = true; C.hrm.g.position.set(B.x + 2.4, 2.7, B.z + 4.2); C.props.push(C.hrm);
+      mabel.flying = false; mabel.perched = true; mabel.perch = new V3(P.pos.x, 2.5, P.pos.z);
+    },
+    tick: function (C, dt) { mabel.perch.set(P.pos.x, 2.5 + (P.hop || 0), P.pos.z); if (C.hrm) C.hrm.g.position.y = 2.7 + Math.sin(G.time * 1.7) * .12; },
+    end: function () { mabel.perch = LR.mpos.clone(); mabel.perched = true; var B = LR.boss; P.pos.set(B.x, 0, B.z + 6.5); P.face.set(0, 0, -1); },
+    beats: [
+      { d: 6, cam: { from: { p: [-3, 1.4, -52], l: [0, 6, -67], fov: 54 }, to: { p: [6, 9, -49], l: [0, 6, -67], fov: 50 }, ease: "out" }, cap: { w: "NARRATOR", t: "Monday. 8:59 a.m." } },
+      { d: 5.4, cam: { from: { p: [8, 6.5, -60], l: [0, 6.4, -67], fov: 44 }, to: { p: [-8, 6.5, -61], l: [0, 6.4, -67], fov: 44 }, ease: "lin" }, cap: { w: "NARRATOR", t: "Employee recognition forms filed: five. Statues in orbit: five." } },
+      { d: 4.4, cam: { from: { p: ON("hrm", 1.2, .3, 3.6), l: ON("hrm"), fov: 36 }, to: { p: ON("hrm", .8, .2, 2.4), l: ON("hrm"), fov: 26 } }, cap: { w: "HR", t: "Dunk. Please do not bonk the monument." } },
+      { d: 3.4, act: function () { P.mood = "smile"; }, cam: { from: { p: DF(3, 1.8, .6), l: ON("dunkHead"), fov: 34 }, to: { p: DF(2.2, 1.7, .2), l: ON("dunkHead"), fov: 26 }, ease: "out" }, cap: { w: "NARRATOR", t: "Dunk considers this." } },
+      { d: 3.6, act: function () { P.mood = null; },
+        at: [[.9, function () {
+          var from = P.pos.clone(), to = new V3(P.pos.x, 0, LR.boss.z + 2.9);
+          tween(.34, function (u) { P.fakeU = u; P.pos.lerpVectors(from, to, easeOut(u)); P.hop = Math.sin(Math.PI * u) * .3; }, function () {
+            snd.dong(); snd.bonk(1); shake(.7); G.hitstop = .1; floater(new V3(P.pos.x, 2.2, P.pos.z - 1.2), "DONGGG", "bw big", 1.4); shockwave(new V3(P.pos.x, 1.2, P.pos.z - 1.4), 0xffe14d, 5, .5); burst(new V3(P.pos.x, 1.4, P.pos.z - 1.4), [0xffe14d, 0xffffff], 14, 6, 5, 1, .8);
+            for (var i = 0; i < T.length; i++) if (T[i].kind === "statue" && T[i].lvl === G.level) T[i].wob = 1;
+            tween(.6, function (u2) { P.fakeU = 1 - u2; P.pos.lerpVectors(to, from, easeOut(u2)); P.hop = 0; });
+          });
+        }]],
+        cam: { from: { p: [7, 2, -63], l: [0, 2, -65], fov: 42 }, to: { p: [5, 1.8, -63.6], l: [0, 2.2, -65.5], fov: 36 }, ease: "lin" } },
+      { d: 3.6, cam: { from: { p: ON("hrm", -1.2, .2, 3.2), l: ON("hrm"), fov: 34 }, to: { p: ON("hrm", -.8, .1, 2.2), l: ON("hrm"), fov: 26 } }, cap: { w: "HR", t: "\u2026Fine. One." } },
+      { d: 3.8, cam: { from: { p: DF(3.2, 3.1, -.9), l: ON("dunkHead", 0, .7, 0), fov: 36 }, to: { p: DF(2.6, 3.0, -.6), l: ON("dunkHead", 0, .7, 0), fov: 30 } }, cap: { w: "MABEL", t: "Same time tomorrow?" } },
+      { d: 3.6, cam: { from: { p: [-2, 2.2, -62], l: ON("hrm"), fov: 40 }, to: { p: [-1, 2.4, -61], l: ON("hrm"), fov: 34 } }, cap: { w: "HR", t: "Pay: unchanged. I am learning." } },
+      { d: 7.5, title: { big: "HARD HEAD", small: "Employee of the Month. Pay unchanged." }, cam: { from: { p: [0, 6, -52], l: [0, 6, -67], fov: 50 }, to: { p: [-34, 76, 46], l: [10, -2, -42], fov: 62 }, ease: "in" } }
+    ] };
+}
+
 /* ---------- generic: build a level from its config ---------- */
 function buildLevel(n) {
   var C = LEVELS[n], R = rt(n); if (R.built) return; R.built = true;
@@ -2748,6 +4166,17 @@ function buildLevel(n) {
   (pl.golds || []).forEach(function (a) { makeRock(a[0] + ox, a[1] + oz, a[2], "gold").lvl = n; });
   (pl.scraps || []).forEach(function (a) { makeScrap(a[0] + ox, a[1] + oz, a[2]).lvl = n; });
   (pl.vendings || []).forEach(function (a) { makeVending(a[0] + ox, a[1] + oz, a[2], a[3]).lvl = n; });
+  (pl.machines || []).forEach(function (a) { makeMachine(a[0] + ox, a[1] + oz, a[2], a[3]).lvl = n; });
+  (pl.props || []).forEach(function (a) { makeProp(R, n, a); });
+  R.belts = []; (C.belts || []).forEach(function (c) { R.belts.push(makeBelt(R, n, c)); });
+  R.presses = []; (C.presses || []).forEach(function (c) { R.presses.push(makePress(R, n, c)); });
+  (C.robots || []).forEach(function (c) { makeRobot(R, n, c).lvl = n; });
+  (pl.gloops || []).forEach(function (a) { makeGloop(a[0] + ox, a[1] + oz, a[2]).lvl = n; });
+  (pl.slimeTrees || []).forEach(function (a) { makeSlimeTree(a[0] + ox, a[1] + oz, a[2]).lvl = n; });
+  R.slows = []; (C.slows || []).forEach(function (c) { R.slows.push(makeSlow(R, n, c)); });
+  R.pads = []; (C.pads || []).forEach(function (c) { R.pads.push(makePad(R, n, c)); });
+  R.spores = []; (C.spores || []).forEach(function (c) { R.spores.push(makeSpore(R, n, c)); });
+  if (C.boss) makeBoss(R, n, C.boss).lvl = n;
   R.vents = R.vents || [];
   (C.vents || []).forEach(function (c) { R.vents.push(makeVent(R, n, c)); });
   (pl.crystals || []).forEach(function (a) { makeCrystal(a[0] + ox, a[1] + oz, a[2]).lvl = n; });
@@ -2775,6 +4204,7 @@ function resetTargets(n) {
     if (t.kind === "statue") { T.splice(i, 1); continue; }
     t.alive = true; t.hp = t.max; t.pop = 1; t.respawn = 0; t.wob = 0; t.g.visible = true; t.g.scale.set(1, 1, 1);
     if (t.kind === "tree") { t.canopy.forEach(function (c) { c.visible = true; }); t.trunk.scale.y = 1; }
+    if (t.home) { t.g.position.copy(t.home); t.pi = 1; t.pdir = 1; t.wait = 0; t.stun = 0; }
   }
 }
 
@@ -2850,8 +4280,8 @@ function saveLevel() {
   var n = G.level, pre = "l" + n + "_", built = [], o = {};
   Object.keys(plots).forEach(function (id) { if (id.indexOf(pre) === 0 && plots[id].built) built.push(id); });
   var hats = HAT_ORDER.filter(function (k) { return UNL[k]; });
-  o["l" + n] = { q: Q.idx, st: Q.state, snap: Q.snap, hats: hats, eq: P.hatId, built: built, inv: copyI(), gath: copyG(), t: G.playTime,
-    st2: { bonks: stats.bonks, perfects: stats.perfects, dizzy: stats.dizzy, bestStreak: stats.bestStreak, bigs: stats.bigs, builds: stats.builds, coconuts: stats.coconuts, sheep: stats.sheep, ouch: stats.ouch || 0, crystals: stats.crystals, vends: stats.vends || 0, shoved: stats.shoved || 0 } };
+  o["l" + n] = { q: Q.idx, st: Q.state, snap: Q.snap, hats: hats, eq: P.hatId, built: built, inv: copyI(), gath: copyG(), bp: (LR.boss ? LR.boss.phase : 0), t: G.playTime,
+    st2: { bonks: stats.bonks, perfects: stats.perfects, dizzy: stats.dizzy, bestStreak: stats.bestStreak, bigs: stats.bigs, builds: stats.builds, coconuts: stats.coconuts, sheep: stats.sheep, ouch: stats.ouch || 0, crystals: stats.crystals, vends: stats.vends || 0, shoved: stats.shoved || 0, robots: stats.robots || 0, squashed: stats.squashed || 0, dodges: stats.dodges || 0, beltT: stats.beltT || 0, pads: stats.pads || 0, gooT: stats.gooT || 0, spored: stats.spored || 0 } };
   o.hats = hats; o.eq = P.hatId;
   writeSave(o);
 }
@@ -2868,7 +4298,7 @@ function restoreLevel(sv) {
   for (var g in GATH) GATH[g] = (sv.gath && sv.gath[g]) || 0;
   for (var s in seen) seen[s] = inv[s] > 0 || GATH[s] > 0;
   if (sv.st2) for (var z in sv.st2) stats[z] = sv.st2[z];
-  G.playTime = sv.t || 0;
+  G.playTime = sv.t || 0; if (LR.boss) LR.boss.phase = sv.bp || 0;
   (sv.built || []).forEach(function (id) { if (plots[id] && !plots[id].built) instantBuild(plots[id]); });
   setHat(sv.eq && UNL[sv.eq] ? sv.eq : "stone", true);
   var q = curQ();
@@ -2885,7 +4315,7 @@ function enterLevel(n, resume) {
   setTimeout(function () {
     buildLevel(n);
     if (LR.mark) LR.mark.visible = false;
-    LR = rt(n); LV = C; QUESTS = C.quests; LG = C.gravity || 1; P.shove = null; LR.ventIsl = -2; LR.ventArm = 5; applySky(C.sky); curMus = C.music || DEF_MUS; mus.step = 0;
+    LR = rt(n); LV = C; QUESTS = C.quests; LG = C.gravity || 1; P.shove = null; LR.ventIsl = -2; LR.ventArm = 5; P.jump = null; P.padCool = 0; LR.sporeIsl = -2; LR.sporeArm = 5; LR.pingT = 1; applySky(C.sky); curMus = C.music || DEF_MUS; mus.step = 0;
     G.level = n; G.title = false; G.playing = true; G.started = true; G.ended = false; G.orbit = false; G.cine = null; G.won = false; G.free = true; G.paused = false; G.sheet = null;
     G.step = STEPS.length; G.stepId = "l" + n; G.perfStreak = 0; showStreak(0);
     resetHints(); activePlot = null; cardPlot = null; marker.visible = false;
@@ -2898,14 +4328,17 @@ function enterLevel(n, resume) {
     Object.keys(plots).forEach(function (id) { if (id.indexOf(pre) === 0) { var p = plots[id]; p.built = false; p.active = false; p.ghost.visible = false; p.real.visible = false; } });
     resetTargets(n);
     colliders.length = 0; colliders.push({ x: -1.6, z: -2.2, r: .45 }, { x: LR.house.pos.x, z: LR.house.pos.z, r: 2.2 });
+    (LR.cols || []).forEach(function (c) { colliders.push(c); });
+    (LR.presses || []).forEach(pressReset); LR.pressIsl = -2; LR.pressArm = 5; LR.beltIsl = -2;
+    if (LR.boss) bossReset(); else { bossHud(false); mabel.bird.visible = true; G.hatFrom = null; } $("credits").classList.add("hidden");
     G.playTime = 0; G.lastProgress = G.time; P.lastBonk = -9;
     P.pos.set(C.spawn[0] + LR.ox, 0, C.spawn[1] + LR.oz); P.face.set(0, 0, -1); P.yaw = Math.PI; P.fakeU = 0; P.hop = 0; P.noggin = 0; P.dizzy = 0; P.stun = 0; P.charging = false; P.lunge = null; P.vel = new V3(); P.gy = 0;
     dunk.stars.visible = false; $("vig").classList.remove("dizzy");
     cam.tgt.set(P.pos.x, 0, P.pos.z); cam.zoom = 1.1; cam.yaw = 0; cam.pitch = .9;
-    $("app").style.background = C.sky ? "linear-gradient(" + C.sky.join(",") + ")" : "";
+    applySky(C.sky);
     var bd = mabel.bird, to = LR.mpos.clone();
     if (bd.parent) bd.parent.remove(bd); scene.add(bd); bd.position.copy(to); mabel.flying = false; mabel.perched = true; mabel.perch = to;
-    gary.root.position.set(C.spawn[0] + 2 + LR.ox, 0, C.spawn[1] + 2 + LR.oz); gary.home.set(C.spawn[0] + 2 + LR.ox, 0, C.spawn[1] + 2 + LR.oz); gary.state = "wander"; gary.body.scale.set(1, 1, 1); gary.body.rotation.z = 0;
+    gary.root.position.set(C.spawn[0] + 2 + LR.ox, 0, C.spawn[1] + 2 + LR.oz); gary.home.set(C.spawn[0] + 2 + LR.ox, 0, C.spawn[1] + 2 + LR.oz); gary.wool.color.setHex(C.garyCol || 0xfbf6ee); gary.state = "wander"; gary.body.scale.set(1, 1, 1); gary.body.rotation.z = 0;
     $("app").classList.add("l1"); $("hud").classList.remove("hidden"); $("controls").classList.remove("hidden"); $("btn-hats").classList.remove("hidden");
     Q.idx = 0; Q.state = "offer"; Q.snap = null; qChip.key = ""; qChip.sig = "";
     var sv = loadSave();
@@ -2917,10 +4350,13 @@ function enterLevel(n, resume) {
     var q = curQ();
     if (q && Q.state === "active" && q.type === "build") activatePlot(q.plot);
     fd.classList.remove("on");
+    var afterIntro = function () {
     actBanner(C.banner[0], C.banner[1]);
     later(2.6, function () {
       if (Q.state === "offer" && curQ()) { say(resume ? "Back already? I have a job for you." : (C.arrive || "Come in. I have a job for you."), 1); later(.9, function () { if (Q.state === "offer") openBoard(); }); }
     });
+    };
+    if (!resume && CUTS[n]) playCutscene(CUTS[n](), afterIntro); else afterIntro();
   }, 420);
 }
 function startTutorial() {
@@ -2989,7 +4425,10 @@ function updateFalls(dt) {
     var h = LR.falls[i], Hd = HAZ[h.kind]; h.t += dt; var u = h.t / h.dur;
     h.m.position.y = lerp(8, 1.6, u * u); h.m.rotation.y += dt * 6; h.sh.scale.setScalar(.2 + .9 * u);
     if (u >= 1) {
-      if (Math.hypot(P.pos.x - h.x, P.pos.z - h.z) < 1.0 && !P.lunge) {
+      if (h.kind === "spark" && HAT().sparkImmune && Math.hypot(P.pos.x - h.x, P.pos.z - h.z) < 1.0 && !P.lunge) {
+        floater(P.pos.clone().setY(2.8), "Fzzt.", "bw", 1.0); once("spark_visor", function () { say("Welder Visor: officially rated for sparks. Not for opinions.", 1); });
+      } else if (Math.hypot(P.pos.x - h.x, P.pos.z - h.z) < 1.0 && !P.lunge) {
+        if (LR.boss && LR.boss.active) bossStrike();
         stats.ouch = (stats.ouch || 0) + 1; addNog(Hd.nog); P.stun = .6; snd.dong(); snd.ow(); shake(.5); vibrate(40); G.hitstop = .08;
         floater(P.pos.clone().setY(2.8), Hd.msg, "ow", 1.2); burst(P.pos.clone().setY(2.3), Hd.col, 8, 4, 5, 1, .6);
         $("vig").classList.remove("hurt"); void $("vig").offsetWidth; $("vig").classList.add("hurt");
@@ -3010,6 +4449,7 @@ function updateFalls(dt) {
 
 /* ---------- finale + end screen (any level) ---------- */
 function finaleLevel() {
+  if (LV.customFinale) { LV.customFinale(); return; }
   var n = G.level, st = plots[LV.final.id], o = {};
   G.won = true; Q.idx = QUESTS.length; Q.state = "offer"; snd.fanfare(); refreshQuestChip();
   G.cine = { pos: st.pos.clone().add(new V3(0, 2.2, 0)), zoom: 1.15 }; G.orbit = true; cam.yaw = 0;
@@ -3023,7 +4463,7 @@ function finaleLevel() {
 function showEndLevel() {
   var n = G.level;
   G.ended = true; G.orbit = true; $("controls").classList.add("hidden"); $("hud").classList.add("hidden"); hideBubble(); closeSheet();
-  $("end-title").textContent = "Level " + n + " complete!";
+  $("end-title").textContent = LV.endTitle || ("Level " + n + " complete!");
   $("end-art").innerHTML = '<div style="width:110px;height:110px;border:3px solid var(--line);overflow:hidden;margin-bottom:8px">' + ART.statue + '</div>';
   var ratio = stats.bonks ? stats.perfects / stats.bonks : 0, nh = HAT_ORDER.filter(function (k) { return UNL[k] && k !== "none"; }).length, review;
   if (stats.dizzy >= 8) review = "Mabel\u2019s review: \u201cFive islands, five hats, and a lot of stars circling your head. Concerning.\u201d";
@@ -3059,11 +4499,11 @@ function update(rdt) {
     P.fakeU = lunge; P.pos.set(bx + bump * .8, 0, r0.z); P.face.set(1, 0, 0); P.hop = bump * .25;
     if (u > .11 && !G.titleHit) { G.titleHit = true; snd.bonk(.5); rockList[1].wob = 1; burst(new V3(r0.x - .7, 1.1, r0.z), [0xb4bdc8, 0x8d97a3], 6, 4, 5, 1, .5); }
     if (u < .05) G.titleHit = false;
-  } else {
+  } else if (!G.cutOnly) {
     updatePlayer(dt); updatePickups(dt); updateHazards(dt); updateDirector(rdt);
     updateBuildCard(); updateQuest(rdt); updateTalk();
   }
-  updateTargets(dt); animPlayer(dt); updateParticles(dt); updateFloaters(dt); updateAmbient(dt); updateMark(); updateDrones(dt); updateHR(rdt);
+  updateTargets(dt); updateCut(dt); animPlayer(dt); updateParticles(dt); updateFloaters(dt); updateAmbient(dt); updateMark(); updateDrones(dt); updateHR(rdt);
   updateBubble(rdt); updateCamera(rdt); updateGuide(rdt); updateGauge(); updateNoggin();
 }
 function frame(now) {
