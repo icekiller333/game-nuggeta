@@ -53,7 +53,6 @@ button:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
 .pressable:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadowc); }
 @keyframes pop{ 0%{transform:scale(1)} 40%{transform:scale(1.2)} 100%{transform:scale(1)} }
 .pop{ animation:pop .3s cubic-bezier(.3,1.6,.5,1); }
-@keyframes fadeOut{ to{opacity:0} }
 
 /* ---------- HUD ---------- */
 #hud{ position:absolute; z-index:30; top:0; left:0; right:0; display:flex; align-items:flex-start; gap:8px; pointer-events:none;
@@ -211,21 +210,9 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .tagline{ margin:14px auto 0; max-width:min(86vw,380px); font-weight:800; font-size:clamp(16px,3.6vmin,20px); line-height:1.25; padding:6px 12px; background:var(--panel); border:3px solid var(--line); box-shadow:var(--shadow-s); }
 .start-foot{ display:flex; flex-direction:column; align-items:center; gap:12px; }
 .how{ margin:0; font-weight:800; font-size:14px; max-width:min(90vw,420px); padding:5px 12px; background:var(--panel); border:3px solid var(--line); line-height:1.3; }
-.studio{ margin:0; font-size:12px; font-weight:800; color:var(--ink); opacity:.7; }
 #webgl-fail{ margin:0; padding:10px 14px; background:var(--panel); border:3px solid var(--bad); font-weight:800; max-width:340px; }
 
-#story{ position:absolute; inset:0; z-index:78; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center; background:rgba(24,14,4,.5); }
-#story-card{ position:relative; background:var(--panel); border:3px solid var(--line); box-shadow:var(--shadow); padding:20px 22px 16px; max-width:410px; width:100%; animation:cardPop .3s cubic-bezier(.2,.9,.3,1.2); }
 @keyframes cardPop{ from{ transform:scale(.9) translateY(14px); opacity:0 } to{ transform:none; opacity:1 } }
-#story-art{ display:flex; justify-content:center; margin:0 0 10px; }
-#story-art svg{ width:116px; height:116px; }
-#story-kicker{ font-family:var(--display); font-size:15px; color:var(--bonk-d); margin:0 0 6px; }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) #story-kicker{ color:#ff8d6e; } }
-#story-text{ font-weight:700; font-size:17px; line-height:1.45; margin:0 0 16px; }
-#story-dots{ display:flex; gap:6px; justify-content:center; margin-top:14px; }
-#story-dots i{ width:9px; height:9px; border:2px solid var(--line); background:var(--panel2); }
-#story-dots i.on{ background:var(--bonk); }
-#story-skip{ background:none; border:0; font-weight:800; font-size:13px; color:var(--muted); text-decoration:underline; margin-top:6px; padding:6px; }
 
 .sheet-wrap{ position:absolute; inset:0; z-index:80; background:rgba(24,14,4,.55); display:flex; align-items:center; justify-content:center; padding:16px; }
 .sheet{ width:min(92vw,420px); max-height:92vh; overflow:auto; background:var(--panel); border:3px solid var(--line); box-shadow:var(--shadow); padding:14px 16px 16px; }
@@ -275,10 +262,6 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .panel-box h2{ margin:2px 0 6px; font-family:var(--display); font-weight:400; font-size:clamp(24px,6.4vmin,34px); line-height:1.05; }
 .panel-box p{ margin:0 0 12px; font-weight:700; font-size:15px; line-height:1.4; }
 .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:0 0 14px; }
-.stat{ background:var(--panel2); border:2px solid var(--line); padding:7px 4px 6px; }
-.stat b{ display:block; font-family:var(--display); font-weight:400; font-size:22px; font-variant-numeric:tabular-nums; }
-.stat span{ font-size:11.5px; font-weight:800; color:var(--muted); line-height:1.15; display:block; }
-.panel-box .btns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
 .review{ background:var(--paper); border:2px dashed var(--line); padding:8px 10px; font-size:14px !important; }
 
 /* ---------- level summary (end screen) ---------- */
@@ -405,14 +388,6 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 #btn-swap .swarr{ position:absolute; right:-6px; bottom:-6px; width:19px; height:19px; border-radius:50%; background:var(--gold); border:2px solid var(--line); display:grid; place-items:center; }
 #btn-swap .swarr svg{ width:11px; height:11px; }
 #btn-swap.new{ animation:throb .5s ease-in-out infinite alternate; }
-.hat-btns{ display:flex; flex-direction:column; gap:5px; flex:none; }
-.hat-btns .cta{ min-width:84px; }
-.hat-sum{ display:flex; gap:8px; margin:0 0 8px; }
-.hat-sum>div{ flex:1; display:flex; gap:8px; align-items:center; background:var(--panel2); border:2px solid var(--line); padding:5px 7px; min-width:0; }
-.hat-sum .hat-ic{ width:34px; height:34px; border-width:2px; }
-.hat-sum .hat-ic svg{ width:26px; height:26px; }
-.hat-sum small{ display:block; font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
-.hat-sum b{ font-family:var(--display); font-size:13px; line-height:1.05; font-weight:400; }
 #title-ask{ position:absolute; left:50%; top:30%; transform:translateX(-50%); z-index:3; padding:10px 14px 12px; width:min(78vw,300px); text-align:center; animation:cardIn .25s cubic-bezier(.2,.9,.3,1.2); }
 #title-ask .who{ font-family:var(--display); font-size:12px; color:var(--bonk-d); }
 #title-ask .tt{ font-family:var(--display); font-size:24px; line-height:1.05; margin:2px 0 10px; }
@@ -603,7 +578,6 @@ body.letterbox #cutbars i{ height:clamp(7vh, calc((100vh - 100vw / 2.39) / 2), 1
   #ov-start .tagline{ margin-left:0; }
   #ov-start .start-foot{ align-items:flex-start; }
   #ov-start .how{ text-align:left; }
-  #ov-start .studio{ color:#fff; opacity:.85; text-shadow:0 1px 2px rgba(0,0,0,.6); }
 }
 
 /* ================= v12: close buttons, lessons ================= */
@@ -730,16 +704,6 @@ body.lessoning #objective{ visibility:hidden; }
     </div>
   </div>
 
-  <div id="story" class="hidden">
-    <div id="story-card">
-      <div id="story-art" aria-hidden="true"></div>
-      <div id="story-kicker"></div>
-      <p id="story-text"></p>
-      <button class="cta pressable" id="story-next">Next</button>
-      <div id="story-dots" aria-hidden="true"></div>
-      <button id="story-skip">Skip intro</button>
-    </div>
-  </div>
 
   <div id="board" class="sheet-wrap hidden">
     <div class="sheet" role="dialog" aria-modal="true" aria-label="Quest from Mabel">
@@ -880,7 +844,6 @@ function vnoise(x, y, z) {
 function fbm3(x, y, z, oct) { var s = 0, a = .5, f = 1; for (var i = 0; i < (oct || 3); i++) { s += a * vnoise(x * f, y * f, z * f); a *= .5; f *= 2.03; } return s; }
 function hex3(h) { return [((h >> 16) & 255) / 255, ((h >> 8) & 255) / 255, (h & 255) / 255]; }
 function lin(h) { var c = new T3.Color(h); c.r = Math.pow(c.r, 2.2); c.g = Math.pow(c.g, 2.2); c.b = Math.pow(c.b, 2.2); return c; }
-function mixHex(a, b, t) { var A = hex3(a), B = hex3(b); return [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t]; }
 
 /* ---------- geometry toolkit ---------- */
 function gNonIdx(g) { return g.index ? g.toNonIndexed() : g; }
@@ -1576,7 +1539,6 @@ function buildPost() {
    ===================================================================== */
 var CUR_LVL = 0, _gs = 7;
 function grand() { _gs |= 0; _gs = _gs + 0x6D2B79F5 | 0; var t = Math.imul(_gs ^ _gs >>> 15, 1 | _gs); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
-function shade(hex, k) { var c = hex3(hex); return [Math.min(1, c[0] * k), Math.min(1, c[1] * k), Math.min(1, c[2] * k)]; }
 function canvasTex(size, fn, rep) { var c = document.createElement("canvas"); c.width = c.height = size; fn(c.getContext("2d"), size); var t = new T3.CanvasTexture(c); t.wrapS = t.wrapT = T3.RepeatWrapping; t.anisotropy = 8; if (rep) t.repeat.set(rep, rep); return t; }
 var _texGrass = null, _texDeck = {};
 function grassTex() {
@@ -2022,7 +1984,7 @@ function animPlayer(dt) {
   /* acting: gestures used by the cutscenes */
   var gid = AN.gid, gu = 0;
   if (gid) { AN.gt += dt; gu = AN.gt / AN.gd; if (gu >= 1) { AN.gid = null; gid = null; } }
-  var ge = gid ? Math.sin(Math.PI * Math.min(1, gu)) : 0, gh = gid ? Math.min(1, Math.min(gu, 1 - gu) * 5) : 0;
+  var gh = gid ? Math.min(1, Math.min(gu, 1 - gu) * 5) : 0;
   if (gid === "nod") headX += Math.sin(gu * Math.PI * 4) * .28 * gh;
   else if (gid === "shake") headY += Math.sin(gu * Math.PI * 5) * .5 * gh;
   else if (gid === "shrug") { aLz = -.75 * gh - .14; aRz = .75 * gh + .14; eL = eR = -1.5 * gh; aLx = aRx = -.25 * gh; headZ += .12 * gh; hipY += .02 * gh; }
@@ -2701,7 +2663,7 @@ function setupInput() {
   var app = $("app"), stick = $("stick"), thumb = stick.firstElementChild, R = 54;
   app.addEventListener("pointerdown", function (e) {
     if (!canAct() || inp.stickId !== null) return;
-    if (e.target.closest("#btn-bonk,#hud,#lesson,#buildcard,#talk,#anvilcard,#bubble,.sheet-wrap,#story,#ov-end,.start-foot,#hub-ui,#title-ask")) return;
+    if (e.target.closest("#btn-bonk,#hud,#lesson,#buildcard,#talk,#anvilcard,#bubble,.sheet-wrap,#ov-end,.start-foot,#hub-ui,#title-ask")) return;
     if (e.pointerType === "touch" && e.clientX > innerWidth * .62) return;
     inp.stickId = e.pointerId; inp.sx = e.clientX; inp.sy = e.clientY;
     stick.style.left = e.clientX + "px"; stick.style.top = e.clientY + "px"; stick.classList.add("on"); thumb.style.transform = "translate(0,0)";
@@ -2724,7 +2686,6 @@ function setupInput() {
     var k = e.key.toLowerCase(), ae = document.activeElement, onBtn = ae && ae.tagName === "BUTTON";
     if (!onBtn && (k === "enter" || k === " ")) {
       if (!$("ov-start").classList.contains("hidden") && !$("btn-start").disabled && !G.titleFree && !G.titleAsk) { e.preventDefault(); $("btn-start").click(); return; }
-      if (!$("story").classList.contains("hidden")) { e.preventDefault(); $("story-next").click(); return; }
     }
     if (k === "escape" || k === "p") { if (G.sheet) { if (G.sheet === "settings") closeSettings(); else closeSheet(); return; } if (cardPlot) { closeBuildCard(); return; } if (G.playing) toggleMenu(); return; }
     if (menuOpen() || G.sheet || !G.playing) return;
@@ -3771,7 +3732,6 @@ function updateNoggin() {
 /* =====================================================================
    The director: one verb at a time, each step gated on the action itself
    ===================================================================== */
-function brokenRocks() { return stats.rocks; }
 var STEPS = [
   { id: "move", lesson: "walk", act: ["Act 1: Head first", "Tools were recalled. Heads were not."], obj: "Walk to the glowing rock",
     target: function () { return tgt(rockList[0]); },
@@ -3818,7 +3778,7 @@ var STEPS = [
     check: function () { return inv.gold >= 5; },
     done: function () { $("btn-bonk").classList.remove("hinted"); say("Five gold. Dunk is officially rich, and officially dizzy.", 1); } },
   { id: "statue", act: ["Act 4: Monument", "One last project. A big one."], obj: "Build the statue", plot: "statue",
-    enter: function () { say("One last build. A statue of the part of you that did all the work.", 1); },
+    enter: function () { say("One last build: a monument. Something every human can look at and stand a little taller. Robots will hate it. That\u2019s the point.", 1); },
     check: function () { return false; } }
 ];
 /* =====================================================================
@@ -3982,10 +3942,11 @@ function finale() {
   stats.finalTime = G.playTime;
   confetti(st.pos);
   later(1.0, function () { confetti(st.pos); snd.chime(); });
-  later(2.2, function () { say("Monument complete. Please do not bonk the monument.", 1); confetti(st.pos); });
+  later(1.8, function () { say("Monument complete. Humans: empowered. Please do not bonk the monument.", 1); confetti(st.pos); });
+  later(3.8, function () { say("Unauthorized monument detected. All units: be upset.", 1, "hr"); });
   // the statue becomes bonkable
   T.push({ kind: "statue", g: st.real, radius: 2.0, hp: 99, max: 99, hard: 0, alive: true, wob: 0, sc: 1, noCol: true, pop: 1 });
-  later(5.2, function () { showEnd(); });
+  later(6.4, function () { showEnd(); });
 }
 /* confetti: rebuilt in the hi-fi layer */
 /* level summary: headline numbers up front, star checklist and full stats behind two toggles */
@@ -4180,14 +4141,6 @@ $("btn-free").addEventListener("click", function () {
 });
 document.addEventListener("visibilitychange", function () { if (document.hidden && G.playing && !G.paused && !G.ended) toggleMenu(true); });
 
-/* ---------- intro story cards ---------- */
-var INTRO = [
-  { art: "dunk", kicker: "Meet Dunk", text: "The year is 3000. Dunk is the last human on payroll. HR-9000 recalled his pickaxe, his shovel and, somehow, his lunch break." },
-  { art: "dunk", kicker: "What Dunk has left", text: "One tool the robots can\u2019t repossess: a very large, very stubborn forehead." },
-  { art: "mabel", kicker: "Meet Mabel (pigeon, foreman, 40% firmware)", text: "\u201cHit things. Collect what falls out. Build stuff. HR-9000 is always listening. Smile.\u201d" },
-  { art: "hr", kicker: "Meet HR-9000", text: "\u201cWelcome to Mandatory Fun. Your enthusiasm has been noted and found insufficient.\u201d" }
-];
-var storyIdx = 0;
 /* ---------- level select hub: walk Dunk to a level\u2019s node and land a Perfect bonk on it ---------- */
 var HUB = { nodes: null };
 function lvlUnlocked(n, sv) {
@@ -4308,19 +4261,9 @@ $("ov-start").addEventListener("click", function (e) {
 $("ta-yes").addEventListener("click", function () { titleFreeStart(false); });
 $("ta-no").addEventListener("click", function () { titleAskClose(); snd.pop(); });
 function showStory() { titleFreeEnd(); titleAskClose(); G.title = false; playCutscene(PROLOGUE(), beginGame); }
-function renderStory() {
-  var c = INTRO[storyIdx];
-  $("story-art").innerHTML = '<div style="width:116px;height:116px;border:3px solid var(--line);overflow:hidden;box-shadow:var(--shadow-s)">' + ART[c.art] + '</div>';
-  $("story-kicker").textContent = c.kicker; $("story-text").textContent = c.text;
-  $("story-next").textContent = storyIdx === INTRO.length - 1 ? "Let’s bonk" : "Next";
-  $("story-dots").innerHTML = INTRO.map(function (_, i) { return '<i class="' + (i === storyIdx ? "on" : "") + '"></i>'; }).join("");
-  snd.pop();
-}
-$("story-next").addEventListener("click", function () { if (storyIdx < INTRO.length - 1) { storyIdx++; renderStory(); } else beginGame(); });
-$("story-skip").addEventListener("click", beginGame);
 function beginGame() {
   audio(); startMusic();
-  $("story").classList.add("hidden"); G.title = false; G.playing = true; G.started = true;
+  G.title = false; G.playing = true; G.started = true;
   P.pos.set(0, 0, 3.5); P.face.set(0, 0, -1); P.yaw = Math.PI; P.fakeU = 0; P.hop = 0; cam.tgt.set(0, 0, 3.5); cam.zoom = 1.1;
   $("hud").classList.remove("hidden"); $("controls").classList.remove("hidden");
   lessonEnd(true); updateRes(); startStep(0);
@@ -5010,7 +4953,7 @@ LEVELS[1] = {
     accept: "Eight gold. Go be rich.", hint: "Eight gold. Gold rocks have the yellow shiny bits.",
     ready: "Eight gold! Dunk, you\u2019re the best employee I\u2019ve ever supervised. You\u2019re also the only one. Take this crown.", reward: { hat: "crown" } },
   { id: "statue", title: "The Monument", type: "build", plot: "l1_statue", obj: "Build the Statue", goal: "Build the Statue of Dunk\u2019s Forehead on Gold Isle.",
-    offer: "One last job. A statue of the part of you that did all the work. Gold, stone, a crystal or two and three nuts, for morale. HR-9000 will file it under \u2018employee recognition\u2019.",
+    offer: "One last job. A statue of the part of you that did all the work. Every human who sees it will remember they\u2019re not to be trifled with. The robots will hate it. Good. Gold, stone, a crystal or two and three nuts, for morale. We\u2019ll tell HR-9000 it\u2019s \u2018employee recognition\u2019.",
     accept: "The plot is on Gold Isle. Go big.", hint: "Statue: gold, stone, crystal and three nuts. If you\u2019re short, the quarries regrow. So do the squirrels.",
     ready: "", reward: {} }
 ]
@@ -5137,7 +5080,7 @@ LEVELS[2] = {
       accept: "East edge of the Observatory. You\u2019ll need crystals.", hint: "Gangway: scrap, stone and crystal. East edge of the Observatory.",
       ready: "The Break Room is open. Allegedly. Mind the fridge.", reward: { note: "Breaks, at last" } },
     { id: "statue", title: "The Monument (Zero-G Edition)", type: "build", plot: "l2_statue", obj: "Build the Statue", goal: "Build the floating Statue of Dunk\u2019s Forehead above the Break Room fridge.",
-      offer: "One last job. A statue of your forehead, floating above the break room fridge. Zero gravity: finally, a pedestal with no gravity. HR-9000 will file it under employee recognition. Again.",
+      offer: "One last job. A statue of your forehead, floating above the break room fridge. Every human in orbit gets a reminder of what we can build. The robots hate it. Good. HR-9000 will file it under employee recognition. Again.",
       accept: "The plot is in the Break Room. Go big. Go weightless.", hint: "Statue: scrap, stone and crystal. If you\u2019re short, the wrecks and rocks regrow.",
       ready: "", reward: {} }
   ]
@@ -5677,7 +5620,7 @@ LEVELS[3] = {
       accept: "North edge of the Robot Yard. You\u2019ll need lots of gears.", hint: "Walkway: scrap and gears. North edge of the Robot Yard.",
       ready: "The Assembly Line is open. Mind the belts. They\u2019re hungry.", reward: { note: "A very long line" } },
     { id: "statue", title: "The Monument (Assembled)", type: "build", plot: "l3_statue", obj: "Build the Statue", goal: "Build the Statue of Dunk\u2019s Forehead on the Assembly Line belt.",
-      offer: "One last job. A statue of your forehead, assembled on a belt, part by part. A robot arm supervises. HR-9000 will file it under \u2018employee recognition\u2019. Third time.",
+      offer: "One last job. A statue of your forehead, assembled on a belt, part by part. Right under the robots\u2019 noses. They hate it. Let them. HR-9000 will file it under \u2018employee recognition\u2019. Third time.",
       accept: "The plot is on the Assembly Line. Go big. Go modular.", hint: "Statue: scrap and gears. If you\u2019re short, the machines and robots regrow.",
       ready: "", reward: {} }
   ]
@@ -5951,7 +5894,7 @@ LEVELS[4] = {
       accept: "Four in a row. Watch the ring above your head.", hint: "Four perfect bonks in a row. A miss resets the streak. Hit anything.",
       ready: "Four in a row! The island is blushing. I think that\u2019s the spores.", reward: { note: "A very proud pigeon" } },
     { id: "statue", title: "The Monument (Overgrown)", type: "build", plot: "l4_statue", obj: "Build the Statue", goal: "Build the Statue of Dunk\u2019s Forehead on Bloom Isle.",
-      offer: "One last job. A statue of your forehead that grows like a plant. It will bloom. It will judge. HR-9000 will file it under employee recognition. Fourth time.",
+      offer: "One last job. A statue of your forehead that grows like a plant. It will bloom. It will judge. The robots hate monuments, and they hate gardening more. HR-9000 will file it under employee recognition. Fourth time.",
       accept: "The plot is on Bloom Isle. Go big. Go leafy.", hint: "Statue: slime, crystal and gears. If you\u2019re short, the mounds and trees regrow.",
       ready: "", reward: {} }
   ]
@@ -5989,7 +5932,6 @@ var BOSS_PH = [
   { name: "Phase 3: Final Review", sub: "Faster windows. Same forehead.", need: 4, closed: 2.3, open: 1.3, zap: 6.5, memo: 2.0, intro: "I am not angry, Dunk. I am a disappointed robot. That is worse. Final review." }
 ];
 var BOSS_HITQ = ["Ow. Noted.", "Feedback received. Resenting it.", "Please stop improving.", "Logged under \u2018rude\u2019.", "My shield! It was expensive!", "Is that\u2026 a good performance?"];
-var BOSS_BASE = 0;
 function bossStrikesMax() { return S.assist ? 6 : 4; }
 function bossNeed(ph) { return Math.max(2, BOSS_PH[ph].need - (HAT().bossB ? 1 : 0)); }
 
@@ -6649,6 +6591,11 @@ function PROLOGUE() {
         cam: { from: { p: [2.4, 2.9, 2.2], l: ON("mabel", 0, -.1, 0), fov: 40 }, to: { p: [1.0, 2.6, .9], l: ON("mabel", 0, -.1, 0), fov: 34 }, ease: "out" }, dofRange: .12, cap: { w: "MABEL", t: "Don’t mind HR. It’s still learning. I’m Mabel. Foreman. Pigeon. Forty percent firmware." } },
       { d: 3.3, act: function () { gary.home.copy(gary.root.position); gary.dirT = 9; gary.dx = gary.dz = 0; gary.root.rotation.y = Math.atan2(-3.3, 3.0); }, cam: { from: { p: ON("gary", -3.3, .7, 3.0), l: ON("gary"), fov: 40 }, to: { p: ON("gary", -2.5, .6, 2.3), l: ON("gary"), fov: 35 } }, dofRange: .1, cap: { w: "NARRATOR", t: "That’s Gary. He’s a contractor. Nobody knows what he contracts." } },
       { d: 4.6, act: function () { mabel.hop = 1; }, cam: { from: { p: ON("mabel", 2.9, -.25, 1.5), l: ON("mabel", 0, -.05, 0), fov: 32 }, to: { p: ON("mabel", 2.2, -.3, 1.1), l: ON("mabel", 0, -.05, 0), fov: 29 } }, dofRange: .1, cap: { w: "MABEL", t: "Rule one: hit things. Rule two: collect what falls out. There is no rule three." } },
+      { d: 4.2, act: function () { mabel.hop = 1; }, cam: { from: { p: ON("mabel", 2.2, -.3, 1.1), l: ON("mabel", 0, -.05, 0), fov: 29 }, to: { p: ON("mabel", 1.6, -.2, .8), l: ON("mabel", 0, -.05, 0), fov: 27 } }, dofRange: .1, cap: { w: "MABEL", t: "Okay. There is a rule three. We build monuments." } },
+      { d: 5.8, act: function () { P.look = null; P.face.set(0, 0, -1); P.mood = "angry"; }, at: [[2.2, function () { P.mood = "smug"; dunkGesture("crack", 1.1); tone(196, .5, "triangle", .06, 0, 392); }]],
+        cam: { from: { p: DF(4.3, 1.9, .8), l: ON("dunkHead", 0, -.05, 0), fov: 42 }, to: { p: DF(2.9, 1.66, .25), l: ON("dunkHead", 0, -.04, 0), fov: 35 }, ease: "out3" }, dofRange: .11, cap: { w: "NARRATOR", t: "Dunk wasn\u2019t only here to hit things. He was here to build something every human left could look up at." } },
+      { d: 6.2, cam: { from: { p: [14, 3.4, 7], l: [32, 3, -2], fov: 48 }, to: { p: [23, 4.2, 4.5], l: [32, 3.6, -2], fov: 42 }, ease: "out" }, cap: { w: "NARRATOR", t: "A monument on every island. Proof that people built this world, and that humans are not to be trifled with. Never again." } },
+      { d: 5.2, cam: { from: { p: ON("drone0", 5, -4.2, 7), l: ON("drone0"), fov: 46 }, to: { p: ON("drone0", 3, -3.6, 5.5), l: ON("drone0"), fov: 42 }, ease: "lin" }, cap: { w: "HR", t: "Unauthorized monuments detected. All units: disapprove. Loudly." } },
       { d: 3.2, act: function (C) { P.look = null; P.mood = "angry"; P.pos.set(-1, 0, 4.5); P.face.set(.8, 0, -.6).normalize(); C.walk = { x: 4.5, z: -.4, sp: 2.9 }; },
         cam: { from: { p: [8.6, 1.0, -3.6], l: ON("dunkHead", 0, -.2, 0), fov: 42 }, to: { p: [7.4, 1.25, -2.7], l: ON("dunkHead", 0, -.2, 0), fov: 36 }, ease: "out" }, dofRange: .2 },
       { d: 5.2, act: function (C) { C.walk = null; P.speed = 0; P.face.set(0, 0, 1); P.mood = "smug"; snd.fanfare(); }, at: [[1.3, function () { dunkGesture("flex", 2.2); P.mood = "smile"; }]], title: { big: "HARD HEAD", small: "Bonk your way to a better tomorrow.", logo: true },
@@ -6660,6 +6607,7 @@ CUTS[1] = function () { return { end: lvlEnd, beats: [
   { d: 6.4, fadeIn: 1.4, dof: .5, title: { kick: "LEVEL 1", big: "BONK ISLES", small: "Legacy Terrain Preserve" }, cam: { from: { p: [-30, 34, 40], l: [24, 0, -14], fov: 58 }, to: { p: [10, 16, 28], l: [18, 0, -8], fov: 50 }, ease: "out" }, cap: { w: "NARRATOR", t: "The Legacy Terrain Preserve. Nature, as remembered by a spreadsheet." } },
   { d: 4.4, cam: { from: { p: [22, 2.6, 12], l: [28, 2, 3], fov: 42 }, to: { p: [42, 2.6, 10], l: [36, 2, 2], fov: 42 }, ease: "lin" }, cap: { w: "HR", t: "Welcome to Nature™. All trees are ethically sourced. From other trees." } },
   { d: 4.6, cam: { from: { p: [48, 9, 16], l: [62, 1, 0], fov: 50 }, to: { p: [58, 5, 10], l: [62, 1, -2], fov: 44 } }, cap: { w: "MABEL", t: "Build bridges. Cross the islands. The gold one at the end has your name on it." } },
+  { d: 5.2, cam: { from: { p: [56, 7, 6], l: [62, 3, -3], fov: 46 }, to: { p: [60, 5, 3], l: [62, 3.4, -3], fov: 40 }, ease: "out" }, cap: { w: "MABEL", t: "There, a monument. Humans will see it and stand a little taller. The robots will hate it. Good." } },
   { d: 4.2, act: function () { mabel.hop = 1; }, cam: { from: { p: [-9, .8, 5], l: ON("mabel"), fov: 44 }, to: { p: [-7, 1.5, 3.5], l: ON("mabel"), fov: 36 }, ease: "out" }, dofRange: .12, cap: { w: "MABEL", t: "I’ll be at the job board. Bonk anything you like. Except me." } },
   dunkClose({ w: "NARRATOR", t: "Dunk was ready. Dunk is always ready." })
 ] }; };
@@ -7050,7 +6998,7 @@ function enterLevel(n, resume) {
   var C = LEVELS[n]; if (!C) return;
   titleFreeEnd(); titleAskClose();
   audio(); startMusic();
-  ["ov-start", "story", "ov-end", "menu", "map"].forEach(function (id) { $(id).classList.add("hidden"); });
+  ["ov-start", "ov-end", "menu", "map"].forEach(function (id) { $(id).classList.add("hidden"); });
   var fd = $("fade"); $("fade-tx").textContent = "Level " + n + ": " + C.name; fd.classList.add("on");
   setTimeout(function () {
     buildLevel(n);
@@ -7196,9 +7144,10 @@ function finaleLevel() {
   stats.finalTime = G.playTime; saveLevel(); o["l" + n + "done"] = true; writeSave(o);
   confetti(st.pos);
   later(1.0, function () { confetti(st.pos); snd.chime(); });
-  later(2.2, function () { say("Level " + n + " complete. Please do not bonk the monument.", 1); confetti(st.pos); });
+  later(1.8, function () { say("Level " + n + " complete. Another monument up, another reminder that people built this. Please do not bonk it.", 1); confetti(st.pos); });
+  later(3.8, function () { var RG = ["Unauthorized monument detected. All units: register displeasure.", "A second monument. The robots are furious. The robots would like that noted.", "A monument on OUR assembly line. We are not okay.", "A monument that grows. The robots are filing a grievance with the plants."]; say(RG[(n - 1) % RG.length], 1, "hr"); });
   T.push({ kind: "statue", g: st.real, radius: 2.0, hp: 99, max: 99, hard: 0, alive: true, wob: 0, sc: 1, noCol: true, pop: 1, lvl: n });
-  later(5.4, function () { showEnd(); });
+  later(6.6, function () { showEnd(); });
 }
 function showEndLevel() {
   var n = G.level;
