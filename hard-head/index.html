@@ -67,8 +67,21 @@ button:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
 #obj-costs svg{ width:16px; height:16px; }
 .bar{ height:8px; margin-top:6px; border:2px solid var(--line); background:var(--panel2); position:relative; overflow:hidden; }
 .bar i{ position:absolute; inset:0 auto 0 0; width:0; background:linear-gradient(90deg,var(--bonk),var(--gold)); transition:width .3s ease; }
-#objective.done{ animation:pop .45s; background:#d9f2c8; }
-#objective.done #obj-t::before{ content:"\2713  "; color:var(--good); }
+#objective{ position:relative; }
+#obj-check{ display:none; width:46px; height:46px; margin:0 auto 3px; position:relative; }
+#obj-check svg{ width:100%; height:100%; display:block; overflow:visible; }
+#obj-check .disc{ fill:var(--good); stroke:#221407; stroke-width:3; }
+#obj-check .tick{ fill:none; stroke:#fff; stroke-width:6; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:34; stroke-dashoffset:34; }
+#objective.done{ background:#d9f2c8; display:flex; flex-direction:column; align-items:center; text-align:center; animation:pop .45s; }
+#objective.done #obj-check{ display:block; animation:chkPop .55s cubic-bezier(.2,1.7,.4,1) both; }
+#objective.done #obj-check .tick{ animation:chkDraw .35s .18s ease-out forwards; }
+#objective.done #obj-t{ color:#1f5a2c; }
+#objective.done #obj-bar, #objective.done #obj-costs{ display:none; }
+@keyframes chkPop{ 0%{ transform:scale(.2) rotate(-20deg); opacity:0 } 60%{ transform:scale(1.25) rotate(4deg); opacity:1 } 100%{ transform:scale(1) rotate(0); opacity:1 } }
+@keyframes chkDraw{ to{ stroke-dashoffset:0 } }
+.obj-spark{ position:absolute; left:50%; top:30px; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; pointer-events:none; z-index:2; border:2px solid #221407; will-change:transform,opacity; }
+.obj-ring{ position:absolute; left:50%; top:30px; width:46px; height:46px; margin:-23px 0 0 -23px; border:4px solid #ffd93d; border-radius:50%; pointer-events:none; z-index:2; }
+@media (prefers-reduced-motion: reduce){ #objective.done #obj-check, #objective.done #obj-check .tick{ animation:none; } #objective.done #obj-check .tick{ stroke-dashoffset:0; } }
 .spacer{ flex:1; }
 #hud-right{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
 #res{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
@@ -89,15 +102,15 @@ button:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
 #btn-menu svg{ width:24px; height:24px; }
 
 /* ---------- Mabel's bubble ---------- */
-#bubble{ position:absolute; z-index:32; left:50%; transform:translateX(-50%); top:calc(var(--safe-t) + 112px); width:min(92vw,430px);
-  display:flex; gap:10px; align-items:center; padding:8px 12px 8px 8px; cursor:pointer; }
+#bubble{ position:absolute; z-index:32; left:calc(10px + var(--safe-l)); top:calc(var(--safe-t) + 66px); width:fit-content; max-width:min(calc(100vw - 150px),330px); text-align:left;
+  display:flex; gap:7px; align-items:center; padding:4px 9px 4px 4px; cursor:pointer; opacity:.94; box-shadow:2px 2px 0 var(--line); }
 #bubble.in{ animation:bIn .28s cubic-bezier(.2,.9,.3,1.25); }
-@keyframes bIn{ from{ transform:translate(-50%,-14px) scale(.92); opacity:0 } to{ transform:translate(-50%,0); opacity:1 } }
-#bubble .pic{ width:54px; height:54px; flex:none; border:3px solid var(--line); background:#cfeaf7; overflow:hidden; }
+@keyframes bIn{ from{ transform:translateY(-14px) scale(.92); opacity:0 } to{ transform:none; opacity:1 } }
+#bubble .pic{ width:30px; height:30px; flex:none; border:3px solid var(--line); background:#cfeaf7; overflow:hidden; }
 #bubble .pic svg{ width:100%; height:100%; display:block; }
-#bubble .who{ font-family:var(--display); font-size:12px; color:var(--bonk-d); margin-bottom:1px; }
+#bubble .who{ font-family:var(--display); font-size:10px; line-height:1; color:var(--bonk-d); margin-bottom:1px; }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) #bubble .who{ color:#ff8d6e; } }
-#bubble .tx{ font-weight:700; font-size:15px; line-height:1.3; }
+#bubble .tx{ font-weight:700; font-size:12.5px; line-height:1.22; }
 
 /* ---------- controls ---------- */
 #controls{ position:absolute; inset:0; z-index:25; pointer-events:none; }
@@ -125,7 +138,7 @@ button:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
 @keyframes fume{ 0%,100%{ transform:translate(0,0) rotate(0) } 25%{ transform:translate(-1.5px,1px) rotate(-4deg) } 75%{ transform:translate(1.5px,-1px) rotate(4deg) } }
 @media (prefers-reduced-motion: reduce){ #btn-bonk.mad svg{ animation:none; } }
 #noggin{ display:none !important; }
-#btn-bonk.hinted::after{ content:""; position:absolute; inset:-12px; border-radius:50%; border:5px solid var(--gold); animation:ring 1s ease-out infinite; pointer-events:none; }
+#btn-bonk.hinted::after, #btn-bonk.lessglow::after{ content:""; position:absolute; inset:-12px; border-radius:50%; border:5px solid var(--gold); animation:ring 1s ease-out infinite; pointer-events:none; }
 @keyframes ring{ 0%{ transform:scale(.82); opacity:1 } 100%{ transform:scale(1.22); opacity:0 } }
 #bonk-key{ position:absolute; right:calc(18px + var(--safe-r)); bottom:calc(6px + var(--safe-b)); width:clamp(96px,23vmin,128px); text-align:center; font-size:11px; font-weight:800; color:var(--ink); opacity:.75; pointer-events:none; }
 #hint-stick{ position:absolute; left:calc(22px + var(--safe-l)); bottom:calc(30px + var(--safe-b)); width:150px; height:130px; pointer-events:none; }
@@ -166,16 +179,16 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .cta.big{ background:var(--bonk); color:#fff; text-shadow:2px 2px 0 #221407; font-size:24px; padding:14px 26px; box-shadow:var(--shadow); width:auto; }
 
 /* ---------- act banner / toast ---------- */
-#banner{ position:absolute; z-index:45; left:0; right:0; top:30%; text-align:center; pointer-events:none; opacity:0; padding:0 24px; box-sizing:border-box; }
+#banner{ position:absolute; z-index:45; left:0; right:0; top:16%; text-align:center; pointer-events:none; opacity:0; padding:0 24px; box-sizing:border-box; }
 #bn-big{ max-width:100%; white-space:normal; overflow-wrap:anywhere; }
 #banner.show{ animation:bnr 3.1s ease both; }
 @keyframes bnr{ 0%{ opacity:0; transform:translateY(-24px) scale(.9) } 10%{ opacity:1; transform:none } 82%{ opacity:1 } 100%{ opacity:0; transform:translateY(10px) } }
-#bn-big{ display:inline-block; font-family:var(--display); font-size:clamp(30px,8.4vmin,58px); line-height:1; color:#fff; padding:10px 18px 12px; background:var(--bonk);
+#bn-big{ display:inline-block; font-family:var(--display); font-size:clamp(22px,5.6vmin,38px); line-height:1; color:#fff; padding:6px 12px 8px; background:var(--bonk);
   border:4px solid var(--line); box-shadow:var(--shadow); transform:rotate(-2deg); text-shadow:3px 3px 0 #221407; }
-#bn-small{ display:block; margin:12px auto 0; width:fit-content; max-width:92vw; font-weight:800; font-size:clamp(14px,3.4vmin,19px); padding:5px 12px; background:var(--panel); border:3px solid var(--line); box-shadow:var(--shadow-s); }
-#toast{ position:absolute; z-index:46; left:50%; top:calc(var(--safe-t) + 214px); transform:translateX(-50%); padding:8px 14px; font-weight:800; font-size:15px; text-align:center; opacity:0; pointer-events:none; max-width:90vw; }
+#bn-small{ display:block; margin:8px auto 0; width:fit-content; max-width:88vw; font-weight:800; font-size:clamp(12px,3vmin,15px); padding:3px 10px; background:var(--panel); border:3px solid var(--line); box-shadow:var(--shadow-s); }
+#toast{ position:absolute; z-index:46; left:calc(10px + var(--safe-l)); top:calc(var(--safe-t) + 66px); width:fit-content; padding:4px 10px; font-weight:800; font-size:12.5px; text-align:left; opacity:0; pointer-events:none; max-width:min(calc(100vw - 150px),330px); }
 #toast.show{ animation:tst 3s ease both; }
-@keyframes tst{ 0%{ opacity:0; transform:translate(-50%,-10px) } 10%{ opacity:1; transform:translate(-50%,0) } 85%{ opacity:1 } 100%{ opacity:0 } }
+@keyframes tst{ 0%{ opacity:0; transform:translateY(-10px) } 10%{ opacity:1; transform:none } 85%{ opacity:1 } 100%{ opacity:0 } }
 
 /* ---------- floating words ---------- */
 .fl{ position:absolute; left:0; top:0; font-family:var(--display); white-space:nowrap; color:#fff; font-size:22px; will-change:transform,opacity;
@@ -227,6 +240,35 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .cta.ghost{ background:var(--panel2); }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .cta.ghost{ color:#fff; } }
 :root[data-theme="dark"] .cta.ghost{ color:#fff; }
+
+/* ---------- pause menu, settings sheet, hub gear ---------- */
+.sheet.pause{ width:min(92vw,360px); padding:16px 16px 14px; }
+.pz-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px; }
+.pz-head h2{ margin:0; }
+.pz-sub{ font-weight:800; font-size:12.5px; color:var(--muted); text-align:right; min-width:0; }
+.cta.pz-resume{ width:100%; font-size:24px; padding:13px 16px; }
+.pz-quick{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.pz-tog{ display:flex; align-items:center; gap:8px; padding:9px 10px; background:var(--panel2); border:3px solid var(--line); font-weight:800; font-size:14px; text-align:left; }
+.pz-tog svg, .pz-item svg{ flex:none; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+.pz-tog svg{ width:22px; height:22px; opacity:.5; }
+.pz-tog.on svg{ opacity:1; }
+.pz-tog b{ margin-left:auto; font-family:var(--display); font-weight:400; font-size:12px; padding:2px 7px; border:2px solid var(--line); background:var(--panel); color:var(--muted); }
+.pz-tog.on b{ background:var(--good); color:#fff; }
+.pz-list{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+.pz-item{ display:flex; align-items:center; gap:12px; width:100%; padding:10px 12px; text-align:left; background:var(--panel2); border:3px solid var(--line); box-shadow:var(--shadow-s); font-weight:800; font-size:16px; }
+.pz-item svg{ width:24px; height:24px; }
+.pz-tx{ flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.15; }
+.pz-tx small{ font-weight:600; font-size:12px; color:var(--muted); }
+.pz-chev::before{ content:"\203A"; font-size:24px; line-height:1; color:var(--muted); }
+.pz-item.danger svg{ color:var(--bad); }
+.pz-item.danger[data-armed="1"]{ background:var(--bad); color:#fff; animation:pop .3s cubic-bezier(.3,1.6,.5,1); }
+.pz-item.danger[data-armed="1"] svg, .pz-item.danger[data-armed="1"] small, .pz-item.danger[data-armed="1"] .pz-chev::before{ color:#fff; }
+.sheet.pause .tip{ margin-top:12px; font-size:12.5px; }
+.st-danger{ margin-top:14px; padding-top:12px; border-top:2px solid var(--panel2); }
+.st-dh{ font-family:var(--display); font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+#hub-settings{ width:44px; height:44px; padding:0; display:grid; place-items:center; flex:none; background:var(--panel); }
+#hub-settings svg{ width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+@media (max-height:520px){ .sheet.pause .tip, .pz-item small{ display:none; } .pz-list{ margin-top:8px; gap:6px; } .pz-quick{ margin-top:8px; } .cta.pz-resume{ padding:9px 14px; font-size:20px; } }
 
 #ov-end{ z-index:85; justify-content:center; padding:20px; background:rgba(24,14,4,.45); }
 .panel-box{ width:min(94vw,440px); max-height:94vh; overflow:auto; background:var(--panel); border:3px solid var(--line); box-shadow:var(--shadow); padding:16px 16px 18px; text-align:center; animation:cardPop .4s cubic-bezier(.2,.9,.3,1.2); }
@@ -336,9 +378,9 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 }
 
 @media (max-height:520px){
-  #bubble{ top:calc(var(--safe-t) + 74px); }
+  #bubble{ top:calc(var(--safe-t) + 58px); }
   #buildcard{ bottom:calc(var(--safe-b) + 12px); }
-  #banner{ top:22%; }
+  #banner{ top:14%; }
 }
 #flash{ position:absolute; inset:0; z-index:6; pointer-events:none; opacity:0; background:radial-gradient(circle,rgba(255,255,255,0) 35%,rgba(255,236,160,.8) 100%); }
 #flash.go{ animation:flashA .26s ease-out; }
@@ -564,6 +606,30 @@ body.letterbox #cutbars i{ height:clamp(7vh, calc((100vh - 100vw / 2.39) / 2), 1
   #ov-start .studio{ color:#fff; opacity:.85; text-shadow:0 1px 2px rgba(0,0,0,.6); }
 }
 
+/* ================= v12: close buttons, lessons ================= */
+.xbtn{ position:absolute; top:-14px; right:-10px; width:36px; height:36px; padding:0; border-radius:50%; background:var(--panel); border:3px solid var(--line); box-shadow:var(--shadow-s); z-index:3; display:grid; place-items:center; }
+.xbtn::before,.xbtn::after{ content:""; position:absolute; width:15px; height:3.5px; background:var(--ink); border-radius:2px; }
+.xbtn::before{ transform:rotate(45deg); } .xbtn::after{ transform:rotate(-45deg); }
+.xbtn:hover{ background:var(--bad); } .xbtn:hover::before,.xbtn:hover::after{ background:#fff; }
+.xbtn.in-sheet{ position:sticky; float:right; top:0; right:auto; margin:-4px -6px 4px 8px; }
+#lessdim{ position:absolute; inset:0; z-index:19; pointer-events:none; opacity:0; transition:opacity .4s ease; background:radial-gradient(ellipse 62% 52% at 50% 54%, rgba(16,10,4,0) 30%, rgba(16,10,4,.6) 100%); }
+#lessdim.on{ opacity:1; }
+#lesson{ position:absolute; z-index:44; left:50%; top:calc(var(--safe-t) + 70px); transform:translateX(-50%); width:min(94vw,380px); display:flex; gap:12px; align-items:center; padding:10px 14px 11px 10px; background:var(--panel); border:3px solid var(--line); box-shadow:var(--shadow), 0 12px 28px rgba(0,0,0,.25); }
+#lesson.in{ animation:lessIn .4s cubic-bezier(.2,1.2,.3,1.1); }
+@keyframes lessIn{ from{ transform:translate(-50%,-26px) scale(.86); opacity:0 } to{ transform:translate(-50%,0) scale(1); opacity:1 } }
+#lesson.win{ background:#d9f2c8; }
+#lesson.win .ls-t, #lesson.win .ls-p{ color:#1f5a2c; }
+.ls-art{ width:64px; height:64px; flex:none; border:3px solid var(--line); background:#cfeaf7; overflow:hidden; }
+.ls-art svg{ width:100%; height:100%; display:block; }
+.ls-tx{ flex:1; min-width:0; }
+.ls-k{ font-family:var(--display); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--bonk-d); }
+.ls-t{ font-family:var(--display); font-size:23px; line-height:1.05; margin:1px 0 3px; }
+.ls-p{ font-weight:800; font-size:14px; line-height:1.25; }
+.ls-p:empty{ display:none; }
+#lesson .cta{ width:auto; flex:none; font-size:16px; padding:8px 12px; }
+#ls-skip{ display:block; margin-top:3px; padding:2px 0; background:none; border:0; font-weight:800; font-size:12px; color:var(--muted); text-decoration:underline; }
+body.lessoning #objective{ visibility:hidden; }
+@media (max-height:520px){ #lesson{ top:calc(var(--safe-t) + 58px); } }
 </style>
 </head>
 <body>
@@ -576,6 +642,7 @@ body.letterbox #cutbars i{ height:clamp(7vh, calc((100vh - 100vw / 2.39) / 2), 1
 
   <header id="hud" class="hidden">
     <div id="objective" class="chip">
+      <div id="obj-check" aria-hidden="true"><svg viewBox="0 0 46 46"><circle class="disc" cx="23" cy="23" r="20"/><path class="tick" d="M13 24 L20.5 31.5 L34 15.5"/></svg></div>
       <div id="obj-t">&nbsp;</div>
       <div id="obj-costs" class="hidden"></div>
       <div class="bar" id="obj-bar"><i id="obj-fill"></i></div>
@@ -603,6 +670,12 @@ body.letterbox #cutbars i{ height:clamp(7vh, calc((100vh - 100vw / 2.39) / 2), 1
 
   <div id="toast" class="chip" role="status"></div>
   <div id="banner"><span id="bn-big"></span><span id="bn-small"></span></div>
+  <div id="lessdim" aria-hidden="true"></div>
+  <div id="lesson" class="hidden" role="status" aria-live="polite">
+    <div class="ls-art" id="ls-art" aria-hidden="true"></div>
+    <div class="ls-tx"><div class="ls-k" id="ls-k"></div><div class="ls-t" id="ls-t"></div><div class="ls-p" id="ls-p"></div><button id="ls-skip" class="hidden" type="button">Skip lesson</button></div>
+    <button class="cta pressable hidden" id="ls-ok" type="button">Got it</button>
+  </div>
 
   <div id="gauge" class="hidden" aria-hidden="true">
     <svg viewBox="0 0 72 72">
@@ -620,6 +693,7 @@ body.letterbox #cutbars i{ height:clamp(7vh, calc((100vh - 100vw / 2.39) / 2), 1
   <div id="edge" class="hidden"><div><svg viewBox="0 0 24 24" fill="#221407"><path d="M12 3l9 16H3z"/></svg></div></div>
 
   <div id="buildcard" class="chip hidden">
+    <button class="xbtn pressable" id="bc-x" type="button" aria-label="Close build menu"></button>
     <div id="bc-title"></div>
     <div id="bc-blurb"></div>
     <div id="bc-costs"></div>
@@ -647,7 +721,7 @@ body.letterbox #cutbars i{ height:clamp(7vh, calc((100vh - 100vw / 2.39) / 2), 1
       <h1 class="logo"><span class="w1">HARD</span><span class="w2">HEAD</span></h1>
       <p class="tagline">The robots took the jobs, not the foreheads.</p>
     </div>
-    <div id="hub-ui"><button class="cta ghost sm pressable" id="hub-back">&larr; Back</button><div id="hub-tip" class="chip">Level select: Perfect-bonk a node to enter</div></div>
+    <div id="hub-ui"><button class="cta ghost sm pressable" id="hub-back">&larr; Back</button><div id="hub-tip" class="chip">Level select: Perfect-bonk a node to enter</div><button class="chip pressable" id="hub-settings" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
     <div id="title-ask" class="chip hidden" role="dialog" aria-label="Dunk asks if you are ready to work"><div class="who">Dunk</div><div class="tt">You ready to work?</div><div class="row"><button class="cta sm pressable" id="ta-yes">Yes</button><button class="cta ghost sm pressable" id="ta-no">Not yet</button></div></div>
     <div class="start-foot">
       <p id="webgl-fail" class="hidden">This browser can’t run 3D graphics. Try a recent Chrome, Safari or Firefox.</p>
@@ -697,17 +771,36 @@ body.letterbox #cutbars i{ height:clamp(7vh, calc((100vh - 100vw / 2.39) / 2), 1
   </div>
 
   <div id="menu" class="sheet-wrap hidden">
-    <div class="sheet" role="dialog" aria-modal="true" aria-label="Paused">
-      <h2>Paused</h2>
+    <div class="sheet pause" role="dialog" aria-modal="true" aria-labelledby="pz-h">
+      <div class="pz-head"><h2 id="pz-h">Paused</h2><div class="pz-sub" id="pz-sub"></div></div>
+      <button class="cta big pz-resume pressable" id="btn-resume">Resume</button>
+      <div class="pz-quick" role="group" aria-label="Quick audio toggles">
+        <button class="pz-tog pressable" data-tog="sound" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 9a4 4 0 0 1 0 6"/></svg><span>Sound</span><b>On</b></button>
+        <button class="pz-tog pressable" data-tog="music" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg><span>Music</span><b>On</b></button>
+      </div>
+      <div class="pz-list">
+        <button class="pz-item pressable" id="btn-menu-map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg><span class="pz-tx"><span>Level select</span><small>Pick another level</small></span><i class="pz-chev" aria-hidden="true"></i></button>
+        <button class="pz-item pressable" id="btn-menu-settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="pz-tx"><span>Settings</span><small>Effects, memos, boss assist</small></span><i class="pz-chev" aria-hidden="true"></i></button>
+        <button class="pz-item danger pressable" id="btn-restart" data-confirm="Restart now?"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg><span class="pz-tx"><span class="cf-l">Restart level</span><small>Clears this level&rsquo;s progress</small></span></button>
+      </div>
+      <p class="tip">Tap = small bonk. Hold and release in the green = PERFECT (4x damage). A full head means dizzy, so pace yourself.</p>
+    </div>
+  </div>
+
+  <div id="settings" class="sheet-wrap hidden">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="st-h">
+      <h2 id="st-h">Settings</h2>
       <div class="set-row"><div>Sound<small>Bonks, thunks, cheers</small></div><div class="seg" data-set="sound"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>Music<small>A jaunty little loop</small></div><div class="seg" data-set="music"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>Screen shake<small>Bonks rattle the camera</small></div><div class="seg" data-set="shake"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>Vibration<small>Phone buzzes on bonks</small></div><div class="seg" data-set="vib"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>HR-9000 memos<small>Occasional corporate announcements</small></div><div class="seg" data-set="memos"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>Boss assist<small>Widens the green zone everywhere</small></div><div class="seg" data-set="assist"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
-      <div class="row2" style="margin-top:6px"><button class="cta ghost pressable" id="btn-menu-map">Level map</button></div>
-      <p class="tip">Reminder: tap = small bonk. Hold and release in the green = PERFECT (4x damage). A full head means dizzy, so pace yourself.</p>
-      <div class="row2"><button class="cta ghost pressable" id="btn-restart">Start over</button><button class="cta pressable" id="btn-resume">Resume</button></div>
+      <div class="st-danger">
+        <div class="st-dh">Danger zone</div>
+        <button class="pz-item danger pressable" id="btn-reset-game" data-confirm="Erase everything?"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg><span class="pz-tx"><span class="cf-l">Reset game</span><small>Erases all progress, hats and upgrades</small></span></button>
+      </div>
+      <div class="row2"><button class="cta pressable" id="st-close">Done</button></div>
     </div>
   </div>
 
@@ -1031,7 +1124,7 @@ var SAVE_KEY = "hardhead.v1";
 function loadSave() { try { var r = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"); return r && typeof r === "object" ? r : {}; } catch (e) { return {}; } }
 var UPG = (function () { var u = (loadSave().upg) || {}; return { loot: u.loot | 0, speed: u.speed | 0, head: u.head | 0, magnet: u.magnet | 0, turret: u.turret | 0 }; })();
 function upgTotal() { return UPG.loot + UPG.speed + UPG.head + UPG.magnet + UPG.turret; }
-function writeSave(o) { try { var c = loadSave(); for (var k in o) c[k] = o[k]; localStorage.setItem(SAVE_KEY, JSON.stringify(c)); } catch (e) {} }
+function writeSave(o) { if (G.resetting) return; try { var c = loadSave(); for (var k in o) c[k] = o[k]; localStorage.setItem(SAVE_KEY, JSON.stringify(c)); } catch (e) {} }
 (function () { var sv = loadSave(); ["sound", "music", "shake", "vib", "memos", "assist"].forEach(function (k) { if (typeof sv[k] === "boolean") S[k] = sv[k]; }); })();
 var RES_KEYS = ["stone", "wood", "gold", "crystal", "scrap", "gear", "slime", "nut"], inv = {}, seen = {}, GATH = {};
 RES_KEYS.forEach(function (k) { inv[k] = 0; seen[k] = false; GATH[k] = 0; });
@@ -2495,19 +2588,35 @@ function toScreen(v) {
   return { x: (_v.x * .5 + .5) * innerWidth, y: (-_v.y * .5 + .5) * innerHeight, behind: _v.z > 1 || _v.z < -1 };
 }
 var floaters = [];
+/* Words only when they carry meaning. Impact noises (BONK, TINK, CLANG...) and "+3 stone" are shown with effects instead:
+   the hit already has a shockwave and sparks, and loot visibly flies out of a broken node. */
+var FL_KEEP = /PERFECT|ENTER|Missed|Dizzy|built|wrecked|DODGED|CORE|REGIONAL|NEW HAT|CLUNK|AAAAAH|OW\.|SPLAT|Ow\./;
+function floaterPri(cls) { return /perfect/.test(cls) ? 4 : /(^| )ow( |$)/.test(cls) ? 3 : /(^| )bw( |$)/.test(cls) ? 2 : 1; }
 function floater(pos, text, cls, rise) {
-  var el = document.createElement("div"); el.className = "fl " + (cls || ""); el.textContent = text; $("fx").appendChild(el);
-  floaters.push({ el: el, pos: pos.clone(), t: 0, dur: /bw|perfect|ow/.test(cls || "") ? 1.0 : 1.2, rise: rise || 1.4, rot: rnd(-8, 8) });
-  if (floaters.length > 26) { var o = floaters.shift(); o.el.remove(); }
+  cls = cls || "";
+  if (/(^| )bw( |$)/.test(cls) && !FL_KEEP.test(text)) return;     // sound-effect word: the burst/shockwave already says it
+  if (/(^| )num( |$)/.test(cls) && /^\+|\+\d/.test(text)) return;   // loot counts: the items flying out say it
+  var pri = floaterPri(cls), s0 = toScreen(pos);
+  for (var i = 0; i < floaters.length; i++) {
+    var o = floaters[i]; if (o.kill !== undefined) continue;
+    if (Math.abs(o.sx - s0.x) > 170 || Math.abs(o.sy - s0.y) > 120) continue;
+    if (o.pri > pri && o.t < .6) return;                        // never talk over a fresh louder word
+    o.kill = 0; o.el.style.opacity = ".35";                      // a newer word replaces the older one nearby
+  }
+  var el = document.createElement("div"); el.className = "fl " + cls; el.textContent = text; $("fx").appendChild(el);
+  floaters.push({ el: el, pos: pos.clone(), t: 0, dur: /bw|perfect|ow/.test(cls) ? 1.0 : 1.2, rise: rise || 1.4, rot: rnd(-8, 8), pri: pri, sx: s0.x, sy: s0.y });
+  if (floaters.length > 26) { var o2 = floaters.shift(); o2.el.remove(); }
 }
 function updateFloaters(dt) {
   for (var i = floaters.length - 1; i >= 0; i--) {
     var f = floaters[i]; f.t += dt; var u = f.t / f.dur;
-    if (u >= 1) { f.el.remove(); floaters.splice(i, 1); continue; }
+    if (f.kill !== undefined) f.kill += (G.rdt || dt);
+    if (u >= 1 || (f.kill !== undefined && f.kill > .14)) { f.el.remove(); floaters.splice(i, 1); continue; }
     _v.copy(f.pos); _v.y += f.rise * easeOut(u);
-    var s = toScreen(_v), sc = 1 + .45 * Math.max(0, 1 - u * 7);
+    var s = toScreen(_v), sc = 1 + .45 * Math.max(0, 1 - u * 7); f.sx = s.x; f.sy = s.y;
     f.el.style.transform = "translate(" + s.x.toFixed(1) + "px," + s.y.toFixed(1) + "px) translate(-50%,-50%) rotate(" + f.rot + "deg) scale(" + sc.toFixed(2) + ")";
-    f.el.style.opacity = u > .65 ? ((1 - u) / .35).toFixed(2) : 1;
+    var op = u > .65 ? (1 - u) / .35 : 1; if (f.kill !== undefined) op = Math.min(op, .35 * (1 - f.kill / .14));
+    f.el.style.opacity = op.toFixed(2);
   }
 }
 
@@ -2518,27 +2627,34 @@ function dropItems(type, n, pos, dir) {
   for (var i = 0; i < n; i++) {
     var m = new THREE.Mesh(PK_GEO[type], PK_MAT[type]); outline(m, .035); scene.add(m);
     m.position.set(pos.x, pos.y + .8, pos.z);
-    var a = Math.random() * 6.283, s = rnd(2.6, 4.6);
-    var hf = lgFly(), v = new V3((Math.cos(a) * s + (dir ? dir.x * 2 : 0)) * hf, rnd(6, 9), (Math.sin(a) * s + (dir ? dir.z * 2 : 0)) * hf);
+    var hf = lgFly(), v;
+    if (dir && (dir.x || dir.z)) {   // flung far in the direction away from the player: you have to go and fetch it
+      var aw = Math.atan2(-dir.z, -dir.x) + rnd(-.5, .5), sp0 = rnd(11, 15);
+      v = new V3(Math.cos(aw) * sp0 * hf, rnd(7, 10), Math.sin(aw) * sp0 * hf);
+    } else { var a = Math.random() * 6.283, s = rnd(2.6, 4.6); v = new V3(Math.cos(a) * s * hf, rnd(6, 9), Math.sin(a) * s * hf); }
     if (type === "wood") m.rotation.z = Math.PI / 2;
     pickups.push({ m: m, v: v, type: type, t: 0, mag: false });
   }
 }
+function MAGR() { return 2.8 * HAT().magnet * (1 + .25 * UPG.magnet); }   // loot only jumps to you from close by
 function updatePickups(dt) {
   for (var i = pickups.length - 1; i >= 0; i--) {
     var k = pickups[i]; k.t += dt;
     if (!k.mag) {
-      k.v.y -= 24 * LG * dt; k.m.position.addScaledVector(k.v, dt);
+      k.v.y -= 24 * LG * dt;
+      var nx = k.m.position.x + k.v.x * dt, nz = k.m.position.z + k.v.z * dt;
+      if (!walkable(nx, nz)) { k.v.x *= -.3; k.v.z *= -.3; nx = k.m.position.x; nz = k.m.position.z; }   // never fly off the island
+      k.m.position.x = nx; k.m.position.z = nz; k.m.position.y += k.v.y * dt;
       var bq = beltAt(k.m.position.x, k.m.position.z); if (bq.b) { k.m.position.x += bq.x * dt; k.m.position.z += bq.z * dt; }
       var gy = groundY(k.m.position.x, k.m.position.z) + .2;
       if (k.m.position.y < gy) { k.m.position.y = gy; k.v.y *= -.45; k.v.x *= .6; k.v.z *= .6; if (Math.abs(k.v.y) < 1) k.v.y = 0; }
       k.m.rotation.y += dt * 4;
-      if (k.t > .7 / lgFly()) k.mag = true;
+      if (k.t > .7 / lgFly() && k.v.y === 0 && k.m.position.y <= gy + .02) k.mag = true;   // only once it has landed
     } else {
       var dx = P.pos.x - k.m.position.x, dz = P.pos.z - k.m.position.z, dy = (P.pos.y + .8) - k.m.position.y, d = Math.sqrt(dx * dx + dz * dz + dy * dy);
       if (d < .75) { collect(k, i); continue; }
-      if (!(d < 8 * HAT().magnet * (1 + .25 * UPG.magnet) || k.t > 3)) { var bq2 = beltAt(k.m.position.x, k.m.position.z); if (bq2.b) { k.m.position.x += bq2.x * dt; k.m.position.z += bq2.z * dt; } }
-      if (d < 8 * HAT().magnet * (1 + .25 * UPG.magnet) || k.t > 3) {
+      if (!(d < MAGR())) { var bq2 = beltAt(k.m.position.x, k.m.position.z); if (bq2.b) { k.m.position.x += bq2.x * dt; k.m.position.z += bq2.z * dt; } }
+      if (d < MAGR()) {
         var sp = Math.min(22, 7 + (k.t - .7) * 12) * dt / d;
         k.m.position.x += dx * sp; k.m.position.y += dy * sp; k.m.position.z += dz * sp;
         k.m.rotation.y += dt * 9; if (Math.random() < (k.type === "crystal" ? .5 : .22)) burst(k.m.position, LOOT_COL[k.type] || 0xffffff, 1, .3, .8, .4, .45);
@@ -2580,12 +2696,12 @@ function pushOut(pos, r) {
 /* ---------- input ---------- */
 var inp = { x: 0, y: 0, stickId: null, sx: 0, sy: 0, keys: {} };
 function menuOpen() { return !$("menu").classList.contains("hidden"); }
-function canAct() { return G.playing && !G.paused && !G.cine && !G.ended; }
+function canAct() { return G.playing && !G.paused && !G.cine && !G.ended && !lessonFrozen(); }
 function setupInput() {
   var app = $("app"), stick = $("stick"), thumb = stick.firstElementChild, R = 54;
   app.addEventListener("pointerdown", function (e) {
     if (!canAct() || inp.stickId !== null) return;
-    if (e.target.closest("#btn-bonk,#hud,#buildcard,#talk,#anvilcard,#bubble,.sheet-wrap,#story,#ov-end,.start-foot,#title-ask")) return;
+    if (e.target.closest("#btn-bonk,#hud,#lesson,#buildcard,#talk,#anvilcard,#bubble,.sheet-wrap,#story,#ov-end,.start-foot,#hub-ui,#title-ask")) return;
     if (e.pointerType === "touch" && e.clientX > innerWidth * .62) return;
     inp.stickId = e.pointerId; inp.sx = e.clientX; inp.sy = e.clientY;
     stick.style.left = e.clientX + "px"; stick.style.top = e.clientY + "px"; stick.classList.add("on"); thumb.style.transform = "translate(0,0)";
@@ -2610,7 +2726,7 @@ function setupInput() {
       if (!$("ov-start").classList.contains("hidden") && !$("btn-start").disabled && !G.titleFree && !G.titleAsk) { e.preventDefault(); $("btn-start").click(); return; }
       if (!$("story").classList.contains("hidden")) { e.preventDefault(); $("story-next").click(); return; }
     }
-    if (k === "escape" || k === "p") { if (G.sheet && !menuOpen()) { closeSheet(); return; } if (G.playing) toggleMenu(); return; }
+    if (k === "escape" || k === "p") { if (G.sheet) { if (G.sheet === "settings") closeSettings(); else closeSheet(); return; } if (cardPlot) { closeBuildCard(); return; } if (G.playing) toggleMenu(); return; }
     if (menuOpen() || G.sheet || !G.playing) return;
     if ("wasd".indexOf(k) >= 0 && k.length === 1 || k.indexOf("arrow") === 0) { inp.keys[k] = true; e.preventDefault(); }
     if (k === " ") { e.preventDefault(); if (!e.repeat) { $("btn-bonk").classList.add("down"); startCharge(); } }
@@ -2681,7 +2797,7 @@ function doBonk(c) {
   else if (c > z[1]) { kind = "over"; dmg = 2; }
   else { kind = "charged"; dmg = 2; }
   dmg += HAT().dmg;
-  stats.bonks++; if (kind === "perfect") stats.perfects++;
+  stats.bonks++; if (kind === "perfect") stats.perfects++; if (kind !== "tap") G.chargedN = (G.chargedN || 0) + 1;
   var tg = pickTarget(3.4, 1.3), from = P.pos.clone(), to = P.pos.clone(), dist = 1.5 * lgLunge();
   if (tg) {
     var dx = tg.g.position.x - P.pos.x, dz = tg.g.position.z - P.pos.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
@@ -2702,6 +2818,7 @@ function resolveBonk(L) {
     var dx = tg.g.position.x - P.pos.x, dz = tg.g.position.z - P.pos.z;
     if (Math.sqrt(dx * dx + dz * dz) - tg.radius > 1.3) tg = null;
   }
+  if (!tg && bonkGhost()) return;
   if (!tg) { G.perfStreak = 0; showStreak(0); bonkNog(3); puff(P.pos.clone().add(new V3(P.face.x * .9, .3, P.face.z * .9)), .8, 0xffffff, .4, .3); once("whiff", function () { say("That was air. You’ve bonked air. Air is not a resource.", 0); }); return; }
   hitTarget(tg, L);
 }
@@ -2729,16 +2846,16 @@ function hitTarget(tg, L) {
     stats.bounces++; bonkNog(20); G.perfStreak = 0; showStreak(0); snd.tink(); tg.wob = 1; floater(hp, "TINK", "bw", 1.2); burst(hp, 0xffffff, 5, 4, 4, .7, .4);
     P.stun = .25; P.pos.x += toP.x * .5; P.pos.z += toP.z * .5; if (!walkable(P.pos.x, P.pos.z)) { P.pos.x -= toP.x * .5; P.pos.z -= toP.z * .5; }
     G.bounceCount = (G.bounceCount || 0) + 1;
-    if (G.bounceCount % 2 === 1) {
+    if (G.bounceCount === 1 || G.bounceCount % 6 === 0) {
       if (tg.kind === "gold") say(P.hat ? "Gold is stubborn. Hold BONK and let go in the green." : "Shiny rocks are tough. Wear the hat and charge your bonk.", 1);
-      else say("Tapping just tickles it. Hold BONK, then let go while the ring is green.", 1);
+      else say(P.hatId === "none" ? "Taps just tickle it. Hold BONK, then let go. Bigger charge, bigger hit. The dizzy is part of the job." : "Tapping just tickles it. Hold BONK, then let go while the ring is green.", 1);
     }
     return;
   }
   var kindCol = tg.kind === "tree" ? [0x70cc6c, 0x8a5a33] : tg.kind === "crystal" ? [0x7fe3ff, 0xb99cff] : tg.kind === "gold" ? [0xf5b921, 0xb4bdc8] : tg.kind === "robot" ? [0xffb347, 0xc9d4e0] : [0xb4bdc8, 0x8d97a3];
-  if (L.perfect) { G.perfStreak = (G.perfStreak || 0) + 1; stats.bestStreak = Math.max(stats.bestStreak, G.perfStreak); snd.perfect(G.perfStreak); floater(hp, G.perfStreak > 1 ? "PERFECT x" + G.perfStreak + "!" : "PERFECT NOGGIN!", "perfect", 1.6); showStreak(G.perfStreak); }
+  if (L.perfect) { G.perfStreak = (G.perfStreak || 0) + 1; stats.bestStreak = Math.max(stats.bestStreak, G.perfStreak); snd.perfect(G.perfStreak); floater(hp, "PERFECT!", "perfect", 1.6); showStreak(G.perfStreak); }
   else { G.perfStreak = 0; showStreak(0); snd.bonk(pw); floater(hp, pick(L.kind === "tap" ? WORDS_TAP : WORDS_CHARGE), L.kind === "tap" ? "bw" : "bw big", 1.2); }
-  if (L.kind === "over") { floater(hp.clone().add(new V3(0, .9, 0)), "Too much forehead", "ow", 1.0); }
+  if (L.kind === "over") { shockwave(hp, 0xff5a36, 3.4, .35); burst(hp, [0xff5a36, 0xffe14d], 8, 5, 5, .9, .5); }
   if (tg.kind === "tree") snd.wood();
   bonkNog(L.perfect ? 6 : L.kind === "tap" ? 10 : L.kind === "over" ? 26 : 16);
   tg.hp -= effD; tg.wob = 1;
@@ -2756,13 +2873,13 @@ function hitTarget(tg, L) {
   stepEvents();
 }
 function breakTarget(tg, L, dir) {
-  var n = tg.yield + UPG.loot + (L.perfect ? 1 : 0) + (HAT().yieldB[tg.res] || 0) + (tg.kind === "robot" ? (HAT().robotB || 0) : 0), gp = tg.g.position.clone();
+  var n = 1 + UPG.loot + (L.perfect ? 1 : 0) + (HAT().yieldB[tg.res] || 0) + (tg.kind === "robot" ? (HAT().robotB || 0) : 0), gp = tg.g.position.clone();
   tg.alive = false; tg.respawn = G.time + tg.rt;
   if (tg.kind === "tree") { tg.canopy.forEach(function (c) { c.visible = false; }); tg.trunk.scale.y = .3; stats.trees++; snd.woodBreak(); burst(gp.clone().setY(2.5), [0x70cc6c, 0x4fb05a], 14, 6, 6, 1.2, .9); }
   else { tg.g.visible = false; if (tg.kind === "gold") stats.golds++; else if (tg.kind === "crystal") stats.crystals++; else if (tg.kind === "robot") { stats.robots = (stats.robots || 0) + 1; snd.clunk(); } else stats.rocks++; if (tg.big) stats.bigs++; if (tg.name === "vending") { stats.vends = (stats.vends || 0) + 1; once("vend1", function () { say("The machine paid out. In scrap. Which is all it was ever holding.", 0); }); } snd.crack(); burst(gp.clone().setY(.8), tg.kind === "crystal" ? [0x7fe3ff, 0xb99cff, 0xffffff] : tg.kind === "gold" ? [0xf5b921, 0xb4bdc8, 0x8d97a3] : tg.kind === "robot" ? [0xffb347, 0xc9d4e0, 0x5fd8ff] : [0xb4bdc8, 0x8d97a3, 0x9aa3ad], tg.big ? 22 : 14, 7, 7, 1.3, .9); }
   puff(gp.clone().setY(.5), 1.6, 0xe8e0d0, .6, .8);
   dropItems(tg.res, n, gp, dir); shake(.45);
-  floater(gp.clone().setY(2.2), "+" + n + " " + tg.res, "num " + tg.res, 1.6); hatWord(tg, gp);
+  hatWord(tg, gp);
   if (tg.big) G.flags.bigBroke = true;
   tg.g.scale.set(1, 1, 1);
 }
@@ -3379,22 +3496,30 @@ function say(text, pri, who) { msgPush({ k: "say", text: text, pri: pri || 0, wh
 function toast(msg) { msgPush({ k: "toast", text: msg }); }
 function actBanner(big, small) { msgPush({ k: "banner", big: big, small: small }); }
 function sayBeat(setup, punch, who, gap) {   // setup line, let it clear, wait 2-3 s, then the punchline
-  msgPush({ k: "say", text: setup, pri: 1, who: who });
-  msgPush({ k: "wait", dur: gap || 2.5 });
-  msgPush({ k: "say", text: punch, pri: 1, who: who });
+  msgPush({ k: "say", text: setup, pri: 1, who: who, beat: true });
+  msgPush({ k: "wait", dur: gap || 2.5, beat: true });
+  msgPush({ k: "say", text: punch, pri: 1, who: who, beat: true });
 }
 function msgPush(it, front) {
+  if (it.k === "say" || it.k === "toast") { if (G.noSay) return; if (G.lesson && G.lesson.active && !(it.pri >= 2)) return; }
   if (it.k === "say") {
     if (msgCur && msgCur.k === "say" && msgCur.text === it.text) return;
     for (var i = 0; i < MQ.length; i++) if (MQ[i].k === "say" && MQ[i].text === it.text) return;
-    if (!it.pri && MQ.length >= 3) return;          // idle chatter is skipped when the line is already long
+    // calm queue: idle chatter only when nothing else is going on and not too soon after the last line;
+    // a newer line replaces older pending ones instead of piling up behind them
+    if (!it.pri && (msgCur || MQ.length || G.time - (G.lastSayT || -99) < 25)) return;
+    if (!it.beat && !(it.pri >= 2)) for (var j = MQ.length - 1; j >= 0; j--) if (MQ[j].k === "say" && !MQ[j].beat && !(MQ[j].pri >= 2)) MQ.splice(j, 1);
   }
+  it.born = G.time;
+  if (it.k === "toast") { for (var jt = MQ.length - 1; jt >= 0; jt--) if (MQ[jt].k === "toast") MQ.splice(jt, 1); }
   if (front && !(MQ.length && MQ[0].k === "wait")) MQ.unshift(it); else MQ.push(it);
   if (!msgCur) msgNext();
 }
 function msgNext() {
   msgCur = null; bubble.cur = null;
-  var it = MQ.shift(); if (!it) return;
+  var it = MQ.shift();
+  while (it && (it.k === "say" || it.k === "toast") && !(it.pri >= 2) && !it.beat && G.time - it.born > 5) it = MQ.shift();   // stale: the moment has passed
+  if (!it) return;
   msgCur = it; it.t = 0;
   if (it.k === "say") { showBubble(it.text, it.pri, it.who); it.dur = bubble.dur; }
   else if (it.k === "toast") { var el = $("toast"); el.textContent = it.text; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show"); it.dur = 3.0; }
@@ -3403,7 +3528,7 @@ function msgNext() {
 }
 function showBubble(text, pri, who) {
   var el = $("bubble");
-  bubble.cur = { text: text, pri: pri, who: who }; bubble.t = 0; bubble.dur = 2.6 + text.length * .04;
+  G.lastSayT = G.time; bubble.cur = { text: text, pri: pri, who: who }; bubble.t = 0; bubble.dur = 2.6 + text.length * .04;
   $("bubble-tx").textContent = text; $("bubble-pic").innerHTML = who === "hr" ? ART.hr : ART.mabel; $("bubble-who").textContent = who === "hr" ? "HR-9000" : "Mabel"; el.classList.toggle("hr", who === "hr");
   el.classList.remove("hidden", "in"); void el.offsetWidth; el.classList.add("in");
   tone(740, .06, "triangle", .06); tone(988, .08, "triangle", .06, .06);
@@ -3478,7 +3603,12 @@ function updateBuildCard() {
   var p = activePlot, card = $("buildcard");
   if (!p || p.built || !canAct() || P.dizzy > 0 && false) { card.classList.add("hidden"); cardPlot = null; return; }
   var d = Math.hypot(P.pos.x - p.pos.x, P.pos.z - p.pos.z);
-  if (d > p.range) { card.classList.add("hidden"); cardPlot = null; return; }
+  if (d > p.range) { card.classList.add("hidden"); cardPlot = null; p.open = false; p.nearT = 0; return; }
+  if (!p.open) {
+    card.classList.add("hidden"); cardPlot = null; p.nearT = (p.nearT || 0) + (G.dt || .016);
+    if (p.nearT > 3) once("ghostHint", function () { say("Bonk the blue outline to start building.", 0); });
+    return;
+  }
   if (cardPlot !== p) {
     cardPlot = p; $("bc-title").textContent = p.name; $("bc-blurb").textContent = p.blurb;
     $("bc-costs").innerHTML = Object.keys(p.cost).map(function (k) { return '<div class="cost" data-k="' + k + '">' + ICO[k] + '<b></b><small></small></div>'; }).join("");
@@ -3493,6 +3623,20 @@ function updateBuildCard() {
   });
   var go = $("bc-go"); go.disabled = !ok; go.classList.toggle("ready", ok);
   go.textContent = ok ? (COARSE ? "Build it" : "Build it [E]") : "Not enough yet";
+}
+function bonkGhost() {   // bonking a ghost outline opens its build card
+  var fx = P.pos.x + P.face.x * .9, fz = P.pos.z + P.face.z * .9;
+  var ids = Object.keys(plots);
+  for (var i = 0; i < ids.length; i++) {
+    var p = plots[ids[i]]; if (!p || p.built || !p.ghost || !p.ghost.visible || p !== activePlot) continue;
+    var bx = new T3.Box3().setFromObject(p.ghost); bx.expandByScalar(1.0);
+    if (fx >= bx.min.x && fx <= bx.max.x && fz >= bx.min.z && fz <= bx.max.z) {
+      p.open = true; snd.tink(); vibrate(12); shake(.1);
+      floater(p.pos.clone().setY(1.6), "BONK", "bw", 1.0);
+      return true;
+    }
+  }
+  return false;
 }
 function tryBuild() {
   if (!cardPlot || !canAct()) return;
@@ -3556,9 +3700,7 @@ function giveHat() {
     scene.remove(hat); P.hat = true; UNL.stone = true; setHat("stone", true); snd.clunk(); shake(.5); G.hitstop = .1;
     floater(P.pos.clone().setY(3.0), "CLUNK", "bw big", 1.2); burst(P.pos.clone().setY(2.3), [0xb4bdc8, 0x8d97a3], 14, 6, 6, 1, .8);
     puff(P.pos.clone().setY(2.2), 1.2, 0xffffff, .5, .4);
-    toast("Stone hat equipped: bonks hit harder, hurt half as much");
-    say("Stone hat: +1 damage, half the headache. HR calls it ‘a cranial amenity’.", 1);
-    say("Wearing a hat also unlocks Perfect bonks: hold BONK, then let go in the green ring.", 1);
+    startLesson("green", 1.7);
     later(1.5, function () { G.cine = null; });
   });
 }
@@ -3618,11 +3760,12 @@ function updateNoggin() {
   if (P.nogShown && n.classList.contains("hidden")) n.classList.remove("hidden");
   $("noggin-fill").style.width = P.noggin + "%";
   n.classList.toggle("warn", P.noggin >= 55 && P.noggin < 80); n.classList.toggle("hot", P.noggin >= 80);
-  var bb = $("btn-bonk"); $("bonk-fill").style.height = P.noggin + "%";   // the head meter now fills the BONK button
-  bb.classList.toggle("nwarn", P.noggin >= 55 && P.noggin < 80); bb.classList.toggle("nhot", P.noggin >= 80);
+  var nv = (G.lesson && G.lesson.active && G.lesson.key === "nog" && !G.lesson.won) ? 75 : P.noggin;   // the head-meter lesson shows the button three-quarters full
+  var bb = $("btn-bonk"); $("bonk-fill").style.height = nv + "%";   // the head meter now fills the BONK button
+  bb.classList.toggle("nwarn", nv >= 55 && nv < 80); bb.classList.toggle("nhot", nv >= 80);
   bb.classList.toggle("mad", P.dizzy > 0);   // stars out: the face goes red and angry
   bb.classList.toggle("lock", P.dizzy > 0);
-  if (P.noggin >= 60) once("nog60", function () { say("The BONK button is filling up. Fill it all the way and you see stars. Pace yourself.", 0); });
+  if (P.noggin >= 60 && !G.lesson && G.flags && !G.flags.nog60 && canAct()) { G.flags.nog60 = true; startLesson("nog", 0); }
 }
 
 /* =====================================================================
@@ -3630,7 +3773,7 @@ function updateNoggin() {
    ===================================================================== */
 function brokenRocks() { return stats.rocks; }
 var STEPS = [
-  { id: "move", act: ["Act 1: Head first", "Tools were recalled. Heads were not."], obj: "Walk to the glowing rock",
+  { id: "move", lesson: "walk", act: ["Act 1: Head first", "Tools were recalled. Heads were not."], obj: "Walk to the glowing rock",
     target: function () { return tgt(rockList[0]); },
     enter: function () {
       $("controls").classList.remove("hidden");
@@ -3639,7 +3782,7 @@ var STEPS = [
     },
     check: function () { return Math.hypot(P.pos.x - rockList[0].g.position.x, P.pos.z - rockList[0].g.position.z) < 3.4; },
     done: function () { $("hint-stick").classList.add("hidden"); $("hint-keys").classList.add("hidden"); } },
-  { id: "bonk1", obj: "Bonk the rock", target: function () { return tgt(rockList[0]); },
+  { id: "bonk1", lesson: "bonk", obj: "Bonk the rock", target: function () { return tgt(rockList[0]); },
     enter: function () { $("btn-bonk").classList.add("hinted"); if (!COARSE) $("bonk-key").classList.remove("hidden"); say("Now press BONK. Forehead first. It’s the only part of you that’s insured.", 1); },
     check: function () { return stats.rocks >= 1; },
     done: function () { $("btn-bonk").classList.remove("hinted"); say("You hit a rock. And it broke. Civilization starts here.", 1); } },
@@ -3648,13 +3791,13 @@ var STEPS = [
     enter: function () { later(3.2, function () { if (G.step === 1 + 1) say("Stones follow you around. They’re needy. Gather 5.", 0); }); },
     check: function () { return inv.stone >= 5; },
     done: function () { say("Five stone. Your head is now the company’s best-performing asset.", 1); } },
-  { id: "boulder", obj: "Charge-bonk the Big Boulder", target: function () { return tgt(T.big, 3.4); },
+  { id: "boulder", lesson: "charge", obj: "Charge-bonk the Big Boulder", target: function () { return tgt(T.big, 3.4); },
     enter: function () { $("btn-bonk").classList.add("hinted"); $("btn-bonk").querySelector("span").textContent = "HOLD"; say("That boulder is thick. Taps just tickle it. HOLD bonk to charge, then let go. A bigger charge hits harder.", 1); },
     check: function () { return !!G.flags.bigBroke; },
     done: function () { $("btn-bonk").classList.remove("hinted"); $("btn-bonk").querySelector("span").textContent = "BONK"; say("A boulder, humbled by a forehead. Beautiful.", 1); } },
-  { id: "forge", act: ["Act 2: Some assembly required", "Dunk builds. Mabel supervises."], obj: "Build the Hat Forge", plot: "forge",
-    enter: function () { say("You’ve been bonking with a bare head. Let’s fix that. Walk to the blue outline and build.", 1); },
-    check: function () { return plots.forge.built && P.hat && !G.cine; } },
+  { id: "forge", lesson: "forge", act: ["Act 2: Some assembly required", "Dunk builds. Mabel supervises."], obj: "Build the Hat Forge", plot: "forge",
+    enter: function () { say("You’ve been bonking with a bare head. Let’s fix that. Walk up to the blue outline and bonk it.", 1); },
+    check: function () { return plots.forge.built && P.hat && !G.cine && !G.lesson; } },
   { id: "trees", obj: "Bonk a tree for wood", target: function () { return tgt(nearestAlive(function (t) { return t.kind === "tree"; }), 4.2); },
     enter: function () { say("Trees are also bonkable. Watch the sky, though. Coconuts have opinions.", 1); },
     check: function () { return seen.wood; },
@@ -3678,6 +3821,122 @@ var STEPS = [
     enter: function () { say("One last build. A statue of the part of you that did all the work.", 1); },
     check: function () { return false; } }
 ];
+/* =====================================================================
+   v12: objective celebration, build-card close, teach-moment lessons
+   ===================================================================== */
+function objCelebrate() {
+  var el = $("objective"); if (REDUCED || !el.animate) return;
+  var cols = ["#ffd93d", "#3e8e4f", "#ff5a36", "#ffffff", "#7fe3ff"], n = 20, i;
+  var ring = document.createElement("i"); ring.className = "obj-ring"; el.appendChild(ring);
+  var ra = ring.animate([{ transform: "scale(.4)", opacity: 1 }, { transform: "scale(3.2)", opacity: 0 }], { duration: 650, easing: "ease-out", fill: "forwards" });
+  ra.onfinish = function () { ring.remove(); };
+  for (i = 0; i < n; i++) {
+    var q = document.createElement("i"), ang = i / n * Math.PI * 2 + rnd(-.2, .2), d = rnd(44, 98);
+    var dx = Math.cos(ang) * d * 1.3, dy = Math.sin(ang) * d * .85 - 8;
+    q.className = "obj-spark"; q.style.background = cols[i % cols.length]; if (i % 3 === 0) q.style.borderRadius = "50%";
+    el.appendChild(q);
+    var an = q.animate([
+      { transform: "translate(0,0) scale(.4) rotate(0deg)", opacity: 1 },
+      { transform: "translate(" + dx.toFixed(0) + "px," + dy.toFixed(0) + "px) scale(1.15) rotate(" + rnd(-260, 260).toFixed(0) + "deg)", opacity: 1, offset: .6 },
+      { transform: "translate(" + (dx * 1.1).toFixed(0) + "px," + (dy + 30).toFixed(0) + "px) scale(.5) rotate(" + rnd(-360, 360).toFixed(0) + "deg)", opacity: 0 }
+    ], { duration: rnd(650, 950), easing: "cubic-bezier(.15,.7,.3,1)", fill: "forwards" });
+    an.onfinish = (function (x) { return function () { x.remove(); }; })(q);
+  }
+}
+
+function closeBuildCard() {
+  var p = cardPlot || activePlot; if (p) { p.open = false; p.nearT = 0; }
+  $("buildcard").classList.add("hidden"); cardPlot = null; snd.pop();
+}
+$("bc-x").addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+$("bc-x").addEventListener("click", closeBuildCard);
+[["board", "qb-close"], ["wardrobe", "hat-close"], ["anvilsheet", "anv-close"], ["map", "map-close"], ["settings", "st-close"]].forEach(function (pr) {
+  var sh = document.querySelector("#" + pr[0] + " .sheet"); if (!sh) return;
+  var x = document.createElement("button"); x.type = "button"; x.className = "xbtn in-sheet pressable"; x.setAttribute("aria-label", "Close");
+  x.addEventListener("click", function () { $(pr[1]).click(); });
+  sh.insertBefore(x, sh.firstChild);
+});
+
+/* ---------- lessons: pause on a new mechanic, zoom in, make the player do it once, then carry on ---------- */
+var LESSON_ART = {
+  walk: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="22" fill="none" stroke="#221407" stroke-width="3" stroke-dasharray="5 5" opacity=".55"/><circle cx="32" cy="32" r="10" fill="#f5b921" stroke="#221407" stroke-width="3"><animateTransform attributeName="transform" type="translate" values="-9 7;9 -7;-9 7" dur="1.6s" repeatCount="indefinite"/></circle></svg>',
+  tap: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="19" fill="none" stroke="#f5b921" stroke-width="4"><animate attributeName="r" values="19;28;19" dur="1s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/></circle><circle cx="32" cy="32" r="17" fill="#ff5a36" stroke="#221407" stroke-width="3"/><text x="32" y="37" text-anchor="middle" font-family="Archivo Black,Arial Black,sans-serif" font-size="12" fill="#fff" stroke="#221407" stroke-width="2.4" paint-order="stroke">BONK</text></svg>',
+  hold: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="22" fill="none" stroke="#221407" stroke-width="12"/><circle cx="32" cy="32" r="22" fill="none" stroke="#fdf3df" stroke-width="8"/><circle cx="32" cy="32" r="22" fill="none" stroke="#ff5a36" stroke-width="4" transform="rotate(-90 32 32)" stroke-dasharray="0 140"><animate attributeName="stroke-dasharray" values="0 140;138 140;138 140" keyTimes="0;.8;1" dur="2s" repeatCount="indefinite"/></circle></svg>',
+  green: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="22" fill="none" stroke="#221407" stroke-width="12"/><circle cx="32" cy="32" r="22" fill="none" stroke="#fdf3df" stroke-width="8"/><circle cx="32" cy="32" r="22" fill="none" stroke="#3e8e4f" stroke-width="8" transform="rotate(-90 32 32)" stroke-dasharray="39 100" stroke-dashoffset="-86"/><g><circle cx="32" cy="10" r="5.5" fill="#fff" stroke="#221407" stroke-width="3"/><animateTransform attributeName="transform" type="rotate" from="0 32 32" to="360 32 32" dur="2.2s" repeatCount="indefinite"/></g></svg>',
+  build: '<svg viewBox="0 0 64 64"><rect x="12" y="20" width="40" height="30" fill="none" stroke="#1a8fb5" stroke-width="4" stroke-dasharray="6 5"/><path d="M18 20 L32 8 L46 20" fill="none" stroke="#1a8fb5" stroke-width="4" stroke-dasharray="6 5"/><circle cx="32" cy="35" r="7" fill="#f0b48a" stroke="#221407" stroke-width="3"><animate attributeName="r" values="7;10;7" dur=".9s" repeatCount="indefinite"/></circle></svg>',
+  meter: '<svg viewBox="0 0 64 64"><rect x="22" y="8" width="20" height="48" rx="2" fill="#fdf3df" stroke="#221407" stroke-width="3"/><rect x="25" y="53" width="14" height="0" fill="#3e8e4f"><animate attributeName="height" values="0;44;44;0" keyTimes="0;.7;.9;1" dur="2.6s" repeatCount="indefinite"/><animate attributeName="y" values="53;9;9;53" keyTimes="0;.7;.9;1" dur="2.6s" repeatCount="indefinite"/><animate attributeName="fill" values="#3e8e4f;#3e8e4f;#d42a1e;#d42a1e" keyTimes="0;.5;.7;1" dur="2.6s" repeatCount="indefinite"/></rect></svg>',
+  check: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="#3e8e4f" stroke="#221407" stroke-width="3"/><path d="M19 33 L28 42 L46 22" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+function lessonArt(k) { var a = LESSON_ART[k] || ""; return REDUCED ? a.replace(/<animate[^>]*\/>/g, "").replace(/<animateTransform[^>]*\/>/g, "") : a; }
+function lessonRock() { var r = nearestAlive(function (t) { return t.kind === "rock"; }); return r ? r.g.position : null; }
+var LESSONS = {
+  walk: { kicker: "Lesson 1 \u00b7 Move", title: function () { return COARSE ? "Drag to walk" : "WASD to walk"; }, text: "Head for the glowing rock.", art: "walk",
+    target: function () { return rockList[0].g.position; },
+    arm: function () { var sx = P.pos.x, sz = P.pos.z; return function () { return Math.hypot(P.pos.x - sx, P.pos.z - sz) > 2.2; }; }, win: "Nice walking!" },
+  bonk: { kicker: "Lesson 2 \u00b7 Bonk", title: "Tap BONK", text: "Headbutt the rock.", art: "tap", glow: true,
+    target: function () { return rockList[0].g.position; },
+    arm: function () { var b = stats.bonks; return function () { return stats.bonks > b; }; }, win: "That's a bonk!" },
+  charge: { kicker: "Lesson 3 \u00b7 Charge", title: "Hold, then let go", text: "Hold BONK to charge up, release to smash the boulder.", art: "hold", glow: true,
+    target: function () { return T.big ? T.big.g.position : null; },
+    arm: function () { var c = G.chargedN || 0; return function () { return (G.chargedN || 0) > c; }; }, win: "Charged!", winText: "Bigger charge, bigger hit." },
+  forge: { kicker: "Building", title: "Bonk the blue outline", text: "Walk up and headbutt it to open the build menu.", art: "build",
+    target: function () { return plots.forge.pos; },
+    arm: function () { return function () { return !!plots.forge.open; }; }, win: "Build menu open", winText: "Tap the X to close it any time." },
+  green: { kicker: "Hat on \u00b7 Perfect bonk", title: "Release in the green", text: "Hold BONK, then let go while the needle is in the green.", art: "green", glow: true,
+    target: lessonRock,
+    arm: function () { var p = stats.perfects; return function () { return stats.perfects > p; }; }, win: "PERFECT!", winText: "Green hits 4x as hard. Chase it." },
+  nog: { kicker: "Heads up", title: "Watch the BONK button", text: "It fills as your head takes hits. Full means dizzy, so ease off.", art: null, info: true, freeze: true, glow: true,
+    target: function () { return null; }, win: "Got it" }
+};
+function lessonFrozen() { var s = G.lesson; return !!(s && s.active && s.L.freeze && !s.won); }
+function startLesson(key, delay) {
+  var L = LESSONS[key]; if (!L || G.lesson) return;
+  G.lesson = { L: L, key: key, wait: delay || 0, waited: 0, active: false, won: false, t: 0, check: null, winT: 0 };
+}
+function lessonFocus() {
+  var L = G.lesson.L, tp = L.target ? L.target() : null, x = P.pos.x, z = P.pos.z, zoom = .58;
+  if (tp) { var d = Math.hypot(tp.x - P.pos.x, tp.z - P.pos.z); x = (P.pos.x + tp.x) / 2; z = (P.pos.z + tp.z) / 2; zoom = clamp(.52 + d * .04, .56, 1.05); }
+  return { x: x, z: z, zoom: zoom };
+}
+function lessonShow() {
+  var s = G.lesson, L = s.L, card = $("lesson");
+  s.active = true; s.t = 0; s.check = L.arm ? L.arm() : null; clearMsgs();
+  $("ls-k").textContent = L.kicker; $("ls-t").textContent = typeof L.title === "function" ? L.title() : L.title; $("ls-p").textContent = L.text || "";
+  $("ls-art").innerHTML = lessonArt(L.art); $("ls-art").classList.toggle("hidden", !L.art); $("ls-ok").classList.toggle("hidden", !L.info); $("ls-skip").classList.add("hidden");
+  card.classList.remove("hidden", "win", "in"); void card.offsetWidth; card.classList.add("in");
+  $("lessdim").classList.add("on"); document.body.classList.add("lessoning"); if (L.glow) $("btn-bonk").classList.add("lessglow");
+  if (L.freeze) { P.charging = false; P.charge = 0; inp.x = inp.y = 0; inp.keys = {}; inp.stickId = null; $("stick").classList.remove("on"); $("btn-bonk").classList.remove("down"); }
+  snd.pop(); G.hitstop = Math.max(G.hitstop || 0, .2);   // a freeze-frame beat while the camera swoops in
+}
+function updateLesson(rdt) {
+  var s = G.lesson; if (!s) return;
+  if (!s.active) {
+    s.waited += rdt; if (G.cine || G.ended) return;
+    s.wait -= rdt;
+    if (s.wait <= 0 && ((!msgCur && !MQ.length) || s.waited > 5)) lessonShow();
+    return;
+  }
+  s.t += rdt;
+  if (s.won) { s.winT -= rdt; if (s.winT <= 0) lessonEnd(); return; }
+  if (s.t > 10) $("ls-skip").classList.remove("hidden");
+  if (!s.L.info && s.check && s.check()) lessonWin();
+}
+function lessonWin() {
+  var s = G.lesson; if (!s || s.won) return; var L = s.L;
+  s.won = true; s.winT = L.info ? .45 : 1.35;
+  $("lesson").classList.add("win"); $("ls-t").textContent = L.win || "Nice!"; $("ls-p").textContent = L.winText || "";
+  if (L.art) $("ls-art").innerHTML = lessonArt("check"); $("ls-ok").classList.add("hidden"); $("ls-skip").classList.add("hidden"); $("btn-bonk").classList.remove("lessglow");
+  if (L.info) { snd.pop(); return; }
+  snd.chime(); var c = P.pos.clone();
+  burst(c.clone().setY(2.3), [0xffd93d, 0xffffff, 0x8cf08c], 20, 6, 7, 1.1, .9); shockwave(c.clone().setY(.4), 0x8cf08c, 4, .5);
+}
+function lessonEnd(silent) {
+  $("lesson").classList.add("hidden"); $("lessdim").classList.remove("on"); document.body.classList.remove("lessoning");
+  $("btn-bonk").classList.remove("lessglow"); $("ls-skip").classList.add("hidden"); G.lesson = null; G.noSay = false;
+}
+$("ls-ok").addEventListener("click", function () { var s = G.lesson; if (s && s.active && s.L.info) lessonWin(); });
+$("ls-skip").addEventListener("click", function () { lessonEnd(); });
+
 G.stepId = "";
 function startStep(i) {
   G.step = i; G.stepT = 0; G.stepDone = false; G.lastProgress = G.time;
@@ -3687,7 +3946,8 @@ function startStep(i) {
   setObjective(st.obj, st.plot ? plots[st.plot].cost : null);
   if (st.act) actBanner(st.act[0], st.act[1]);
   if (st.plot) activatePlot(st.plot);
-  if (st.enter) st.enter();
+  G.noSay = !!st.lesson; if (st.enter) st.enter(); G.noSay = false;
+  if (st.lesson) startLesson(st.lesson, 0);
   refreshObjective(true);
 }
 var stepAdvancing = false;
@@ -3703,12 +3963,12 @@ function stepEvents() {
 function updateDirector(dt) {
   var st = STEPS[G.step]; if (!st || G.won || G.free) return;
   G.stepT += dt; refreshObjective(false);
-  if (!G.stepDone && st.check && st.check()) {
-    G.stepDone = true; $("objective").classList.add("done"); snd.chime(); G.lastProgress = G.time;
+  if (!G.stepDone && !G.lesson && st.check && st.check()) {
+    G.stepDone = true; $("objective").classList.add("done"); objCelebrate(); snd.chime(); G.lastProgress = G.time;
     if (st.done) st.done();
     nextStepSoon(1.1);
   }
-  if (!G.stepDone && G.time - G.lastProgress > 28 && !G.cine) {
+  if (!G.stepDone && G.time - G.lastProgress > 28 && !G.cine && !G.lesson) {
     G.lastProgress = G.time;
     if (st.plot) say(plots[st.plot].built ? "Keep going." : "Need more materials. Rocks give stone, trees give wood. Hit them with your face.", 0);
     else say("Follow the bouncing arrow. It’s not a metaphor. It’s literally an arrow.", 0);
@@ -3802,10 +4062,11 @@ function updateCamera(dt) {
   var tt = G.title && !G.titleFree;
   if (tt) { var wdT = camera.aspect > 1.25; tx = P.pos.x + (wdT ? -1.15 : .9); tz = P.pos.z + .2; zoom = wdT ? .44 : .46; cam.yaw = Math.sin(G.time * .3) * .22 - (wdT ? .32 : .15); }
   else if (G.cine) { tx = G.cine.pos.x; tz = G.cine.pos.z; ty = G.cine.pos.y * .3; zoom = G.cine.zoom * portraitK(); }
+  else if (G.lesson && G.lesson.active) { var lf = lessonFocus(); tx = lf.x; tz = lf.z; zoom = lf.zoom * portraitK(); }
   else if (cardPlot) { tx = lerp(P.pos.x, cardPlot.pos.x, .5); tz = lerp(P.pos.z, cardPlot.pos.z, .5); zoom = 1.12; }
   else { tx = P.pos.x + (P.vel ? P.vel.x * .22 : 0); tz = P.pos.z + (P.vel ? P.vel.z * .22 : 0); }
   if (G.orbit) cam.yaw += dt * .28; else if (!tt) cam.yaw = damp(cam.yaw, 0, 3, dt);
-  var k = G.cine ? 3.2 : 6.5;
+  var k = G.cine ? 3.2 : (G.lesson && G.lesson.active) ? 4.2 : 6.5;
   cam.tgt.x = damp(cam.tgt.x, tx, k, dt); cam.tgt.z = damp(cam.tgt.z, tz, k, dt); cam.tgt.y = damp(cam.tgt.y, ty, k, dt);
   cam.zoom = damp(cam.zoom, zoom, 3.5, dt);
   cam.pitch = damp(cam.pitch, tt ? .5 : G.orbit ? .38 : .9, 2.4, dt);
@@ -3849,19 +4110,62 @@ var _wp = new V3();
 function toggleMenu(force) {
   var open = force !== undefined ? force : !menuOpen();
   $("menu").classList.toggle("hidden", !open); G.paused = open || !!G.sheet;
-  if (open) { P.charging = false; inp.x = inp.y = 0; inp.keys = {}; $("btn-bonk").classList.remove("down"); syncSettings(); setTimeout(function () { $("btn-resume").focus(); }, 30); }
+  disarmBtn($("btn-restart"));
+  if (open) { P.charging = false; inp.x = inp.y = 0; inp.keys = {}; $("btn-bonk").classList.remove("down"); syncSettings(); refreshPause(); setTimeout(function () { $("btn-resume").focus(); }, 30); }
+}
+function refreshPause() {                                   // context-aware pause menu: what it says and which buttons make sense right now
+  var inGame = G.started || G.level >= 1, m = (typeof LEVEL_META !== "undefined" && LEVEL_META[G.level]) || null;
+  $("pz-sub").textContent = !inGame ? "Level select" : G.level >= 1 && m ? "Level " + G.level + " \u00b7 " + m.name : "Tutorial";
+  $("btn-restart").classList.toggle("hidden", !inGame);
+  $("btn-menu-map").classList.toggle("hidden", !!G.hub);
+  $("btn-restart").querySelector(".cf-l").textContent = G.level >= 1 ? "Restart level" : "Restart tutorial";
+  $("btn-restart").querySelector("small").textContent = G.level >= 1 ? "Clears this level\u2019s progress" : "Back to the title screen";
+}
+/* two-tap confirm for destructive buttons: first tap arms it, second tap (within 3.5 s) does it */
+function disarmBtn(btn) {
+  if (!btn || btn.getAttribute("data-armed") !== "1") return;
+  clearTimeout(btn._t); btn.removeAttribute("data-armed");
+  btn.querySelector(".cf-l").textContent = btn._l0; btn.querySelector("small").textContent = btn._s0;
+}
+function confirmTap(btn, run) {
+  btn.addEventListener("click", function () {
+    if (btn.getAttribute("data-armed") === "1") { disarmBtn(btn); run(); return; }
+    var lb = btn.querySelector(".cf-l"), sm = btn.querySelector("small");
+    btn._l0 = lb.textContent; btn._s0 = sm.textContent; btn.setAttribute("data-armed", "1");
+    lb.textContent = btn.getAttribute("data-confirm"); sm.textContent = "Tap again to confirm"; snd.tap();
+    btn._t = setTimeout(function () { disarmBtn(btn); }, 3500);
+  });
 }
 function syncSettings() {
   document.querySelectorAll(".seg").forEach(function (sg) {
     var k = sg.getAttribute("data-set"); sg.querySelectorAll("button").forEach(function (b) { b.classList.toggle("on", (b.getAttribute("data-v") === "1") === !!S[k]); });
   });
+  document.querySelectorAll(".pz-tog").forEach(function (t) {
+    var on = !!S[t.getAttribute("data-tog")]; t.classList.toggle("on", on); t.setAttribute("aria-pressed", on ? "true" : "false"); t.querySelector("b").textContent = on ? "On" : "Off";
+  });
 }
+document.querySelectorAll(".pz-tog").forEach(function (t) {
+  t.addEventListener("click", function () { var k = t.getAttribute("data-tog"); S[k] = !S[k]; var o = {}; o[k] = S[k]; writeSave(o); syncSettings(); snd.tap(); });
+});
 document.querySelectorAll(".seg button").forEach(function (b) {
   b.addEventListener("click", function () { var k = b.parentNode.getAttribute("data-set"); S[k] = b.getAttribute("data-v") === "1"; var o = {}; o[k] = S[k]; writeSave(o); syncSettings(); snd.tap(); });
 });
 $("btn-menu").addEventListener("click", function () { toggleMenu(true); });
 $("btn-resume").addEventListener("click", function () { toggleMenu(false); });
-$("btn-restart").addEventListener("click", function () { if (G.level >= 1) { var ro = {}; ro["l" + G.level] = null; writeSave(ro); } location.reload(); });
+confirmTap($("btn-restart"), function () { if (G.level >= 1) { var ro = {}; ro["l" + G.level] = null; writeSave(ro); } location.reload(); });
+/* settings sheet: reachable from the level select screen (gear) and from the pause menu */
+function openSettings() { snd.pop(); syncSettings(); openSheet("settings"); setTimeout(function () { $("st-close").focus(); }, 30); }
+function closeSettings() { disarmBtn($("btn-reset-game")); closeSheet(); }
+$("btn-menu-settings").addEventListener("click", openSettings);
+$("hub-settings").addEventListener("click", openSettings);
+$("st-close").addEventListener("click", function () { snd.pop(); closeSettings(); });
+confirmTap($("btn-reset-game"), function () {                 // wipes progress, hats, upgrades and level saves; keeps your sound/feel preferences
+  var sv = loadSave(), keep = {};
+  ["sound", "music", "shake", "vib", "memos", "assist"].forEach(function (k) { if (typeof sv[k] === "boolean") keep[k] = sv[k]; });
+  G.resetting = true;                                         // stops any late autosave from writing the old progress back
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(keep)); } catch (e) {}
+  location.reload();
+});
 $("btn-again").addEventListener("click", function () { location.reload(); });
 $("btn-share").addEventListener("click", function () {
   var b = $("btn-share"), t = G.shareText || "I played Hard Head.";
@@ -3956,7 +4260,7 @@ function hubHit(tg, L, hp) {
   later(1.0, function () { if (G.hub) playLevel(tg.hub); });
 }
 function openMap() {
-  snd.pop(); $("menu").classList.add("hidden");
+  snd.pop(); if (menuOpen()) toggleMenu(false);
   if (G.started || G.level >= 1) {                    // inside a level: the hub lives on a fresh island, so reload straight into it
     if (G.playing && G.level >= 1) saveLevel();
     writeSave({ autostart: "hub" }); location.reload(); return;
@@ -4019,7 +4323,7 @@ function beginGame() {
   $("story").classList.add("hidden"); G.title = false; G.playing = true; G.started = true;
   P.pos.set(0, 0, 3.5); P.face.set(0, 0, -1); P.yaw = Math.PI; P.fakeU = 0; P.hop = 0; cam.tgt.set(0, 0, 3.5); cam.zoom = 1.1;
   $("hud").classList.remove("hidden"); $("controls").classList.remove("hidden");
-  updateRes(); startStep(0);
+  lessonEnd(true); updateRes(); startStep(0);
 }
 $("btn-next").addEventListener("click", function () { snd.pop(); enterLevel(G.level >= 1 ? G.level + 1 : 1, false); });
 $("btn-map").addEventListener("click", function () { openMap(); });
@@ -4377,7 +4681,7 @@ function refreshQuestChip() {
   if (key !== qChip.key) {
     qChip.key = key; el.classList.remove("done");
     if (costs) { cc.innerHTML = Object.keys(costs).map(function (k) { return '<span data-k="' + k + '">' + ICO[k] + "<b></b></span>"; }).join(""); cc.classList.remove("hidden"); } else cc.classList.add("hidden");
-    if (done) { void el.offsetWidth; el.classList.add("done"); }
+    if (done) { void el.offsetWidth; el.classList.add("done"); objCelebrate(); }
   }
   $("obj-t").textContent = txt;
   $("obj-fill").style.width = (max ? Math.min(100, cur / max * 100) : 0) + "%";
@@ -6742,6 +7046,7 @@ function restoreLevel(sv) {
 
 /* ---------- entering a level ---------- */
 function enterLevel(n, resume) {
+  lessonEnd(true);
   var C = LEVELS[n]; if (!C) return;
   titleFreeEnd(); titleAskClose();
   audio(); startMusic();
@@ -6927,8 +7232,9 @@ function showEndLevel() {
 var last = 0;
 function update(rdt) {
   if (G.paused) return;
-  G.time += rdt; var dt = rdt;
+  G.rdt = rdt; G.time += rdt; var dt = rdt;
   if (G.hitstop > 0) { G.hitstop -= rdt; dt = rdt * .05; } else dt = rdt * (GFX.slowmo || 1);
+  if (lessonFrozen()) dt = rdt * 1e-4;
   updateTimers(rdt);
   if (G.playing && !G.ended) G.playTime += rdt;
   if (G.title && G.titleFree) {
@@ -6940,7 +7246,7 @@ function update(rdt) {
     if (u > .11 && !G.titleHit) { G.titleHit = true; snd.bonk(.5); rockList[1].wob = 1; burst(new V3(r0.x - .7, 1.1, r0.z), [0xb4bdc8, 0x8d97a3], 6, 4, 5, 1, .5); }
     if (u < .05) G.titleHit = false;
   } else if (!G.cutOnly) {
-    updatePlayer(dt); updatePickups(dt); updateHazards(dt); updateGusts(dt); updateRaids(dt); updateDirector(rdt);
+    updatePlayer(dt); updatePickups(dt); if (!(G.lesson && G.lesson.active)) { updateHazards(dt); updateGusts(dt); updateRaids(dt); } updateDirector(rdt); updateLesson(rdt);
     updateBuildCard(); updateQuest(rdt); updateTalk(); updateAnvil();
   }
   updateTargets(dt); updateCut(dt); animPlayer(dt); updateParticles(dt); updateFloaters(dt); updateAmbient(dt); updateMark(); updateDrones(dt); updateHR(rdt);
