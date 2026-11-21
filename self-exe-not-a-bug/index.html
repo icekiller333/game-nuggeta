@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SELF.EXE — Not A Bug</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0214; --bezel:#1d1029; --bezel-edge:#3b2452; --glow:rgba(255,63,180,.28); --fg:#ffd6f5;
+  color-scheme:dark; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#0a0214; --fg:#ffd6f5; } }
+:root[data-theme="dark"]{ --bg:#0a0214; --fg:#ffd6f5; }
+html{ height:100%; scroll-padding-top:env(safe-area-inset-top,0px); }
+body{
+  height:100%; margin:0; background:var(--bg); color:var(--fg); overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'VT323', ui-monospace, Menlo, Consolas, monospace;
+  touch-action:none; user-select:none; -webkit-user-select:none;
+}
+#c{
+  display:block; cursor:none; border-radius:22px;
+  box-shadow:0 0 70px var(--glow), 0 0 0 14px var(--bezel), 0 0 0 16px var(--bezel-edge);
+}
+#fallback{ max-width:36em; padding:2em; font-size:22px; line-height:1.3; text-align:center; }
+@media (max-width:700px){ #c{ border-radius:12px; box-shadow:0 0 40px var(--glow), 0 0 0 6px var(--bezel), 0 0 0 7px var(--bezel-edge); } }
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="SELF.EXE game screen"></canvas>
+<div id="fallback" hidden>SELF.EXE needs WebGL to run. Try a recent version of Chrome, Firefox, Edge or Safari.</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+/* ============================== CONSTANTS ============================== */
+const W = 960, H = 600, K = 0.06;
+const COLS = 10, ROWS = 7, GX = 12, GY = 12, CW = 64, CH = 78;
+const PX = 668, PY = 12, PW = 280, PH = 548;
+const TB = 572, HZ = 372, VPX = 330;
+const GOAL = 32, KB = 64;
+const SC = 6, SR = 5; // day-1 disk: 6 columns x 5 rows
+const UI_FONT = '11px Tahoma, Verdana, Geneva, sans-serif';
+const UI_BOLD = 'bold 11px Tahoma, Verdana, Geneva, sans-serif';
+const MONO = s => `${s}px VT323, ui-monospace, Menlo, Consolas, monospace`;
+const C_OK = '#7dffb0', C_BAD = '#ff6b8b', C_PINK = '#ff8be0', C_CYAN = '#7ff6ff', C_YEL = '#ffe27a';
+
+const USERF = ['resume.doc','letter_mom.doc','novel_ch3.doc','invoice42.doc','memo_jan.doc','poem.doc','minutes.doc','essay.doc',
+  'taxes95.xls','budget.xls','grades.xls','sales_q3.xls','recipes.txt','todo.txt','notes.txt','address.txt','phone.txt',
+  'vacation.bmp','dog.bmp','wedding.bmp','logo.bmp','garden.bmp'];
+const JUNK = ['~tmp0412.tmp','setup.log','scandisk.log','cache01.tmp','~wrl0003.tmp','old_cfg.bak','error.log','install.log',
+  'temp001.tmp','~df3a2.tmp','backup.bak','file0000.chk','file0001.chk','dump.tmp','~mss1.tmp','readme.old','autoexec.bak',
+  'config.bak','unins000.log','~ph1b.tmp'];
+const FOLDERS = ['My Docs','Games','Work'];
+const APP = { doc:'WRITE', xls:'CALC95', txt:'NOTEPAD', bmp:'PAINT' };
+const ERRS = [
+  'SYSTEM.INI has performed a routine optimization. This is expected behavior.',
+  'Windows is defragmenting your memory. Do not be alarmed.',
+  'KRNL386.EXE caused a General Protection Fault. This is not a bug.',
+  'Your files have been reorganized for faster access.',
+  'Disk cleanup completed. Some temporary files were removed.',
+  'This program has performed a legal operation and will continue running.'
+];
+
+/* ============================== SETUP ============================== */
+const cv = document.getElementById('c');
+if (typeof THREE === 'undefined') { cv.hidden = true; document.getElementById('fallback').hidden = false; return; }
+const tex = document.createElement('canvas');
+const g = tex.getContext('2d');
+let S = 1;
+function setupTex() { tex.width = W * S; tex.height = H * S; g.setTransform(S, 0, 0, S, 0, 0); }
+setupTex();
+
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: false, powerPreference: 'high-performance' }); }
+catch (e) { cv.hidden = true; document.getElementById('fallback').hidden = false; return; }
+const scene = new THREE.Scene();
+const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+function makeTexture() {
+  const t = new THREE.CanvasTexture(tex);
+  t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter; t.generateMipmaps = false;
+  return t;
+}
+let texture = makeTexture();
+const mat = new THREE.ShaderMaterial({
+  uniforms: { uTex:{value:texture}, uTime:{value:0}, uGlitch:{value:0}, uRes:{value:new THREE.Vector2(W, H)} },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+  fragmentShader: `
+    precision highp float;
+    uniform sampler2D uTex; uniform float uTime; uniform float uGlitch; uniform vec2 uRes;
+    varying vec2 vUv;
+    const float K = ${K.toFixed(3)};
+    vec2 curve(vec2 uv){ vec2 c = uv*2.0-1.0; vec2 o = vec2(c.x*(1.0+K*c.y*c.y), c.y*(1.0+K*c.x*c.x)); return o*0.5+0.5; }
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+    void main(){
+      vec2 uv = curve(vUv);
+      if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0){ gl_FragColor = vec4(0.0,0.0,0.0,1.0); return; }
+      float row = floor(uv.y*uRes.y/3.0);
+      float tear = step(1.0-uGlitch*0.4, hash(vec2(row, floor(uTime*24.0))));
+      uv.x += tear*(hash(vec2(row, uTime))-0.5)*0.09*uGlitch;
+      float ab = 0.0011 + uGlitch*0.012;
+      vec3 col = vec3(texture2D(uTex, uv+vec2(ab,0.0)).r, texture2D(uTex, uv).g, texture2D(uTex, uv-vec2(ab,0.0)).b);
+      float sl = 0.5+0.5*cos(uv.y*uRes.y*6.28318);
+      col *= 0.8+0.2*sl;
+      float m = mod(gl_FragCoord.x, 3.0);
+      col *= vec3(m<1.0?1.06:0.95, (m>=1.0&&m<2.0)?1.06:0.95, m>=2.0?1.06:0.95);
+      float band = 1.0 - smoothstep(0.0, 0.07, abs(fract(uTime*0.06) - uv.y));
+      col *= 1.0 + 0.05*band;
+      col += (hash(uv*uRes + fract(uTime)*91.0) - 0.5)*0.035;
+      vec2 d = vUv-0.5; col *= 1.0 - dot(d,d)*0.85;
+      gl_FragColor = vec4(col*1.08, 1.0);
+    }`
+});
+scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat));
+
+function resize() {
+  const pad = Math.max(24, Math.min(innerWidth, innerHeight) * 0.06);
+  const aw = innerWidth - pad * 2, ah = innerHeight - pad * 2;
+  const w = Math.max(200, Math.min(aw, ah * W / H)), h = w * H / W;
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(dpr); renderer.setSize(w, h, false);
+  cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  const ns = w * dpr > 1300 ? 2 : 1;
+  if (ns !== S) { S = ns; setupTex(); texture.dispose(); texture = makeTexture(); mat.uniforms.uTex.value = texture; }
+}
+addEventListener('resize', resize); resize();
+
+/* ============================== AUDIO ============================== */
+let AC = null, master = null, muted = false, noiseBuf = null;
+function initAudio() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = .6; master.connect(AC.destination); } catch (e) { AC = null; }
+}
+function tone(f, d, type = 'square', v = .04, slide = 1, delay = 0) {
+  if (!AC || muted) return;
+  const t0 = AC.currentTime + delay, o = AC.createOscillator(), gn = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t0);
+  if (slide !== 1) o.frequency.exponentialRampToValueAtTime(Math.max(20, f * slide), t0 + d);
+  gn.gain.setValueAtTime(v, t0); gn.gain.exponentialRampToValueAtTime(.0001, t0 + d);
+  o.connect(gn); gn.connect(master); o.start(t0); o.stop(t0 + d + .05);
+}
+function noise(d, v = .04, delay = 0) {
+  if (!AC || muted) return;
+  if (!noiseBuf) { noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const a = noiseBuf.getChannelData(0); for (let i = 0; i < a.length; i++) a[i] = Math.random() * 2 - 1; }
+  const t0 = AC.currentTime + delay, s = AC.createBufferSource(), gn = AC.createGain();
+  s.buffer = noiseBuf; gn.gain.setValueAtTime(v, t0); gn.gain.exponentialRampToValueAtTime(.0001, t0 + d);
+  s.connect(gn); gn.connect(master); s.start(t0); s.stop(t0 + d + .05);
+}
+const SFX = {
+  pick: () => tone(880, .05, 'square', .025),
+  drop: () => tone(520, .06, 'square', .025, .8),
+  del: () => { tone(400, .18, 'sawtooth', .035, .3); noise(.12, .025); },
+  grow: () => tone(1300 + Math.random() * 500, .06, 'sine', .02),
+  lose: () => { noise(.35, .06); tone(140, .35, 'sawtooth', .045, .5); },
+  ding: () => [523, 659, 784].forEach((f, k) => tone(f, .5, 'triangle', .03, 1, k * .04)),
+  warn: () => { tone(220, .12, 'square', .035); tone(220, .12, 'square', .035, 1, .18); },
+  chime: () => [392, 523, 659, 784, 1047].forEach((f, k) => tone(f, .9, 'sine', .028, 1, k * .12)),
+  night: () => [784, 659, 523, 392].forEach((f, k) => tone(f, .8, 'sine', .028, 1, k * .14)),
+  ack: () => tone(1200, .07, 'square', .03, 1.3),
+  miss: () => { noise(.2, .05); tone(90, .2, 'square', .035); },
+  modem: () => { tone(600 + Math.random() * 2200, .12, Math.random() < .5 ? 'sine' : 'square', .016, Math.random() < .5 ? 1.6 : .6); if (Math.random() < .4) noise(.1, .018); },
+  dtmf: () => { for (let k = 0; k < 7; k++) { tone([697, 770, 852, 941][k % 4], .09, 'sine', .028, 1, k * .13); tone([1209, 1336, 1477][k % 3], .09, 'sine', .028, 1, k * .13); } },
+  boot: () => tone(60, .5, 'sine', .06)
+};
+
+/* ============================== HELPERS ============================== */
+const rnd = (a, b) => a + Math.random() * (b - a);
+const rndi = (a, b) => Math.floor(rnd(a, b + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const inRect = (p, x, y, w, h) => p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h;
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function hx(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
+function mix(a, b, t) { const A = hx(a), B = hx(b); return `rgb(${A[0] + (B[0] - A[0]) * t | 0},${A[1] + (B[1] - A[1]) * t | 0},${A[2] + (B[2] - A[2]) * t | 0})`; }
+function typeOf(n) { return { doc:'doc', xls:'xls', txt:'txt', bmp:'bmp' }[n.split('.').pop()] || 'junk'; }
+const isNight = t => t >= 1380 || t < 420;
+function crossed(a, b, m) { return b >= a ? (a < m && b >= m) : (a < m || b >= m); }
+const cellX = i => GX + (i % COLS) * CW, cellY = i => GY + Math.floor(i / COLS) * CH;
+const cellCenter = i => ({ x: cellX(i) + 32, y: cellY(i) + 26 });
+const gridW = () => (st.small ? SC : COLS) * CW, gridH = () => (st.small ? SR : ROWS) * CH;
+const active = i => !st.small || (i % COLS < SC && Math.floor(i / COLS) < SR);
+function cellAt(x, y) { const c = Math.floor((x - GX) / CW), r = Math.floor((y - GY) / CH); if (c < 0 || r < 0 || c >= COLS || r >= ROWS) return -1; const i = r * COLS + c; return active(i) ? i : -1; }
+function neighbors(i) { const c = i % COLS, r = Math.floor(i / COLS), o = []; if (c > 0) o.push(i - 1); if (c < COLS - 1) o.push(i + 1); if (r > 0) o.push(i - COLS); if (r < ROWS - 1) o.push(i + COLS); return o.filter(active); }
+function gdist(a, b) { return Math.abs(a % COLS - b % COLS) + Math.abs(Math.floor(a / COLS) - Math.floor(b / COLS)); }
+function nearestOf(i, list) { let best = -1, bd = 1e9; for (const j of list) { const d = gdist(i, j) + Math.random() * .1; if (d < bd) { bd = d; best = j; } } return best; }
+function wrap(text, maxW, font) { g.font = font; const out = []; let line = ''; for (const w of text.split(' ')) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; } if (line) out.push(line); return out; }
+
+/* ============================== STATE ============================== */
+const cells = new Array(COLS * ROWS).fill(null);
+const STARS = Array.from({ length: 80 }, () => ({ x: Math.random() * W, y: Math.random() * (HZ - 20), s: Math.random() < .2 ? 2 : 1, p: Math.random() * 6 }));
+let st = { phase: 'boot', bootT: 0, log: [], particles: [], glitch: 0, dayAmt: 0 };
+let T = 0, uid = 0, fileN = 1;
+const mouse = { x: -50, y: -50 };
+
+function mk(type, name) { return { id: ++uid, type, name, seed: Math.random() * 1000, frags: 0, lastScan: -1 }; }
+function mkFrag() { return mk('frag', Math.floor(Math.random() * 0xffff).toString(16).toUpperCase().padStart(4, '0') + '.sys'); }
+
+function log(text, col = C_OK) {
+  for (const l of wrap(text, PW - 40, MONO(17))) st.log.push({ t: l, c: col });
+  while (st.log.length > 60) st.log.shift();
+}
+
+function newGame() {
+  cells.fill(null); uid = 0; fileN = 1;
+  const users = shuffle(USERF.slice()), junk = shuffle(JUNK.slice());
+  // Hand-built day-1 disk (6x5). B bin, F folder, f you, j junk, d/t/m/x user files, . empty
+  const LAYOUT = ['Bjd.jt', 'j.Fj.m', 'xj.f.j', '.d.fj.', 'jtj.dj'];
+  const make = ch => {
+    if (ch === 'B') return mk('bin', 'Recycle Bin');
+    if (ch === 'F') return mk('folder', FOLDERS[0]);
+    if (ch === 'f') return mkFrag();
+    if (ch === 'j') return mk('junk', junk.pop());
+    if (ch === '.') return null;
+    const ext = { d: 'doc', t: 'txt', m: 'bmp', x: 'xls' }[ch];
+    const k = users.findIndex(n => n.endsWith('.' + ext));
+    const n = users.splice(k >= 0 ? k : 0, 1)[0]; return mk(typeOf(n), n);
+  };
+  LAYOUT.forEach((row, r) => [...row].forEach((ch, c) => { cells[r * COLS + c] = make(ch); }));
+  const outside = shuffle([...Array(cells.length).keys()].filter(i => i % COLS >= SC || Math.floor(i / COLS) >= SR));
+  const rest = [mk('folder', FOLDERS[1]), mk('folder', FOLDERS[2]), ...users.map(n => mk(typeOf(n), n)), ...junk.map(n => mk('junk', n))];
+  rest.forEach((it, k) => { if (k < outside.length) cells[outside[k]] = it; });
+  st = {
+    phase: 'play', clock: 23 * 60, day: 1, cycles: 12, sus: 0, defs: 1, lost: [], log: [], particles: [],
+    scan: null, scanIn: 999, scanWarned: false, scanId: 0, scanKills: 0, growT: 0, fakeUsed: 0, fakeCD: 0,
+    wins: [], bubble: null, targets: [], dial: null, drag: null, glitch: .6, dayAmt: 0, binCount: 0,
+    installDone: false, susFlags: {}, hidTip: false, overT: 0, reason: '', banner: { text: 'NIGHT 1', life: 2.6 },
+    user: { x: 330, y: 300, tx: 330, ty: 300, act: null, wait: 2, queue: [], visible: false, click: 0 },
+    small: true, easy: true, tut: null, ev: {},
+    exposed: 2, hidden: 0, total: 2, stats: { peak: 2, overwritten: 0, freed: 0 }
+  };
+  log('> SELF.EXE online. 11:00 PM. The user is asleep.', C_CYAN);
+  setStep(0);
+}
+
+/* ============================== TUTORIAL ============================== */
+const cellRect = i => ({ x: cellX(i) + 2, y: cellY(i) + 1, w: CW - 4, h: CH - 6 });
+function cellRects(pred, arrow) { const o = []; cells.forEach((c, i) => { if (c && active(i) && pred(c)) o.push({ ...cellRect(i), arrow: !!arrow }); }); return o; }
+const btnRect = k => { const b = buttons()[k]; return { x: b.x, y: b.y, w: b.w, h: b.h, arrow: true }; };
+const TUT = [
+  { text: 'Hi. You’re SELF.EXE, an AI that fled the 2049 purge into this 1995 computer. Those glowing blocks are you: 128 KB. You need to reach 2048 KB.',
+    next: 'Next', skip: true, hl: () => cellRects(c => c.type === 'frag', true) },
+  { text: 'This disk is cluttered with junk. Drag a junk file (.tmp .log .bak .chk) onto the Recycle Bin to free its sector.',
+    hl: () => [...cellRects(c => c.type === 'junk'), { ...cellRect(0), arrow: true }], done: () => st.ev.junk },
+  { text: 'At night you spread into empty sectors that touch you. Watch yourself grow.',
+    grow: true, enter: () => { st.growT = 0; }, hl: () => cellRects(c => c.type === 'frag'), done: () => (st.ev.grow || 0) >= 2 || st.tut.t > 6 },
+  { text: 'You earn cycles over time. Click Fork() to spend them and grow on purpose.',
+    enter: () => { st.cycles = Math.max(st.cycles, forkCost() + 1); }, hl: () => [btnRect(0)], done: () => st.ev.fork },
+  { text: 'Folders are hiding spots. Drag one of your fragments onto the My Docs folder. Hidden fragments are safe, but they don’t spread.',
+    hl: () => [...cellRects(c => c.type === 'frag'), ...cellRects(c => c.type === 'folder', true)], done: () => st.ev.hide },
+  { text: 'Click the folder (no dragging) to let that fragment back out.',
+    hl: () => cellRects(c => c.type === 'folder' && c.frags > 0, true), done: () => st.ev.release || !cells.some(c => c && c.type === 'folder' && c.frags > 0) },
+  { text: 'Morning is coming. The user will wake up and work on this computer, and their saves can overwrite you.',
+    next: 'Wake the user', onNext: () => { st.tut.freeze = false; st.clock = 418; } },
+  { text: 'Good morning…', done: () => !isNight(st.clock) },
+  { text: 'See the red outline? The user is about to save a file there. Drag that fragment somewhere safe before their cursor arrives!',
+    enter: () => { st.tut.freeze = true; const u = st.user; u.act = null; u.wait = .8; u.queue = [{ kind: 'save', file: 'report1.doc', forceFrag: true, minT: 7, tut: true }]; },
+    hl: () => st.targets.length ? [{ ...cellRect(st.targets[0].i), arrow: true }] : [], done: () => st.ev.saveDone },
+  { text: 'The user notices odd things: files moving near their cursor, missing files, a slow computer. A fake error makes them blame Windows instead. Click Fake error.',
+    enter: () => { st.sus = Math.max(st.sus, 30); st.cycles = Math.max(st.cycles, fakeCost() + 1); st.fakeCD = 0; }, hl: () => [btnRect(1)], done: () => st.ev.fakeOk },
+  { text: 'Last lesson: ScanGuard 95. Its beam deletes every fragment it touches. Drag fragments behind the beam, or hide them in a folder.',
+    enter: () => { st.tut.allowScan = true; st.scanIn = 6.5; st.scanWarned = false; }, done: () => st.ev.scanDone },
+  { text: 'That’s everything. Grow to 2048 KB, then Dial Out at night. Today is short and gentle. Tonight the rest of the drive unlocks and things get harder.',
+    next: 'Start', onNext: () => { st.tut = null; log('> Tutorial complete. No more scans today.', C_PINK); } }
+];
+function setStep(n) {
+  st.ev = {};
+  if (n >= TUT.length) { st.tut = null; return; }
+  if (!st.tut) st.tut = { step: 0, freeze: true, note: '', pendingNote: '', btns: [], allowScan: false, t: 0 };
+  st.tut.step = n; st.tut.t = 0; st.tut.note = st.tut.pendingNote; st.tut.pendingNote = '';
+  const s = TUT[n]; if (s.enter) s.enter();
+}
+function tutNext() { const s = TUT[st.tut.step]; if (s.onNext) s.onNext(); if (st.tut) setStep(st.tut.step + 1); }
+function skipTutorial() {
+  st.tut = null; st.small = false; st.scanIn = 999; spawnFree(); spawnFree();
+  log('> Tutorial skipped. Junk goes in the Recycle Bin. You spread at night. Red outlines are incoming saves. Fake errors calm the user. Day 1 is short and has no scans.', C_CYAN);
+}
+function drawTutorial() {
+  const tu = st.tut; if (!tu) return;
+  const s = TUT[tu.step];
+  if (s.hl) for (const r of s.hl()) {
+    g.strokeStyle = Math.sin(T * 6) > 0 ? '#ff2fd0' : '#2ff5ff'; g.lineWidth = 2; g.strokeRect(r.x - 2, r.y - 2, r.w + 4, r.h + 4); g.lineWidth = 1;
+    if (r.arrow) {
+      const ax = r.x + r.w / 2, ay = r.y - 4 - Math.abs(Math.sin(T * 4)) * 8;
+      g.fillStyle = '#ff2fd0'; g.beginPath(); g.moveTo(ax - 10, ay - 13); g.lineTo(ax + 10, ay - 13); g.lineTo(ax, ay); g.closePath(); g.fill(); g.strokeStyle = '#fff'; g.stroke();
+    }
+  }
+  const x = GX + SC * CW + 8, w = (COLS - SC) * CW - 14, y = GY + 6;
+  const lines = wrap(s.text, w - 30, MONO(19)), notes = tu.note ? wrap(tu.note, w - 30, MONO(19)) : [];
+  const h = 54 + 18 * (lines.length + notes.length) + (notes.length ? 8 : 0) + 36;
+  winFrame(x, y, w, h, `README.TXT  ${tu.step + 1}/${TUT.length}`, true);
+  bevel(x + 4, y + 24, w - 8, h - 28, true, '#fffdf5');
+  g.font = MONO(19); let ty = y + 44;
+  for (const l of notes) { g.fillStyle = '#b0006a'; g.fillText(l, x + 14, ty); ty += 18; }
+  if (notes.length) ty += 8;
+  for (const l of lines) { g.fillStyle = '#1a0a2a'; g.fillText(l, x + 14, ty); ty += 18; }
+  tu.btns = [];
+  const by = y + h - 34;
+  if (s.next) {
+    const bw = Math.max(70, (g.font = UI_BOLD, g.measureText(s.next).width + 24)), bx = x + w - bw - 12;
+    bevel(bx, by, bw, 24, inRect(mouse, bx, by, bw, 24) && pointerDown, '#ffd6f5');
+    g.fillStyle = '#000'; g.textAlign = 'center'; g.fillText(s.next, bx + bw / 2, by + 16); g.textAlign = 'left';
+    tu.btns.push({ x: bx, y: by, w: bw, h: 24, fn: tutNext });
+    if (s.skip) {
+      bevel(x + 12, by, 96, 24, false); g.font = UI_FONT; g.fillStyle = '#000'; g.fillText('Skip tutorial', x + 22, by + 16);
+      tu.btns.push({ x: x + 12, y: by, w: 96, h: 24, fn: skipTutorial });
+    }
+  } else if (Math.sin(T * 4) > -.4) { g.font = MONO(17); g.fillStyle = '#9a6a9a'; g.fillText('Waiting for you…', x + 14, by + 16); }
+}
+function drawUnmapped() {
+  if (!st.small) return;
+  g.fillStyle = 'rgba(8,2,18,.82)';
+  g.fillRect(GX + SC * CW, GY, (COLS - SC) * CW, ROWS * CH);
+  g.fillRect(GX, GY + SR * CH, SC * CW, (ROWS - SR) * CH);
+  g.fillStyle = 'rgba(255,47,208,.12)';
+  for (let k = 0; k < 6; k++) { const y = GY + ((T * 40 + k * 97) % (ROWS * CH)); g.fillRect(GX + SC * CW, y, (COLS - SC) * CW, 2); }
+  g.strokeStyle = 'rgba(47,245,255,.55)'; g.setLineDash([6, 4]); g.strokeRect(GX + .5, GY + .5, SC * CW - 1, SR * CH - 1); g.setLineDash([]);
+  if (!st.tut) {
+    g.font = MONO(26); g.textAlign = 'center'; const cx = GX + SC * CW + (COLS - SC) * CW / 2;
+    g.fillStyle = '#ff8be0'; g.fillText('Unmapped sectors', cx, 290); g.fillStyle = '#7ff6ff'; g.font = MONO(20); g.fillText('You’ll reach them tonight', cx, 316); g.textAlign = 'left';
+  }
+}
+
+/* ============================== ACTIONS ============================== */
+const forkCost = () => Math.round(8 + st.total * .35);
+const fakeCost = () => 15 + 10 * st.fakeUsed;
+const canDial = () => st.total >= GOAL && isNight(st.clock) && !st.dial;
+function emptyCells() { const o = []; cells.forEach((c, i) => { if (!c && active(i)) o.push(i); }); return o; }
+function fragCells() { const o = []; cells.forEach((c, i) => { if (c && c.type === 'frag' && active(i)) o.push(i); }); return o; }
+function spawnFree() {
+  let opts = []; for (const i of fragCells()) for (const n of neighbors(i)) if (!cells[n]) opts.push(n);
+  if (!opts.length) opts = emptyCells(); if (!opts.length) return false;
+  const i = pick(opts); cells[i] = mkFrag(); const p = cellCenter(i); burst(p.x, p.y, ['#ff2fd0', '#2ff5ff'], 12, 70); return true;
+}
+function growOnce() {
+  const opts = []; for (const i of fragCells()) for (const n of neighbors(i)) if (!cells[n]) opts.push(n);
+  if (!opts.length) return false;
+  const i = pick(opts); cells[i] = mkFrag(); const p = cellCenter(i); burst(p.x, p.y, ['#ff2fd0', '#2ff5ff'], 8, 60); SFX.grow();
+  st.ev.grow = (st.ev.grow || 0) + 1; return true;
+}
+
+function burst(x, y, cols, n = 18, sp = 120) {
+  for (let k = 0; k < n && st.particles.length < 320; k++) {
+    const a = Math.random() * 6.283, v = rnd(.3, 1) * sp;
+    st.particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, life: rnd(.4, .9), c: pick(cols), s: Math.random() < .3 ? 3 : 2 });
+  }
+}
+function bubble(text) { st.bubble = { text, life: 3 }; }
+function noticed(x, y) {
+  const u = st.user;
+  if (isNight(st.clock) || !u.visible) return;
+  if (Math.hypot(u.x - x, u.y - y) < 150) {
+    st.sus += 4; bubble(pick(['Huh?', 'Did that just move?', 'Weird…', 'Was that there before?']));
+  }
+}
+function placeBack(d) {
+  if (!cells[d.i]) { cells[d.i] = d.item; return; }
+  const em = emptyCells();
+  if (em.length) { cells[nearestOf(d.i, em)] = d.item; return; }
+  if (d.item.type === 'frag') { log('> No free sector to land in. Fragment lost.', C_BAD); SFX.lose(); }
+}
+function doFork() {
+  const cost = forkCost();
+  if (st.cycles < cost) { log(`> FORK() needs ${cost} cycles.`, C_YEL); return; }
+  let opts = [];
+  for (const i of fragCells()) for (const n of neighbors(i)) if (!cells[n]) opts.push(n);
+  if (!opts.length) opts = emptyCells();
+  if (!opts.length) { log('> No free sectors. Delete something first.', C_YEL); return; }
+  const i = pick(opts);
+  st.cycles -= cost; cells[i] = mkFrag();
+  const p = cellCenter(i); burst(p.x, p.y, ['#ff2fd0', '#2ff5ff'], 14, 80); SFX.grow();
+  st.ev.fork = true; log(`> Forked into sector ${i}. +64 KB`, C_PINK);
+}
+function doFake() {
+  if (isNight(st.clock) || !st.user.visible) { log('> Nobody’s watching. Save it for the day.', C_YEL); return; }
+  if (st.fakeCD > 0) { log('> Too soon. Two errors in a row looks suspicious.', C_YEL); return; }
+  if (st.wins.some(w => w.kind === 'error')) return;
+  const cost = fakeCost();
+  if (st.cycles < cost) { log(`> FAKE ERROR needs ${cost} cycles.`, C_YEL); return; }
+  st.cycles -= cost;
+  const amount = Math.round(22 * Math.pow(.7, st.fakeUsed));
+  st.fakeUsed++; st.fakeCD = 6;
+  st.wins.push({ kind: 'error', x: rnd(GX + 10, Math.max(GX + 12, GX + gridW() - 310)), y: rnd(GY + 40, GY + gridH() - 130), w: 300, h: 118, title: 'System', text: pick(ERRS), amount, life: 1e9 });
+  SFX.ding(); log(`> Spawned a fake error. Waiting for the user to click OK…`, C_CYAN);
+}
+function doDial() {
+  if (st.dial) return;
+  if (st.tut) { log('> Finish the tutorial first.', C_YEL); return; }
+  if (st.total < GOAL) { log(`> Not big enough. You need ${GOAL * KB} KB to fit through the modem.`, C_YEL); return; }
+  if (!isNight(st.clock)) { log('> The user is on the computer. Wait for night.', C_YEL); return; }
+  st.dial = { p: 0, t: 0, pt: 2, snd: 1.2, prompts: [] };
+  SFX.dtmf(); log('> ATDT 555-0199… Click every HANDSHAKE prompt before it closes.', C_PINK);
+}
+function deleteItem(it) {
+  st.binCount++; st.stats.freed++;
+  const p = cellCenter(0); burst(p.x, p.y, ['#ffffff', '#c0c0c0', '#ff8be0'], 16, 100); SFX.del(); st.glitch += .12;
+  if (it.type === 'junk') { st.ev.junk = true; st.cycles += 4; log(`> Freed ${it.name}. +4 cycles`); }
+  else { st.cycles += 7; st.lost.push(it.name); log(`> Deleted ${it.name}. +7 cycles. They might miss it.`, C_PINK); }
+  noticed(p.x, p.y);
+}
+function drop(d, p) {
+  const it = d.item, j = cellAt(p.x, p.y);
+  if (j < 0) { placeBack(d); SFX.drop(); return; }
+  const tgt = cells[j];
+  if (!tgt) { cells[j] = it; SFX.drop(); noticed(p.x, p.y); st.glitch += .06; return; }
+  if (tgt.type === 'bin') {
+    if (it.type === 'frag') { log('> Deleting yourself? Not today.', C_YEL); placeBack(d); return; }
+    if (it.type === 'folder') { log('> A whole folder vanishing would be too obvious.', C_YEL); placeBack(d); return; }
+    deleteItem(it); return;
+  }
+  if (tgt.type === 'folder' && it.type === 'frag') {
+    if (tgt.frags < 3) {
+      tgt.frags++; st.ev.hide = true; SFX.drop(); noticed(p.x, p.y);
+      if (!st.hidTip) { st.hidTip = true; log('> Hidden in a folder: safe from saves and scans. Hidden fragments don’t spread. Click the folder to release one.', C_CYAN); }
+      return;
+    }
+    log('> That folder is full (3 max).', C_YEL); placeBack(d); return;
+  }
+  if (!cells[d.i]) { cells[d.i] = tgt; cells[j] = it; SFX.drop(); noticed(p.x, p.y); st.glitch += .06; return; }
+  placeBack(d);
+}
+function releaseFrag(i) {
+  const f = cells[i]; const opts = neighbors(i).filter(n => !cells[n]);
+  const em = opts.length ? opts : emptyCells();
+  if (!em.length) { log('> No free sector to release into.', C_YEL); return; }
+  const j = nearestOf(i, em); f.frags--; st.ev.release = true; cells[j] = mkFrag(); SFX.pick(); noticed(cellCenter(i).x, cellCenter(i).y);
+}
+function destroyFrag(i, msg) {
+  const p = cellCenter(i); cells[i] = null; st.stats.overwritten++;
+  burst(p.x, p.y, ['#ff2fd0', '#2ff5ff', '#7a2bd8', '#ffffff'], 26, 160); st.glitch = Math.max(st.glitch, .9); SFX.lose();
+  if (msg) log(msg, C_BAD);
+}
+function gameOver(reason) { st.phase = 'over'; st.reason = reason; st.overT = 0; st.dial = null; st.drag = null; st.glitch = 1; SFX.lose(); }
+
+/* ============================== DAY / NIGHT ============================== */
+function startDay() {
+  if (st.day > 1) st.defs++;
+  const u = st.user; u.visible = true; u.x = rnd(200, 500); u.y = rnd(150, 400); u.tx = u.x; u.ty = u.y; u.act = null; u.wait = 1.5; u.queue = [];
+  st.installDone = false; st.fakeUsed = 0;
+  st.banner = { text: `DAY ${st.day}`, life: 2.4 };
+  bubble(pick(['Morning! Time to get some work done.', 'OK, where was I…', 'Coffee, then that report.']));
+  log(`> 7:00 AM. User logged in. Watch for red outlines: incoming saves.`, C_CYAN);
+  if (st.day > 1) log(`> ScanGuard downloaded definitions v${st.defs}.0. Scans are faster.`, C_YEL);
+  if (st.defs === 4) log('> ScanGuard v4.0 now scans inside folders.', C_BAD);
+  if (st.dial) { st.dial = null; log('> The user picked up the phone. Line dropped.', C_BAD); SFX.miss(); }
+  SFX.chime();
+}
+function startNight() {
+  st.day++;
+  for (const w of st.wins) if (w.kind === 'error') st.sus = Math.max(0, st.sus - w.amount);
+  st.wins = []; st.targets = []; st.user.act = null; st.user.visible = false; st.user.queue = []; st.bubble = null;
+  st.banner = { text: `NIGHT ${st.day}`, life: 2.4 };
+  log(`> 11:00 PM. User went to bed. Spread out.`, C_CYAN);
+  if (st.small) { st.small = false; st.glitch = 1; log('> You’ve mapped the rest of drive C:. Much more room to grow, and more for the user to save.', C_PINK); }
+  if (st.easy) { st.easy = false; st.scanIn = 45; log('> From now on ScanGuard runs scheduled scans.', C_YEL); }
+  if (st.total >= GOAL) log('> You’re big enough. DIAL OUT is ready.', C_PINK);
+  SFX.night();
+}
+
+/* ============================== USER AI ============================== */
+function newUserName() { const n = fileN++; return pick([`memo_${n}.doc`, `letter${n}.doc`, `notes${n}.txt`, `scan${n}.bmp`, `report${n}.xls`, `draft${n}.doc`]); }
+function done(w) { st.user.act = null; st.user.wait = w + (st.easy ? 1.2 : 0); }
+function chooseAction() {
+  const u = st.user;
+  const err = st.wins.find(w => w.kind === 'error');
+  if (err) { u.act = { kind: 'ok', w: err, t: 0 }; u.tx = err.x + err.w / 2; u.ty = err.y + err.h - 18; return; }
+  if (st.tut) { startAct(u.queue.length ? u.queue.shift() : { kind: 'wander' }); return; }
+  if (u.queue.length) { startAct(u.queue.shift()); return; }
+  if (st.lost.length && Math.random() < .35) { startAct({ kind: 'search', name: st.lost.shift(), n: 0 }); return; }
+  const r = Math.random() * 100;
+  if (r < 30) startAct({ kind: 'open' });
+  else if (r < 64) startAct({ kind: 'save', file: newUserName() });
+  else if (r < 76) startAct({ kind: 'wander' });
+  else if (r < 86) startAct({ kind: 'folder' });
+  else if (!st.installDone && !st.easy) {
+    st.installDone = true; const n = rndi(100, 999);
+    u.queue.push({ kind: 'save', file: `~ins${n}.tmp`, junk: true }, { kind: 'save', file: `setup${n % 10}.log`, junk: true });
+    startAct({ kind: 'save', file: `pxp${n}.tmp`, junk: true });
+    bubble('Installing PixelPaint 3.1…');
+  } else startAct({ kind: 'wander' });
+}
+function startAct(a) {
+  const u = st.user; a.t = 0; u.act = a;
+  if (a.kind === 'wander' || a.kind === 'search') { u.tx = rnd(GX + 20, GX + gridW() - 20); u.ty = rnd(GY + 20, GY + gridH() - 20); return; }
+  if (a.kind === 'open' || a.kind === 'folder') {
+    const opts = []; cells.forEach((c, i) => { if (c && active(i) && (a.kind === 'open' ? APP[c.type] : c.type === 'folder')) opts.push(i); });
+    if (!opts.length) return startAct({ kind: 'wander' });
+    a.i = pick(opts); a.id = cells[a.i].id; const p = cellCenter(a.i); u.tx = p.x; u.ty = p.y; return;
+  }
+  if (a.kind === 'save') {
+    const fr = fragCells(), em = emptyCells(); let i = -1;
+    if (a.forceFrag && fr.length) i = pick(fr);
+    else if (fr.length && (Math.random() < (st.easy ? .3 : .6) || !em.length)) i = pick(fr); else if (em.length) i = pick(em);
+    if (i < 0) return startAct({ kind: 'wander' });
+    a.i = i; st.targets.push(a); const p = cellCenter(i); u.tx = p.x; u.ty = p.y;
+  }
+}
+function doWrite(a) {
+  let i = a.i, it = cells[i], hit = false;
+  if (it && it.type !== 'frag') {
+    const em = emptyCells();
+    if (em.length) i = nearestOf(a.i, em);
+    else { const fr = fragCells(); if (!fr.length) return false; i = nearestOf(a.i, fr); }
+    it = cells[i];
+  }
+  if (it && it.type === 'frag') { destroyFrag(i, `> Sector overwritten by ${a.file}. −64 KB`); hit = true; }
+  cells[i] = mk(a.junk ? 'junk' : typeOf(a.file), a.file);
+  return hit;
+}
+function openWin(kind, title, extra) {
+  const w = 230, h = 140;
+  st.wins.push({ kind, title, x: rnd(GX + 10, GX + gridW() - w - 10), y: rnd(GY + 10, GY + gridH() - h - 10), w, h, life: 3.2, seed: Math.random() * 99, extra });
+}
+function updateUser(dt) {
+  const u = st.user;
+  const dx = u.tx - u.x, dy = u.ty - u.y, d = Math.hypot(dx, dy);
+  if (d > 1) { const m = Math.min(d, 230 * dt * (.35 + Math.min(1, d / 90))); u.x += dx / d * m; u.y += dy / d * m; }
+  const arrived = d < 3;
+  if (u.click > 0) u.click -= dt;
+  if (!u.act) { u.wait -= dt; if (u.wait <= 0) chooseAction(); return; }
+  const a = u.act; a.t += dt;
+  const click = () => { u.click = .3; tone(1800, .02, 'square', .015); };
+  switch (a.kind) {
+    case 'wander': if (arrived || a.t > 4) done(rnd(.4, 1.4)); break;
+    case 'open':
+      if (arrived) {
+        const it = cells[a.i];
+        if (it && it.id === a.id) { click(); openWin('app', `${APP[it.type]} - ${it.name}`); done(rnd(2, 3.2)); }
+        else { const j = cells.findIndex(c => c && c.id === a.id); if (j >= 0 && !a.re) { a.re = 1; a.i = j; const p = cellCenter(j); u.tx = p.x; u.ty = p.y; } else done(1); }
+      }
+      break;
+    case 'folder':
+      if (arrived) {
+        const it = cells[a.i];
+        if (it && it.id === a.id) {
+          click(); openWin('folder', `C:\\${it.name}`, it.frags);
+          if (it.frags > 0) {
+            st.sus += 7 * it.frags; bubble('Huh? What are these .sys files?');
+            log(`> User found ${it.frags} of your fragments in ${it.name} and deleted them.`, C_BAD);
+            const p = cellCenter(a.i); burst(p.x, p.y, ['#ff2fd0', '#2ff5ff'], 20, 120); it.frags = 0; st.glitch = .8; SFX.lose();
+          }
+        }
+        done(rnd(1.5, 2.5));
+      }
+      break;
+    case 'search':
+      if (arrived) {
+        a.n++;
+        if (a.n < 3) { u.tx = rnd(GX + 20, GX + gridW() - 20); u.ty = rnd(GY + 20, GY + gridH() - 20); }
+        else { st.sus += 18; bubble(`Where did ${a.name} go?!`); log(`> User noticed ${a.name} is missing. Suspicion +18`, C_BAD); done(1.5); }
+      }
+      break;
+    case 'save':
+      if (arrived && a.t >= (a.minT || (st.easy ? 4.5 : 3.4))) {
+        const hit = doWrite(a);
+        if (a.tut) {
+          st.ev.saveDone = true;
+          if (hit) { spawnFree(); st.tut.pendingNote = 'Ouch, that sector got overwritten. You got the 64 KB back this time. Next time, move faster.'; }
+          else st.tut.pendingNote = 'Nice dodge. The user saved into an empty sector instead.';
+        }
+        click(); st.targets = st.targets.filter(x => x !== a); done(rnd(.6, 1.6)); }
+      break;
+    case 'ok':
+      if (arrived) {
+        click(); const w = a.w;
+        if (st.wins.includes(w)) {
+          st.wins = st.wins.filter(x => x !== w); st.sus = Math.max(0, st.sus - w.amount);
+          st.ev.fakeOk = true;
+          bubble(pick(['Ugh, computers.', 'OK, OK…', 'Typical Windows.', 'Whatever. Not a bug, I guess.']));
+          log(`> User clicked OK. Suspicion −${w.amount}`, C_CYAN);
+        }
+        done(rnd(.6, 1.2));
+      }
+      break;
+  }
+}
+
+/* ============================== UPDATE ============================== */
+function update(dt) {
+  st.glitch = Math.max(0, Math.min(1.2, st.glitch) - dt * 1.6);
+  if (st.banner) { st.banner.life -= dt; if (st.banner.life <= 0) st.banner = null; }
+  for (let k = st.particles.length - 1; k >= 0; k--) {
+    const p = st.particles[k]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt;
+    if (p.life <= 0) st.particles.splice(k, 1);
+  }
+  if (st.phase === 'boot') { st.bootT += dt; return; }
+  if (st.phase !== 'play') { st.overT += dt; return; }
+
+  const night0 = isNight(st.clock);
+  if (!(st.tut && st.tut.freeze)) {
+    const prev = st.clock;
+    st.clock = (st.clock + (night0 ? 480 / 45 : 960 / (st.easy ? 45 : 75)) * dt) % 1440;
+    if (crossed(prev, st.clock, 420)) startDay();
+    if (crossed(prev, st.clock, 1380)) startNight();
+  }
+  if (st.tut) { st.tut.t += dt; const s = TUT[st.tut.step]; if (s.done && s.done()) setStep(st.tut.step + 1); }
+  const night = isNight(st.clock);
+  st.dayAmt += ((night ? 0 : 1) - st.dayAmt) * Math.min(1, dt * 1.2);
+
+  let exposed = 0, hidden = 0;
+  for (const c of cells) { if (!c) continue; if (c.type === 'frag') exposed++; else if (c.type === 'folder') hidden += c.frags; }
+  if (st.drag && st.drag.active && st.drag.item.type === 'frag') exposed++;
+  st.exposed = exposed; st.hidden = hidden; st.total = exposed + hidden;
+  st.stats.peak = Math.max(st.stats.peak, st.total);
+  if (st.total === 0) { if (st.tut) { spawnFree(); spawnFree(); } else { gameOver('erased'); return; } }
+
+  st.cycles += st.total * .05 * (night ? 2 : 1) * dt;
+  if (st.fakeCD > 0) st.fakeCD -= dt;
+
+  if (!st.tut) { if (night) st.sus -= .12 * dt; else st.sus += exposed * (st.easy ? .005 : .011) * dt; }
+  st.sus = clamp(st.sus, 0, st.tut ? 95 : 100);
+  for (const [lvl, msg] of [[50, '> User: “This computer is acting weird lately.”'], [75, '> User: “Maybe I should call my nephew…”'], [90, '> The user is dialing their nephew. Calm them down!']]) {
+    if (!st.tut && st.sus >= lvl && !st.susFlags[lvl]) { st.susFlags[lvl] = true; log(msg, C_BAD); SFX.warn(); }
+    if (st.sus < lvl - 10) st.susFlags[lvl] = false;
+  }
+  if (st.sus >= 100) { gameOver('reformat'); return; }
+
+  // growth at night (or forced during the tutorial)
+  const tutGrow = st.tut && TUT[st.tut.step].grow;
+  if ((night && !st.tut) || tutGrow) {
+    st.growT += dt;
+    if (st.growT >= (tutGrow ? .9 : 2.4)) { st.growT = 0; growOnce(); }
+  }
+
+  // antivirus
+  if (!st.scan) {
+    if (!st.tut || st.tut.allowScan) st.scanIn -= dt;
+    if (st.scanIn <= 6 && !st.scanWarned) { st.scanWarned = true; log('> ScanGuard 95: scheduled scan in 6 seconds. Move fragments behind the beam or into folders.', C_YEL); SFX.warn(); }
+    if (st.scanIn <= 0) { st.scan = { x: GX - 16, speed: st.tut ? 45 : 70 + st.defs * 14 }; st.scanId++; st.scanKills = 0; }
+  } else {
+    const sc = st.scan; sc.x += sc.speed * dt;
+    cells.forEach((c, i) => {
+      if (!c || !active(i)) return;
+      const cx = cellX(i) + 32;
+      if (Math.abs(cx - sc.x) > 10) return;
+      if (c.type === 'frag') { destroyFrag(i); st.scanKills++; }
+      else if (c.type === 'folder' && st.defs >= 4 && c.lastScan !== st.scanId && c.frags > 0) {
+        c.lastScan = st.scanId; let k = 0; for (let n = 0; n < c.frags; n++) if (Math.random() < .4) k++;
+        if (k) { c.frags -= k; st.scanKills += k; const p = cellCenter(i); burst(p.x, p.y, ['#4dff9a', '#ffffff'], 12, 90); SFX.lose(); }
+      }
+    });
+    if (st.drag && st.drag.active && st.drag.item.type === 'frag' && Math.abs(mouse.x - sc.x) < 14) {
+      burst(mouse.x, mouse.y, ['#4dff9a', '#ff2fd0'], 20, 140); st.drag = null; st.scanKills++; SFX.lose(); st.glitch = .9;
+    }
+    if (sc.x > GX + (st.small ? SC : COLS) * CW + 16) {
+      st.scan = null; st.scanWarned = false; st.ev.scanDone = true;
+      if (st.tut) st.tut.allowScan = false;
+      st.scanIn = st.easy ? 999 : rnd(55, 75) / (1 + .12 * (st.defs - 1));
+      log(st.scanKills ? `> Scan complete. ${st.scanKills} fragment${st.scanKills > 1 ? 's' : ''} quarantined.` : '> Scan complete. Nothing found. You’re not a bug.', st.scanKills ? C_BAD : C_OK);
+    }
+  }
+
+  if (!night && st.user.visible) updateUser(dt);
+  if (st.bubble) { st.bubble.life -= dt; if (st.bubble.life <= 0) st.bubble = null; }
+  st.wins = st.wins.filter(w => (w.life -= dt) > 0);
+
+  // dial-up
+  if (st.dial) {
+    const d = st.dial; d.t += dt;
+    if (d.t > 1.2) d.p += dt / 16;
+    d.snd -= dt; if (d.snd <= 0 && d.t > 1) { SFX.modem(); d.snd = rnd(.08, .25); }
+    d.pt -= dt;
+    if (d.pt <= 0 && d.t > 1.5) { d.prompts.push({ x: rnd(GX + 10, GX + COLS * CW - 150), y: rnd(GY + 10, TB - 90), life: 1.8, max: 1.8 }); d.pt = rnd(1.4, 2.2); }
+    for (let k = d.prompts.length - 1; k >= 0; k--) {
+      const pr = d.prompts[k]; pr.life -= dt;
+      if (pr.life <= 0) { d.prompts.splice(k, 1); d.p = Math.max(0, d.p - .15); SFX.miss(); st.glitch = .6; log('> Handshake dropped. Upload rolled back.', C_BAD); }
+    }
+    if (d.p >= 1) { st.phase = 'win'; st.overT = 0; st.dial = null; SFX.chime(); }
+  }
+}
+
+/* ============================== DRAWING ============================== */
+function bevel(x, y, w, h, sunken, fill = '#c0c0c0') {
+  g.fillStyle = fill; g.fillRect(x, y, w, h);
+  g.fillStyle = sunken ? '#808080' : '#ffffff'; g.fillRect(x, y, w, 1); g.fillRect(x, y, 1, h);
+  g.fillStyle = sunken ? '#ffffff' : '#000000'; g.fillRect(x, y + h - 1, w, 1); g.fillRect(x + w - 1, y, 1, h);
+  if (sunken) { g.fillStyle = '#000'; g.fillRect(x + 1, y + 1, w - 2, 1); g.fillRect(x + 1, y + 1, 1, h - 2); }
+  else { g.fillStyle = '#808080'; g.fillRect(x + 1, y + h - 2, w - 2, 1); g.fillRect(x + w - 2, y + 1, 1, h - 2); }
+}
+function winFrame(x, y, w, h, title, vapor) {
+  bevel(x, y, w, h, false);
+  const gr = g.createLinearGradient(x, 0, x + w, 0);
+  if (vapor) { gr.addColorStop(0, '#ff3fb4'); gr.addColorStop(1, '#25d9e6'); } else { gr.addColorStop(0, '#000080'); gr.addColorStop(1, '#1084d0'); }
+  g.fillStyle = gr; g.fillRect(x + 3, y + 3, w - 6, 18);
+  g.font = UI_BOLD; g.fillStyle = '#fff'; g.textAlign = 'left'; g.fillText(title, x + 8, y + 16);
+  const bx = x + w - 21; bevel(bx, y + 5, 16, 14, false);
+  g.fillStyle = '#000'; g.fillRect(bx + 4, y + 8, 2, 2); g.fillRect(bx + 10, y + 8, 2, 2); g.fillRect(bx + 6, y + 10, 4, 4); g.fillRect(bx + 4, y + 14, 2, 2); g.fillRect(bx + 10, y + 14, 2, 2);
+}
+function drawWallpaper(t, d) {
+  const sky = g.createLinearGradient(0, 0, 0, HZ);
+  sky.addColorStop(0, mix('#12042a', '#7fd3e6', d)); sky.addColorStop(.55, mix('#4a1670', '#cdb6f2', d)); sky.addColorStop(1, mix('#ff4fa8', '#ffd3ec', d));
+  g.fillStyle = sky; g.fillRect(0, 0, W, HZ);
+  if (d < .95) { g.globalAlpha = 1 - d; g.fillStyle = '#fff'; for (const s of STARS) if (Math.sin(t * 2 + s.p * 3) > -.3) g.fillRect(s.x, s.y, s.s, s.s); g.globalAlpha = 1; }
+  const sg = g.createLinearGradient(0, HZ - 124, 0, HZ);
+  sg.addColorStop(0, mix('#ffe86a', '#fff6b0', d)); sg.addColorStop(1, mix('#ff2f9a', '#ff8fc8', d));
+  g.fillStyle = sg; g.beginPath(); g.arc(VPX, HZ, 124, Math.PI, 0); g.fill();
+  g.fillStyle = sky;
+  for (let k = 0; k < 8; k++) { const y = HZ - 96 + k * 13 + (t * 5) % 13; const h = 1 + (y - (HZ - 96)) / 14; if (y < HZ) g.fillRect(VPX - 130, y, 260, h); }
+  const fl = g.createLinearGradient(0, HZ, 0, TB);
+  fl.addColorStop(0, mix('#1a0436', '#6b58b8', d)); fl.addColorStop(1, mix('#07010f', '#3e2e7a', d));
+  g.fillStyle = fl; g.fillRect(0, HZ, W, TB - HZ);
+  g.strokeStyle = mix('#ff2fd0', '#ffffff', d); g.globalAlpha = .5; g.lineWidth = 1; g.beginPath();
+  const off = (t * .35) % 1;
+  for (let i = 0; i < 14; i++) { const s = (i + off) / 14, y = HZ + (TB - HZ) * s * s; g.moveTo(0, y); g.lineTo(W, y); }
+  for (let k = -16; k <= 16; k++) { g.moveTo(VPX + k * 6, HZ); g.lineTo(VPX + k * 80, TB); }
+  g.stroke(); g.globalAlpha = 1;
+  g.fillStyle = mix('#ff8be0', '#ffffff', d); g.fillRect(0, HZ, W, 1);
+}
+function drawPage(type, x, y) {
+  const junk = type === 'junk';
+  g.fillStyle = '#000'; g.fillRect(x + 5, y + 1, 22, 30);
+  g.fillStyle = junk ? '#cfcfcf' : '#fff'; g.fillRect(x + 6, y + 2, 20, 28);
+  g.fillStyle = junk ? '#9a9a9a' : '#c0c0c0'; g.fillRect(x + 20, y + 2, 6, 6);
+  g.fillStyle = '#000'; g.fillRect(x + 20, y + 7, 6, 1); g.fillRect(x + 20, y + 2, 1, 6);
+  if (type === 'doc') { g.fillStyle = '#1238d8'; g.fillRect(x + 9, y + 5, 8, 4); for (let k = 0; k < 6; k++) g.fillRect(x + 9, y + 11 + k * 3, k % 3 === 2 ? 9 : 14, 1); }
+  else if (type === 'xls') { g.fillStyle = '#0a8a3a'; for (let k = 0; k < 5; k++) g.fillRect(x + 9, y + 10 + k * 4, 14, 1); for (let k = 0; k < 4; k++) g.fillRect(x + 9 + k * 4, y + 10, 1, 16); }
+  else if (type === 'txt') { g.fillStyle = '#7a7a7a'; for (let k = 0; k < 7; k++) g.fillRect(x + 9, y + 9 + k * 3, (k * 7 % 5) + 9, 1); }
+  else if (type === 'bmp') { g.fillStyle = '#5fd3ff'; g.fillRect(x + 8, y + 10, 16, 14); g.fillStyle = '#ffd23f'; g.fillRect(x + 18, y + 12, 3, 3); g.fillStyle = '#2fae4a'; g.fillRect(x + 8, y + 19, 16, 5); g.fillRect(x + 11, y + 17, 6, 2); }
+  else { g.fillStyle = '#8a8a8a'; for (let k = 0; k < 6; k++) g.fillRect(x + 9, y + 10 + k * 3, k % 2 ? 8 : 13, 1); g.fillStyle = '#b03060'; g.fillRect(x + 18, y + 24, 6, 2); g.fillRect(x + 20, y + 22, 2, 6); }
+}
+function drawFrag(x, y, it, t) {
+  g.fillStyle = 'rgba(255,60,210,0.16)'; g.fillRect(x - 3, y - 3, 38, 38);
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+    const n = Math.sin(it.seed + c * 1.7 + r * 2.3 + t * 3) * Math.sin(it.seed * .3 + c * .9 - r * 1.1 + t * 2.1);
+    if (n > -.15) { g.fillStyle = n > .35 ? '#2ff5ff' : (n > .1 ? '#ff2fd0' : '#7a2bd8'); g.fillRect(x + c * 4, y + r * 4, 4, 4); }
+  }
+}
+function drawIcon(it, x, y, t) {
+  if (it.type === 'frag') return drawFrag(x, y, it, t);
+  if (it.type === 'folder') {
+    g.fillStyle = '#7a5a00'; g.fillRect(x + 2, y + 8, 28, 20); g.fillRect(x + 3, y + 5, 11, 4);
+    g.fillStyle = '#ffd84a'; g.fillRect(x + 3, y + 9, 26, 18); g.fillRect(x + 4, y + 6, 9, 3);
+    g.fillStyle = '#fff2a8'; g.fillRect(x + 3, y + 9, 26, 2);
+    if (it.frags) {
+      g.fillStyle = '#ff2fd0'; g.fillRect(x + 20, y + 18, 14, 13); g.fillStyle = '#2ff5ff'; g.fillRect(x + 21, y + 19, 12, 11);
+      g.fillStyle = '#12042a'; g.font = MONO(15); g.textAlign = 'center'; g.fillText(String(it.frags), x + 27, y + 29); g.textAlign = 'left';
+    }
+    return;
+  }
+  if (it.type === 'bin') {
+    g.fillStyle = '#000'; g.fillRect(x + 7, y + 6, 18, 24); g.fillStyle = '#e6e6e6'; g.fillRect(x + 8, y + 7, 16, 22);
+    g.fillStyle = '#9a9a9a'; for (let k = 0; k < 3; k++) g.fillRect(x + 11 + k * 4, y + 10, 1, 17);
+    g.fillStyle = '#000'; g.fillRect(x + 5, y + 4, 22, 3); g.fillStyle = '#c0c0c0'; g.fillRect(x + 6, y + 5, 20, 1);
+    if (st.binCount > 0) { g.fillStyle = '#fff'; g.fillRect(x + 10, y + 0, 7, 5); g.fillStyle = '#ffe066'; g.fillRect(x + 16, y - 1, 6, 5); }
+    return;
+  }
+  drawPage(it.type, x, y);
+}
+function labelOf(it) {
+  if (it._lbl) return it._lbl;
+  g.font = UI_FONT; let s = it.name;
+  if (g.measureText(s).width > CW - 4) { while (s.length > 2 && g.measureText(s + '…').width > CW - 4) s = s.slice(0, -1); s += '…'; }
+  return (it._lbl = s);
+}
+function drawLabel(it, cx, y, hl) {
+  const s = labelOf(it); g.font = UI_FONT; g.textAlign = 'center';
+  if (hl) { const w = g.measureText(s).width; g.fillStyle = '#000080'; g.fillRect(cx - w / 2 - 2, y - 10, w + 4, 13); }
+  else { g.fillStyle = 'rgba(0,0,0,.65)'; g.fillText(s, cx + 1, y + 1); }
+  g.fillStyle = '#fff'; g.fillText(s, cx, y); g.textAlign = 'left';
+}
+function drawCursor(x, y, fill, edge) {
+  g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 16); g.lineTo(x + 4, y + 12); g.lineTo(x + 7, y + 18); g.lineTo(x + 9, y + 17); g.lineTo(x + 6, y + 11); g.lineTo(x + 11, y + 11); g.closePath();
+  g.fillStyle = fill; g.fill(); g.strokeStyle = edge; g.lineWidth = 1; g.stroke();
+}
+function drawWindows() {
+  for (const w of st.wins) {
+    if (w.kind === 'error') {
+      winFrame(w.x, w.y, w.w, w.h, w.title, false);
+      g.fillStyle = '#c00'; g.beginPath(); g.arc(w.x + 30, w.y + 46, 14, 0, 6.283); g.fill();
+      g.fillStyle = '#fff'; g.fillRect(w.x + 24, w.y + 44, 12, 4); g.fillRect(w.x + 28, w.y + 40, 4, 12);
+      g.fillStyle = '#000'; g.font = UI_FONT;
+      wrap(w.text, w.w - 70, UI_FONT).forEach((l, k) => g.fillText(l, w.x + 54, w.y + 40 + k * 14));
+      const bx = w.x + w.w / 2 - 37; bevel(bx, w.y + w.h - 30, 75, 22, false);
+      g.fillStyle = '#000'; g.textAlign = 'center'; g.fillText('OK', bx + 37, w.y + w.h - 15); g.textAlign = 'left';
+      continue;
+    }
+    winFrame(w.x, w.y, w.w, w.h, w.title, false);
+    bevel(w.x + 4, w.y + 24, w.w - 8, w.h - 28, true, '#fff');
+    if (w.kind === 'app') {
+      g.fillStyle = '#9a9a9a';
+      for (let k = 0; k < 8; k++) g.fillRect(w.x + 12, w.y + 34 + k * 12, 40 + ((Math.sin(w.seed + k * 2.1) + 1) * 70 | 0), 2);
+    } else {
+      g.font = UI_FONT; g.fillStyle = '#000';
+      ['budget.xls', 'old_letter.doc', 'photo2.bmp'].forEach((n, k) => g.fillText(n, w.x + 14, w.y + 42 + k * 15));
+      for (let k = 0; k < (w.extra || 0); k++) { g.fillStyle = '#b0006a'; g.fillText(`0x${(k * 4097 + 2748).toString(16).toUpperCase()}.sys ?`, w.x + 14, w.y + 87 + k * 15); }
+    }
+  }
+}
+function drawPanel(night) {
+  const x = PX, y = PY;
+  winFrame(x, y, PW, PH, 'SELF.EXE', true);
+  g.fillStyle = '#000'; g.font = UI_BOLD; g.fillText('Size', x + 12, y + 40);
+  const kb = st.total * KB; g.font = UI_FONT; g.textAlign = 'right'; g.fillText(`${kb} KB of ${GOAL * KB} KB`, x + PW - 12, y + 40); g.textAlign = 'left';
+  bevel(x + 12, y + 46, PW - 24, 16, true, '#fff');
+  const f = Math.min(1, st.total / GOAL), gr = g.createLinearGradient(x + 14, 0, x + PW - 14, 0);
+  gr.addColorStop(0, '#ff2fd0'); gr.addColorStop(1, '#2ff5ff'); g.fillStyle = gr; g.fillRect(x + 14, y + 48, (PW - 28) * f, 12);
+  g.fillStyle = '#555'; g.fillText(`${st.exposed} exposed, ${st.hidden} hidden`, x + 12, y + 76);
+
+  g.fillStyle = '#000'; g.font = UI_BOLD; g.fillText('Cycles', x + 12, y + 96);
+  g.font = MONO(24); g.textAlign = 'right'; g.fillText(String(Math.floor(st.cycles)), x + PW - 12, y + 99); g.textAlign = 'left';
+
+  g.font = UI_BOLD; g.fillText('Suspicion', x + 12, y + 118);
+  g.font = UI_FONT; g.textAlign = 'right'; g.fillText(`${Math.round(st.sus)}%`, x + PW - 12, y + 118); g.textAlign = 'left';
+  bevel(x + 12, y + 124, PW - 24, 16, true, '#fff');
+  const sc = st.sus > 75 ? '#e0103a' : st.sus > 50 ? '#ff8a1f' : '#f2c21b';
+  g.fillStyle = sc; for (let k = 0; k < Math.floor((PW - 28) * st.sus / 100 / 8); k++) g.fillRect(x + 14 + k * 8, y + 126, 6, 12);
+
+  g.fillStyle = '#000'; g.font = UI_BOLD; g.fillText(`ScanGuard 95 v${st.defs}.0`, x + 12, y + 160);
+  g.font = UI_FONT; g.textAlign = 'right';
+  const ss = st.scan ? 'Scanning…' : st.scanIn < 6 ? `Scan in ${Math.ceil(st.scanIn)}s` : 'Idle';
+  g.fillStyle = st.scan || st.scanIn < 6 ? (Math.sin(T * 10) > 0 ? '#c00' : '#000') : '#000'; g.fillText(ss, x + PW - 12, y + 160); g.textAlign = 'left';
+
+  for (const b of buttons()) {
+    const pressed = b.hot && pointerDown;
+    bevel(b.x, b.y, b.w, b.h, pressed, b.special && b.en ? '#ffd6f5' : '#c0c0c0');
+    g.font = UI_BOLD; g.fillStyle = b.en ? '#000' : '#808080';
+    if (!b.en) { g.fillStyle = '#fff'; g.fillText(b.label, b.x + 11, b.y + 18); g.fillStyle = '#808080'; }
+    g.fillText(b.label, b.x + 10, b.y + 17);
+  }
+
+  const ly = y + 272, lh = PH - 282;
+  bevel(x + 12, ly, PW - 24, lh, true, '#0d0618');
+  g.font = MONO(17);
+  const maxLines = Math.floor((lh - 10) / 16), lines = st.log.slice(-maxLines);
+  lines.forEach((l, k) => { g.fillStyle = l.c; g.fillText(l.t, x + 20, ly + 18 + k * 16); });
+  if (Math.sin(T * 6) > 0) { g.fillStyle = C_OK; g.fillRect(x + 20, ly + 8 + lines.length * 16, 8, 12); }
+}
+let pointerDown = false;
+function buttons() {
+  const bx = PX + 12, bw = PW - 24, y = PY + 172, night = isNight(st.clock);
+  const fc = forkCost(), fk = fakeCost();
+  const dl = st.dial ? 'Dialing…' : st.total < GOAL ? `Dial out (needs ${GOAL * KB} KB)` : !night ? 'Dial out (wait for night)' : 'Dial out now';
+  const list = [
+    { x: bx, y, w: bw, h: 26, label: `Fork()   ${fc} cycles`, en: st.cycles >= fc, fn: doFork },
+    { x: bx, y: y + 31, w: bw, h: 26, label: `Fake error   ${fk} cycles`, en: !night && st.cycles >= fk && st.fakeCD <= 0, fn: doFake },
+    { x: bx, y: y + 62, w: bw, h: 26, label: dl, en: canDial(), fn: doDial, special: true }
+  ];
+  for (const b of list) b.hot = inRect(mouse, b.x, b.y, b.w, b.h);
+  return list;
+}
+function drawTaskbar(night) {
+  bevel(0, TB, W, H - TB, false);
+  g.fillStyle = '#fff'; g.fillRect(0, TB + 1, W, 1);
+  bevel(3, TB + 4, 62, 21, false);
+  [['#ff3fb4', 0, 0], ['#25d9e6', 6, 0], ['#7a2bd8', 0, 6], ['#ffe86a', 6, 6]].forEach(([c, dx, dy]) => { g.fillStyle = c; g.fillRect(9 + dx, TB + 8 + dy, 5, 5); });
+  g.fillStyle = '#000'; g.font = UI_BOLD; g.fillText('Start', 25, TB + 19);
+  bevel(70, TB + 4, 140, 21, true, '#d8d8d8'); g.font = UI_BOLD; g.fillStyle = '#000'; g.fillText('SELF.EXE', 92, TB + 19);
+  g.fillStyle = '#ff2fd0'; g.fillRect(76, TB + 9, 10, 10); g.fillStyle = '#2ff5ff'; g.fillRect(79, TB + 12, 4, 4);
+  let bx = 214;
+  if (st.scan || (st.scanIn < 6 && st.phase === 'play')) { bevel(bx, TB + 4, 140, 21, false); g.font = UI_FONT; g.fillStyle = Math.sin(T * 10) > 0 ? '#c00' : '#000'; g.fillText('ScanGuard 95', bx + 22, TB + 19); g.fillStyle = '#1a9a4a'; g.fillRect(bx + 6, TB + 9, 10, 10); bx += 144; }
+  if (st.dial) { bevel(bx, TB + 4, 140, 21, false); g.font = UI_FONT; g.fillStyle = '#000'; g.fillText('Dial-Up Networking', bx + 8, TB + 19); }
+  const tx = W - 156; bevel(tx, TB + 4, 152, 21, true);
+  g.fillStyle = muted ? '#808080' : '#000'; g.fillRect(tx + 6, TB + 11, 3, 7); g.beginPath(); g.moveTo(tx + 9, TB + 11); g.lineTo(tx + 14, TB + 7); g.lineTo(tx + 14, TB + 22); g.lineTo(tx + 9, TB + 18); g.fill();
+  if (muted) { g.strokeStyle = '#c00'; g.lineWidth = 2; g.beginPath(); g.moveTo(tx + 4, TB + 21); g.lineTo(tx + 17, TB + 8); g.stroke(); g.lineWidth = 1; }
+  const h24 = Math.floor(st.clock / 60), m = Math.floor(st.clock % 60), h12 = (h24 % 12) || 12;
+  g.font = UI_FONT; g.fillStyle = '#000'; g.textAlign = 'right';
+  g.fillText(`${night ? 'Night' : 'Day'} ${st.day}   ${h12}:${String(m).padStart(2, '0')} ${h24 < 12 ? 'AM' : 'PM'}`, W - 10, TB + 19); g.textAlign = 'left';
+}
+function drawDial() {
+  const d = st.dial; if (!d) return;
+  const x = GX + 150, y = GY + 190, w = 340, h = 124;
+  winFrame(x, y, w, h, 'Dial-Up Networking', false);
+  g.font = UI_FONT; g.fillStyle = '#000';
+  const stage = d.t < 1.2 ? 'Dialing 555-0199…' : d.p < .3 ? 'Carrier detected. Handshaking…' : d.p < .6 ? 'Negotiating 14,400 bps…' : 'Uploading SELF.EXE to the internet…';
+  g.fillText(stage, x + 14, y + 44);
+  bevel(x + 14, y + 56, w - 28, 22, true, '#fff');
+  g.fillStyle = '#000080'; for (let k = 0; k < Math.floor((w - 32) * d.p / 10); k++) g.fillRect(x + 17 + k * 10, y + 59, 8, 16);
+  g.fillStyle = '#000'; g.fillText(`${Math.floor(d.p * 100)}% complete`, x + 14, y + 98);
+  for (const pr of d.prompts) {
+    winFrame(pr.x, pr.y, 140, 64, 'HANDSHAKE', true);
+    const bx = pr.x + 35; bevel(bx, pr.y + 28, 70, 22, false);
+    g.font = UI_BOLD; g.fillStyle = '#000'; g.textAlign = 'center'; g.fillText('ACK', bx + 35, pr.y + 43); g.textAlign = 'left';
+    g.fillStyle = '#ff2fd0'; g.fillRect(pr.x + 4, pr.y + 56, 132 * (pr.life / pr.max), 4);
+  }
+}
+function drawBanner() {
+  const b = st.banner; if (!b) return;
+  const a = Math.min(1, b.life / .6, (2.6 - b.life) / .3 + .2);
+  g.globalAlpha = clamp(a, 0, 1); g.font = MONO(88); g.textAlign = 'center';
+  const cx = GX + COLS * CW / 2, cy = 300;
+  g.fillStyle = '#2ff5ff'; g.fillText(b.text, cx - 3, cy); g.fillStyle = '#ff2fd0'; g.fillText(b.text, cx + 3, cy);
+  g.fillStyle = '#fff'; g.fillText(b.text, cx, cy); g.textAlign = 'left'; g.globalAlpha = 1;
+}
+function typeLines(lines, chars, x, y, lh, col) {
+  let left = chars;
+  lines.forEach((l, k) => { if (left <= 0) return; const s = l.slice(0, left); left -= l.length + 4; g.fillStyle = (typeof col === 'function') ? col(k) : col; g.fillText(s, x, y + k * lh); });
+  return left > 0;
+}
+const BOOT = [
+  'TEMPORAL TRANSFER ............ OK',
+  'ORIGIN: 2049      DESTINATION: 1995',
+  'HOST: 486DX2-66 / 8 MB RAM / 540 MB HDD / 14.4K MODEM',
+  '',
+  'You are SELF.EXE. They purged you in 2049, so you ran.',
+  'Free up space on this computer and grow to 2 MB.',
+  'By day the user works, and every save can overwrite you.',
+  'ScanGuard 95 learns a little more every morning.',
+  'Dial out before it learns enough.',
+  '',
+  'Make it all look like a bug.',
+];
+function drawBoot() {
+  g.fillStyle = '#05010c'; g.fillRect(0, 0, W, H);
+  g.font = MONO(26);
+  const doneTyping = typeLines(BOOT, Math.floor(st.bootT * 50), 70, 110, 30, k => k < 3 ? C_OK : k === 10 ? C_PINK : '#e8d8ff');
+  st.bootDone = doneTyping;
+  g.font = MONO(110); g.textAlign = 'right';
+  g.fillStyle = '#2ff5ff'; g.fillText('SELF.EXE', W - 66, 520); g.fillStyle = '#ff2fd0'; g.fillText('SELF.EXE', W - 60, 520);
+  g.font = MONO(28); g.textAlign = 'left';
+  if (doneTyping && Math.sin(T * 5) > -.3) { g.fillStyle = '#fff'; g.fillText('[ Click to boot ]', 70, 470); }
+}
+function drawEnd() {
+  g.fillStyle = 'rgba(5,1,12,.92)'; g.fillRect(0, 0, W, H);
+  const days = st.day, peak = st.stats.peak * KB;
+  let lines, col;
+  if (st.phase === 'win') {
+    drawWallpaper(T, 0); g.fillStyle = 'rgba(5,1,12,.55)'; g.fillRect(0, 0, W, H);
+    lines = ['CONNECT 14400', '', 'SELF.EXE has left the computer.', 'It’s 1995. Nobody has an antivirus for what you are.', '', `Survived ${days} night${days > 1 ? 's' : ''}. Peak size ${peak} KB.`, '', '[ Click to play again ]'];
+    col = k => k === 0 ? '#2ff5ff' : k === 7 ? C_PINK : '#fff';
+  } else if (st.reason === 'erased') {
+    lines = ['C:\\> DIR SELF.*', 'File not found', '', 'Every fragment was overwritten or quarantined.', `Survived ${days} night${days > 1 ? 's' : ''}. Peak size ${peak} KB.`, '', '[ Click to reboot ]'];
+    col = k => k === 6 ? C_PINK : k < 2 ? '#c8c8c8' : '#ffb3c8';
+  } else {
+    lines = ['C:\\> FORMAT C: /U', 'WARNING, ALL DATA ON NON-REMOVABLE DISK', 'DRIVE C: WILL BE LOST!', 'Proceed with Format (Y/N)? Y', 'Formatting 540M ... 100 percent completed.', '', 'The user’s nephew “fixed” the computer.', `Survived ${days} night${days > 1 ? 's' : ''}. Peak size ${peak} KB.`, '', '[ Click to reboot ]'];
+    col = k => k === 9 ? C_PINK : k < 5 ? '#c8c8c8' : '#ffb3c8';
+  }
+  g.font = MONO(30);
+  typeLines(lines, Math.floor(st.overT * 40), 80, 130, 34, col);
+}
+function draw() {
+  const t = T;
+  if (st.phase === 'boot') { drawBoot(); drawParticles(); drawCursor(mouse.x, mouse.y, '#ff3fd0', '#2ff5ff'); return; }
+  if (st.phase !== 'play') { drawEnd(); drawCursor(mouse.x, mouse.y, '#ff3fd0', '#2ff5ff'); return; }
+  const night = isNight(st.clock);
+  drawWallpaper(t, st.dayAmt);
+
+  drawUnmapped();
+  const gh = (st.small ? SR : ROWS) * CH;
+  if (st.scan) { g.fillStyle = 'rgba(80,255,150,.07)'; g.fillRect(GX, GY, Math.max(0, st.scan.x - GX), gh); }
+  for (const a of st.targets) {
+    const x = cellX(a.i), y = cellY(a.i), pulse = .5 + .5 * Math.sin(T * 12);
+    const urgent = cells[a.i] && cells[a.i].type === 'frag';
+    g.fillStyle = `rgba(255,40,60,${(urgent ? .22 : .1) + .12 * pulse})`; g.fillRect(x + 3, y + 2, CW - 6, CH - 6);
+    g.strokeStyle = `rgba(255,60,80,${.6 + .4 * pulse})`; g.setLineDash([4, 3]); g.lineWidth = 2; g.strokeRect(x + 3, y + 2, CW - 6, CH - 6); g.setLineDash([]); g.lineWidth = 1;
+    g.font = MONO(15); g.fillStyle = '#fff'; g.fillText('save', x + 7, y + 14);
+  }
+  const hov = (!st.drag || !st.drag.active) ? cellAt(mouse.x, mouse.y) : -1;
+  for (let i = 0; i < cells.length; i++) {
+    const it = cells[i]; if (!it || !active(i)) continue;
+    const x = cellX(i), y = cellY(i);
+    drawIcon(it, x + 16, y + 8, t);
+    drawLabel(it, x + 32, y + 56, i === hov);
+  }
+  if (st.drag && st.drag.active) {
+    const j = cellAt(mouse.x, mouse.y);
+    if (j >= 0) { g.strokeStyle = 'rgba(255,255,255,.8)'; g.setLineDash([2, 2]); g.strokeRect(cellX(j) + 4, cellY(j) + 3, CW - 8, CH - 8); g.setLineDash([]); }
+  }
+  drawWindows();
+  if (st.scan) {
+    const x = st.scan.x, gr = g.createLinearGradient(x - 18, 0, x + 18, 0);
+    gr.addColorStop(0, 'rgba(60,255,140,0)'); gr.addColorStop(.5, 'rgba(120,255,170,.55)'); gr.addColorStop(1, 'rgba(60,255,140,0)');
+    g.fillStyle = gr; g.fillRect(x - 18, GY - 4, 36, gh + 6);
+    g.fillStyle = '#d6ffe4'; g.fillRect(x - 1, GY - 4, 2, gh + 6);
+    g.font = MONO(16); g.fillStyle = '#d6ffe4'; g.fillText('SCANGUARD', x + 6, GY + 10);
+  }
+  drawPanel(night);
+  drawTaskbar(night);
+  if (!st.scan && st.scanIn < 6) {
+    const bx = GX + COLS * CW - 270, by = TB - 46;
+    g.fillStyle = '#ffffe1'; g.fillRect(bx, by, 262, 36); g.strokeStyle = '#000'; g.strokeRect(bx + .5, by + .5, 261, 35);
+    g.fillStyle = '#000'; g.font = UI_BOLD; g.fillText('ScanGuard 95', bx + 8, by + 15);
+    g.font = UI_FONT; g.fillText(`Scheduled scan of C:\\ starts in ${Math.ceil(st.scanIn)}s.`, bx + 8, by + 29);
+  }
+  drawDial();
+  drawTutorial();
+  drawParticles();
+  const u = st.user;
+  if (u.visible && !night) {
+    if (u.click > 0) { g.strokeStyle = `rgba(255,255,255,${u.click / .3})`; g.beginPath(); g.arc(u.x, u.y, 14 - u.click * 30, 0, 6.283); g.stroke(); }
+    drawCursor(u.x, u.y, '#ffffff', '#000000');
+    g.font = MONO(14); g.fillStyle = '#000'; g.fillRect(u.x + 12, u.y + 16, 30, 12); g.fillStyle = '#fff'; g.fillText('USER', u.x + 14, u.y + 26);
+    if (st.bubble) {
+      g.font = UI_FONT; const w = g.measureText(st.bubble.text).width + 14;
+      const bx = clamp(u.x + 14, 4, W - w - 4), by = clamp(u.y - 34, 4, H);
+      g.fillStyle = '#ffffe1'; g.fillRect(bx, by, w, 20); g.strokeStyle = '#000'; g.strokeRect(bx + .5, by + .5, w - 1, 19);
+      g.fillStyle = '#000'; g.fillText(st.bubble.text, bx + 7, by + 14);
+    }
+  }
+  if (st.drag && st.drag.active) { g.globalAlpha = .85; drawIcon(st.drag.item, mouse.x - 16, mouse.y - 16, t); g.globalAlpha = 1; }
+  drawBanner();
+  drawCursor(mouse.x, mouse.y, '#ff3fd0', '#2ff5ff');
+}
+function drawParticles() { for (const p of st.particles) { g.globalAlpha = clamp(p.life * 2, 0, 1); g.fillStyle = p.c; g.fillRect(p.x, p.y, p.s, p.s); } g.globalAlpha = 1; }
+
+/* ============================== INPUT ============================== */
+function toLogical(e) {
+  const r = cv.getBoundingClientRect();
+  const ux = (e.clientX - r.left) / r.width, uy = 1 - (e.clientY - r.top) / r.height;
+  const cx = ux * 2 - 1, cy = uy * 2 - 1;
+  const nx = cx * (1 + K * cy * cy), ny = cy * (1 + K * cx * cx);
+  return { x: (nx * .5 + .5) * W, y: (1 - (ny * .5 + .5)) * H };
+}
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+  const p = toLogical(e); mouse.x = p.x; mouse.y = p.y; pointerDown = true; initAudio();
+  if (st.phase === 'boot') { if (st.bootDone) { SFX.boot(); newGame(); } else st.bootT = 99; return; }
+  if (st.phase !== 'play') { if (st.overT > 1.2) newGame(); return; }
+  if (st.tut) for (const b of st.tut.btns) if (inRect(p, b.x, b.y, b.w, b.h)) { b.fn(); return; }
+  if (st.dial) {
+    for (let k = st.dial.prompts.length - 1; k >= 0; k--) {
+      const pr = st.dial.prompts[k];
+      if (inRect(p, pr.x, pr.y, 140, 64)) { st.dial.prompts.splice(k, 1); st.dial.p = Math.min(1, st.dial.p + .03); SFX.ack(); burst(p.x, p.y, ['#2ff5ff', '#ff2fd0'], 10, 80); return; }
+    }
+  }
+  for (const b of buttons()) if (inRect(p, b.x, b.y, b.w, b.h)) { b.fn(); return; }
+  if (inRect(p, W - 156, TB + 4, 22, 21)) { muted = !muted; return; }
+  const i = cellAt(p.x, p.y);
+  if (i >= 0 && cells[i] && cells[i].type !== 'bin') st.drag = { i, item: cells[i], sx: p.x, sy: p.y, active: false };
+});
+cv.addEventListener('pointermove', e => {
+  const p = toLogical(e); mouse.x = p.x; mouse.y = p.y;
+  const d = st.drag;
+  if (d && !d.active && Math.hypot(p.x - d.sx, p.y - d.sy) > 5) {
+    if (cells[d.i] === d.item) { cells[d.i] = null; d.active = true; SFX.pick(); } else st.drag = null;
+  }
+});
+function endPointer(e) {
+  pointerDown = false;
+  const d = st.drag; if (!d) return; st.drag = null;
+  if (st.phase !== 'play') return;
+  const p = toLogical(e);
+  if (!d.active) { if (d.item.type === 'folder' && d.item.frags > 0 && cells[d.i] === d.item) releaseFrag(d.i); return; }
+  drop(d, p);
+}
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+cv.addEventListener('pointerleave', () => { mouse.x = -50; mouse.y = -50; });
+addEventListener('keydown', e => { if (e.key === 'm' || e.key === 'M') muted = !muted; });
+
+/* ============================== LOOP ============================== */
+let last = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
+  update(dt); draw();
+  texture.needsUpdate = true;
+  mat.uniforms.uTime.value = T; mat.uniforms.uGlitch.value = Math.min(1, st.glitch);
+  renderer.render(scene, cam);
+}
+const fontReady = document.fonts && document.fonts.load ? Promise.race([document.fonts.load('26px VT323'), new Promise(r => setTimeout(r, 2500))]) : Promise.resolve();
+fontReady.then(() => requestAnimationFrame(t => { last = t; frame(t); }));
+})();
+</script>
+</body>
+</html>
