@@ -300,6 +300,9 @@
 .p-skully    { --bg: #D8D2F5; --ac: #4C1D95; }
 .p-selfexe   { --bg: #123524; --ac: #4ADE80; }
 .p-orbithopper { --bg: #0E2A47; --ac: #FFD23F; }
+.p-monsterreel { --bg: #0E3A53; --ac: #FFD23F; }
+.p-beambound  { --bg: #0B1026; --ac: #FFC53D; }
+.p-tiltedstack { --bg: #FDE68A; --ac: #92400E; }
   .p-goblins   { --bg: #3A1C7A; --ac: #B6FF00; }
   .p-mtd       { --bg: #A8E4FF; --ac: #FF8A00; }
   .p-brick     { --bg: #FFBE8F; --ac: #00E5FF; }
@@ -415,7 +418,7 @@
     </svg>
     <span class="wm"><b>Weird Demon</b><b>Game Nuggets</b></span>
   </a>
-  <span class="chip-count"><b id="total">41</b> games</span>
+  <span class="chip-count"><b id="total">44</b> games</span>
 </header>
 
 <div class="mq" aria-hidden="true">
@@ -425,7 +428,7 @@
   </div>
 </div>
 
-<section class="hero swap" id="hero" aria-roledescription="carousel" aria-label="Featured games" style="--hbg:#D8D2F5;--hac:#4C1D95">
+<section class="hero swap" id="hero" aria-roledescription="carousel" aria-label="Featured games" style="--hbg:#0E3A53;--hac:#FFD23F">
   <div class="hero-bg" aria-hidden="true">
     <svg class="d1" viewBox="0 0 100 90"><polygon points="50,6 96,84 4,84"/></svg>
     <svg class="d2" viewBox="0 0 60 60"><polygon points="22,2 38,2 38,22 58,22 58,38 38,38 38,58 22,58 22,38 2,38 2,22 22,22"/></svg>
@@ -434,25 +437,25 @@
   <div class="hero-in">
     <div class="hero-top">
       <span class="kick" id="heroKicker">New from the workshop</span>
-      <div class="stk" aria-hidden="true"><span class="rays"></span><span class="tile"><span id="heroEmoji">💀</span></span></div>
+      <div class="stk" aria-hidden="true"><span class="rays"></span><span class="tile"><span id="heroEmoji">🎣</span></span></div>
     </div>
-    <h1 id="heroTitle">Skully Sweep</h1>
-    <p class="pitch" id="heroPitch">Sweep the graveyard, wake the skullkins.</p>
-    <div class="chips" id="heroMeta"><span>Minesweeper</span><span>Night shifts</span><span>Grandma Bones</span></div>
+    <h1 id="heroTitle">Monster Reel</h1>
+    <p class="pitch" id="heroPitch">Hook a giant sea monster, shoot it weak, reel it in.</p>
+    <div class="chips" id="heroMeta"><span>Cast, shoot, reel</span><span>3 monsters</span><span>Don't snap the line</span></div>
     <div class="ctl">
-      <a class="play-btn" id="heroPlay" href="skully-sweep/index.html"><i class="tri" aria-hidden="true"></i>Play now</a>
+      <a class="play-btn" id="heroPlay" href="monster-reel/index.html"><i class="tri" aria-hidden="true"></i>Play now</a>
       <button class="sq" id="prev" type="button" aria-label="Previous featured game"><svg viewBox="0 0 24 24"><path d="M16 3 5 12l11 9z"/></svg></button>
       <button class="sq" id="next" type="button" aria-label="Next featured game"><svg viewBox="0 0 24 24"><path d="M8 3l11 9-11 9z"/></svg></button>
     </div>
     <div class="segs" role="group" aria-label="Featured games">
-      <button class="seg on" data-i="0" type="button" aria-label="Skully Sweep" aria-current="true"><i></i></button>
-      <button class="seg" data-i="1" type="button" aria-label="SELF.EXE — Not A Bug"><i></i></button>
-      <button class="seg" data-i="2" type="button" aria-label="Orbit Hopper: The Last Spark"><i></i></button>
-      <button class="seg" data-i="3" type="button" aria-label="Hard Head"><i></i></button>
-      <button class="seg" data-i="4" type="button" aria-label="Roll the Shoulder"><i></i></button>
-      <button class="seg" data-i="5" type="button" aria-label="Parry Card King"><i></i></button>
-      <button class="seg" data-i="6" type="button" aria-label="The Wax Tower"><i></i></button>
-      <button class="seg" data-i="7" type="button" aria-label="Brick by Brick: Back in Time"><i></i></button>
+      <button class="seg on" data-i="0" type="button" aria-label="Monster Reel" aria-current="true"><i></i></button>
+      <button class="seg" data-i="1" type="button" aria-label="Beambound"><i></i></button>
+      <button class="seg" data-i="2" type="button" aria-label="Tilted Stack"><i></i></button>
+      <button class="seg" data-i="3" type="button" aria-label="Skully Sweep"><i></i></button>
+      <button class="seg" data-i="4" type="button" aria-label="SELF.EXE — Not A Bug"><i></i></button>
+      <button class="seg" data-i="5" type="button" aria-label="Orbit Hopper: The Last Spark"><i></i></button>
+      <button class="seg" data-i="6" type="button" aria-label="Hard Head"><i></i></button>
+      <button class="seg" data-i="7" type="button" aria-label="Roll the Shoulder"><i></i></button>
       <button class="pz" id="pz" type="button" aria-label="Pause or resume auto-advance"><svg class="ic-pause" viewBox="0 0 14 14"><path d="M1 0h4v14H1zM9 0h4v14H9z"/></svg><svg class="ic-play" viewBox="0 0 14 14"><path d="M2 0l11 7-11 7z"/></svg></button>
     </div>
   </div>
@@ -460,16 +463,19 @@
 
 <main>
   <section class="sec wrap" id="dev" aria-labelledby="dev-h">
-    <div class="sec-head"><h2 id="dev-h">In Development</h2><span class="count" aria-hidden="true">12</span><p>Actively being worked on. Newest first, tap one to play.</p></div>
+    <div class="sec-head"><h2 id="dev-h">In Development</h2><span class="count" aria-hidden="true">15</span><p>Actively being worked on. Newest first, tap one to play.</p></div>
     <!-- ORDER: newest first. When a new game is pushed, add its card at the FRONT of this row. -->
     <div class="grid">
+      <a class="card p-monsterreel" href="monster-reel/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🎣</span></span><span class="cbody"><h3>Monster Reel</h3><p class="blurb">Hook a giant sea monster, shoot it weak, reel it in.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
+      <a class="card p-beambound" href="beambound/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🔦</span></span><span class="cbody"><h3>Beambound</h3><p class="blurb">Follow the lighthouse beam home through the fog — five seconds outside the light and the dark takes you.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
+      <a class="card p-tiltedstack" href="tilted-stack/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🪙</span></span><span class="cbody"><h3>Tilted Stack</h3><p class="blurb">Stack 100 coins to pay off the debt — one tower, no second chances.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-skully" href="skully-sweep/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">💀</span></span><span class="cbody"><h3>Skully Sweep</h3><p class="blurb">Sweep the graveyard, wake the skullkins.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-selfexe" href="self-exe-not-a-bug/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">💾</span></span><span class="cbody"><h3>SELF.EXE — Not A Bug</h3><p class="blurb">Purged in 2049, you ran. Make every glitch look like a bug.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
-      <a class="card p-backintime" href="brick-by-brick-back-in-time/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🔺</span></span><span class="cbody"><h3>Brick by Brick: Back in Time</h3><p class="blurb">Sixteen layers, four sides, one golden capstone.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
+      <a class="card p-backintime" href="brick-by-brick-back-in-time/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🔺</span></span><span class="cbody"><h3>Brick by Brick: Back in Time</h3><p class="blurb">Sixteen layers, four sides, one golden capstone.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-roll" href="roll-the-shoulder/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🛞</span></span><span class="cbody"><h3>Roll the Shoulder</h3><p class="blurb">Roll the cement shoulder. Steer the roller, stay on the strip.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-hardhead" href="hard-head/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">💥</span></span><span class="cbody"><h3>Hard Head</h3><p class="blurb">Mine with your face. Build with the rubble.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-arena" href="arena-recall/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🧠</span></span><span class="cbody"><h3>Arena Recall</h3><p class="blurb">Watch the foe’s strikes, repeat the pattern, land the blows.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
-      <a class="card p-parry" href="parry-card-king/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🃏</span></span><span class="cbody"><h3>Parry Card King</h3><p class="blurb">Parry strikes from eight directions. Break the guard, spend it on weapons.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
+      <a class="card p-parry" href="parry-card-king/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🃏</span></span><span class="cbody"><h3>Parry Card King</h3><p class="blurb">Parry strikes from eight directions. Break the guard, spend it on weapons.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-shroom" href="shroom-siege/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🍄</span></span><span class="cbody"><h3>Shroom Siege</h3><p class="blurb">Pop the mushroom mob before it eats your corn. Grab the blaster.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-orbit" href="orbit-gardener/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🪐</span></span><span class="cbody"><h3>Orbit Gardener</h3><p class="blurb">Grow starflowers on a tiny planet, then rocket to the moon.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-bug" href="alien-bug-inspector/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🐛</span></span><span class="cbody"><h3>Alien Bug Inspector</h3><p class="blurb">Customs for the weird: find the alien bugs, stamp PASS.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
@@ -485,7 +491,7 @@
     <!-- ORDER: newest first. When a game moves to the backlog, move its card here, keeping newest-first order. -->
     <div class="grid">
       <a class="card p-penny" href="down-to-the-last-penny/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🪙</span></span><span class="cbody"><h3>Down to the Last Penny</h3><p class="blurb">Knock out protesters, loot their pockets, bank 10,000 pennies.</p></span><span class="cfoot"><span class="tag">Backlog</span><span class="go" aria-hidden="true"></span></span></a>
-      <a class="card p-waxtower" href="the-wax-tower/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🕯️</span></span><span class="cbody"><h3>The Wax Tower</h3><p class="blurb">Dip 10 perfect candles before dawn, or the tower goes dark.</p></span><span class="cfoot"><span class="tag">Backlog</span><span class="go" aria-hidden="true"></span></span></a>
+      <a class="card p-waxtower" href="the-wax-tower/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🕯️</span></span><span class="cbody"><h3>The Wax Tower</h3><p class="blurb">Dip 10 perfect candles before dawn, or the tower goes dark.</p></span><span class="cfoot"><span class="tag">Backlog</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-foxglove" href="daily-roguelike-the-foxglove-derby-2026-11-17/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🦊</span></span><span class="cbody"><h3>The Foxglove Derby</h3><p class="blurb">Hold the book on a midnight race — stake gold, switch mid-race, bank 40.</p></span><span class="cfoot"><span class="tag">Parimutuel betting</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-tinshop" href="daily-roguelike-the-tin-shop-s-masks-2026-11-16/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🎭</span></span><span class="cbody"><h3>The Tin Shop’s Masks</h3><p class="blurb">Wake 5 wind-up toys by turning gears — each mask twists the controls.</p></span><span class="cfoot"><span class="tag">Gear puzzle</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-lastwind dark" href="daily-roguelike-the-last-wind-2026-11-15/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🕰️</span></span><span class="cbody"><h3>The Last Wind</h3><p class="blurb">Hold WIND, release in the green — 12 chimes before the candle dies.</p></span><span class="cfoot"><span class="tag">Timing</span><span class="go" aria-hidden="true"></span></span></a>
@@ -607,6 +613,15 @@
 
   /* ---------- hero ---------- */
   var featured = [
+    { bg: '#0E3A53', ac: '#FFD23F', emoji: '🎣', kicker: 'New from the workshop', title: 'Monster Reel',
+      pitch: 'Hook a giant sea monster, shoot it weak, reel it in.',
+      meta: ['Cast, shoot, reel', '3 monsters', 'Don\'t snap the line'], href: 'monster-reel/index.html' },
+    { bg: '#0B1026', ac: '#FFC53D', emoji: '🔦', kicker: 'New from the workshop', title: 'Beambound',
+      pitch: 'Follow the lighthouse beam home through the fog — five seconds outside the light and the dark takes you.',
+      meta: ['Follow the beam', '2,500 m', 'Thumbstick + lever'], href: 'beambound/index.html' },
+    { bg: '#FDE68A', ac: '#92400E', emoji: '🪙', kicker: 'New from the workshop', title: 'Tilted Stack',
+      pitch: 'Stack 100 coins to pay off the debt — one tower, no second chances.',
+      meta: ['Coin stacking', '100 coins', "The Gull's patience"], href: 'tilted-stack/index.html' },
     { bg: '#D8D2F5', ac: '#4C1D95', emoji: '💀', kicker: 'New from the workshop', title: 'Skully Sweep',
       pitch: 'Sweep the graveyard, wake the skullkins.',
       meta: ['Minesweeper', 'Night shifts', 'Grandma Bones'], href: 'skully-sweep/index.html' },
@@ -622,16 +637,6 @@
     { bg: '#FFE45C', ac: '#FF5C00', emoji: '🛞', kicker: 'New from the workshop', title: 'Roll the Shoulder',
       pitch: 'Roll the cement shoulder. Steer the roller, stay on the strip.',
       meta: ['3D sidewalk roller', 'Steer with arrows', 'Walking pace'], href: 'roll-the-shoulder/index.html' },
-    { bg: '#E8D9FF', ac: '#D6303A', emoji: '🃏', kicker: 'New from the workshop', title: 'Parry Card King',
-      pitch: 'Parry strikes from eight directions. Break the guard, spend it on weapons.',
-      meta: ['8 directions', 'Swipe to parry', 'Spend guard on weapons'], href: 'parry-card-king/index.html' },
-    { bg: '#FFF3D6', ac: '#B45309', emoji: '🕯️', kicker: 'New from the workshop', title: 'The Wax Tower',
-      pitch: 'Dip 10 perfect candles before dawn — or the tower goes dark forever.',
-      meta: ['Wax-dipping', '12 rounds', '3 wicks'], href: 'the-wax-tower/index.html' },
-    { bg: '#F0C987', ac: '#E8501F', emoji: '🔺', kicker: 'New from the workshop', title: 'Brick by Brick: Back in Time',
-      pitch: 'Sixteen layers. Four sides each. One golden capstone. And try not to look up.',
-      meta: ['3D pyramid build', '16 layers', 'Golden capstone'], href: 'brick-by-brick-back-in-time/index.html' },
-  
   ];
   var hero = document.getElementById('hero');
   var elEmoji = document.getElementById('heroEmoji'), elKick = document.getElementById('heroKicker'),

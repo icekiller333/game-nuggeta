@@ -1,0 +1,1430 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:," />
+    <title>Beambound Demo</title>
+    <style>
+      button, [role="button"] { min-height: 2.25rem; }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: #05080f;
+        color: #f4f1e6;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        overflow: hidden;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #app { position: fixed; inset: 0; }
+      canvas#game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+      /* ---------- HUD ---------- */
+      #hud {
+        position: absolute; inset: 0;
+        padding: max(10px, env(safe-area-inset-top)) 12px 0;
+        display: none;
+        pointer-events: none;
+        z-index: 5;
+      }
+      #hud.on { display: block; }
+      .hud-row { display: flex; align-items: flex-start; gap: 10px; }
+      #progress-wrap {
+        flex: 1;
+        background: #0a1220;
+        border: 3px solid #000;
+        box-shadow: 4px 4px 0 #000;
+        padding: 7px 10px 9px;
+      }
+      #progress-label {
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 11px; font-weight: 700; letter-spacing: .12em;
+        color: #ffd97a; text-transform: uppercase; margin-bottom: 6px;
+      }
+      #progress-label .dist { color: #f4f1e6; letter-spacing: .02em; white-space: nowrap; flex: 0 0 auto; }
+      /* Narrow screens: the panel is too slim for both labels side by side,
+         so stack them — route on top, the distance readout on its own line. */
+      @media (max-width: 600px) {
+        #progress-label { flex-direction: column; align-items: flex-start; gap: 2px; }
+        #progress-label .route-tail { display: none; }
+      }
+      #track {
+        position: relative; height: 14px;
+        background: #12233c; border: 2px solid #000;
+        overflow: visible;
+      }
+      #track-fill {
+        position: absolute; left: 0; top: 0; bottom: 0; width: 0%;
+        background: repeating-linear-gradient(45deg, #ffd97a 0 10px, #f5b942 10px 20px);
+      }
+      #track-boat {
+        position: absolute; top: 50%; left: 0%;
+        transform: translate(-50%, -50%);
+        font-size: 16px; line-height: 1;
+        filter: drop-shadow(1px 1px 0 #000);
+      }
+      #track-home {
+        position: absolute; right: -4px; top: 50%;
+        transform: translate(50%, -50%);
+        font-size: 16px; line-height: 1;
+        filter: drop-shadow(1px 1px 0 #000);
+      }
+      #mute-btn, #pause-btn {
+        pointer-events: auto;
+        width: 44px; height: 44px; flex: 0 0 auto;
+        background: #ffd97a; color: #0a1220;
+        border: 3px solid #000; box-shadow: 4px 4px 0 #000;
+        font-size: 19px; cursor: pointer; line-height: 1;
+      }
+      #mute-btn:active, #pause-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
+
+      /* Hull pips: hull left, shown not numbered */
+      #hull {
+        flex: 0 0 auto;
+        display: flex; align-items: center; gap: 6px;
+        background: #0a1220;
+        border: 3px solid #000; box-shadow: 4px 4px 0 #000;
+        padding: 8px 10px; height: 44px;
+      }
+      #hull .hlbl { font-size: 10px; font-weight: 700; letter-spacing: .12em; color: #ffd97a; text-transform: uppercase; }
+      .hpip {
+        width: 13px; height: 13px;
+        background: #7ee08a; border: 2px solid #000;
+        transform: rotate(45deg);
+      }
+      .hpip.spent { background: #3d1512; }
+
+      /* Dread pips: your time left in the dark, shown not numbered */
+      #dread {
+        margin: 10px auto 0;
+        width: fit-content;
+        display: none;
+        align-items: center; gap: 8px;
+        background: #2a0d0d;
+        border: 3px solid #000; box-shadow: 4px 4px 0 #000;
+        padding: 7px 12px;
+      }
+      #dread.on { display: flex; }
+      #dread .lbl { font-size: 11px; font-weight: 700; letter-spacing: .14em; color: #ff8a70; text-transform: uppercase; }
+      .pip {
+        width: 22px; height: 14px;
+        background: #ff6b4a; border: 2px solid #000;
+        transform: skewX(-14deg);
+      }
+      .pip.spent { background: #3d1512; }
+
+      /* ---------- Toast (one hint at a time) ---------- */
+      #toast {
+        position: absolute; left: 50%; bottom: calc(186px + env(safe-area-inset-bottom));
+        transform: translateX(-50%) translateY(16px);
+        max-width: min(92vw, 430px);
+        background: #f4f1e6; color: #0a1220;
+        border: 3px solid #000; box-shadow: 5px 5px 0 #000;
+        padding: 10px 14px;
+        font-size: 14px; font-weight: 700; text-align: center;
+        opacity: 0; pointer-events: none;
+        transition: opacity .18s ease, transform .18s ease;
+        z-index: 6;
+      }
+      #toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+      /* ---------- Screens ---------- */
+      .screen {
+        position: absolute; inset: 0; z-index: 10;
+        display: none;
+        align-items: center; justify-content: center;
+        padding: 18px;
+        background: rgba(3, 6, 12, .55);
+      }
+      .screen.on { display: flex; }
+      .card {
+        width: min(94vw, 460px);
+        background: #0d1830;
+        border: 3px solid #000;
+        box-shadow: 8px 8px 0 #000;
+        padding: 22px 20px 20px;
+        text-align: center;
+      }
+      .card .art {
+        font-size: 54px; line-height: 1.15; margin-bottom: 8px;
+        filter: drop-shadow(3px 3px 0 #000);
+      }
+      .card h1 {
+        font-family: "Archivo Black", system-ui, sans-serif;
+        font-size: clamp(26px, 7vw, 38px);
+        margin: 0 0 6px; letter-spacing: .01em;
+        color: #ffd97a; text-transform: uppercase;
+        text-shadow: 3px 3px 0 #000;
+      }
+      .card h2 {
+        font-family: "Archivo Black", system-ui, sans-serif;
+        font-size: clamp(22px, 6vw, 30px);
+        margin: 0 0 8px; color: #ffd97a; text-transform: uppercase;
+        text-shadow: 3px 3px 0 #000;
+      }
+      .card p { font-size: 15px; line-height: 1.55; margin: 8px 0; color: #eef2f8; }
+      .card p.dim { color: #b9c6da; font-size: 13px; }
+      .dots { display: flex; gap: 8px; justify-content: center; margin: 14px 0 4px; }
+      .dots i { width: 12px; height: 12px; background: #27405f; border: 2px solid #000; display: block; }
+      .dots i.here { background: #ffd97a; }
+      .big-btn {
+        display: inline-block; margin-top: 14px;
+        background: #c22e12; color: #fff;
+        border: 3px solid #000; box-shadow: 5px 5px 0 #000;
+        font-family: "Archivo Black", system-ui, sans-serif;
+        font-size: 19px; letter-spacing: .04em; text-transform: uppercase;
+        padding: 13px 30px; cursor: pointer; min-height: 52px;
+      }
+      .big-btn:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 #000; }
+      .big-btn.alt { background: #ffd97a; color: #0a1220; }
+      #death-cause { color: #ff8a70; font-weight: 700; }
+      #final-dist, #win-dist { color: #ffd97a; font-weight: 700; }
+      .stat-row {
+        display: flex; justify-content: center; gap: 10px; margin-top: 12px; flex-wrap: wrap;
+      }
+      .stat {
+        background: #12233c; border: 2px solid #000; padding: 7px 12px;
+        font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #b9c6da;
+      }
+      .stat b { color: #f4f1e6; display: block; font-size: 17px; margin-top: 2px; letter-spacing: 0; }
+      /* ---------- Loading ---------- */
+      #load-bar-wrap {
+        height: 14px; margin-top: 18px;
+        background: #12233c; border: 2px solid #000;
+      }
+      #load-bar {
+        height: 100%; width: 0%;
+        background: repeating-linear-gradient(45deg, #ffd97a 0 10px, #f5b942 10px 20px);
+        transition: width 1.1s linear;
+      }
+      #scr-menu .big-btn, #scr-pause .big-btn { display: block; width: 100%; }
+
+      /* ---------- Touch controls: thumbstick + throttle lever ---------- */
+      #controls {
+        position: absolute; left: 0; right: 0;
+        bottom: max(12px, env(safe-area-inset-bottom));
+        display: flex; justify-content: space-between; align-items: flex-end;
+        padding: 0 14px;
+        pointer-events: none;
+      }
+      #stick {
+        pointer-events: auto; touch-action: none;
+        width: 128px; height: 128px; border-radius: 50%;
+        background: rgba(10, 18, 32, 0.85);
+        border: 3px solid #000; box-shadow: 4px 4px 0 #000;
+        position: relative; flex: 0 0 auto;
+      }
+      #stick-knob {
+        position: absolute; left: 50%; top: 50%;
+        width: 56px; height: 56px; border-radius: 50%;
+        background: #ffd97a; border: 3px solid #000;
+        transform: translate(-50%, -50%);
+        box-shadow: 2px 2px 0 #000;
+        pointer-events: none;
+      }
+      #stick-knob::after {
+        content: ''; position: absolute; left: 50%; top: 50%;
+        width: 18px; height: 18px; border-radius: 50%;
+        background: #0a1220; transform: translate(-50%, -50%);
+      }
+      #stick .s-dir {
+        position: absolute; left: 50%; top: 6px; transform: translateX(-50%);
+        color: #ffd97a; font-size: 13px; font-weight: 700; pointer-events: none;
+      }
+      #lever {
+        pointer-events: auto; touch-action: none;
+        display: flex; flex-direction: column; align-items: center; gap: 5px;
+        flex: 0 0 auto;
+        background: rgba(10, 18, 32, 0.85);
+        border: 3px solid #000; box-shadow: 4px 4px 0 #000;
+        padding: 8px 12px;
+      }
+      .lev-lbl { font-size: 10px; font-weight: 700; letter-spacing: .14em; color: #ffd97a; text-transform: uppercase; }
+      .lev-lbl.rev { color: #ff8a70; }
+      #lever-track {
+        position: relative; width: 34px; height: 118px;
+        background: #12233c; border: 2px solid #000;
+      }
+      #lever-track::before {
+        content: ''; position: absolute; left: -6px; right: -6px; top: 50%;
+        height: 2px; background: #f4f1e6; transform: translateY(-50%);
+      }
+      #lever-handle {
+        position: absolute; left: 50%; top: 59px;
+        width: 58px; height: 30px;
+        transform: translate(-50%, -50%);
+        background: #ffd97a; border: 3px solid #000; box-shadow: 2px 2px 0 #000;
+        pointer-events: none;
+      }
+      #lever-handle::after {
+        content: ''; position: absolute; left: 8px; right: 8px; top: 50%;
+        height: 3px; background: #0a1220; transform: translateY(-50%);
+      }
+      #lever.rev #lever-handle { background: #ff8a70; }
+      .teach { animation: teachPulse .65s ease-in-out infinite alternate; }
+      @keyframes teachPulse {
+        from { box-shadow: 4px 4px 0 #000, 0 0 0 0 rgba(255, 217, 122, 0); }
+        to { box-shadow: 4px 4px 0 #000, 0 0 0 7px rgba(255, 217, 122, .85); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #toast { transition: none; }
+        #load-bar { transition: none; }
+        .teach { animation: none; box-shadow: 4px 4px 0 #000, 0 0 0 6px rgba(255, 217, 122, .85); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game"></canvas>
+
+      <div id="hud">
+        <div class="hud-row">
+          <div id="progress-wrap">
+            <div id="progress-label"><span>Beam route <span class="route-tail">· home</span></span><span class="dist" id="dist-read">0 / 2500 m</span></div>
+            <div id="track">
+              <div id="track-fill"></div>
+              <div id="track-boat">⛵</div>
+              <div id="track-home">🗼</div>
+            </div>
+          </div>
+          <div id="hull" aria-label="Hull">
+            <span class="hlbl">Hull</span>
+            <span class="hpip"></span><span class="hpip"></span><span class="hpip"></span>
+          </div>
+          <button id="pause-btn" aria-label="Pause">⏸</button>
+          <button id="mute-btn" aria-label="Toggle sound">🔊</button>
+        </div>
+        <div id="dread">
+          <span class="lbl">In the dark</span>
+          <span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span>
+        </div>
+        <div id="controls">
+          <div id="stick" role="button" aria-label="Steering thumbstick">
+            <span class="s-dir">▲</span>
+            <div id="stick-knob"></div>
+          </div>
+          <div id="lever" role="button" aria-label="Throttle lever">
+            <span class="lev-lbl">▲ Fwd</span>
+            <div id="lever-track"><div id="lever-handle"></div></div>
+            <span class="lev-lbl rev">Rev ▼</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="toast" role="status"></div>
+
+      <!-- Loading -->
+      <div class="screen on" id="scr-loading">
+        <div class="card">
+          <div class="art">🗼</div>
+          <h1>Beambound</h1>
+          <div id="load-bar-wrap"><div id="load-bar"></div></div>
+          <p class="dim">Lighting the lamp…</p>
+        </div>
+      </div>
+
+      <!-- Main menu -->
+      <div class="screen" id="scr-menu">
+        <div class="card">
+          <div class="art">🗼🚤</div>
+          <h1>Beambound</h1>
+          <p class="dim" id="menu-stats">Best — · Wins —</p>
+          <button class="big-btn" id="btn-play">Play</button>
+          <button class="big-btn alt" id="menu-sound-btn">🔊 Sound on</button>
+        </div>
+      </div>
+
+      <!-- Story panel 1 -->
+      <div class="screen" id="scr-story1">
+        <div class="card">
+          <div class="art">🌫️🚤🌫️</div>
+          <p>The fog took the sea. The lighthouse is the only light left — and it is moving.</p>
+          <div class="dots"><i class="here"></i><i></i></div>
+          <button class="big-btn alt" id="btn-story1">Next ▸</button>
+        </div>
+      </div>
+
+      <!-- Story panel 2 -->
+      <div class="screen" id="scr-story2">
+        <div class="card">
+          <div class="art">🗼💡🐙</div>
+          <p>Follow the beam. Whatever lives in the dark is patient. It gives you five seconds.</p>
+          <div class="dots"><i></i><i class="here"></i></div>
+          <button class="big-btn" id="btn-start">Start the engine</button>
+          <p class="dim">Stick steers, lever drives — stay in the light, dodge what swims in it.</p>
+        </div>
+      </div>
+
+      <!-- Game over -->
+      <div class="screen" id="scr-over">
+        <div class="card">
+          <div class="art" id="death-art">🐙</div>
+          <h2 id="death-title">Crushed</h2>
+          <p id="death-cause"></p>
+          <div class="stat-row">
+            <div class="stat">Distance<b id="final-dist">0 m</b></div>
+            <div class="stat">Best<b id="best-dist">—</b></div>
+            <div class="stat">Wins<b id="final-wins">—</b></div>
+          </div>
+          <button class="big-btn" id="btn-retry">Sail again</button>
+        </div>
+      </div>
+
+      <!-- Win -->
+      <div class="screen" id="scr-win">
+        <div class="card">
+          <div class="art">🗼🎉🚤</div>
+          <h2>Safe Harbor</h2>
+          <p>The beam sets you down at the harbour mouth. Whatever was counting in the dark… stops.</p>
+          <div class="stat-row">
+            <div class="stat">Voyage<b id="win-dist">2500 m</b></div>
+            <div class="stat">Time<b id="win-time">0:00</b></div>
+            <div class="stat">Best<b id="win-best">—</b></div>
+            <div class="stat">Wins<b id="win-wins">—</b></div>
+          </div>
+          <button class="big-btn" id="btn-again">Sail again</button>
+        </div>
+      </div>
+
+      <!-- Pause sheet -->
+      <div class="screen" id="scr-pause">
+        <div class="card">
+          <h2>Paused</h2>
+          <p class="dim" id="pause-stats">Best — · Wins —</p>
+          <button class="big-btn" id="btn-resume">Resume</button>
+          <button class="big-btn alt" id="pause-sound-btn">🔊 Sound on</button>
+          <button class="big-btn alt" id="btn-abandon">Abandon run</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      'use strict';
+      /* ================= Beambound =================
+         Steer a fishing boat inside a moving lighthouse beam.
+         5 seconds outside the light and the deep takes you. */
+
+      var canvas = document.getElementById('game');
+      var ctx = canvas.getContext('2d');
+      var W = 0, H = 0, DPR = 1;
+
+      function resize() {
+        DPR = Math.min(window.devicePixelRatio || 1, 2);
+        W = window.innerWidth; H = window.innerHeight;
+        canvas.width = Math.round(W * DPR);
+        canvas.height = Math.round(H * DPR);
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      var GOAL_M = 2500;          // metres of beam route to sail
+      var PX_PER_M = 10;
+      var OUT_LIMIT = 5;          // seconds allowed outside the beam
+      var BEAM_R = 148;           // beam radius in world px (shrinks slightly late-run)
+      var ZOOM = 1 / 1.3;         // camera pulled back 30%: 1.3x more sea on screen, world sizes unchanged
+      var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      var state = 'loading';      // loading | menu | story | playing | paused | dying | over | win
+      var deathType = null;
+      var deathT = 0;
+      var runTime = 0;
+
+      /* ---------------- Save (localStorage) ---------------- */
+      var save = { best: 0, wins: 0 };
+      try {
+        save.best = parseInt(localStorage.getItem('beambound-best') || '0', 10) || 0;
+        save.wins = parseInt(localStorage.getItem('beambound-wins') || '0', 10) || 0;
+      } catch (e) {}
+      var bestM = save.best;
+      function persist() {
+        try {
+          localStorage.setItem('beambound-best', String(bestM));
+          localStorage.setItem('beambound-wins', String(save.wins));
+        } catch (e) {}
+      }
+      function statsLine() {
+        return 'Best ' + (bestM > 0 ? bestM + ' m' : '—') + ' · Wins ' + (save.wins > 0 ? save.wins : '—');
+      }
+      function fmtBest() { return bestM > 0 ? bestM + ' m' : '—'; }
+      function fmtWins() { return save.wins > 0 ? String(save.wins) : '—'; }
+
+      var boat, beam, hazards, camX, camY, nextSpawnY, shake, hintFlags, taught;
+      var keys = {};
+
+      function beamPathX(y) {
+        return Math.sin(y * 0.0016) * 270 + Math.sin(y * 0.0047 + 1.3) * 70;
+      }
+
+      function resetRun() {
+        boat = { x: 0, y: 0, vx: 0, vy: 0, angle: -Math.PI / 2, out: 0, wake: [], hull: 3, invuln: 0, slowT: 0 };
+        beam = { x: beamPathX(-70), y: -70, r: BEAM_R };
+        hazards = [];
+        camX = boat.x; camY = boat.y;
+        nextSpawnY = -2500; // no hazards before 250 m
+        shake = 0;
+        runTime = 0;
+        deathType = null; deathT = 0;
+        hintFlags = { lever: false, beam: false, dark: false };
+        taught = { whirlpool: false, shark: false, mine: false, jelly: false };
+        if (typeof stickVec !== 'undefined' && stickVec) { stickVec.active = false; stickVec.mag = 0; }
+        if (typeof knobEl !== 'undefined' && knobEl) knobEl.style.transform = 'translate(-50%, -50%)';
+        if (typeof setLever === 'function') setLever(0);
+        var st = document.getElementById('stick'); if (st) st.classList.remove('teach');
+        var lv = document.getElementById('lever'); if (lv) lv.classList.remove('teach');
+      }
+      resetRun();
+
+      /* ---------------- Audio (tiny synth) ---------------- */
+      var AC = null, muted = false, droneNodes = null;
+      function audio() {
+        if (!AC) {
+          try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; }
+        }
+        if (AC && AC.state === 'suspended') AC.resume();
+        return AC;
+      }
+      function beep(freq, dur, type, vol, slideTo) {
+        if (muted || !audio()) return;
+        var t = AC.currentTime;
+        var o = AC.createOscillator(), g = AC.createGain();
+        o.type = type || 'sine';
+        o.frequency.setValueAtTime(freq, t);
+        if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+        g.gain.setValueAtTime(vol || 0.12, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        o.connect(g); g.connect(AC.destination);
+        o.start(t); o.stop(t + dur);
+      }
+      function startDrone() {
+        if (muted || !audio() || droneNodes) return;
+        var o = AC.createOscillator(), o2 = AC.createOscillator(), g = AC.createGain();
+        o.type = 'sine'; o.frequency.value = 55;
+        o2.type = 'triangle'; o2.frequency.value = 55.7;
+        g.gain.value = 0.035;
+        o.connect(g); o2.connect(g); g.connect(AC.destination);
+        o.start(); o2.start();
+        droneNodes = { o: o, o2: o2, g: g };
+      }
+      function stopDrone() {
+        if (!droneNodes) return;
+        try { droneNodes.o.stop(); droneNodes.o2.stop(); } catch (e) {}
+        droneNodes = null;
+      }
+      function syncSoundUI() {
+        document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
+        document.getElementById('menu-sound-btn').textContent = muted ? '🔇 Sound off' : '🔊 Sound on';
+        document.getElementById('pause-sound-btn').textContent = muted ? '🔇 Sound off' : '🔊 Sound on';
+      }
+      function toggleMute() {
+        muted = !muted;
+        syncSoundUI();
+        if (muted) stopDrone(); else if (state === 'playing') startDrone();
+      }
+      document.getElementById('mute-btn').addEventListener('click', toggleMute);
+      document.getElementById('menu-sound-btn').addEventListener('click', function () { audio(); toggleMute(); });
+      document.getElementById('pause-sound-btn').addEventListener('click', function () { audio(); toggleMute(); });
+
+      /* ---------------- Input ---------------- */
+      window.addEventListener('keydown', function (e) {
+        keys[e.key.toLowerCase()] = true;
+        if (['arrowup','arrowdown','arrowleft','arrowright',' '].indexOf(e.key.toLowerCase()) >= 0) e.preventDefault();
+      });
+      window.addEventListener('keyup', function (e) { keys[e.key.toLowerCase()] = false; });
+
+      canvas.addEventListener('pointerdown', function () { audio(); });
+
+      /* Thumbstick (left): sets the boat's heading. Lever (right): throttle, up = forward, down = reverse. */
+      var stickEl = document.getElementById('stick');
+      var knobEl = document.getElementById('stick-knob');
+      var leverEl = document.getElementById('lever');
+      var trackEl = document.getElementById('lever-track');
+      var handleEl = document.getElementById('lever-handle');
+      var stickVec = { active: false, mag: 0, angle: 0 };
+      var leverVal = 0;
+      var leverActive = false;
+
+      function syncLeverUI() {
+        if (!handleEl || !leverEl) return; // elements not wired yet (initial resetRun)
+        handleEl.style.top = (((1 - leverVal) / 2) * 88 + 15) + 'px';
+        leverEl.classList.toggle('rev', leverVal < -0.05);
+      }
+      function setLever(v) {
+        leverVal = Math.max(-1, Math.min(1, v));
+        if (Math.abs(leverVal) < 0.14) leverVal = 0; // centre detent = stop
+        syncLeverUI();
+      }
+      function stickSet(e) {
+        var r = stickEl.getBoundingClientRect();
+        var dx = e.clientX - (r.left + r.width / 2);
+        var dy = e.clientY - (r.top + r.height / 2);
+        var len = Math.hypot(dx, dy);
+        var max = 38;
+        var cl = Math.min(len, max);
+        var nx = len > 0 ? dx / len : 0, ny = len > 0 ? dy / len : 0;
+        knobEl.style.transform = 'translate(calc(-50% + ' + (nx * cl).toFixed(1) + 'px), calc(-50% + ' + (ny * cl).toFixed(1) + 'px))';
+        stickVec.mag = Math.min(1, len / max);
+        stickVec.angle = Math.atan2(dy, dx);
+      }
+      function stickEnd() {
+        stickVec.active = false; stickVec.mag = 0;
+        knobEl.style.transform = 'translate(-50%, -50%)';
+      }
+      stickEl.addEventListener('pointerdown', function (e) {
+        audio();
+        stickVec.active = true;
+        try { stickEl.setPointerCapture(e.pointerId); } catch (err) {}
+        stickSet(e);
+        e.preventDefault();
+      });
+      stickEl.addEventListener('pointermove', function (e) { if (stickVec.active) stickSet(e); });
+      stickEl.addEventListener('pointerup', stickEnd);
+      stickEl.addEventListener('pointercancel', stickEnd);
+
+      function leverSet(e) {
+        var r = trackEl.getBoundingClientRect();
+        setLever(((r.top + r.height / 2) - e.clientY) / 44);
+      }
+      leverEl.addEventListener('pointerdown', function (e) {
+        audio();
+        leverActive = true;
+        try { leverEl.setPointerCapture(e.pointerId); } catch (err) {}
+        leverSet(e);
+        e.preventDefault();
+      });
+      leverEl.addEventListener('pointermove', function (e) { if (leverActive) leverSet(e); });
+      leverEl.addEventListener('pointerup', function () { leverActive = false; });
+      leverEl.addEventListener('pointercancel', function () { leverActive = false; });
+
+      /* ---------------- Toast hints (one at a time) ---------------- */
+      var toastEl = document.getElementById('toast');
+      var toastTimer = 0;
+      var toastUntil = 0;
+      function toast(msg, secs) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('on');
+        clearTimeout(toastTimer);
+        toastUntil = performance.now() + (secs || 3) * 1000;
+        toastTimer = setTimeout(function () { toastEl.classList.remove('on'); }, (secs || 3) * 1000);
+      }
+
+      /* ---------------- HUD ---------------- */
+      var hudEl = document.getElementById('hud');
+      var dreadEl = document.getElementById('dread');
+      var pips = dreadEl.querySelectorAll('.pip');
+      var fillEl = document.getElementById('track-fill');
+      var trackBoatEl = document.getElementById('track-boat');
+      var distReadEl = document.getElementById('dist-read');
+      var hpips = document.querySelectorAll('.hpip');
+
+      function distM() { return Math.max(0, Math.floor(-boat.y / PX_PER_M)); }
+
+      function updateHUD() {
+        var m = distM();
+        var pct = Math.min(100, (m / GOAL_M) * 100);
+        fillEl.style.width = pct + '%';
+        trackBoatEl.style.left = pct + '%';
+        distReadEl.textContent = m + ' / ' + GOAL_M + ' m';
+        for (var hi = 0; hi < hpips.length; hi++) {
+          hpips[hi].classList.toggle('spent', hi >= boat.hull);
+        }
+        if (boat.out > 0.05) {
+          dreadEl.classList.add('on');
+          var left = Math.max(0, OUT_LIMIT - boat.out);
+          var lit = Math.ceil(left / OUT_LIMIT * 5);
+          for (var i = 0; i < pips.length; i++) {
+            pips[i].classList.toggle('spent', i >= lit);
+          }
+        } else {
+          dreadEl.classList.remove('on');
+        }
+      }
+
+      /* ---------------- Hazards ---------------- */
+      var TEACH = {
+        whirlpool: 'Whirlpool ahead! Skirt the edge, stay in the light.',
+        shark: 'Shark in the beam! Dodge it — but stay in the light.',
+        mine: 'Drifting mine! Watch its blinking light — one touch costs a hull.',
+        jelly: 'Jellyfish bloom! A sting costs a hull and slows you down.'
+      };
+
+      function makeHazard(type, cx, y, off) {
+        if (type === 'whirlpool') {
+          return { type: type, x: cx + off, y: y, r: 46, spin: Math.random() * 6.28, dead: false };
+        }
+        if (type === 'shark') {
+          return {
+            type: type, baseX: cx + off * 0.4, y: y, r: 30,
+            phase: Math.random() * 6.28, range: 95 + Math.random() * 40,
+            speed: 0.9 + Math.random() * 0.5, x: cx, dead: false
+          };
+        }
+        if (type === 'mine') {
+          var mx = cx + off * 0.6;
+          return {
+            type: type, baseX: mx, x: mx, y: y, r: 18,
+            phase: Math.random() * 6.28, range: 20 + Math.random() * 16,
+            speed: 0.35 + Math.random() * 0.3, dead: false
+          };
+        }
+        var jx = cx + off * 0.5;
+        var blobs = [];
+        var n = 5 + Math.floor(Math.random() * 3);
+        for (var bi = 0; bi < n; bi++) {
+          blobs.push({ dx: (Math.random() * 2 - 1) * 26, dy: (Math.random() * 2 - 1) * 22, r: 8 + Math.random() * 6, ph: Math.random() * 6.28 });
+        }
+        return {
+          type: type, baseX: jx, x: jx, y: y, r: 34,
+          phase: Math.random() * 6.28, range: 30 + Math.random() * 14,
+          speed: 0.3 + Math.random() * 0.25, blobs: blobs, dead: false
+        };
+      }
+
+      function spawnHazard() {
+        var y = beam.y - (H / ZOOM) * 0.8 - 140;
+        var cx = beamPathX(y);
+        var spawnM = Math.floor(-y / PX_PER_M);
+        var r = Math.random();
+        var type;
+        if (spawnM < 500) type = 'whirlpool'; // sharks only from 500 m
+        else if (spawnM < 1000) type = r < 0.5 ? 'whirlpool' : 'shark';
+        else if (spawnM < 1500) type = r < 0.34 ? 'whirlpool' : (r < 0.67 ? 'shark' : 'mine'); // mines from 1000 m
+        else type = r < 0.30 ? 'whirlpool' : (r < 0.58 ? 'shark' : (r < 0.79 ? 'mine' : 'jelly')); // jellyfish from 1500 m
+        var off = (Math.random() * 2 - 1) * 78;
+        hazards.push(makeHazard(type, cx, y, off));
+        var spacing = 340 + Math.random() * 160;
+        if (spawnM >= 1000 && spawnM <= 2000) spacing *= 0.6; // busier stretch
+        nextSpawnY = beam.y - spacing;
+      }
+
+      /* ---------------- Hull hits & deaths ---------------- */
+      function hitHull(kind, hz) {
+        if (state !== 'playing' || boat.invuln > 0) return;
+        boat.hull -= 1;
+        boat.invuln = 1.5;
+        var dx = boat.x - hz.x, dy = boat.y - hz.y;
+        var d = Math.hypot(dx, dy) || 1;
+        var power = kind === 'whirlpool' ? 660 : kind === 'mine' ? 580 : kind === 'jelly' ? 320 : 470; // whirlpool flings hard, mine pops, shark knocks back, jelly stings soft
+        boat.vx = (dx / d) * power;
+        boat.vy = (dy / d) * power;
+        beep(150, 0.22, 'square', 0.15, 65);
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) shake = Math.max(shake, 7);
+        if (boat.hull <= 0) die('sunk');
+      }
+
+      function die(type) {
+        if (state !== 'playing') return;
+        state = 'dying';
+        deathType = type;
+        deathT = 0;
+        stopDrone();
+        if (type === 'tentacle') beep(90, 0.9, 'sawtooth', 0.16, 38);
+        if (type === 'sunk') beep(300, 0.9, 'sine', 0.14, 48);
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) shake = 10;
+      }
+
+      var DEATHS = {
+        tentacle: { art: '🐙', title: 'The Dark Took the Boat', cause: 'Five seconds in the dark was all it needed. A tentacle took the boat like a toy.' },
+        sunk: { art: '🌊', title: 'The Sea Took the Boat', cause: 'Three hits was all the little hull could take. She slipped under without a sound.' }
+      };
+
+      function showOver() {
+        state = 'over';
+        var d = DEATHS[deathType] || DEATHS.tentacle;
+        document.getElementById('death-art').textContent = d.art;
+        document.getElementById('death-title').textContent = d.title;
+        document.getElementById('death-cause').textContent = d.cause;
+        var m = distM();
+        if (m > bestM) bestM = m;
+        persist();
+        document.getElementById('final-dist').textContent = m + ' m';
+        document.getElementById('best-dist').textContent = fmtBest();
+        document.getElementById('final-wins').textContent = fmtWins();
+        hudEl.classList.remove('on');
+        show('scr-over');
+      }
+
+      function showWin() {
+        state = 'win';
+        stopDrone();
+        beep(523, 0.16, 'sine', 0.12); setTimeout(function(){ beep(659, 0.16, 'sine', 0.12); }, 150);
+        setTimeout(function(){ beep(784, 0.34, 'sine', 0.13); }, 300);
+        var m = distM();
+        if (m > bestM) bestM = m;
+        save.wins += 1;
+        persist();
+        document.getElementById('win-dist').textContent = GOAL_M + ' m';
+        document.getElementById('win-best').textContent = fmtBest();
+        document.getElementById('win-wins').textContent = fmtWins();
+        var s = Math.floor(runTime);
+        document.getElementById('win-time').textContent = Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+        hudEl.classList.remove('on');
+        show('scr-win');
+      }
+
+      /* ---------------- Screens ---------------- */
+      var screens = ['scr-loading', 'scr-menu', 'scr-story1', 'scr-story2', 'scr-over', 'scr-win', 'scr-pause'];
+      function show(id) {
+        screens.forEach(function (s) { document.getElementById(s).classList.toggle('on', s === id); });
+      }
+      function hideAll() { screens.forEach(function (s) { document.getElementById(s).classList.remove('on'); }); }
+
+      /* Loading → main menu */
+      function showMenu() {
+        state = 'menu';
+        document.getElementById('menu-stats').textContent = statsLine();
+        syncSoundUI();
+        show('scr-menu');
+      }
+      requestAnimationFrame(function () {
+        document.getElementById('load-bar').style.width = '100%';
+      });
+      setTimeout(function () { if (state === 'loading') showMenu(); }, 1350);
+
+      document.getElementById('btn-play').addEventListener('click', function () {
+        audio(); beep(660, 0.08, 'sine', 0.07);
+        state = 'story';
+        show('scr-story1');
+      });
+      document.getElementById('btn-story1').addEventListener('click', function () { audio(); beep(660, 0.08, 'sine', 0.07); show('scr-story2'); });
+
+      /* Pause */
+      document.getElementById('pause-btn').addEventListener('click', function () {
+        if (state !== 'playing') return;
+        state = 'paused';
+        stopDrone();
+        document.getElementById('pause-stats').textContent = statsLine();
+        syncSoundUI();
+        document.getElementById('scr-pause').classList.add('on');
+      });
+      document.getElementById('btn-resume').addEventListener('click', function () {
+        if (state !== 'paused') return;
+        document.getElementById('scr-pause').classList.remove('on');
+        state = 'playing';
+        if (!muted) startDrone();
+      });
+      document.getElementById('btn-abandon').addEventListener('click', function () {
+        if (state !== 'paused') return;
+        var m = distM();
+        if (m > bestM) bestM = m;
+        persist();
+        document.getElementById('scr-pause').classList.remove('on');
+        hudEl.classList.remove('on');
+        showMenu();
+      });
+      function startGame() {
+        audio();
+        resetRun();
+        hideAll();
+        hudEl.classList.add('on');
+        state = 'playing';
+        startDrone();
+        stickEl.classList.add('teach');
+        toast('Left stick steers — push it the way you want to go.', 3.2);
+        setTimeout(function () {
+          stickEl.classList.remove('teach');
+          if (state === 'playing' && !hintFlags.lever) {
+            leverEl.classList.add('teach');
+            toast('Right lever drives — push up for forward, pull down for reverse.', 3.4);
+            hintFlags.lever = true;
+          }
+        }, 3500);
+        setTimeout(function () {
+          leverEl.classList.remove('teach');
+          if (state === 'playing' && !hintFlags.beam) { toast('Follow the light. It knows the way home.', 3); hintFlags.beam = true; }
+        }, 7200);
+      }
+      document.getElementById('btn-start').addEventListener('click', startGame);
+      document.getElementById('btn-retry').addEventListener('click', startGame);
+      document.getElementById('btn-again').addEventListener('click', startGame);
+
+      /* ---------------- Update ---------------- */
+      var lastTickSecond = -1;
+
+      function update(dt) {
+        if (state !== 'playing' && state !== 'dying') return;
+        runTime += dt;
+        if (boat.invuln > 0) boat.invuln = Math.max(0, boat.invuln - dt);
+
+        /* Beam travels the route, gently faster as you go */
+        var m = distM();
+        var beamSpeed = 104 + Math.min(46, m * 0.045);
+        beam.y -= beamSpeed * dt;
+        beam.x = beamPathX(beam.y);
+        beam.r = BEAM_R - Math.min(26, m * 0.02);
+
+        if (state === 'dying') {
+          deathT += dt;
+          boat.vx *= 0.94; boat.vy *= 0.94;
+          boat.x += boat.vx * dt; boat.y += boat.vy * dt;
+          if (deathType === 'whirlpool') { boat.angle += dt * 9; }
+          if (deathT > 1.25) showOver();
+          updateCam(dt);
+          return;
+        }
+
+        /* Steering: thumbstick (or keys) sets heading, lever sets throttle */
+        var throttle = leverVal;
+        var wantAngle = null;
+        if (stickVec.active && stickVec.mag > 0.28) {
+          wantAngle = stickVec.angle;
+        } else {
+          var kx = 0, ky = 0;
+          if (keys['a'] || keys['arrowleft']) kx -= 1;
+          if (keys['d'] || keys['arrowright']) kx += 1;
+          if (keys['w'] || keys['arrowup']) ky -= 1;
+          if (keys['s'] || keys['arrowdown']) ky += 1;
+          if (kx !== 0 || ky !== 0) { wantAngle = Math.atan2(ky, kx); throttle = 1; }
+        }
+        if (wantAngle !== null) {
+          var adiff = wantAngle - boat.angle;
+          while (adiff > Math.PI) adiff -= Math.PI * 2;
+          while (adiff < -Math.PI) adiff += Math.PI * 2;
+          boat.angle += adiff * Math.min(1, dt * 5.5);
+        }
+        if (boat.slowT > 0) boat.slowT = Math.max(0, boat.slowT - dt);
+        var MAXV = 238;
+        var topSpd = MAXV * (boat.slowT > 0 ? 0.45 : 1); // jellyfish sting slows the boat
+        var tvx = Math.cos(boat.angle) * throttle * (throttle < 0 ? topSpd * 0.55 : topSpd);
+        var tvy = Math.sin(boat.angle) * throttle * (throttle < 0 ? topSpd * 0.55 : topSpd);
+        var vk = Math.min(1, dt * 2.8);
+        boat.vx += (tvx - boat.vx) * vk;
+        boat.vy += (tvy - boat.vy) * vk;
+        var sp = Math.hypot(boat.vx, boat.vy);
+        if (sp > 720) { boat.vx = boat.vx / sp * 720; boat.vy = boat.vy / sp * 720; sp = 720; }
+        boat.x += boat.vx * dt;
+        boat.y += boat.vy * dt;
+
+        /* Wake trail */
+        if (sp > 40 && Math.random() < 0.6) boat.wake.push({ x: boat.x, y: boat.y, t: 0 });
+        for (var wi = boat.wake.length - 1; wi >= 0; wi--) {
+          boat.wake[wi].t += dt;
+          if (boat.wake[wi].t > 0.9) boat.wake.splice(wi, 1);
+        }
+
+        /* Hazards */
+        if (beam.y < nextSpawnY) spawnHazard();
+        for (var i = hazards.length - 1; i >= 0; i--) {
+          var hz = hazards[i];
+          if (hz.y > camY + H / ZOOM + 90) { hazards.splice(i, 1); continue; }
+          if (hz.type === 'shark') {
+            hz.phase += dt * hz.speed;
+            hz.x = hz.baseX + Math.sin(hz.phase) * hz.range;
+            if (!hz.dead && Math.hypot(hz.x - boat.x, hz.y - boat.y) < hz.r + 14) { hitHull('shark', hz); hz.dead = true; }
+          } else if (hz.type === 'whirlpool') {
+            hz.spin += dt * 2.4;
+            /* Whirlpool pull */
+            var pdx = hz.x - boat.x, pdy = hz.y - boat.y;
+            var pd = Math.hypot(pdx, pdy);
+            if (pd < 118 && pd > 1) {
+              var pull = (1 - pd / 118) * 340;
+              boat.vx += (pdx / pd) * pull * dt;
+              boat.vy += (pdy / pd) * pull * dt;
+              boat.angle += dt * (1 - pd / 118) * 3.2;
+            }
+            if (pd < 20) { hitHull('whirlpool', hz); }
+          } else if (hz.type === 'mine') {
+            hz.phase += dt * hz.speed;
+            hz.x = hz.baseX + Math.sin(hz.phase) * hz.range;
+            hz.y += 9 * dt; // drifts slowly downstream
+            if (!hz.dead && Math.hypot(hz.x - boat.x, hz.y - boat.y) < hz.r + 15) {
+              hitHull('mine', hz);
+              hazards.splice(i, 1);
+              continue;
+            }
+          } else if (hz.type === 'jelly') {
+            hz.phase += dt * hz.speed;
+            hz.x = hz.baseX + Math.sin(hz.phase) * hz.range;
+            hz.y += 7 * dt;
+            if (!hz.dead && Math.hypot(hz.x - boat.x, hz.y - boat.y) < hz.r + 16) {
+              hitHull('jelly', hz);
+              boat.slowT = 2.6;
+              hazards.splice(i, 1);
+              continue;
+            }
+          }
+        }
+        /* Teach each hazard type at first sight — one message at a time */
+        if (state === 'playing' && performance.now() > toastUntil) {
+          for (var ti = 0; ti < hazards.length; ti++) {
+            var th = hazards[ti];
+            if (!taught[th.type] && Math.abs(th.y - boat.y) < 470 && Math.abs(th.x - boat.x) < 340) {
+              taught[th.type] = true;
+              toast(TEACH[th.type], 3.2);
+              break;
+            }
+          }
+        }
+
+        /* In / out of the beam */
+        var bd = Math.hypot(boat.x - beam.x, boat.y - beam.y);
+        var inside = bd < beam.r - 6;
+        if (inside) {
+          boat.out = Math.max(0, boat.out - dt * 2.2);
+          lastTickSecond = -1;
+        } else {
+          boat.out += dt;
+          if (!hintFlags.dark) { toast('The dark is counting — get back to the light!', 2.6); hintFlags.dark = true; }
+          var whole = Math.floor(boat.out);
+          if (whole !== lastTickSecond && boat.out > 0.4) {
+            lastTickSecond = whole;
+            beep(220 + whole * 60, 0.09, 'square', 0.08);
+          }
+          if (boat.out >= OUT_LIMIT) die('tentacle');
+        }
+
+        /* Win */
+        if (m >= GOAL_M) { showWin(); return; }
+
+        updateCam(dt);
+        updateHUD();
+      }
+
+      function updateCam(dt) {
+        var tx = boat.x * 0.62 + beam.x * 0.38;
+        var ty = boat.y * 0.62 + beam.y * 0.38 - 30;
+        var k = Math.min(1, dt * 3.2);
+        camX += (tx - camX) * k;
+        camY += (ty - camY) * k;
+        if (shake > 0) shake = Math.max(0, shake - dt * 14);
+      }
+
+      /* ---------------- Drawing ---------------- */
+      function w2s(x, y) { return { x: (x - camX) * ZOOM + W / 2, y: (y - camY) * ZOOM + H / 2 }; }
+
+      function drawOcean(t) {
+        ctx.fillStyle = '#0a1626';
+        ctx.fillRect(0, 0, W, H);
+        var timeK = REDUCED ? 0 : t;
+        /* Rolling wave crests, locked to the world so they scroll past the boat.
+           Visual only — they never push the boat. */
+        var spacing = 56;
+        var topW = camY - H / (2 * ZOOM) - spacing;
+        var botW = camY + H / (2 * ZOOM) + spacing;
+        ctx.lineWidth = 2;
+        for (var wy = Math.floor(topW / spacing) * spacing; wy < botW; wy += spacing) {
+          var pulse = 0.5 + 0.5 * Math.sin(wy * 0.045 + timeK * 0.8);
+          ctx.strokeStyle = 'rgba(126,186,228,' + (0.07 + pulse * 0.10).toFixed(3) + ')';
+          ctx.beginPath();
+          for (var sx = -12; sx <= W + 12; sx += 16) {
+            var wx = camX + (sx - W / 2) / ZOOM;
+            var yy = wy + Math.sin(wx * 0.016 + wy * 0.11 + timeK * 1.15) * 5.5;
+            var syy = (yy - camY) * ZOOM + H / 2;
+            if (sx === -12) ctx.moveTo(sx, syy); else ctx.lineTo(sx, syy);
+          }
+          ctx.stroke();
+        }
+        /* short swell arcs drifting between the crests */
+        ctx.strokeStyle = 'rgba(120,180,220,0.10)';
+        var gap = 74;
+        var ox = ((-camX * ZOOM % gap) + gap) % gap;
+        var oy = ((-camY * ZOOM % gap) + gap) % gap;
+        ctx.beginPath();
+        for (var gx = -gap; gx < W + gap; gx += gap) {
+          for (var gy = -gap; gy < H + gap; gy += gap) {
+            var axp = gx + ox, ayp = gy + oy;
+            var ph = Math.sin(timeK * 1.4 + (axp + camX * ZOOM) * 0.02 + (ayp + camY * ZOOM) * 0.013) * 4;
+            ctx.moveTo(axp - 13, ayp + ph);
+            ctx.quadraticCurveTo(axp, ayp - 5 + ph, axp + 13, ayp + ph);
+          }
+        }
+        ctx.stroke();
+      }
+
+      function drawBeamLight(t) {
+        var b = w2s(beam.x, beam.y);
+        var br = beam.r * ZOOM; // lit area is the same world size, just seen from further back
+        /* warm pool of light */
+        var g = ctx.createRadialGradient(b.x, b.y, 10, b.x, b.y, br * 1.55);
+        g.addColorStop(0, 'rgba(255,224,150,0.34)');
+        g.addColorStop(0.55, 'rgba(255,205,110,0.20)');
+        g.addColorStop(1, 'rgba(255,205,110,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(b.x, b.y, br * 1.55, 0, 6.29); ctx.fill();
+        /* sweeping ray streaks inside the pool */
+        ctx.save();
+        ctx.beginPath(); ctx.arc(b.x, b.y, br, 0, 6.29); ctx.clip();
+        ctx.globalAlpha = 0.10;
+        ctx.fillStyle = '#ffe9b0';
+        for (var i = 0; i < 3; i++) {
+          var a = t * 0.35 + i * 2.1;
+          ctx.save();
+          ctx.translate(b.x, b.y); ctx.rotate(a);
+          ctx.fillRect(-br, -13, br * 2, 26);
+          ctx.restore();
+        }
+        ctx.restore();
+        ctx.globalAlpha = 1;
+        /* rim */
+        ctx.strokeStyle = 'rgba(255,225,160,0.5)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([14, 10]);
+        ctx.lineDashOffset = -t * 22;
+        ctx.beginPath(); ctx.arc(b.x, b.y, br, 0, 6.29); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      function drawWhirlpool(hz, t) {
+        var p = w2s(hz.x, hz.y);
+        if (p.x < -90 || p.x > W + 90 || p.y < -90 || p.y > H + 90) return;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.scale(ZOOM, ZOOM);
+        for (var ring = 0; ring < 4; ring++) {
+          var rr = hz.r - ring * 10;
+          ctx.strokeStyle = ring % 2 ? 'rgba(160,220,255,0.85)' : 'rgba(230,248,255,0.9)';
+          ctx.lineWidth = 4 - ring * 0.6;
+          ctx.beginPath();
+          ctx.arc(0, 0, rr, hz.spin + ring * 0.9, hz.spin + ring * 0.9 + 4.2);
+          ctx.stroke();
+        }
+        ctx.fillStyle = '#04101f';
+        ctx.beginPath(); ctx.arc(0, 0, 11, 0, 6.29); ctx.fill();
+        ctx.strokeStyle = 'rgba(200,235,255,0.9)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(0, 0, 11, hz.spin * 1.6, hz.spin * 1.6 + 3.6); ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawShark(hz, t) {
+        var p = w2s(hz.x, hz.y);
+        if (p.x < -80 || p.x > W + 80 || p.y < -80 || p.y > H + 80) return;
+        var dir = Math.cos(hz.phase) >= 0 ? 1 : -1;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.scale(ZOOM, ZOOM);
+        /* wake V */
+        ctx.strokeStyle = 'rgba(200,235,255,0.55)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-dir * 6, 4); ctx.lineTo(-dir * 30, 13);
+        ctx.moveTo(-dir * 6, 4); ctx.lineTo(-dir * 30, -6);
+        ctx.stroke();
+        /* fin */
+        ctx.fillStyle = '#233447';
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-dir * 13, 7);
+        ctx.quadraticCurveTo(-dir * 2, -16, dir * 12, 5);
+        ctx.quadraticCurveTo(0, 9, -dir * 13, 7);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawMine(hz, t) {
+        var p = w2s(hz.x, hz.y);
+        if (p.x < -70 || p.x > W + 70 || p.y < -70 || p.y > H + 70) return;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.scale(ZOOM, ZOOM);
+        /* spikes */
+        ctx.strokeStyle = '#0a0f16';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        for (var a = 0; a < 8; a++) {
+          var ang = a * Math.PI / 4 + 0.4;
+          ctx.moveTo(Math.cos(ang) * 10, Math.sin(ang) * 10);
+          ctx.lineTo(Math.cos(ang) * 27, Math.sin(ang) * 27);
+        }
+        ctx.stroke();
+        /* body */
+        ctx.fillStyle = '#48586a';
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(0, 0, 17, 0, 6.29); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = 'rgba(220,235,245,0.35)';
+        ctx.beginPath(); ctx.arc(-5, -6, 6, 0, 6.29); ctx.fill();
+        /* blinking warning light — the telegraph */
+        var on = Math.sin(t * 4.2 + hz.phase) > 0.1;
+        if (on) {
+          ctx.fillStyle = 'rgba(255,92,60,0.28)';
+          ctx.beginPath(); ctx.arc(0, -13, 11, 0, 6.29); ctx.fill();
+        }
+        ctx.fillStyle = on ? '#ff6a4a' : '#571f14';
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(0, -13, 4.6, 0, 6.29); ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawJelly(hz, t) {
+        var p = w2s(hz.x, hz.y);
+        if (p.x < -110 || p.x > W + 110 || p.y < -110 || p.y > H + 110) return;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.scale(ZOOM, ZOOM);
+        /* glow halo */
+        var g = ctx.createRadialGradient(0, 0, 4, 0, 0, 54);
+        g.addColorStop(0, 'rgba(186,120,255,0.20)');
+        g.addColorStop(1, 'rgba(186,120,255,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(0, 0, 54, 0, 6.29); ctx.fill();
+        for (var i = 0; i < hz.blobs.length; i++) {
+          var b = hz.blobs[i];
+          var pu = REDUCED ? 1 : 1 + Math.sin(t * 2.6 + b.ph) * 0.10;
+          ctx.save();
+          ctx.translate(b.dx, b.dy + (REDUCED ? 0 : Math.sin(t * 1.8 + b.ph) * 2));
+          ctx.scale(pu, pu);
+          /* tentacles */
+          ctx.strokeStyle = 'rgba(216,178,255,0.85)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (var tn = -1; tn <= 1; tn++) {
+            ctx.moveTo(tn * b.r * 0.45, b.r * 0.5);
+            ctx.quadraticCurveTo(tn * b.r * 0.45 + Math.sin(t * 3 + b.ph + tn) * 3, b.r * 1.15, tn * b.r * 0.45, b.r * 1.7);
+          }
+          ctx.stroke();
+          /* dome */
+          ctx.fillStyle = 'rgba(198,150,255,0.78)';
+          ctx.strokeStyle = '#2a1240'; ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 0, b.r, Math.PI, 0);
+          ctx.quadraticCurveTo(b.r * 0.9, b.r * 0.75, 0, b.r * 0.62);
+          ctx.quadraticCurveTo(-b.r * 0.9, b.r * 0.75, -b.r, 0);
+          ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = 'rgba(255,235,255,0.8)';
+          ctx.beginPath(); ctx.arc(-b.r * 0.3, -b.r * 0.35, b.r * 0.22, 0, 6.29); ctx.fill();
+          ctx.restore();
+        }
+        ctx.restore();
+      }
+
+      function drawBoat(t) {
+        var p = w2s(boat.x, boat.y);
+        /* wake */
+        for (var i = 0; i < boat.wake.length; i++) {
+          var wk = boat.wake[i];
+          var wp = w2s(wk.x, wk.y);
+          ctx.strokeStyle = 'rgba(190,225,250,' + (0.4 * (1 - wk.t / 0.9)) + ')';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(wp.x, wp.y, (5 + wk.t * 17) * ZOOM, 0, 6.29); ctx.stroke();
+        }
+        /* jellyfish sting marker */
+        if (boat.slowT > 0 && state === 'playing') {
+          ctx.strokeStyle = 'rgba(201,157,240,0.75)';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath(); ctx.arc(p.x, p.y, 30 * ZOOM + Math.sin(t * 6) * 2, 0, 6.29); ctx.stroke();
+        }
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        /* gentle bob on the waves — visual only */
+        var bobY = REDUCED ? 0 : Math.sin(t * 2.1) * 2.1;
+        var roll = REDUCED ? 0 : Math.sin(t * 1.55) * 0.05;
+        ctx.translate(0, bobY);
+        var scale = 1;
+        if (state === 'dying' && deathType === 'sunk') {
+          ctx.translate(0, deathT * 34);
+          scale = Math.max(0.1, 1 - deathT * 0.55);
+          ctx.globalAlpha = Math.max(0, 1 - deathT * 0.8);
+        }
+        if (state === 'playing' && boat.invuln > 0) {
+          ctx.globalAlpha = (Math.floor(t * 9) % 2 === 0) ? 0.25 : 0.85;
+        }
+        ctx.scale(scale * ZOOM, scale * ZOOM);
+        ctx.rotate(boat.angle + Math.PI / 2 + roll);
+        /* hull */
+        ctx.fillStyle = '#e4572e';
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -19);
+        ctx.quadraticCurveTo(11, -8, 10, 8);
+        ctx.quadraticCurveTo(8, 17, 0, 18);
+        ctx.quadraticCurveTo(-8, 17, -10, 8);
+        ctx.quadraticCurveTo(-11, -8, 0, -19);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        /* deck stripe */
+        ctx.fillStyle = '#f4f1e6';
+        ctx.fillRect(-7, -4, 14, 4);
+        /* cabin */
+        ctx.fillStyle = '#ffd97a';
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+        ctx.fillRect(-6, 3, 12, 9); ctx.strokeRect(-6, 3, 12, 9);
+        ctx.fillStyle = '#12314f';
+        ctx.fillRect(-3.5, 5.5, 7, 4);
+        /* mast + lamp */
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, -15); ctx.stroke();
+        ctx.fillStyle = '#fff3c4';
+        ctx.beginPath(); ctx.arc(0, -16, 3.2, 0, 6.29); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,240,190,0.6)';
+        ctx.beginPath(); ctx.arc(0, -16, 6 + Math.sin(t * 5) * 1.2, 0, 6.29); ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawTentacleDeath() {
+        if (deathType !== 'tentacle') return;
+        var p = w2s(boat.x, boat.y);
+        var k = Math.min(1, deathT / 0.75);         // rise
+        var squeeze = Math.max(0, deathT - 0.7) * 2; // crush
+        ctx.save();
+        ctx.translate(p.x, p.y + 66 * ZOOM * (1 - k));
+        ctx.scale(ZOOM, ZOOM);
+        ctx.rotate(Math.sin(deathT * 3) * 0.08);
+        /* main arm wrapping up over the boat */
+        ctx.fillStyle = '#5b2a86';
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-17, 74);
+        ctx.quadraticCurveTo(-26, 10, -8, -26 - squeeze * 6);
+        ctx.quadraticCurveTo(0, -40 - squeeze * 6, 9, -24 - squeeze * 6);
+        ctx.quadraticCurveTo(22, 8, 15, 74);
+        ctx.quadraticCurveTo(0, 84, -17, 74);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        /* suckers */
+        ctx.fillStyle = '#c99df0';
+        var sy = [46, 24, 2, -18];
+        for (var i = 0; i < sy.length; i++) {
+          ctx.beginPath(); ctx.arc(-3, sy[i] - squeeze * 5, 4.2, 0, 6.29); ctx.fill();
+          ctx.beginPath(); ctx.arc(6, sy[i] - 9 - squeeze * 5, 3.4, 0, 6.29); ctx.fill();
+        }
+        ctx.restore();
+        /* second arm curling in from the side */
+        ctx.save();
+        ctx.translate(p.x - 58 * ZOOM * k, p.y + 20 * ZOOM);
+        ctx.scale(ZOOM, ZOOM);
+        ctx.rotate(-0.7);
+        ctx.fillStyle = '#4a2170';
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-10, 44);
+        ctx.quadraticCurveTo(-13, -6, 0, -30);
+        ctx.quadraticCurveTo(11, -6, 9, 44);
+        ctx.quadraticCurveTo(0, 50, -10, 44);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawDarkness(t) {
+        var b = w2s(beam.x, beam.y);
+        var bp = w2s(boat.x, boat.y);
+        var g = ctx.createRadialGradient(b.x, b.y, beam.r * ZOOM * 0.55, b.x, b.y, beam.r * ZOOM * 2.35);
+        g.addColorStop(0, 'rgba(3,6,13,0)');
+        g.addColorStop(0.42, 'rgba(3,6,13,0.12)');
+        g.addColorStop(0.72, 'rgba(3,6,13,0.82)');
+        g.addColorStop(1, 'rgba(2,4,10,0.985)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+        /* the boat's own little lamp fights the dark a few metres out */
+        if (state === 'playing' || state === 'dying') {
+          var bd = Math.hypot(boat.x - beam.x, boat.y - beam.y);
+          if (bd > beam.r * 0.8) {
+            var lg = ctx.createRadialGradient(bp.x, bp.y, 4, bp.x, bp.y, 64 * ZOOM);
+            lg.addColorStop(0, 'rgba(255,240,190,0.20)');
+            lg.addColorStop(1, 'rgba(255,240,190,0)');
+            ctx.fillStyle = lg;
+            ctx.beginPath(); ctx.arc(bp.x, bp.y, 64 * ZOOM, 0, 6.29); ctx.fill();
+          }
+          /* dread vignette while the count runs */
+          if (boat.out > 0.4 && state === 'playing') {
+            var pulse = 0.22 + Math.min(0.5, boat.out / OUT_LIMIT * 0.55) + Math.sin(t * 7) * 0.05;
+            var vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.34, W / 2, H / 2, Math.max(W, H) * 0.72);
+            vg.addColorStop(0, 'rgba(40,0,10,0)');
+            vg.addColorStop(1, 'rgba(40,0,10,' + Math.max(0, pulse) + ')');
+            ctx.fillStyle = vg;
+            ctx.fillRect(0, 0, W, H);
+            /* shadow tentacles reaching in as time runs out */
+            if (boat.out > 2.1) {
+              ctx.strokeStyle = 'rgba(10,2,20,0.85)';
+              ctx.lineCap = 'round';
+              var reach = (boat.out - 2.1) / (OUT_LIMIT - 2.1);
+              var spots = [[W * 0.12, H], [W * 0.88, H], [W, H * 0.7]];
+              for (var si = 0; si < spots.length; si++) {
+                var sx = spots[si][0], sy2 = spots[si][1];
+                ctx.lineWidth = 15 - si * 3;
+                ctx.beginPath();
+                ctx.moveTo(sx, sy2 + 30);
+                ctx.quadraticCurveTo(
+                  sx + (bp.x - sx) * 0.4 + Math.sin(t * 2 + si * 2) * 14,
+                  sy2 + (bp.y - sy2) * 0.4,
+                  sx + (bp.x - sx) * reach * 0.62,
+                  sy2 + (bp.y - sy2) * reach * 0.62
+                );
+                ctx.stroke();
+              }
+            }
+          }
+        }
+      }
+
+      function drawGoalGlow() {
+        /* harbour light shimmering at the end of the route */
+        if (distM() < GOAL_M - 130) return;
+        var gy = -GOAL_M * PX_PER_M;
+        var p = w2s(beamPathX(gy), gy);
+        if (p.y < -160 || p.y > H + 160) return;
+        var g = ctx.createRadialGradient(p.x, p.y, 6, p.x, p.y, 130 * ZOOM);
+        g.addColorStop(0, 'rgba(140,255,190,0.5)');
+        g.addColorStop(1, 'rgba(140,255,190,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 130 * ZOOM, 0, 6.29); ctx.fill();
+        ctx.font = '34px serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('🗼', p.x, p.y + 10);
+      }
+
+      var last = performance.now();
+      function frame(now) {
+        var dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        var t = now / 1000;
+
+        var sx = 0, sy = 0;
+        if (shake > 0) { sx = (Math.random() * 2 - 1) * shake; sy = (Math.random() * 2 - 1) * shake; }
+        ctx.save();
+        ctx.translate(sx, sy);
+
+        drawOcean(t);
+        drawBeamLight(t);
+        for (var i = 0; i < hazards.length; i++) {
+          if (hazards[i].type === 'whirlpool') drawWhirlpool(hazards[i], t);
+          else if (hazards[i].type === 'shark') drawShark(hazards[i], t);
+          else if (hazards[i].type === 'mine') drawMine(hazards[i], t);
+          else drawJelly(hazards[i], t);
+        }
+        drawGoalGlow();
+        drawBoat(t);
+        if (state === 'dying') drawTentacleDeath();
+        drawDarkness(t);
+
+        ctx.restore();
+        update(dt);
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+
+      /* Test hooks for the automated probe */
+      window.__bb = {
+        get state() { return state; },
+        get boat() { return boat; },
+        get beam() { return beam; },
+        get hazards() { return hazards; },
+        get lever() { return leverVal; },
+        get stick() { return stickVec; },
+        ZOOM: ZOOM,
+        GOAL: GOAL_M,
+        distM: distM,
+        start: startGame,
+        spawn: spawnHazard,
+        setLever: setLever,
+        setStick: function (angle) { stickVec.active = true; stickVec.mag = 1; stickVec.angle = angle; },
+        clearStick: function () { stickVec.active = false; stickVec.mag = 0; },
+        teleport: function (m) {
+          boat.y = -m * PX_PER_M;
+          boat.x = beamPathX(boat.y);
+          beam.y = boat.y - 70;
+          beam.x = beamPathX(beam.y);
+          camX = boat.x; camY = boat.y;
+          nextSpawnY = beam.y - 400;
+        },
+        spawnAt: function (type, aheadPx) {
+          var hz = makeHazard(type, boat.x, boat.y - (aheadPx || 0), 0);
+          hz.x = boat.x;
+          if (hz.baseX !== undefined) hz.baseX = boat.x;
+          hazards.push(hz);
+          return hz;
+        }
+      };
+    </script>
+  </body>
+</html>
