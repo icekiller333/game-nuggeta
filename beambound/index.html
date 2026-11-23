@@ -133,6 +133,13 @@
       .j-entry.locked p { color: #8fa2bd; font-style: italic; }
       #scr-journal .big-btn { display: block; width: 100%; text-align: center; }
 
+      /* ---------- Tutorial reference ---------- */
+      #scr-tutorial .card { text-align: left; padding: 18px 18px 16px; }
+      #scr-tutorial h2 { text-align: center; }
+      #tutorial-list { max-height: 46vh; overflow-y: auto; margin-top: 10px; -webkit-overflow-scrolling: touch; }
+      #scr-tutorial .big-btn { display: block; width: 100%; text-align: center; }
+      #scr-tutorial p.dim { text-align: center; }
+
       /* Dread pips: your time left in the dark, shown not numbered */
       #dread {
         margin: 10px auto 0;
@@ -258,24 +265,43 @@
       #load-bar {
         height: 100%; width: 0%;
         background: repeating-linear-gradient(45deg, #ffd97a 0 10px, #f5b942 10px 20px);
-        transition: width 1.1s linear;
+        transition: width .25s linear;
       }
+      #load-status { min-height: 1.4em; letter-spacing: .04em; }
+      /* Lighthouse beam sweeping slowly behind the loading + menu screens */
+      #scr-loading, #scr-menu { overflow: hidden; background: radial-gradient(ellipse at 50% 38%, rgba(20, 44, 78, .55), rgba(3, 6, 12, .82) 70%); }
+      #scr-loading::before, #scr-menu::before {
+        content: ''; position: absolute; left: 50%; top: 50%;
+        width: 150vmax; height: 150vmax; margin: -75vmax 0 0 -75vmax;
+        background: conic-gradient(from 0deg, rgba(255, 243, 196, 0) 0deg, rgba(255, 243, 196, .16) 12deg, rgba(255, 243, 196, 0) 28deg, rgba(255, 243, 196, 0) 360deg);
+        animation: beamSweep 11s linear infinite;
+        pointer-events: none;
+      }
+      #scr-loading .card, #scr-menu .card { position: relative; z-index: 1; }
+      @keyframes beamSweep { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { #scr-loading::before, #scr-menu::before { animation: none; } }
       #scr-menu .big-btn, #scr-pause .big-btn, #scr-win .big-btn { display: block; width: 100%; }
 
       /* ---------- Touch controls: ship's wheel + throttle lever ---------- */
       #controls {
+        --wheel: clamp(124px, min(38vw, 26vh), 172px);
+        --lev-h: clamp(104px, 17vh, 150px);
         position: absolute; left: 0; right: 0;
-        bottom: max(12px, env(safe-area-inset-bottom));
+        /* lifted off the bottom edge so thumbs rest naturally and clear the home bar */
+        bottom: max(26px, calc(env(safe-area-inset-bottom) + 14px));
         display: flex; justify-content: space-between; align-items: flex-end;
-        padding: 0 14px;
+        padding: 0 max(18px, calc(env(safe-area-inset-right) + 10px)) 0 max(18px, calc(env(safe-area-inset-left) + 10px));
         pointer-events: none;
+        -webkit-touch-callout: none;
       }
       #wheel {
         pointer-events: auto; touch-action: none;
-        width: 132px; height: 132px; border-radius: 50%;
+        width: var(--wheel); height: var(--wheel); border-radius: 50%;
         position: relative; flex: 0 0 auto;
         cursor: grab;
       }
+      /* invisible, generous grab zone so a thumb that drifts off the rim keeps hold */
+      #wheel::before { content: ''; position: absolute; inset: -16px; border-radius: 50%; }
       #wheel:active { cursor: grabbing; }
       #wheel-svg {
         display: block; width: 100%; height: 100%;
@@ -288,12 +314,14 @@
         flex: 0 0 auto;
         background: rgba(10, 18, 32, 0.85);
         border: 3px solid #000; box-shadow: 4px 4px 0 #000;
-        padding: 8px 12px;
+        padding: 10px 16px;
+        position: relative;
       }
+      #lever::before { content: ''; position: absolute; inset: -14px -10px; }
       .lev-lbl { font-size: 10px; font-weight: 700; letter-spacing: .14em; color: #ffd97a; text-transform: uppercase; }
       .lev-lbl.rev { color: #ff8a70; }
       #lever-track {
-        position: relative; width: 34px; height: 118px;
+        position: relative; width: 40px; height: var(--lev-h);
         background: #12233c; border: 2px solid #000;
       }
       #lever-track::before {
@@ -301,8 +329,8 @@
         height: 2px; background: #f4f1e6; transform: translateY(-50%);
       }
       #lever-handle {
-        position: absolute; left: 50%; top: 59px;
-        width: 58px; height: 30px;
+        position: absolute; left: 50%; top: 50%;
+        width: 66px; height: 34px;
         transform: translate(-50%, -50%);
         background: #ffd97a; border: 3px solid #000; box-shadow: 2px 2px 0 #000;
         pointer-events: none;
@@ -312,6 +340,11 @@
         height: 3px; background: #0a1220; transform: translateY(-50%);
       }
       #lever.rev #lever-handle { background: #ff8a70; }
+      /* Short landscape phones: shrink controls so they never cover the beam */
+      @media (max-height: 480px) {
+        #controls { --wheel: clamp(104px, 34vh, 128px); --lev-h: clamp(84px, 30vh, 108px); bottom: max(14px, calc(env(safe-area-inset-bottom) + 8px)); }
+        #lever { padding: 6px 12px; gap: 3px; }
+      }
       .teach { animation: teachPulse .65s ease-in-out infinite alternate; }
       @keyframes teachPulse {
         from { box-shadow: 4px 4px 0 #000, 0 0 0 0 rgba(255, 217, 122, 0); }
@@ -433,7 +466,7 @@
         <div class="card">
           <img class="logo-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MjAgMjcwIiB3aWR0aD0iNTIwIiBoZWlnaHQ9IjI3MCI+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImhiZWFtIiB4MT0iMSIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmM2M0IiBzdG9wLW9wYWNpdHk9Ii43NSIvPjxzdG9wIG9mZnNldD0iLjYiIHN0b3AtY29sb3I9IiNmZmQ5N2EiIHN0b3Atb3BhY2l0eT0iLjE4Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZkOTdhIiBzdG9wLW9wYWNpdHk9IjAiLz48L2xpbmVhckdyYWRpZW50Pgo8cmFkaWFsR3JhZGllbnQgaWQ9ImhsYW1wIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmYzYzQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYzYzQiIHN0b3Atb3BhY2l0eT0iMCIvPjwvcmFkaWFsR3JhZGllbnQ+CjxyYWRpYWxHcmFkaWVudCBpZD0iaHNlYSIgY3g9Ii44IiBjeT0iLjEiIHI9IjEuMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMTYzNDVhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMDUwODBmIi8+PC9yYWRpYWxHcmFkaWVudD4KPGNsaXBQYXRoIGlkPSJoY2xpcCI+PHJlY3Qgd2lkdGg9IjUyMCIgaGVpZ2h0PSIyNzAiIHJ4PSIwIi8+PC9jbGlwUGF0aD4KPC9kZWZzPgo8cmVjdCB3aWR0aD0iNTIwIiBoZWlnaHQ9IjI3MCIgZmlsbD0idXJsKCNoc2VhKSIvPgo8ZyBjbGlwLXBhdGg9InVybCgjaGNsaXApIj4KPHBhdGggZD0iTTEwIDIwNiBxMTQgLTYgMjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjN2ViYWU0IiBzdHJva2Utb3BhY2l0eT0iMC4yMiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNMTkgMjE5IHExNCAtNiAyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiM3ZWJhZTQiIHN0cm9rZS1vcGFjaXR5PSIwLjE5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yOCAyMzIgcTE0IC02IDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzdlYmFlNCIgc3Ryb2tlLW9wYWNpdHk9IjAuMTYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTM3IDI0NSBxMTQgLTYgMjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjN2ViYWU0IiBzdHJva2Utb3BhY2l0eT0iMC4xMyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNNDYgMjU4IHExNCAtNiAyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiM3ZWJhZTQiIHN0cm9rZS1vcGFjaXR5PSIwLjEwIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNDcwIDM0IEwtMjAgMTUwIEw0MCAyNjIgWiIgZmlsbD0idXJsKCNoYmVhbSkiLz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNTggMCkiPgo8cGF0aCBkPSJNMzk0IDYyIEg0MzAgTDQyNCAxNTAgSDQwMFoiIGZpbGw9IiNmNGYxZTYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPHBhdGggZD0iTTM5NyA4NCBINDI3IEw0MjYgOTggSDM5OFpNMzk5IDExOCBINDI1IEw0MjQuNSAxMzIgSDM5OS41WiIgZmlsbD0iI2U0NTcyZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNSIvPgo8cmVjdCB4PSIzOTgiIHk9IjQ2IiB3aWR0aD0iMjgiIGhlaWdodD0iMTYiIGZpbGw9IiNmZmQ5N2EiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIzLjUiLz4KPHBhdGggZD0iTTM5MiA0NiBMNDEyIDI4IEw0MzIgNDZaIiBmaWxsPSIjZTQ1NzJlIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMy41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxjaXJjbGUgY3g9IjQxMiIgY3k9IjU0IiByPSIyNiIgZmlsbD0idXJsKCNobGFtcCkiLz4KPHJlY3QgeD0iNDA1IiB5PSI0OSIgd2lkdGg9IjE0IiBoZWlnaHQ9IjEwIiBmaWxsPSIjZmZmYmUwIi8+CjwvZz4KPCEtLSB0aXRsZSAtLT4KPGcgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVqb2luPSJiZXZlbCIgc3Ryb2tlLWxpbmVjYXA9InNxdWFyZSI+PGcgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIwLjkiPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwIDEwMykgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIyIEwzMCAxMCBWMTggTDIyIDI0IEg0IE0yMiAyNCBMMzIgMzAgVjQyIEwyNCA0OCBINCBNNCA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDY4IDEwMykgc2NhbGUoMC45NSkiIGQ9Ik0zMiA0IEg0IFY0OCBIMzIgTTQgMjYgSDI2Ii8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTE2IDEwMykgc2NhbGUoMC45NSkiIGQ9Ik0yIDQ4IEwxOCA0IEwzNCA0OCBNOSAzMyBIMjciLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNjQgMTAzKSBzY2FsZSgwLjk1KSIgZD0iTTQgNDggVjQgTDE4IDI4IEwzMiA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIxMiAxMDMpIHNjYWxlKDAuOTUpIiBkPSJNNCA0IEgyMiBMMzAgMTAgVjE4IEwyMiAyNCBINCBNMjIgMjQgTDMyIDMwIFY0MiBMMjQgNDggSDQgTTQgNCBWNDgiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyNjAgMTAzKSBzY2FsZSgwLjk1KSIgZD0iTTEwIDQgSDI2IEwzMiAxMCBWNDIgTDI2IDQ4IEgxMCBMNCA0MiBWMTAgWiIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMwOCAxMDMpIHNjYWxlKDAuOTUpIiBkPSJNNCA0IFY0MCBMMTIgNDggSDI0IEwzMiA0MCBWNCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM1NiAxMDMpIHNjYWxlKDAuOTUpIiBkPSJNNCA0OCBWNCBMMzIgNDggVjQiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSg0MDQgMTAzKSBzY2FsZSgwLjk1KSIgZD0iTTQgNCBIMjAgTDMyIDE0IFYzOCBMMjAgNDggSDQgWiIvPjwvZz48ZyBzdHJva2U9IiNlNDU3MmUiIHN0cm9rZS13aWR0aD0iMTUuMiI+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAgMTAzKSBzY2FsZSgwLjk1KSIgZD0iTTQgNCBIMjIgTDMwIDEwIFYxOCBMMjIgMjQgSDQgTTIyIDI0IEwzMiAzMCBWNDIgTDI0IDQ4IEg0IE00IDQgVjQ4Ii8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNjggMTAzKSBzY2FsZSgwLjk1KSIgZD0iTTMyIDQgSDQgVjQ4IEgzMiBNNCAyNiBIMjYiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMTYgMTAzKSBzY2FsZSgwLjk1KSIgZD0iTTIgNDggTDE4IDQgTDM0IDQ4IE05IDMzIEgyNyIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE2NCAxMDMpIHNjYWxlKDAuOTUpIiBkPSJNNCA0OCBWNCBMMTggMjggTDMyIDQgVjQ4Ii8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjEyIDEwMykgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIyIEwzMCAxMCBWMTggTDIyIDI0IEg0IE0yMiAyNCBMMzIgMzAgVjQyIEwyNCA0OCBINCBNNCA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI2MCAxMDMpIHNjYWxlKDAuOTUpIiBkPSJNMTAgNCBIMjYgTDMyIDEwIFY0MiBMMjYgNDggSDEwIEw0IDQyIFYxMCBaIi8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzA4IDEwMykgc2NhbGUoMC45NSkiIGQ9Ik00IDQgVjQwIEwxMiA0OCBIMjQgTDMyIDQwIFY0Ii8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzU2IDEwMykgc2NhbGUoMC45NSkiIGQ9Ik00IDQ4IFY0IEwzMiA0OCBWNCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQwNCAxMDMpIHNjYWxlKDAuOTUpIiBkPSJNNCA0IEgyMCBMMzIgMTQgVjM4IEwyMCA0OCBINCBaIi8+PC9nPjxnIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxNS4yIj48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIyIEwzMCAxMCBWMTggTDIyIDI0IEg0IE0yMiAyNCBMMzIgMzAgVjQyIEwyNCA0OCBINCBNNCA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDYyIDk2KSBzY2FsZSgwLjk1KSIgZD0iTTMyIDQgSDQgVjQ4IEgzMiBNNCAyNiBIMjYiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMTAgOTYpIHNjYWxlKDAuOTUpIiBkPSJNMiA0OCBMMTggNCBMMzQgNDggTTkgMzMgSDI3Ii8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTU4IDk2KSBzY2FsZSgwLjk1KSIgZD0iTTQgNDggVjQgTDE4IDI4IEwzMiA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwNiA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIyIEwzMCAxMCBWMTggTDIyIDI0IEg0IE0yMiAyNCBMMzIgMzAgVjQyIEwyNCA0OCBINCBNNCA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI1NCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik0xMCA0IEgyNiBMMzIgMTAgVjQyIEwyNiA0OCBIMTAgTDQgNDIgVjEwIFoiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMDIgOTYpIHNjYWxlKDAuOTUpIiBkPSJNNCA0IFY0MCBMMTIgNDggSDI0IEwzMiA0MCBWNCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM1MCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQ4IFY0IEwzMiA0OCBWNCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM5OCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIwIEwzMiAxNCBWMzggTDIwIDQ4IEg0IFoiLz48L2c+PGcgc3Ryb2tlPSIjZmZkOTdhIiBzdHJva2Utd2lkdGg9IjguNTQ5OTk5OTk5OTk5OTk5Ij48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIyIEwzMCAxMCBWMTggTDIyIDI0IEg0IE0yMiAyNCBMMzIgMzAgVjQyIEwyNCA0OCBINCBNNCA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDYyIDk2KSBzY2FsZSgwLjk1KSIgZD0iTTMyIDQgSDQgVjQ4IEgzMiBNNCAyNiBIMjYiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMTAgOTYpIHNjYWxlKDAuOTUpIiBkPSJNMiA0OCBMMTggNCBMMzQgNDggTTkgMzMgSDI3Ii8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTU4IDk2KSBzY2FsZSgwLjk1KSIgZD0iTTQgNDggVjQgTDE4IDI4IEwzMiA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwNiA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIyIEwzMCAxMCBWMTggTDIyIDI0IEg0IE0yMiAyNCBMMzIgMzAgVjQyIEwyNCA0OCBINCBNNCA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI1NCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik0xMCA0IEgyNiBMMzIgMTAgVjQyIEwyNiA0OCBIMTAgTDQgNDIgVjEwIFoiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMDIgOTYpIHNjYWxlKDAuOTUpIiBkPSJNNCA0IFY0MCBMMTIgNDggSDI0IEwzMiA0MCBWNCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM1MCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQ4IFY0IEwzMiA0OCBWNCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM5OCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIwIEwzMiAxNCBWMzggTDIwIDQ4IEg0IFoiLz48L2c+PC9nPgo8IS0tIGJvYXQgcmlkaW5nIHRoZSBiZWFtIC0tPgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg4NCA2Mikgcm90YXRlKC02Mikgc2NhbGUoMS41KSI+CjxwYXRoIGQ9Ik0wIC0xOSBRMTEgLTggMTAgOCBROCAxNyAwIDE4IFEtOCAxNyAtMTAgOCBRLTExIC04IDAgLTE5WiIgZmlsbD0iI2U0NTcyZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8cmVjdCB4PSItNyIgeT0iLTQiIHdpZHRoPSIxNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZjRmMWU2Ii8+CjxyZWN0IHg9Ii02IiB5PSIzIiB3aWR0aD0iMTIiIGhlaWdodD0iOSIgZmlsbD0iI2ZmZDk3YSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSItMy41IiB5PSI1LjUiIHdpZHRoPSI3IiBoZWlnaHQ9IjQiIGZpbGw9IiMxMjMxNGYiLz4KPGxpbmUgeDE9IjAiIHkxPSItNCIgeDI9IjAiIHkyPSItMTUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGNpcmNsZSBjeD0iMCIgY3k9Ii0xNiIgcj0iMy4yIiBmaWxsPSIjZmZmM2M0IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PC9nPgo8ZyBzdHJva2U9IiNiZWUxZmEiIHN0cm9rZS1vcGFjaXR5PSIuNTUiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj48cGF0aCBkPSJNMTA0IDg4IHE4IDEyIDIyIDE0TTk2IDk2IHE2IDEyIDE4IDE4Ii8+PC9nPgo8IS0tIGV5ZXMgaW4gdGhlIGRhcmsgLS0+CjxnIGZpbGw9IiNmZjVhM2MiPjxlbGxpcHNlIGN4PSIzOCIgY3k9IjIzNiIgcng9IjQiIHJ5PSIyLjQiLz48ZWxsaXBzZSBjeD0iNTQiIGN5PSIyMzYiIHJ4PSI0IiByeT0iMi40Ii8+PC9nPgo8ZyBmaWxsPSIjMDAwIj48ZWxsaXBzZSBjeD0iMzguNSIgY3k9IjIzNiIgcng9IjEuMyIgcnk9IjEuOCIvPjxlbGxpcHNlIGN4PSI1NC41IiBjeT0iMjM2IiByeD0iMS4zIiByeT0iMS44Ii8+PC9nPgo8L2c+CjxyZWN0IHg9IjEuNSIgeT0iMS41IiB3aWR0aD0iNTE3IiBoZWlnaHQ9IjI2NyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjMiLz4KPC9zdmc+Cg==" alt="Beambound">
           <div id="load-bar-wrap"><div id="load-bar"></div></div>
-          <p class="dim">The fog is coming in…</p>
+          <p class="dim" id="load-status">The fog is coming in…</p>
         </div>
       </div>
 
@@ -443,6 +476,7 @@
           <img class="logo-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MjAgMjcwIiB3aWR0aD0iNTIwIiBoZWlnaHQ9IjI3MCI+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImhiZWFtIiB4MT0iMSIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmM2M0IiBzdG9wLW9wYWNpdHk9Ii43NSIvPjxzdG9wIG9mZnNldD0iLjYiIHN0b3AtY29sb3I9IiNmZmQ5N2EiIHN0b3Atb3BhY2l0eT0iLjE4Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZkOTdhIiBzdG9wLW9wYWNpdHk9IjAiLz48L2xpbmVhckdyYWRpZW50Pgo8cmFkaWFsR3JhZGllbnQgaWQ9ImhsYW1wIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmYzYzQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYzYzQiIHN0b3Atb3BhY2l0eT0iMCIvPjwvcmFkaWFsR3JhZGllbnQ+CjxyYWRpYWxHcmFkaWVudCBpZD0iaHNlYSIgY3g9Ii44IiBjeT0iLjEiIHI9IjEuMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMTYzNDVhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMDUwODBmIi8+PC9yYWRpYWxHcmFkaWVudD4KPGNsaXBQYXRoIGlkPSJoY2xpcCI+PHJlY3Qgd2lkdGg9IjUyMCIgaGVpZ2h0PSIyNzAiIHJ4PSIwIi8+PC9jbGlwUGF0aD4KPC9kZWZzPgo8cmVjdCB3aWR0aD0iNTIwIiBoZWlnaHQ9IjI3MCIgZmlsbD0idXJsKCNoc2VhKSIvPgo8ZyBjbGlwLXBhdGg9InVybCgjaGNsaXApIj4KPHBhdGggZD0iTTEwIDIwNiBxMTQgLTYgMjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjN2ViYWU0IiBzdHJva2Utb3BhY2l0eT0iMC4yMiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNMTkgMjE5IHExNCAtNiAyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiM3ZWJhZTQiIHN0cm9rZS1vcGFjaXR5PSIwLjE5IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yOCAyMzIgcTE0IC02IDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAgdDI4IDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzdlYmFlNCIgc3Ryb2tlLW9wYWNpdHk9IjAuMTYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTM3IDI0NSBxMTQgLTYgMjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCB0MjggMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjN2ViYWU0IiBzdHJva2Utb3BhY2l0eT0iMC4xMyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNNDYgMjU4IHExNCAtNiAyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIHQyOCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiM3ZWJhZTQiIHN0cm9rZS1vcGFjaXR5PSIwLjEwIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNNDcwIDM0IEwtMjAgMTUwIEw0MCAyNjIgWiIgZmlsbD0idXJsKCNoYmVhbSkiLz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNTggMCkiPgo8cGF0aCBkPSJNMzk0IDYyIEg0MzAgTDQyNCAxNTAgSDQwMFoiIGZpbGw9IiNmNGYxZTYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPHBhdGggZD0iTTM5NyA4NCBINDI3IEw0MjYgOTggSDM5OFpNMzk5IDExOCBINDI1IEw0MjQuNSAxMzIgSDM5OS41WiIgZmlsbD0iI2U0NTcyZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNSIvPgo8cmVjdCB4PSIzOTgiIHk9IjQ2IiB3aWR0aD0iMjgiIGhlaWdodD0iMTYiIGZpbGw9IiNmZmQ5N2EiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIzLjUiLz4KPHBhdGggZD0iTTM5MiA0NiBMNDEyIDI4IEw0MzIgNDZaIiBmaWxsPSIjZTQ1NzJlIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMy41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxjaXJjbGUgY3g9IjQxMiIgY3k9IjU0IiByPSIyNiIgZmlsbD0idXJsKCNobGFtcCkiLz4KPHJlY3QgeD0iNDA1IiB5PSI0OSIgd2lkdGg9IjE0IiBoZWlnaHQ9IjEwIiBmaWxsPSIjZmZmYmUwIi8+CjwvZz4KPCEtLSB0aXRsZSAtLT4KPGcgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVqb2luPSJiZXZlbCIgc3Ryb2tlLWxpbmVjYXA9InNxdWFyZSI+PGcgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIwLjkiPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwIDEwMykgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIyIEwzMCAxMCBWMTggTDIyIDI0IEg0IE0yMiAyNCBMMzIgMzAgVjQyIEwyNCA0OCBINCBNNCA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDY4IDEwMykgc2NhbGUoMC45NSkiIGQ9Ik0zMiA0IEg0IFY0OCBIMzIgTTQgMjYgSDI2Ii8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTE2IDEwMykgc2NhbGUoMC45NSkiIGQ9Ik0yIDQ4IEwxOCA0IEwzNCA0OCBNOSAzMyBIMjciLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNjQgMTAzKSBzY2FsZSgwLjk1KSIgZD0iTTQgNDggVjQgTDE4IDI4IEwzMiA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIxMiAxMDMpIHNjYWxlKDAuOTUpIiBkPSJNNCA0IEgyMiBMMzAgMTAgVjE4IEwyMiAyNCBINCBNMjIgMjQgTDMyIDMwIFY0MiBMMjQgNDggSDQgTTQgNCBWNDgiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyNjAgMTAzKSBzY2FsZSgwLjk1KSIgZD0iTTEwIDQgSDI2IEwzMiAxMCBWNDIgTDI2IDQ4IEgxMCBMNCA0MiBWMTAgWiIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMwOCAxMDMpIHNjYWxlKDAuOTUpIiBkPSJNNCA0IFY0MCBMMTIgNDggSDI0IEwzMiA0MCBWNCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM1NiAxMDMpIHNjYWxlKDAuOTUpIiBkPSJNNCA0OCBWNCBMMzIgNDggVjQiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSg0MDQgMTAzKSBzY2FsZSgwLjk1KSIgZD0iTTQgNCBIMjAgTDMyIDE0IFYzOCBMMjAgNDggSDQgWiIvPjwvZz48ZyBzdHJva2U9IiNlNDU3MmUiIHN0cm9rZS13aWR0aD0iMTUuMiI+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAgMTAzKSBzY2FsZSgwLjk1KSIgZD0iTTQgNCBIMjIgTDMwIDEwIFYxOCBMMjIgMjQgSDQgTTIyIDI0IEwzMiAzMCBWNDIgTDI0IDQ4IEg0IE00IDQgVjQ4Ii8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNjggMTAzKSBzY2FsZSgwLjk1KSIgZD0iTTMyIDQgSDQgVjQ4IEgzMiBNNCAyNiBIMjYiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMTYgMTAzKSBzY2FsZSgwLjk1KSIgZD0iTTIgNDggTDE4IDQgTDM0IDQ4IE05IDMzIEgyNyIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE2NCAxMDMpIHNjYWxlKDAuOTUpIiBkPSJNNCA0OCBWNCBMMTggMjggTDMyIDQgVjQ4Ii8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjEyIDEwMykgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIyIEwzMCAxMCBWMTggTDIyIDI0IEg0IE0yMiAyNCBMMzIgMzAgVjQyIEwyNCA0OCBINCBNNCA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI2MCAxMDMpIHNjYWxlKDAuOTUpIiBkPSJNMTAgNCBIMjYgTDMyIDEwIFY0MiBMMjYgNDggSDEwIEw0IDQyIFYxMCBaIi8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzA4IDEwMykgc2NhbGUoMC45NSkiIGQ9Ik00IDQgVjQwIEwxMiA0OCBIMjQgTDMyIDQwIFY0Ii8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzU2IDEwMykgc2NhbGUoMC45NSkiIGQ9Ik00IDQ4IFY0IEwzMiA0OCBWNCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQwNCAxMDMpIHNjYWxlKDAuOTUpIiBkPSJNNCA0IEgyMCBMMzIgMTQgVjM4IEwyMCA0OCBINCBaIi8+PC9nPjxnIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxNS4yIj48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIyIEwzMCAxMCBWMTggTDIyIDI0IEg0IE0yMiAyNCBMMzIgMzAgVjQyIEwyNCA0OCBINCBNNCA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDYyIDk2KSBzY2FsZSgwLjk1KSIgZD0iTTMyIDQgSDQgVjQ4IEgzMiBNNCAyNiBIMjYiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMTAgOTYpIHNjYWxlKDAuOTUpIiBkPSJNMiA0OCBMMTggNCBMMzQgNDggTTkgMzMgSDI3Ii8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTU4IDk2KSBzY2FsZSgwLjk1KSIgZD0iTTQgNDggVjQgTDE4IDI4IEwzMiA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwNiA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIyIEwzMCAxMCBWMTggTDIyIDI0IEg0IE0yMiAyNCBMMzIgMzAgVjQyIEwyNCA0OCBINCBNNCA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI1NCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik0xMCA0IEgyNiBMMzIgMTAgVjQyIEwyNiA0OCBIMTAgTDQgNDIgVjEwIFoiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMDIgOTYpIHNjYWxlKDAuOTUpIiBkPSJNNCA0IFY0MCBMMTIgNDggSDI0IEwzMiA0MCBWNCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM1MCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQ4IFY0IEwzMiA0OCBWNCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM5OCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIwIEwzMiAxNCBWMzggTDIwIDQ4IEg0IFoiLz48L2c+PGcgc3Ryb2tlPSIjZmZkOTdhIiBzdHJva2Utd2lkdGg9IjguNTQ5OTk5OTk5OTk5OTk5Ij48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIyIEwzMCAxMCBWMTggTDIyIDI0IEg0IE0yMiAyNCBMMzIgMzAgVjQyIEwyNCA0OCBINCBNNCA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDYyIDk2KSBzY2FsZSgwLjk1KSIgZD0iTTMyIDQgSDQgVjQ4IEgzMiBNNCAyNiBIMjYiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMTAgOTYpIHNjYWxlKDAuOTUpIiBkPSJNMiA0OCBMMTggNCBMMzQgNDggTTkgMzMgSDI3Ii8+PHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTU4IDk2KSBzY2FsZSgwLjk1KSIgZD0iTTQgNDggVjQgTDE4IDI4IEwzMiA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwNiA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIyIEwzMCAxMCBWMTggTDIyIDI0IEg0IE0yMiAyNCBMMzIgMzAgVjQyIEwyNCA0OCBINCBNNCA0IFY0OCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI1NCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik0xMCA0IEgyNiBMMzIgMTAgVjQyIEwyNiA0OCBIMTAgTDQgNDIgVjEwIFoiLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMDIgOTYpIHNjYWxlKDAuOTUpIiBkPSJNNCA0IFY0MCBMMTIgNDggSDI0IEwzMiA0MCBWNCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM1MCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQ4IFY0IEwzMiA0OCBWNCIvPjxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM5OCA5Nikgc2NhbGUoMC45NSkiIGQ9Ik00IDQgSDIwIEwzMiAxNCBWMzggTDIwIDQ4IEg0IFoiLz48L2c+PC9nPgo8IS0tIGJvYXQgcmlkaW5nIHRoZSBiZWFtIC0tPgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg4NCA2Mikgcm90YXRlKC02Mikgc2NhbGUoMS41KSI+CjxwYXRoIGQ9Ik0wIC0xOSBRMTEgLTggMTAgOCBROCAxNyAwIDE4IFEtOCAxNyAtMTAgOCBRLTExIC04IDAgLTE5WiIgZmlsbD0iI2U0NTcyZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8cmVjdCB4PSItNyIgeT0iLTQiIHdpZHRoPSIxNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZjRmMWU2Ii8+CjxyZWN0IHg9Ii02IiB5PSIzIiB3aWR0aD0iMTIiIGhlaWdodD0iOSIgZmlsbD0iI2ZmZDk3YSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSItMy41IiB5PSI1LjUiIHdpZHRoPSI3IiBoZWlnaHQ9IjQiIGZpbGw9IiMxMjMxNGYiLz4KPGxpbmUgeDE9IjAiIHkxPSItNCIgeDI9IjAiIHkyPSItMTUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGNpcmNsZSBjeD0iMCIgY3k9Ii0xNiIgcj0iMy4yIiBmaWxsPSIjZmZmM2M0IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PC9nPgo8ZyBzdHJva2U9IiNiZWUxZmEiIHN0cm9rZS1vcGFjaXR5PSIuNTUiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj48cGF0aCBkPSJNMTA0IDg4IHE4IDEyIDIyIDE0TTk2IDk2IHE2IDEyIDE4IDE4Ii8+PC9nPgo8IS0tIGV5ZXMgaW4gdGhlIGRhcmsgLS0+CjxnIGZpbGw9IiNmZjVhM2MiPjxlbGxpcHNlIGN4PSIzOCIgY3k9IjIzNiIgcng9IjQiIHJ5PSIyLjQiLz48ZWxsaXBzZSBjeD0iNTQiIGN5PSIyMzYiIHJ4PSI0IiByeT0iMi40Ii8+PC9nPgo8ZyBmaWxsPSIjMDAwIj48ZWxsaXBzZSBjeD0iMzguNSIgY3k9IjIzNiIgcng9IjEuMyIgcnk9IjEuOCIvPjxlbGxpcHNlIGN4PSI1NC41IiBjeT0iMjM2IiByeD0iMS4zIiByeT0iMS44Ii8+PC9nPgo8L2c+CjxyZWN0IHg9IjEuNSIgeT0iMS41IiB3aWR0aD0iNTE3IiBoZWlnaHQ9IjI2NyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjMiLz4KPC9zdmc+Cg==" alt="Beambound">
           <p class="dim" id="menu-stats">Best — · Wins —</p>
           <button class="big-btn" id="btn-play">Play</button>
+          <button class="big-btn alt" id="menu-tutorial-btn">Tutorial — learn the ropes</button>
           <button class="big-btn alt" id="menu-journal-btn">Bottles — what the sea kept</button>
           <button class="big-btn alt" id="menu-sound-btn"><svg class="snd-ic" viewBox="0 0 48 48" aria-hidden="true"><path d="M7 18 H14 L25 8 V40 L14 30 H7 Z" fill="currentColor" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><path d="M30 17 Q36 24 30 31" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M35 12 Q44 24 35 36" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg> Sound on</button>
         </div>
@@ -507,6 +541,17 @@
           <h2>Notes in Bottles</h2>
           <div id="journal-list"></div>
           <button class="big-btn alt" id="btn-journal-back">Back</button>
+        </div>
+      </div>
+
+      <!-- Tutorial reference + guided run -->
+      <div class="screen" id="scr-tutorial">
+        <div class="card">
+          <h2>Learn the Ropes</h2>
+          <div id="tutorial-list"></div>
+          <p class="dim">In a normal voyage each tip appears only once. Replay them here any time.</p>
+          <button class="big-btn" id="btn-tutorial-run">Start a guided run</button>
+          <button class="big-btn alt" id="btn-tutorial-back">Back</button>
         </div>
       </div>
 
@@ -610,6 +655,20 @@
         save.wins = parseInt(localStorage.getItem('beambound-wins') || '0', 10) || 0;
       } catch (e) {}
       var bestM = save.best;
+      /* Tutorial hints are shown once, then remembered. */
+      var tutSeen = {};
+      var tutReplay = false;   // true during a guided run: every hint shows again, nothing is saved
+      try { tutSeen = JSON.parse(localStorage.getItem('beambound-tutorial') || '{}') || {}; } catch (e) { tutSeen = {}; }
+      function tutNeeded(id) { return tutReplay || !tutSeen[id]; }
+      function tutToast(id, msg, secs) {
+        if (!tutNeeded(id)) return false;
+        if (!tutReplay) {
+          tutSeen[id] = true;
+          try { localStorage.setItem('beambound-tutorial', JSON.stringify(tutSeen)); } catch (e) {}
+        }
+        toast(msg, secs);
+        return true;
+      }
       function persist() {
         try {
           localStorage.setItem('beambound-best', String(bestM));
@@ -681,7 +740,7 @@
       var WRECK = { x: beamPathX(-200 * PX_PER_M) + 55, y: -200 * PX_PER_M };
 
       function resetRun() {
-        boat = { x: 0, y: 0, vx: 0, vy: 0, angle: -Math.PI / 2, out: 0, wake: [], hull: 3, invuln: 0, slowT: 0 };
+        boat = { x: 0, y: 0, vx: 0, vy: 0, angVel: 0, angle: -Math.PI / 2, out: 0, wake: [], hull: 3, invuln: 0, slowT: 0 };
         beam = { x: beamPathX(-70), y: -70, r: BEAM_R };
         hazards = [];
         camX = boat.x; camY = boat.y;
@@ -701,7 +760,7 @@
         atmosSeen = {}; lastMilestone = 0; missStreak = 0; wasInside = true; boatPop = 0; hitstop = 0; punch = 0; flashA = 0;
         seedBottles();
         if (typeof wheelVec !== 'undefined' && wheelVec) { wheelVec.active = false; wheelVec.turn = 0; wheelVec.mag = 0; }
-        if (typeof wheelAngle !== 'undefined') wheelAngle = 0;
+        if (typeof wheelAngle !== 'undefined') { wheelAngle = 0; wheelTarget = 0; }
         if (typeof wheelSvg !== 'undefined' && wheelSvg) wheelSvg.style.transform = 'rotate(0deg)';
         if (typeof setLever === 'function') setLever(0);
         var st = document.getElementById('wheel'); if (st) st.classList.remove('teach');
@@ -779,19 +838,32 @@
       var WHEEL_MAX = 1.15;   /* wheel travel, radians either way from centre */
       var WHEEL_TURN = 2.9;   /* boat turn rate at full wheel, rad/s — matched to the old stick's swing */
       var wheelVec = { active: false, turn: 0, mag: 0 };
-      var wheelAngle = 0;
+      var wheelAngle = 0;     /* smoothed wheel position actually used for steering */
+      var wheelTarget = 0;    /* where the finger wants the wheel */
       var wheelPtr = 0;
-      var leverVal = 0;
+      var leverVal = 0;       /* smoothed throttle actually used */
+      var leverTarget = 0;    /* where the finger wants the lever */
       var leverActive = false;
 
       function syncLeverUI() {
         if (!handleEl || !leverEl) return; // elements not wired yet (initial resetRun)
-        handleEl.style.top = (((1 - leverVal) / 2) * 88 + 15) + 'px';
+        var hh = handleEl.offsetHeight || 34;
+        var travel = Math.max(10, trackEl.clientHeight - hh);
+        handleEl.style.top = (hh / 2 + ((1 - leverVal) / 2) * travel).toFixed(1) + 'px';
         leverEl.classList.toggle('rev', leverVal < -0.05);
       }
+      function leverTravelHalf() {
+        var hh = handleEl.offsetHeight || 34;
+        return Math.max(10, (trackEl.clientHeight - hh) / 2);
+      }
+      function leverDetent(v) {
+        v = Math.max(-1, Math.min(1, v));
+        return Math.abs(v) < 0.12 ? 0 : v; // centre detent = stop
+      }
+      /* Immediate set (resets, test hooks) */
       function setLever(v) {
-        leverVal = Math.max(-1, Math.min(1, v));
-        if (Math.abs(leverVal) < 0.14) leverVal = 0; // centre detent = stop
+        leverTarget = leverDetent(v);
+        leverVal = leverTarget;
         syncLeverUI();
       }
       function syncWheel() {
@@ -809,10 +881,9 @@
         while (d > Math.PI) d -= Math.PI * 2;
         while (d < -Math.PI) d += Math.PI * 2;
         wheelPtr = a;
-        wheelAngle = Math.max(-WHEEL_MAX, Math.min(WHEEL_MAX, wheelAngle + d));
-        syncWheel();
+        wheelTarget = Math.max(-WHEEL_MAX, Math.min(WHEEL_MAX, wheelTarget + d));
       }
-      function wheelEnd() { wheelVec.active = false; } /* the spring in frame() winds it back to centre */
+      function wheelEnd() { wheelVec.active = false; wheelTarget = 0; } /* the spring in frame() winds it back to centre */
       wheelEl.addEventListener('pointerdown', function (e) {
         if (typeof msgActive !== 'undefined' && msgActive) return; // a message is up: the game is paused
         audio();
@@ -825,9 +896,13 @@
       wheelEl.addEventListener('pointerup', wheelEnd);
       wheelEl.addEventListener('pointercancel', wheelEnd);
 
+      window.addEventListener('resize', function () { syncLeverUI(); });
+      window.addEventListener('orientationchange', function () { setTimeout(syncLeverUI, 250); });
+      setTimeout(syncLeverUI, 0);
+
       function leverSet(e) {
         var r = trackEl.getBoundingClientRect();
-        setLever(((r.top + r.height / 2) - e.clientY) / 44);
+        leverTarget = leverDetent(((r.top + r.height / 2) - e.clientY) / leverTravelHalf());
       }
       leverEl.addEventListener('pointerdown', function (e) {
         if (typeof msgActive !== 'undefined' && msgActive) return; // a message is up: the game is paused
@@ -1213,7 +1288,7 @@
       }
 
       /* ---------------- Screens ---------------- */
-      var screens = ['scr-loading', 'scr-menu', 'scr-story1', 'scr-story2', 'scr-over', 'scr-win', 'scr-pause', 'scr-journal'];
+      var screens = ['scr-loading', 'scr-menu', 'scr-story1', 'scr-story2', 'scr-over', 'scr-win', 'scr-pause', 'scr-journal', 'scr-tutorial'];
       function show(id) {
         screens.forEach(function (s) { document.getElementById(s).classList.toggle('on', s === id); });
       }
@@ -1222,17 +1297,74 @@
       /* Loading → main menu */
       function showMenu() {
         state = 'menu';
+        tutReplay = false;
         document.getElementById('menu-stats').textContent = statsLine();
         syncSoundUI();
         show('scr-menu');
       }
-      requestAnimationFrame(function () {
-        document.getElementById('load-bar').style.width = '100%';
+      /* Real loading: wait for the art sprites to settle (loaded or failed), with a
+         short minimum so the screen never just flashes, and a cap so it never hangs. */
+      (function () {
+        var t0 = performance.now(), MIN = 1500, MAX = 4500;
+        var bar = document.getElementById('load-bar'), status = document.getElementById('load-status');
+        var iv = setInterval(function () {
+          if (state !== 'loading') { clearInterval(iv); return; }
+          var n = 0, t = 0;
+          for (var k in SPR) { t++; if (SPR[k].complete) n++; }
+          var assets = t ? n / t : 1;
+          var el = performance.now() - t0;
+          var p = Math.min(assets, el / MIN);
+          bar.style.width = Math.round(p * 100) + '%';
+          status.textContent = p < 0.4 ? 'The fog is coming in…' : (p < 0.85 ? 'Trimming the lamp…' : 'Follow the light…');
+          if ((assets >= 1 && el >= MIN) || el >= MAX) {
+            clearInterval(iv);
+            bar.style.width = '100%';
+            setTimeout(function () { if (state === 'loading') showMenu(); }, 250);
+          }
+        }, 60);
+      })();
+
+      /* Tutorial reference screen + guided run */
+      var TUT_ENTRIES = [
+        ['Steering', 'Drag around the ship\'s wheel on the left to turn. Wind it further to turn faster; let go and it springs back. On a keyboard, use WASD or the arrow keys.'],
+        ['Throttle', 'Push the lever on the right up to run, pull it down to back water. The middle notch stops the boat.'],
+        ['The light', 'Stay inside the beam. It seems to know the way home.'],
+        ['The dark', 'Leave the light and the pips fill. When they run out, something below takes you.'],
+        ['Whirlpool', TEACH.whirlpool],
+        ['Shark', TEACH.shark],
+        ['Mine', TEACH.mine],
+        ['Jellyfish', TEACH.jelly],
+        ['Bottles', 'Bottles ride the swell along the beam. Sail into one — someone left you a message. Read them again under Bottles.']
+      ];
+      function openTutorial() {
+        var list = document.getElementById('tutorial-list');
+        list.innerHTML = '';
+        TUT_ENTRIES.forEach(function (e) {
+          var d = document.createElement('div'); d.className = 'j-entry';
+          var h = document.createElement('div'); h.className = 'j-head'; h.textContent = e[0];
+          var p = document.createElement('p'); p.textContent = e[1];
+          d.appendChild(h); d.appendChild(p); list.appendChild(d);
+        });
+        list.scrollTop = 0;
+        show('scr-tutorial');
+      }
+      function spawnTutorialHazard(type) {
+        var y = beam.y - (H / ZOOM) * 0.8 - 140;
+        hazards.push(makeHazard(type, beamPathX(y), y, 0));
+      }
+      document.getElementById('menu-tutorial-btn').addEventListener('click', function () { audio(); beep(660, 0.08, 'sine', 0.07); openTutorial(); });
+      document.getElementById('btn-tutorial-back').addEventListener('click', function () { audio(); show('scr-menu'); });
+      document.getElementById('btn-tutorial-run').addEventListener('click', function () {
+        tutReplay = true;
+        startGame();
+        ['whirlpool', 'shark', 'mine', 'jelly'].forEach(function (type, i) {
+          scheduleHint(11000 + i * 9000, function () { if (state === 'playing' && tutReplay) spawnTutorialHazard(type); });
+        });
       });
-      setTimeout(function () { if (state === 'loading') showMenu(); }, 1350);
 
       document.getElementById('btn-play').addEventListener('click', function () {
         audio(); beep(660, 0.08, 'sine', 0.07);
+        tutReplay = false;
         state = 'story';
         show('scr-story1');
       });
@@ -1270,23 +1402,27 @@
         hudEl.classList.add('on');
         state = 'playing';
         startDrone();
-        wheelEl.classList.add('teach');
-        toast('The wheel is stiff with cold. Drag it around to turn her.', 3.2);
+        if (tutNeeded('wheel')) {
+          wheelEl.classList.add('teach');
+          tutToast('wheel', 'The wheel is stiff with cold. Drag it around to turn her.', 3.2);
+        }
         scheduleHint(3500, function () {
           wheelEl.classList.remove('teach');
           if (!hintFlags.lever) {
-            leverEl.classList.add('teach');
-            toast('The throttle: push up to run, pull down to back water.', 3.4);
             hintFlags.lever = true;
+            if (tutNeeded('lever')) {
+              leverEl.classList.add('teach');
+              tutToast('lever', 'The throttle: push up to run, pull down to back water.', 3.4);
+            }
           }
         });
         scheduleHint(7200, function () {
           leverEl.classList.remove('teach');
-          if (!hintFlags.beam) { toast('Stay in the light. It seems to know the way home.', 3.2); hintFlags.beam = true; }
+          if (!hintFlags.beam) { hintFlags.beam = true; tutToast('beam', 'Stay in the light. It seems to know the way home.', 3.2); }
         });
       }
-      document.getElementById('btn-start').addEventListener('click', startGame);
-      document.getElementById('btn-retry').addEventListener('click', startGame);
+      document.getElementById('btn-start').addEventListener('click', function () { tutReplay = false; startGame(); });
+      document.getElementById('btn-retry').addEventListener('click', function () { tutReplay = false; startGame(); });
       document.getElementById('btn-again').addEventListener('click', startEndless);
       document.getElementById('btn-tomenu').addEventListener('click', function () {
         hudEl.classList.remove('on');
@@ -1324,9 +1460,20 @@
            faster she turns. Keys aim the heading directly. Lever sets throttle. */
         var throttle = leverVal;
         var wantAngle = null;
-        if (wheelVec.active && Math.abs(wheelVec.turn) > 0.07) {
-          boat.angle += wheelVec.turn * WHEEL_TURN * dt;
+        /* Soft dead-zone + response curve: tiny wheel movements make gentle
+           corrections, full lock still turns at the full rate. */
+        var wt = wheelVec.turn, wmag = Math.abs(wt);
+        var wRate = 0;
+        if (wmag > 0.04) {
+          var wn = (wmag - 0.04) / 0.96;
+          wRate = (wt < 0 ? -1 : 1) * Math.pow(wn, 1.35) * WHEEL_TURN;
+        }
+        if (wheelVec.active || wRate !== 0) {
+          boat.angVel += (wRate - boat.angVel) * Math.min(1, dt * 9);
         } else {
+          boat.angVel += (0 - boat.angVel) * Math.min(1, dt * 12);
+          if (Math.abs(boat.angVel) < 0.002) boat.angVel = 0;
+
           var kx = 0, ky = 0;
           if (keys['a'] || keys['arrowleft']) kx -= 1;
           if (keys['d'] || keys['arrowright']) kx += 1;
@@ -1334,6 +1481,7 @@
           if (keys['s'] || keys['arrowdown']) ky += 1;
           if (kx !== 0 || ky !== 0) { wantAngle = Math.atan2(ky, kx); throttle = 1; }
         }
+        boat.angle += boat.angVel * dt;
         if (wantAngle !== null) {
           var adiff = wantAngle - boat.angle;
           while (adiff > Math.PI) adiff -= Math.PI * 2;
@@ -1446,8 +1594,7 @@
             var th = hazards[ti];
             if (!taught[th.type] && Math.abs(th.y - boat.y) < 470 && Math.abs(th.x - boat.x) < 340) {
               taught[th.type] = true;
-              toast(TEACH[th.type], 3.2);
-              break;
+              if (tutToast('hz-' + th.type, TEACH[th.type], 3.2)) break;
             }
           }
         }
@@ -1475,7 +1622,7 @@
           lastTickSecond = -1;
         } else {
           boat.out += dt;
-          if (!hintFlags.dark) { toast('You have left the light. Something below has started to count.', 3); hintFlags.dark = true; }
+          if (!hintFlags.dark) { hintFlags.dark = true; tutToast('dark', 'You have left the light. Something below has started to count.', 3); }
           var whole = Math.floor(boat.out);
           if (whole !== lastTickSecond && boat.out > 0.4) {
             lastTickSecond = whole;
@@ -1495,7 +1642,7 @@
             var bdist = Math.hypot(bt.x - boat.x, bt.y - boat.y);
             if (!bottleHinted && bdist < 480 && performance.now() > toastUntil) {
               bottleHinted = true;
-              toast('A bottle, riding the swell. Sail into it — someone left you a message.', 3.4);
+              tutToast('bottle', 'A bottle, riding the swell. Sail into it — someone left you a message.', 3.4);
             }
             /* bottles drift toward you when you're close, and twinkle from afar */
             if (bdist < 160 && bdist > 1) {
@@ -2453,10 +2600,16 @@
         ctx.restore();
         drawOverlayFX();
         /* Wheel spring: released, it winds itself back to centre */
-        if (!wheelVec.active && wheelAngle !== 0 && !frozen) {
-          wheelAngle += (0 - wheelAngle) * Math.min(1, dt * 8);
-          if (Math.abs(wheelAngle) < 0.003) wheelAngle = 0;
+        if (!frozen && wheelAngle !== wheelTarget) {
+          /* follows the finger with a little inertia; springs home faster once released */
+          wheelAngle += (wheelTarget - wheelAngle) * Math.min(1, dt * (wheelVec.active ? 22 : 8));
+          if (Math.abs(wheelAngle - wheelTarget) < 0.003) wheelAngle = wheelTarget;
           syncWheel();
+        }
+        if (!frozen && leverVal !== leverTarget) {
+          leverVal += (leverTarget - leverVal) * Math.min(1, dt * 14);
+          if (Math.abs(leverVal - leverTarget) < 0.004) leverVal = leverTarget;
+          syncLeverUI();
         }
         update(gdt);
         requestAnimationFrame(frame);
@@ -2496,7 +2649,7 @@
         setLever: setLever,
         setWheel: function (turn) {
           wheelVec.active = true;
-          wheelAngle = Math.max(-1, Math.min(1, turn)) * WHEEL_MAX;
+          wheelAngle = wheelTarget = Math.max(-1, Math.min(1, turn)) * WHEEL_MAX;
           syncWheel();
         },
         setStick: function (angle) {
@@ -2504,10 +2657,10 @@
           while (d > Math.PI) d -= Math.PI * 2;
           while (d < -Math.PI) d += Math.PI * 2;
           wheelVec.active = true;
-          wheelAngle = Math.max(-1, Math.min(1, d / (Math.PI / 2))) * WHEEL_MAX;
+          wheelAngle = wheelTarget = Math.max(-1, Math.min(1, d / (Math.PI / 2))) * WHEEL_MAX;
           syncWheel();
         },
-        clearStick: function () { wheelVec.active = false; },
+        clearStick: function () { wheelVec.active = false; wheelTarget = 0; },
         teleport: function (m) {
           boat.y = -m * PX_PER_M;
           boat.x = beamPathX(boat.y);
