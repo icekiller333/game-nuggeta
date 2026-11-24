@@ -18,6 +18,7 @@
         --teal:#12b5a5;
         --sky:#7fd8f7;
         --red:#e52421;
+        --lime:#4cff7a;
       }
       @media (prefers-color-scheme: dark){
         :root{
@@ -50,40 +51,44 @@
         background:var(--page);
         z-index:5;
       }
-      .hud-row{ display:flex; align-items:center; gap:10px; }
+      .hud-row{ display:flex; align-items:center; gap:8px; }
       .hud-label{
         font-weight:900; font-size:11px; letter-spacing:.06em;
         color:#fff; white-space:nowrap;
       }
       .pips{ display:flex; gap:4px; }
       .pip{
-        width:22px; height:14px; border:2px solid #000; background:#2c3e46;
+        width:20px; height:14px; border:2px solid #000; background:#2c3e46;
         box-shadow:2px 2px 0 #000;
       }
-      .pip.on{ background:var(--coral); }
       .pip.catch.on{ background:var(--gold); }
-      #soundBtn,#pauseBtn{
-        margin-left:auto; width:40px; height:40px; flex:0 0 auto;
+      .iconbtn{
+        width:36px; height:36px; flex:0 0 auto;
         background:var(--panel); border:3px solid #000; box-shadow:3px 3px 0 #000;
         display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
       }
-      #soundBtn:active,#pauseBtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 #000; }
-      #soundBtn svg,#pauseBtn svg{ width:22px; height:22px; }
-      #pauseBtn{ margin-left:0; }
+      .iconbtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 #000; }
+      .iconbtn svg{ width:20px; height:20px; }
       .bar-wrap{ flex:1 1 auto; min-width:0; }
       .bar-track{
+        position:relative;
         height:16px; border:3px solid #000; background:#2c3e46; box-shadow:3px 3px 0 #000;
         overflow:hidden;
       }
       .bar-fill{ height:100%; width:100%; transition:width .12s linear; }
-      #monFill{ background:var(--teal); }
+      .bar-num{
+        position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+        font-size:10px; font-weight:900; color:#fff; text-shadow:1px 1px 0 #000; letter-spacing:.04em;
+        pointer-events:none;
+      }
+      #monFill{ background:var(--coral); }
       #monFill.weak{ background:var(--gold); animation:pulse .45s infinite alternate; }
-      #tenFill{ background:var(--coral); width:0%; }
-      #tenFill.red{ background:var(--red); animation:pulse .3s infinite alternate; }
-      #distFill{ background:var(--sky); width:0%; }
+      #rodFill{ background:var(--teal); }
+      #rodFill.low{ background:var(--gold); }
+      #rodFill.crit{ background:var(--red); animation:pulse .3s infinite alternate; }
       @keyframes pulse{ from{ filter:brightness(1);} to{ filter:brightness(1.5);} }
-      #monRow,#tenRow,#distRow{ visibility:hidden; }
-      #monRow.show,#tenRow.show,#distRow.show{ visibility:visible; }
+      #monRow{ visibility:hidden; }
+      #monRow.show{ visibility:visible; }
       /* ---------- Stage ---------- */
       #stage{ position:relative; flex:1 1 auto; min-height:0; overflow:hidden; background:#04121f; }
       #gl{ position:absolute; inset:0; }
@@ -94,27 +99,50 @@
         background:var(--panel); color:var(--panel-ink);
         border:3px solid #000; box-shadow:4px 4px 0 #000;
         font-weight:900; font-size:14px; text-align:center; line-height:1.25;
-        display:none; z-index:4; pointer-events:none;
+        display:none; z-index:6; pointer-events:none;
       }
       #hint.show{ display:block; }
       #bigWord{
         position:absolute; left:50%; top:16%; transform:translate(-50%,-50%) rotate(-3deg);
-        font-weight:900; font-size:clamp(30px,9vw,52px);
+        font-weight:900; font-size:clamp(28px,8.5vw,50px);
         color:var(--gold); -webkit-text-stroke:2px #000; paint-order:stroke fill;
-        text-shadow:4px 4px 0 #000; display:none; z-index:4; pointer-events:none; white-space:nowrap;
+        text-shadow:4px 4px 0 #000; display:none; z-index:6; pointer-events:none; white-space:nowrap;
       }
       #bigWord.show{ display:block; animation:pop .25s ease-out; }
       @keyframes pop{ from{ transform:translate(-50%,-50%) scale(.5) rotate(-3deg);} to{ transform:translate(-50%,-50%) scale(1) rotate(-3deg);} }
       #stateWord{
-        position:absolute; left:50%; top:8px; transform:translateX(-50%);
+        position:absolute; left:50%; top:40px; transform:translateX(-50%);
         font-weight:900; font-size:17px; letter-spacing:.04em; white-space:nowrap;
         display:none; z-index:4; pointer-events:none;
         text-shadow:2px 2px 0 #000;
       }
       #stateWord.show{ display:block; }
-      #stateWord.thrash{ color:#ff5a4d; }
-      #stateWord.warn{ color:var(--gold); }
       #stateWord.windup{ color:#ff5a4d; animation:pulse .25s infinite alternate; }
+      #stateWord.good{ color:var(--gold); }
+      #scoreBox{
+        position:absolute; left:8px; top:6px; z-index:4; pointer-events:none;
+        display:none; align-items:center; gap:8px;
+        font-weight:900; color:#fff; text-shadow:2px 2px 0 #000;
+      }
+      #scoreBox.show{ display:flex; }
+      #scoreBox .sv{ font-size:20px; letter-spacing:.02em; }
+      #scoreBox .sl{ font-size:10px; letter-spacing:.08em; opacity:.85; }
+      #combo{
+        display:none; background:var(--gold); color:#101418; text-shadow:none;
+        border:2px solid #000; box-shadow:2px 2px 0 #000; padding:1px 6px; font-size:13px;
+      }
+      #combo.show{ display:block; animation:pop2 .18s ease-out; }
+      @keyframes pop2{ from{ transform:scale(1.5);} to{ transform:scale(1);} }
+      #fx{ position:absolute; inset:0; z-index:5; pointer-events:none; overflow:hidden; }
+      .ftx{
+        position:absolute; transform:translate(-50%,-50%);
+        font-weight:900; font-size:18px; color:#fff; white-space:nowrap;
+        -webkit-text-stroke:2px #000; paint-order:stroke fill; text-shadow:2px 2px 0 #000;
+        animation:floatUp .85s ease-out forwards;
+      }
+      .ftx.crit{ color:var(--gold); font-size:24px; }
+      .ftx.miss{ color:#ff8c7a; font-size:15px; }
+      @keyframes floatUp{ from{ opacity:1; margin-top:0; } to{ opacity:0; margin-top:-46px; } }
       /* ---------- Crosshair ---------- */
       #crosshair{
         position:absolute; width:46px; height:46px; z-index:3; pointer-events:none;
@@ -123,17 +151,44 @@
       }
       #crosshair.show{ display:block; }
       #crosshair .ring{ stroke:var(--gold); }
+      #crosshair.lock .ring{ stroke:var(--lime); }
+      #crosshair.lock{ transform:translate(-50%,-50%) scale(.88); }
       #crosshair.miss .ring{ stroke:var(--red); }
+      /* ---------- Reel minigame ---------- */
+      #reelUI{
+        position:absolute; right:10px; top:44px; bottom:64px; width:78px;
+        display:none; gap:8px; z-index:4;
+      }
+      #reelUI.show{ display:flex; }
+      #rTrack{
+        position:relative; flex:1 1 auto; border:3px solid #000; box-shadow:4px 4px 0 #000;
+        background:repeating-linear-gradient(180deg,#0b2f45 0 14px,#0d3a54 14px 28px);
+        overflow:hidden;
+      }
+      #rZone{
+        position:absolute; left:0; right:0; background:rgba(76,255,122,.38);
+        border-top:3px solid var(--lime); border-bottom:3px solid var(--lime);
+        box-sizing:border-box;
+      }
+      #rZone.on{ background:rgba(76,255,122,.62); }
+      #rFish{ position:absolute; left:50%; width:40px; height:28px; margin-left:-20px; margin-bottom:-14px; }
+      #rFish.out{ animation:jitter .12s infinite alternate; }
+      @keyframes jitter{ from{ transform:translateX(-2px);} to{ transform:translateX(2px);} }
+      #rProg{
+        flex:0 0 20px; border:3px solid #000; box-shadow:3px 3px 0 #000; background:#2c3e46;
+        position:relative; overflow:hidden;
+      }
+      #rProgFill{ position:absolute; left:0; right:0; bottom:0; height:30%; background:var(--gold); }
       /* ---------- Controls ---------- */
       #controls{
-        flex:0 0 auto; height:92px;
-        display:flex; gap:10px; align-items:stretch;
+        flex:0 0 auto; height:150px;
+        display:flex; gap:12px; align-items:stretch;
         padding:10px; background:var(--page); z-index:5;
       }
       .cbtn{
         position:relative; overflow:hidden;
         flex:1 1 0; min-height:56px;
-        font-weight:900; font-size:19px; letter-spacing:.03em;
+        font-weight:900; font-size:26px; letter-spacing:.03em;
         border:3px solid #000; box-shadow:4px 4px 0 #000; cursor:pointer;
         color:#101418; background:var(--gold);
         display:none; align-items:center; justify-content:center; gap:8px;
@@ -141,36 +196,32 @@
       }
       .cbtn.show{ display:flex; }
       .cbtn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 #000; }
-      .cbtn.fire{ background:var(--coral); color:#fff; }
-      .cbtn.fire.reloadMode{ background:var(--sky); color:#101418; }
-      .cbtn.fire.reloadMode svg{ display:none; }
-      #ammoBox{
-        display:none; flex:0 0 40px; flex-direction:column; align-items:center; justify-content:center; gap:4px;
-      }
-      #ammoBox.show{ display:flex; }
-      #ammoBox .hud-label{ font-size:9px; }
-      #ammoPips{ display:grid; grid-template-columns:repeat(2,12px); gap:3px; }
-      .bullet{
-        width:10px; height:15px; border:2px solid #000; background:#2c3e46;
-        border-radius:5px 5px 2px 2px;
-      }
-      .bullet.on{ background:var(--gold); }
-      .cbtn.reel{ background:var(--teal); color:#fff; flex-grow:1.25; }
-      .cbtn.dodge{ background:var(--gold); color:#101418; }
+      .cbtn.fire{ background:var(--coral); color:#fff; flex:0 0 46%; font-size:28px; }
+      .cbtn.reel{ background:var(--teal); color:#fff; }
       .cbtn.holding{ transform:translate(3px,3px); box-shadow:1px 1px 0 #000; filter:brightness(1.2); }
       .cbtn:disabled{ filter:grayscale(.7) brightness(.75); cursor:default; }
-      .cbtn svg{ width:24px; height:24px; flex:0 0 auto; }
-      .cbtn .lbl{ position:relative; z-index:2; display:flex; align-items:center; gap:8px; }
-      #dodgeCd{
-        position:absolute; left:0; bottom:0; height:100%; width:0%;
-        background:rgba(0,0,0,.38); z-index:1; pointer-events:none;
+      .cbtn svg{ width:30px; height:30px; flex:0 0 auto; }
+      .cbtn .lbl{ position:relative; z-index:2; display:flex; align-items:center; gap:8px; text-align:center; line-height:1.05; }
+      #stickZone{
+        position:relative; flex:1 1 0; display:none; touch-action:none;
       }
-      .cbtn.cooling{ filter:brightness(.72); }
+      #stickZone.show{ display:block; }
+      #stickBase{
+        position:absolute; left:50%; top:50%; width:124px; height:124px; margin:-62px 0 0 -62px;
+        border-radius:50%; border:3px solid #000; box-shadow:4px 4px 0 #000;
+        background:var(--panel); opacity:.95;
+      }
+      #stickBase.live{ opacity:1; }
+      #stickBase svg{ position:absolute; inset:0; width:100%; height:100%; opacity:.35; }
+      #stickKnob{
+        position:absolute; left:50%; top:50%; width:58px; height:58px; margin:-29px 0 0 -29px;
+        border-radius:50%; background:var(--gold); border:3px solid #000; box-shadow:2px 2px 0 #000;
+      }
       /* ---------- Overlays ---------- */
       .overlay{
         position:absolute; inset:0; z-index:10;
         display:none; align-items:center; justify-content:center;
-        background:rgba(3,18,28,.72); padding:18px;
+        background:rgba(3,18,28,.72); padding:18px; overflow:auto;
       }
       .overlay.show{ display:flex; }
       .card{
@@ -196,6 +247,14 @@
       }
       .bigbtn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 #000; }
       .bigbtn.teal{ background:var(--teal); color:#fff; }
+      .upbtn{
+        display:block; width:100%; text-align:left; margin-top:10px;
+        background:var(--gold); color:#101418; font:inherit;
+        border:3px solid #000; box-shadow:4px 4px 0 #000; padding:10px 14px; cursor:pointer;
+      }
+      .upbtn:active{ transform:translate(2px,2px); box-shadow:2px 2px 0 #000; }
+      .upbtn b{ display:block; font-size:18px; font-weight:900; }
+      .upbtn span{ display:block; font-size:14px; font-weight:700; margin-top:2px; }
       .loadbar{
         height:18px; border:3px solid #000; background:#2c3e46; overflow:hidden; margin-top:14px;
       }
@@ -209,10 +268,16 @@
         .hud-row{ gap:7px; }
         .hud-label{ font-size:10px; }
         #hud{ padding:8px 8px 6px; }
-        .cbtn{ font-size:16px; }
+        .cbtn{ font-size:22px; }
+        .cbtn.fire{ font-size:24px; }
+      }
+      @media (max-height:640px){
+        #controls{ height:128px; }
+        #stickBase{ width:104px; height:104px; margin:-52px 0 0 -52px; }
+        #stickKnob{ width:50px; height:50px; margin:-25px 0 0 -25px; }
       }
       @media (prefers-reduced-motion: reduce){
-        .wiggle,#monFill.weak,#tenFill.red,#stateWord.windup{ animation:none; }
+        .wiggle,#monFill.weak,#rodFill.crit,#stateWord.windup,#rFish.out,.ftx,#combo.show{ animation:none; }
       }
     </style>
   </head>
@@ -224,15 +289,13 @@
           <div class="pips" id="catchPips">
             <div class="pip catch"></div><div class="pip catch"></div><div class="pip catch"></div>
           </div>
-          <span class="hud-label" style="margin-left:6px;">HULL</span>
-          <div class="pips" id="hullPips">
-            <div class="pip on"></div><div class="pip on"></div><div class="pip on"></div><div class="pip on"></div>
-          </div>
-          <button id="soundBtn" aria-label="Toggle sound">
+          <span class="hud-label" style="margin-left:4px;">ROD</span>
+          <div class="bar-wrap"><div class="bar-track"><div class="bar-fill" id="rodFill"></div><div class="bar-num" id="rodTxt">100</div></div></div>
+          <button class="iconbtn" id="soundBtn" aria-label="Toggle sound">
             <svg id="sndOn" viewBox="0 0 24 24" fill="none" stroke="#101418" stroke-width="2.4" stroke-linecap="square"><path d="M4 9v6h4l6 5V4L8 9H4z" fill="#101418"/><path d="M17 8c1.5 1.2 1.5 6.8 0 8M19.5 5.5c2.8 2.4 2.8 10.6 0 13"/></svg>
             <svg id="sndOff" viewBox="0 0 24 24" fill="none" stroke="#101418" stroke-width="2.4" stroke-linecap="square" style="display:none"><path d="M4 9v6h4l6 5V4L8 9H4z" fill="#101418"/><path d="M17 9l6 6M23 9l-6 6"/></svg>
           </button>
-          <button id="pauseBtn" aria-label="Pause" style="display:none">
+          <button class="iconbtn" id="pauseBtn" aria-label="Pause" style="display:none">
             <svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" fill="#101418"/><rect x="14" y="5" width="4" height="14" fill="#101418"/></svg>
           </button>
         </div>
@@ -240,19 +303,20 @@
           <span class="hud-label" id="monName">MONSTER</span>
           <div class="bar-wrap"><div class="bar-track"><div class="bar-fill" id="monFill"></div></div></div>
         </div>
-        <div class="hud-row" id="distRow">
-          <span class="hud-label" id="distName">DIST —</span>
-          <div class="bar-wrap"><div class="bar-track"><div class="bar-fill" id="distFill"></div></div></div>
-        </div>
-        <div class="hud-row" id="tenRow">
-          <span class="hud-label">TENSION</span>
-          <div class="bar-wrap"><div class="bar-track"><div class="bar-fill" id="tenFill"></div></div></div>
-        </div>
       </div>
 
       <div id="stage">
         <div id="gl"></div>
         <div id="crosshair" aria-hidden="true"><svg viewBox="0 0 46 46" width="46" height="46" fill="none"><circle class="ring" cx="23" cy="23" r="13" stroke-width="3"/><path class="ring" d="M23 2v10M23 34v10M2 23h10M34 23h10" stroke-width="3"/><circle cx="23" cy="23" r="2.6" fill="#ffc61a" stroke="#000" stroke-width="1"/></svg></div>
+        <div id="scoreBox"><span class="sl">SCORE</span><span class="sv" id="scoreVal">0</span><span id="combo">x2</span></div>
+        <div id="reelUI" aria-hidden="true">
+          <div id="rTrack">
+            <div id="rZone"></div>
+            <div id="rFish"><svg viewBox="0 0 40 28" width="40" height="28"><path id="rFishPath" d="M2 14 Q14 0 28 8 L38 2 L36 14 L38 26 L28 20 Q14 28 2 14Z" fill="#12b5a5" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><circle cx="11" cy="12" r="2.6" fill="#fff" stroke="#000" stroke-width="1.4"/><circle cx="11.6" cy="12" r="1" fill="#000"/></svg></div>
+          </div>
+          <div id="rProg"><div id="rProgFill"></div></div>
+        </div>
+        <div id="fx"></div>
         <div id="stateWord"></div>
         <div id="bigWord"></div>
         <div id="hint"></div>
@@ -271,7 +335,7 @@
               <svg width="72" height="72" viewBox="0 0 72 72"><path d="M8 44 Q36 66 64 44 L58 58 Q36 68 14 58 Z" fill="#ff4d2e" stroke="#000" stroke-width="3"/><path d="M36 44 V14" stroke="#000" stroke-width="4"/><path d="M36 14 Q58 10 60 26" fill="none" stroke="#000" stroke-width="3"/><circle cx="60" cy="30" r="4" fill="#ffc61a" stroke="#000" stroke-width="2"/></svg>
             </div>
             <h1>MONSTER<br/>REEL</h1>
-            <p id="howtoLine">Drag to aim the crosshair, tap SHOOT to weaken it, hold REEL to drag it in, and flip with DODGE when its eyes flare red — four hits and you're done.</p>
+            <p id="howtoLine"></p>
             <p id="bestLine"></p>
             <p id="saveLine"></p>
             <button class="bigbtn" id="startBtn">START FISHING</button>
@@ -282,6 +346,14 @@
           <div class="card">
             <p class="story" id="storyText"></p>
             <button class="bigbtn teal" id="storyBtn">NEXT</button>
+          </div>
+        </div>
+
+        <div class="overlay" id="ovUpgrade">
+          <div class="card">
+            <h2>PICK A REWARD</h2>
+            <p id="upSub" style="margin-bottom:4px;">One upgrade for the next monster.</p>
+            <div id="upChoices"></div>
           </div>
         </div>
 
@@ -309,15 +381,16 @@
 
       <div id="controls">
         <button class="cbtn" id="btnMain">CAST</button>
-        <button class="cbtn reel" id="btnReel"><span class="lbl">REEL</span></button>
-        <button class="cbtn dodge" id="btnDodge"><span id="dodgeCd"></span><span class="lbl" id="dodgeLbl">DODGE</span></button>
-        <div id="ammoBox" aria-label="Ammo">
-          <span class="hud-label">AMMO</span>
-          <div id="ammoPips"><div class="bullet on"></div><div class="bullet on"></div><div class="bullet on"></div><div class="bullet on"></div><div class="bullet on"></div><div class="bullet on"></div></div>
+        <button class="cbtn reel" id="btnReel"><span class="lbl">HOLD<br/>TO REEL</span></button>
+        <div id="stickZone" aria-label="Aim stick">
+          <div id="stickBase">
+            <svg viewBox="0 0 124 124" fill="none" stroke="#101418" stroke-width="3" stroke-linecap="square"><path d="M62 10v22M62 92v22M10 62h22M92 62h22"/></svg>
+            <div id="stickKnob"></div>
+          </div>
         </div>
         <button class="cbtn fire" id="btnFire"><span class="lbl">
-          <svg id="fireIco" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M3 21 L17 7"/><path d="M17 7 l4-4 M17 7 l-1 5 M17 7 l5 1" stroke-linecap="square"/></svg>
-          <span id="fireLbl">SHOOT</span></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><circle cx="12" cy="12" r="8"/><path d="M12 1v6M12 17v6M1 12h6M17 12h6" stroke-linecap="square"/></svg>
+          <span>SHOOT</span></span>
         </button>
       </div>
     </main>
@@ -336,8 +409,6 @@
       if(S3){ S3.renderer.setSize(W, H, false); S3.camera.aspect = W/H; S3.camera.updateProjectionMatrix(); }
     }
     window.addEventListener("resize", resize);
-
-    /* ================= audio ================= */
     var AC = null, muted = false;
     function ac(){
       if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC = null; } }
@@ -363,21 +434,26 @@
       var f = a.createBiquadFilter(); f.type="lowpass"; f.frequency.value = 900;
       s.connect(f); f.connect(g); g.connect(a.destination); s.start();
     }
+
     var sfx = {
-      cast:  function(){ tone(500,.18,"sine",.12, 900); },
-      splash:function(){ noiseBurst(.25,.18); },
-      bite:  function(){ tone(1150,.12,"square",.16); setTimeout(function(){ tone(1500,.14,"square",.16); },90); },
-      hook:  function(){ tone(300,.15,"sawtooth",.16, 700); },
-      shoot: function(){ tone(760,.07,"square",.10, 220); noiseBurst(.06,.08); },
-      hit:   function(){ tone(170,.10,"sawtooth",.16, 90); noiseBurst(.08,.10); },
-      hurt:  function(){ tone(120,.28,"sawtooth",.22, 55); noiseBurst(.2,.16); },
-      snap:  function(){ tone(900,.06,"square",.2); setTimeout(function(){ tone(140,.3,"sawtooth",.2,60); },60); },
-      reel:  function(){ tone(210,.05,"square",.05, 260); },
-      thrash:function(){ noiseBurst(.18,.14); tone(90,.18,"sine",.16, 60); },
-      dodge: function(){ tone(300,.3,"sine",.12, 900); },
-      roar:  function(){ tone(80,.5,"sawtooth",.16, 45); noiseBurst(.3,.1); },
-      caught:function(){ var n=[523,659,784,1046]; for(var i=0;i<n.length;i++){ (function(f,t){ setTimeout(function(){ tone(f,.22,"square",.14); },t); })(n[i], i*110); } },
-      win:   function(){ var n=[523,659,784,1046,1318]; for(var i=0;i<n.length;i++){ (function(f,t){ setTimeout(function(){ tone(f,.3,"square",.14); },t); })(n[i], i*130); } }
+      cast:   function(){ tone(500,.18,"sine",.12, 900); },
+      splash: function(){ noiseBurst(.25,.18); },
+      bite:   function(){ tone(1150,.12,"square",.16); setTimeout(function(){ tone(1500,.14,"square",.16); },90); },
+      hook:   function(){ tone(300,.15,"sawtooth",.16, 700); },
+      shoot:  function(){ tone(760,.07,"square",.10, 220); noiseBurst(.06,.08); },
+      hit:    function(){ tone(170,.10,"sawtooth",.16, 90); noiseBurst(.08,.10); },
+      crit:   function(){ tone(170,.10,"sawtooth",.16, 90); noiseBurst(.08,.10); setTimeout(function(){ tone(880,.1,"square",.12,1320); },50); setTimeout(function(){ tone(1320,.14,"square",.12,1760); },110); },
+      miss:   function(){ tone(190,.08,"square",.08,120); noiseBurst(.06,.06); },
+      hurt:   function(){ tone(120,.28,"sawtooth",.22, 55); noiseBurst(.2,.16); },
+      snap:   function(){ tone(900,.06,"square",.2); setTimeout(function(){ tone(140,.3,"sawtooth",.2,60); },60); },
+      reel:   function(p){ tone(200 + (p||0)*320,.05,"square",.05, 260 + (p||0)*320); },
+      surface:function(){ noiseBurst(.3,.16); tone(110,.3,"sine",.14,260); },
+      dive:   function(){ noiseBurst(.2,.12); tone(260,.22,"sine",.1,90); },
+      warn:   function(){ tone(80,.4,"sawtooth",.16,45); noiseBurst(.2,.1); },
+      roar:   function(){ tone(80,.5,"sawtooth",.16, 45); noiseBurst(.3,.1); },
+      pick:   function(){ tone(660,.08,"square",.1,990); setTimeout(function(){ tone(990,.1,"square",.1,1320); },70); },
+      caught: function(){ var n=[523,659,784,1046]; for(var i=0;i<n.length;i++){ (function(f,t){ setTimeout(function(){ tone(f,.22,"square",.14); },t); })(n[i], i*110); } },
+      win:    function(){ var n=[523,659,784,1046,1318]; for(var i=0;i<n.length;i++){ (function(f,t){ setTimeout(function(){ tone(f,.3,"square",.14); },t); })(n[i], i*130); } }
     };
     $("soundBtn").addEventListener("click", function(){
       muted = !muted;
@@ -387,87 +463,147 @@
     });
 
     /* ================= game data ================= */
-    var HOWTO = "Drag to aim the crosshair, tap SHOOT to weaken it, hold REEL to drag it in, and flip with DODGE when its eyes flare red — four hits and you're done.";
-    var CYLINDER = 6, RELOAD_TIME = 1.5;
+    var HOWTO = "Cast, hook, then hold REEL to keep the monster inside the green bar. Once it's hauled in, slide the stick to aim and tap SHOOT whenever it surfaces \u2014 before it lashes your rod to bits.";
+    /* hp is in damage points (a body shot does 10, a bullseye 20).
+       up = seconds it stays surfaced, warn = red-eye tell before it lashes,
+       hide = seconds underwater before it pops up somewhere new. */
     var MONSTERS = [
-      { name:"MAWFIN",      hp:100, scale:1.0,  startDist:46, atkEvery:2.6, windup:1.0,  spitN:1, kit:["spit"],               reelRate:6.2, col:0x12b5a5, col2:0x0a7d72, tongue:0xe52421, tongueName:"red" },
-      { name:"KRAKEN CALF", hp:155, scale:1.18, startDist:56, atkEvery:2.3, windup:0.9,  spitN:2, kit:["spit","pillars"],      reelRate:5.2, col:0xff5d8f, col2:0xc22e63, tongue:0x9b30ff, tongueName:"purple" },
-      { name:"LEVIATHAN",   hp:215, scale:1.45, startDist:66, atkEvery:2.0, windup:0.8,  spitN:3, kit:["spit","pillars","lunge"], reelRate:4.4, col:0xff7b33, col2:0xc24e12, tongue:0x00b7ff, tongueName:"bright blue" }
+      { name:"MAWFIN",      hp:50,  scale:1.0,  kit:["spit"],            spitN:1, lash:12, up:2.6, warn:0.60, hide:0.95, move:"still", startDist:46,
+        reel:{ zone:0.36, speed:0.45, retarget:[0.9,1.7], range:0.38, dart:0.00, gain:0.21, drain:0.12 },
+        col:0x12b5a5, col2:0x0a7d72, tongue:0xe52421, tongueName:"red" },
+      { name:"KRAKEN CALF", hp:90,  scale:1.18, kit:["spit","pillars"],  spitN:2, lash:16, up:2.2, warn:0.55, hide:0.80, move:"sway",  startDist:56,
+        reel:{ zone:0.31, speed:0.65, retarget:[0.7,1.4], range:0.50, dart:0.15, gain:0.20, drain:0.14 },
+        col:0xff5d8f, col2:0xc22e63, tongue:0x9b30ff, tongueName:"purple" },
+      { name:"LEVIATHAN",   hp:120, scale:1.45, kit:["spit","pillars"],  spitN:3, lash:20, up:1.9, warn:0.50, hide:0.65, move:"hop",   startDist:66,
+        reel:{ zone:0.27, speed:0.85, retarget:[0.5,1.1], range:0.60, dart:0.30, gain:0.20, drain:0.16 },
+        col:0xff7b33, col2:0xc24e12, tongue:0x00b7ff, tongueName:"bright blue" }
     ];
-    var TEACH_ORDER = ["cast","hook","shoot","reel","reload","dodge","fake1","fake2"];
+    var UPGRADES = [
+      { id:"patch",   title:"PATCH THE ROD",  desc:"Restore 40 rod health.",                    ok:function(){ return G.rod < G.rodMax; }, apply:function(){ G.rod = Math.min(G.rodMax, G.rod + 40); } },
+      { id:"carbon",  title:"CARBON ROD",     desc:"+30 max rod health, and repair 30.",         ok:function(){ return true; },              apply:function(){ G.rodMax += 30; G.rod += 30; } },
+      { id:"sights",  title:"WIDE SIGHTS",    desc:"Monsters are easier to hit.",                ok:function(){ return G.up.sights < 3; },   apply:function(){ G.up.sights++; } },
+      { id:"hollow",  title:"HOLLOW POINTS",  desc:"Every shot hits harder.",                    ok:function(){ return G.up.dmg < 3; },      apply:function(){ G.up.dmg++; } },
+      { id:"grip",    title:"GRIPPY REEL",    desc:"A bigger green bar when reeling.",           ok:function(){ return G.up.reel < 3; },     apply:function(){ G.up.reel++; } },
+      { id:"trigger", title:"HAIR TRIGGER",   desc:"Fire noticeably faster.",                    ok:function(){ return G.up.trigger < 2; },  apply:function(){ G.up.trigger++; } }
+    ];
+    var TEACH_ORDER = ["cast","hook","reel","aim","warn"];
+    /* Two fixed camera rigs: a low cinematic one for casting and reeling, and
+       a higher one for the shooting phase so monsters can pop up all over the
+       water. Hit-testing and monster placement use the same rig as rendering. */
+    var CAMS = {
+      low:  { px:0, py:2.3, pz:7.4, lx:0, ly:1.5, lz:-14 },
+      high: { px:0, py:7.5, pz:8.2, lx:0, ly:0.2, lz:-12 }
+    };
+    var TAN_H = 0.6009;   // tan(31deg): half of the 62deg vertical fov
     var G = {
       screen:"load",           // load | menu | story | play | end
-      phase:"idle",            // cast | wait | fight | caught
-      idx:0, catches:0, hull:4,
+      phase:"idle",            // idle | cast | wait | reel | monster | caught
+      idx:0, catches:0,
+      rod:100, rodMax:100, score:0, streak:0,
+      up:{ sights:0, dmg:0, reel:0, trigger:0 },
       time:0, runTime:0,
-      mon:null,                // active monster state
+      mon:null, reel:null,
       bobberOn:false, biteT:-1, waitT:0,
-      fireCD:0, reelBtn:false, reelKey:false, tension:0, snapT:0,
-      thrashState:"calm", thrashT:0, reelTick:0,
-      dodgeT:0, dodgeCD:0, flipP:-1, boatShake:0,
-      hintStage:0, started:false, paused:false,
-      ammo:CYLINDER, reloading:false, reloadT:0,
-      aim:{ x:0.5, y:0.45 },
+      fireCD:0, reelBtn:false, reelKey:false, reelTick:0,
+      stick:{ x:0, y:0 },
+      aim:{ x:0.5, y:0.5 },
+      cam:{ px:0, py:2.3, pz:7.4, lx:0, ly:1.5, lz:-14 },
+      boatShake:0, paused:false,
       teach:{}, teachLog:[]
     };
     function reeling(){ return G.reelBtn || G.reelKey; }
+    function mult(){ return Math.min(5, 1 + Math.floor(Math.max(0, G.streak - 1) / 3)); }
     function newMonster(i){
       var d = MONSTERS[i];
       return {
         def:d, hp:d.hp, maxhp:d.hp, kind:i,
         dist:d.startDist, startDist:d.startDist,
-        bobP: Math.random()*6.28, flash:0,
-        atkT: 1.6, atkState:"none", atkT2:0, atkKind:null, rearP:0,
-        fakeT: rand(3.5,5.5), fakeState:"none", fakeT2:0, fakeKind:0,
-        sink:0, resolved:false
+        bobP: Math.random()*6.28, flash:0, sink:0,
+        state:"reel",            // reel | hidden | rising | up | warn | diving | spent
+        rise:0.5, rearP:0, stT:0, upT:0, upAge:0, hopT:0, swayP:0, first:true, spentT:0, bubT:0,
+        px:0, pz:-30, sx:0.5, sy:0.45, cx:0.5, cy:0.45, hx:0.5, hy:0.45
       };
     }
 
+    /* ================= camera math ================= */
+    function camBasis(c){
+      var fx=c.lx-c.px, fy=c.ly-c.py, fz=c.lz-c.pz, fl=Math.sqrt(fx*fx+fy*fy+fz*fz);
+      fx/=fl; fy/=fl; fz/=fl;
+      var rx=-fz, rz=fx, rl=Math.sqrt(rx*rx+rz*rz); rx/=rl; rz/=rl;
+      return { fx:fx, fy:fy, fz:fz, rx:rx, rz:rz, ux:-rz*fy, uy:rz*fx - rx*fz, uz:rx*fy };
+    }
+    function tanW(){ return TAN_H * (W/Math.max(1,H)); }
+    function project(c, x, y, z){
+      var b = camBasis(c), vx=x-c.px, vy=y-c.py, vz=z-c.pz;
+      var zc = vx*b.fx + vy*b.fy + vz*b.fz;
+      if(zc < 0.5) return null;
+      var xc = vx*b.rx + vz*b.rz, yc = vx*b.ux + vy*b.uy + vz*b.uz;
+      return { sx: 0.5 + xc/(zc*tanW())/2, sy: 0.5 - yc/(zc*TAN_H)/2, zc:zc };
+    }
+    function unproject(c, sx, sy, planeY){
+      var b = camBasis(c), nx=(sx-0.5)*2, ny=(0.5-sy)*2, tw=tanW();
+      var dx = b.fx + nx*tw*b.rx + ny*TAN_H*b.ux;
+      var dy = b.fy + ny*TAN_H*b.uy;
+      var dz = b.fz + nx*tw*b.rz + ny*TAN_H*b.uz;
+      if(dy > -0.01) return null;
+      var t = (planeY - c.py)/dy;
+      return { x:c.px + dx*t, y:planeY, z:c.pz + dz*t };
+    }
+    function camTarget(){
+      var m = G.mon;
+      var high = (G.phase==="monster") || (G.phase==="caught" && m);
+      return high ? CAMS.high : CAMS.low;
+    }
+    function stepCam(dt){
+      var t = camTarget(), c = G.cam, k = Math.min(1, dt*2.6);
+      for(var key in t){ c[key] += (t[key] - c[key]) * k; }
+    }
+
     /* ================= UI refs ================= */
-    var hintEl=$("hint"), bigWordEl=$("bigWord"), stateEl=$("stateWord");
-    var btnMain=$("btnMain"), btnFire=$("btnFire"), btnReel=$("btnReel"), btnDodge=$("btnDodge");
+    var hintEl=$("hint"), bigWordEl=$("bigWord"), stateEl=$("stateWord"), fxEl=$("fx");
+    var btnMain=$("btnMain"), btnFire=$("btnFire"), btnReel=$("btnReel");
+    var stickZone=$("stickZone"), stickBase=$("stickBase"), stickKnob=$("stickKnob");
+    var reelUI=$("reelUI"), rZone=$("rZone"), rFish=$("rFish"), rProgFill=$("rProgFill");
     var crossEl=$("crosshair");
     function positionCrosshair(){
       crossEl.style.left = (G.aim.x*100) + "%";
       crossEl.style.top = (G.aim.y*100) + "%";
     }
-    /* Screen-space hit zone for the monster, from the same fixed camera
-       the 3D scene uses (pos y2.3, 62° fov, slight downward pitch).
-       Generous ellipse covering the body; works with or without WebGL. */
+    function monZ(dist){ return -(4 + dist*0.85); }
+    function monWorldPos(){
+      var m = G.mon;
+      if(!m) return { x:0, y:2, z:-30 };
+      return { x:m.px, y:1.6 + (m.rise-1)*6.5 + m.rearP*1.0, z:m.pz };
+    }
+    function isVulnerable(m){
+      return !!m && m.hp>0 && (m.state==="up" || m.state==="warn" || (m.state==="rising" && m.rise>=0.5));
+    }
+    /* Screen-space hit ellipse (fractions of the stage), from the live camera. */
     function monsterBox(){
-      if(!G.mon) return null;
-      var m = G.mon, wp = monWorldPos();
-      var d = Math.max(6, 7.4 - wp.z);
-      var tanH = 0.6009; // tan(31°) — half the vertical fov
-      var tanW = tanH * (W/Math.max(1,H));
-      var relY = (wp.y - 2.3) + d*0.0374;
-      var cx = 0.5 + (wp.x/(d*tanW))/2;
-      var cy = 0.5 - (relY/(d*tanH))/2;
-      var rW = 4.4 * m.def.scale;
+      var m = G.mon; if(!m) return null;
+      var wp = monWorldPos(), p = project(G.cam, wp.x, wp.y, wp.z);
+      if(!p) return null;
+      var wide = 1 + 0.22*G.up.sights;
+      var R = 3.5 * m.def.scale * wide;
       return {
-        cx:cx, cy:cy,
-        rx: Math.max(0.10,  (rW/(d*tanW))/2 * 1.15),
-        ry: Math.max(0.085, (rW/(d*tanH))/2 * 1.15)
+        cx:p.sx, cy:p.sy,
+        rx: Math.max(0.07*wide, R/(p.zc*tanW())/2*1.1),
+        ry: Math.max(0.065*wide, R/(p.zc*TAN_H)/2*0.9)
       };
     }
-    function aimHit(){
-      var b = monsterBox(); if(!b) return false;
-      var dx = (G.aim.x - b.cx)/b.rx, dy = (G.aim.y - b.cy)/b.ry;
-      return dx*dx + dy*dy <= 1;
+    function hitInfo(){
+      var m = G.mon;
+      if(G.phase!=="monster" || !isVulnerable(m)) return { hit:false, crit:false, box:null };
+      var b = monsterBox(); if(!b) return { hit:false, crit:false, box:null };
+      var dx = (G.aim.x - b.cx)/b.rx, dy = (G.aim.y - b.cy)/b.ry, d2 = dx*dx + dy*dy;
+      return { hit:d2<=1, crit:d2<=0.3, box:b };
     }
     function aimWorldPoint(){
-      var m = G.mon, z = m ? monZ(m.dist) : -20;
-      var d = Math.max(6, 7.4 - z);
-      var tanH = 0.6009, tanW = tanH * (W/Math.max(1,H));
-      return {
-        x: (G.aim.x*2 - 1) * d * tanW,
-        y: Math.max(0.35, 2.3 + (1 - G.aim.y*2) * d * tanH - d*0.0374),
-        z: z + 2.5
-      };
+      var p = unproject(G.cam, G.aim.x, G.aim.y, 0.3);
+      return p || { x:0, y:0.3, z:-20 };
     }
     /* One-at-a-time onboarding: a lesson only fires once every earlier
-       lesson has fired, so spotlights always land in play order and
-       never stack — there is only ever the single hint element. */
+       lesson has fired, so hints always land in play order and never stack. */
     function tryTeach(key, txt){
       if(G.teach[key]) return false;
       for(var i=0;i<TEACH_ORDER.length;i++){
@@ -475,7 +611,7 @@
         if(!G.teach[TEACH_ORDER[i]]) return false;
       }
       G.teach[key] = true; G.teachLog.push(key);
-      hint(txt, true);
+      hint(txt, key!=="warn");
       return true;
     }
     var hintTimer=null;
@@ -485,64 +621,58 @@
       if(!sticky){ hintTimer = setTimeout(function(){ hintEl.classList.remove("show"); }, 3400); }
     }
     function hideHint(){ hintEl.classList.remove("show"); if(hintTimer){ clearTimeout(hintTimer); hintTimer=null; } }
+    var bigTimer=null;
     function bigWord(txt, ms){
-      bigWordEl.textContent = txt; bigWordEl.classList.add("show");
-      setTimeout(function(){ bigWordEl.classList.remove("show"); }, ms||900);
+      bigWordEl.textContent = txt; bigWordEl.classList.remove("show"); void bigWordEl.offsetWidth; bigWordEl.classList.add("show");
+      if(bigTimer){ clearTimeout(bigTimer); }
+      bigTimer = setTimeout(function(){ bigWordEl.classList.remove("show"); }, ms||900);
     }
     function stateWord(txt, cls){
       if(!txt){ stateEl.classList.remove("show"); stateEl.textContent=""; return; }
       stateEl.textContent = txt;
       stateEl.className = "show " + (cls||"");
     }
+    function floatText(txt, sx, sy, cls){
+      while(fxEl.children.length > 7){ fxEl.removeChild(fxEl.firstChild); }
+      var d = document.createElement("div");
+      d.className = "ftx " + (cls||""); d.textContent = txt;
+      d.style.left = (clamp(sx,0.08,0.92)*100) + "%"; d.style.top = (clamp(sy,0.1,0.9)*100) + "%";
+      fxEl.appendChild(d);
+      setTimeout(function(){ if(d.parentNode){ d.parentNode.removeChild(d); } }, 900);
+    }
     function showBtns(){
-      btnMain.classList.toggle("show", G.phase==="cast" || G.phase==="wait");
-      btnMain.textContent = (G.phase==="wait" && G.biteT>=0) ? "HOOK!" : "CAST";
-      btnMain.disabled = (G.phase==="wait" && G.biteT<0);
-      var fight = G.phase==="fight";
-      btnFire.classList.toggle("show", fight);
-      btnReel.classList.toggle("show", fight);
-      btnDodge.classList.toggle("show", fight);
-      $("ammoBox").classList.toggle("show", fight);
+      var ph = G.phase;
+      btnMain.classList.toggle("show", ph==="cast" || ph==="wait");
+      btnMain.textContent = (ph==="wait" && G.biteT>=0) ? "HOOK!" : "CAST";
+      btnMain.disabled = (ph==="wait" && G.biteT<0);
+      btnReel.classList.toggle("show", ph==="reel");
+      btnFire.classList.toggle("show", ph==="monster");
+      stickZone.classList.toggle("show", ph==="monster");
+      reelUI.classList.toggle("show", ph==="reel");
     }
     function syncHUD(){
       var cp = $("catchPips").children;
       for(var i=0;i<cp.length;i++){ cp[i].classList.toggle("on", i < G.catches); }
-      var hp = $("hullPips").children;
-      for(var i=0;i<hp.length;i++){ hp[i].classList.toggle("on", i < G.hull); }
-      var inFight = (G.phase==="fight" || G.phase==="caught") && G.mon;
+      var rp = clamp(G.rod/G.rodMax*100, 0, 100), rf = $("rodFill");
+      rf.style.width = rp + "%";
+      rf.classList.toggle("low", rp<=50 && rp>25);
+      rf.classList.toggle("crit", rp<=25);
+      $("rodTxt").textContent = Math.ceil(G.rod) + " / " + G.rodMax;
+      var m = G.mon, inFight = (G.phase==="monster" || G.phase==="caught") && m;
       $("monRow").classList.toggle("show", !!inFight);
-      $("distRow").classList.toggle("show", !!inFight);
-      $("tenRow").classList.toggle("show", G.phase==="fight");
-      if(G.mon){
-        $("monName").textContent = G.mon.def.name + (G.mon.hp<=0 ? " · SPENT" : "");
+      if(m){
+        $("monName").textContent = m.def.name + (m.hp<=0 ? " \u00b7 SPENT" : "");
         var f = $("monFill");
-        f.style.width = clamp(G.mon.hp/G.mon.maxhp*100,0,100) + "%";
-        f.classList.toggle("weak", G.mon.hp<=0);
-        $("distName").textContent = "DIST " + Math.max(0, Math.ceil(G.mon.dist)) + "m";
-        $("distFill").style.width = clamp((1 - G.mon.dist/G.mon.startDist)*100, 0, 100) + "%";
+        f.style.width = clamp(m.hp/m.maxhp*100,0,100) + "%";
+        f.classList.toggle("weak", m.hp<=0);
       }
-      var tf = $("tenFill");
-      tf.style.width = clamp(G.tension,0,100) + "%";
-      tf.classList.toggle("red", G.tension>=70);
-      // dodge cooldown readout
-      if(G.dodgeCD>0){
-        btnDodge.classList.add("cooling");
-        $("dodgeCd").style.width = clamp(G.dodgeCD/2*100,0,100) + "%";
-        $("dodgeLbl").textContent = "DODGE " + G.dodgeCD.toFixed(1);
-      } else {
-        btnDodge.classList.remove("cooling");
-        $("dodgeCd").style.width = "0%";
-        $("dodgeLbl").textContent = "DODGE";
-      }
-      var ap = $("ammoPips").children;
-      for(var ai=0; ai<ap.length; ai++){ ap[ai].classList.toggle("on", ai < G.ammo); }
-      // SHOOT swaps in place to RELOAD when the cylinder runs dry
-      var swap = G.phase==="fight" && (G.reloading || G.ammo<=0);
-      btnFire.classList.toggle("reloadMode", swap);
-      $("fireLbl").textContent = G.reloading ? ("RELOAD " + Math.max(0, G.reloadT).toFixed(1)) : (G.ammo<=0 ? "RELOAD" : "SHOOT");
-      btnFire.disabled = G.reloading;
-      crossEl.classList.toggle("show", G.phase==="fight");
-      btnReel.classList.toggle("holding", G.phase==="fight" && reeling());
+      $("scoreBox").classList.toggle("show", G.screen==="play");
+      $("scoreVal").textContent = G.score;
+      var mu = mult(), cb = $("combo");
+      cb.textContent = "x" + mu + " COMBO";
+      cb.classList.toggle("show", mu>1 && G.phase==="monster");
+      crossEl.classList.toggle("show", G.phase==="monster" && !!m && m.hp>0);
+      btnReel.classList.toggle("holding", G.phase==="reel" && reeling());
       $("pauseBtn").style.display = (G.screen==="play" && !G.paused) ? "flex" : "none";
     }
 
@@ -564,6 +694,7 @@
         $("ovStory").classList.remove("show");
         G.screen = "play";
         if(storyDone){ var d = storyDone; storyDone = null; d(); }
+        syncHUD();
       }
     });
     $("startBtn").addEventListener("click", function(){
@@ -572,9 +703,10 @@
       if(pendingRun){
         var pr = pendingRun; pendingRun = null;
         startRun();
-        G.idx = pr.idx; G.catches = pr.catches; G.hull = pr.hull;
+        G.idx = pr.idx; G.catches = pr.catches; G.rodMax = pr.rodMax; G.rod = Math.min(pr.rod, pr.rodMax);
+        G.score = pr.score; G.up = pr.up;
         G.screen = "play";
-        syncHUD(); saveRun(); refreshMenuStats();
+        saveRun(); refreshMenuStats();
         beginCast(false);
         return;
       }
@@ -592,26 +724,30 @@
       beginCast(true);
     });
     function startRun(){
-      G.idx = 0; G.catches = 0; G.hull = 4; G.runTime = 0;
-      G.mon = null; G.tension = 0; G.snapT = 0; G.hintStage = 0;
-      G.ammo = CYLINDER; G.reloading = false; G.reloadT = 0;
-      G.teach = {}; G.teachLog = [];
-      G.dodgeT = 0; G.dodgeCD = 0; G.flipP = -1;
+      G.idx = 0; G.catches = 0; G.rodMax = 100; G.rod = 100; G.score = 0; G.streak = 0; G.runTime = 0;
+      G.up = { sights:0, dmg:0, reel:0, trigger:0 };
+      G.mon = null; G.reel = null; G.fireCD = 0;
       G.reelBtn = false; G.reelKey = false;
+      releaseStick();
       clearMon3D(); hideBobber3D();
       stateWord(null);
       syncHUD();
     }
     function endRun(won){
-      G.screen = "end"; G.phase = "idle";
-      stateWord(null);
+      G.screen = "end"; G.phase = "idle"; G.reel = null;
+      G.reelBtn = false; G.reelKey = false; releaseStick();
+      stateWord(null); hideHint();
+      if(won){ G.score += Math.round(G.rod) * 10; }
       showBtns(); syncHUD();
-      $("endTitle").textContent = won ? "THE DEEP IS YOURS" : "THE SEA TOOK THE BOAT";
+      $("endTitle").textContent = won ? "THE DEEP IS YOURS" : "THE ROD SNAPPED";
       var secs = Math.round(G.runTime);
-      $("endText").textContent = won
-        ? "Bright blue. That's the tongue. That's the one. Mawfin, Kraken Calf and the Leviathan — all in the hold. Time: " + secs + "s. Hull left: " + G.hull + "/4."
-        : "You landed " + G.catches + " of 3 before the hull gave out. The monsters keep the rest.";
+      var newBest = G.score > best.score;
+      $("endText").textContent = (won
+        ? "Bright blue. That's the tongue. That's the one. Mawfin, Kraken Calf and the Leviathan \u2014 all in the hold. Rod left: " + Math.ceil(G.rod) + "/" + G.rodMax + ". Time: " + secs + "s."
+        : "You landed " + G.catches + " of 3 before the rod gave out. The monsters keep the rest.")
+        + " Score: " + G.score + (newBest ? " \u2014 a new best!" : ".");
       best.catches = Math.max(best.catches, G.catches);
+      best.score = Math.max(best.score, G.score);
       if(won){ best.wins++; }
       saveBest(); clearRunSave();
       $("ovEnd").classList.add("show");
@@ -619,15 +755,22 @@
     }
 
     /* ================= save / pause ================= */
-    var best = { catches:0, wins:0 }, pendingRun = null;
-    try{ var _b = JSON.parse(localStorage.getItem("monsterReelBestV1")||"null"); if(_b){ best.catches = _b.catches|0; best.wins = _b.wins|0; } }catch(e){}
-    try{ var _r = JSON.parse(localStorage.getItem("monsterReelRunV1")||"null"); if(_r && _r.hull>0 && _r.idx>=0 && _r.idx<3 && (_r.catches>0 || _r.idx>0 || _r.hull<4)){ pendingRun = { idx:_r.idx|0, catches:_r.catches|0, hull:Math.min(4,_r.hull|0) }; } }catch(e){}
-    function saveBest(){ try{ localStorage.setItem("monsterReelBestV1", JSON.stringify(best)); }catch(e){} refreshMenuStats(); }
-    function saveRun(){ try{ if(G.catches>0 || G.idx>0 || G.hull<4){ localStorage.setItem("monsterReelRunV1", JSON.stringify({ idx:G.idx, catches:G.catches, hull:G.hull })); } }catch(e){} }
-    function clearRunSave(){ pendingRun = null; try{ localStorage.removeItem("monsterReelRunV1"); }catch(e){} refreshMenuStats(); }
+    var best = { catches:0, wins:0, score:0 }, pendingRun = null;
+    try{ var _b = JSON.parse(localStorage.getItem("monsterReelBestV2")||"null"); if(_b){ best.catches = _b.catches|0; best.wins = _b.wins|0; best.score = _b.score|0; } }catch(e){}
+    try{
+      var _r = JSON.parse(localStorage.getItem("monsterReelRunV2")||"null");
+      if(_r && _r.rod>0 && _r.idx>=0 && _r.idx<3 && (_r.catches>0 || _r.idx>0)){
+        var _u = _r.up || {};
+        pendingRun = { idx:_r.idx|0, catches:_r.catches|0, rod:+_r.rod||100, rodMax:+_r.rodMax||100, score:_r.score|0,
+          up:{ sights:_u.sights|0, dmg:_u.dmg|0, reel:_u.reel|0, trigger:_u.trigger|0 } };
+      }
+    }catch(e){}
+    function saveBest(){ try{ localStorage.setItem("monsterReelBestV2", JSON.stringify(best)); }catch(e){} refreshMenuStats(); }
+    function saveRun(){ try{ if(G.catches>0 || G.idx>0){ localStorage.setItem("monsterReelRunV2", JSON.stringify({ idx:G.idx, catches:G.catches, rod:Math.round(G.rod), rodMax:G.rodMax, score:G.score, up:G.up })); } }catch(e){} }
+    function clearRunSave(){ pendingRun = null; try{ localStorage.removeItem("monsterReelRunV2"); }catch(e){} refreshMenuStats(); }
     function refreshMenuStats(){
       var hw = $("howtoLine"); if(hw){ hw.textContent = HOWTO; }
-      var el = $("bestLine"); if(el){ el.textContent = "Best catches: " + best.catches + " of 3 \u00b7 Runs won: " + best.wins; }
+      var el = $("bestLine"); if(el){ el.textContent = "Best score: " + best.score + " \u00b7 Best catches: " + best.catches + " of 3 \u00b7 Runs won: " + best.wins; }
       var sl = $("saveLine"); if(sl){ sl.textContent = pendingRun ? ("Saved run waiting \u2014 " + pendingRun.catches + " landed. START continues it.") : ""; }
       var sb = $("startBtn"); if(sb){ sb.textContent = pendingRun ? "CONTINUE RUN" : "START FISHING"; }
     }
@@ -635,6 +778,7 @@
     function setPaused(p){
       if(p && G.screen!=="play") return;
       G.paused = p;
+      if(p){ G.reelBtn = false; G.reelKey = false; releaseStick(); }
       $("ovPause").classList.toggle("show", p);
       if(p){ $("abandonConfirm").style.display = "none"; $("abandonBtn").style.display = ""; syncPauseSound(); }
       syncHUD();
@@ -643,12 +787,13 @@
       G.paused = false;
       $("ovPause").classList.remove("show");
       clearRunSave();
-      G.screen = "menu"; G.phase = "idle"; G.mon = null;
-      G.reelBtn = false; G.reelKey = false;
+      G.screen = "menu"; G.phase = "idle"; G.mon = null; G.reel = null;
+      G.reelBtn = false; G.reelKey = false; releaseStick();
       clearMon3D(); hideBobber3D();
       stateWord(null);
       hideHint(); showBtns(); syncHUD();
       $("ovStory").classList.remove("show");
+      $("ovUpgrade").classList.remove("show");
       $("ovEnd").classList.remove("show");
       $("ovMenu").classList.add("show");
       refreshMenuStats();
@@ -660,16 +805,15 @@
     $("abandonNo").addEventListener("click", function(){ $("abandonConfirm").style.display = "none"; $("abandonBtn").style.display = ""; });
     $("abandonYes").addEventListener("click", function(){ abandonRun(); });
 
-    /* ================= phases ================= */
+    /* ================= phase 1: cast, bite, hook ================= */
     function beginCast(first){
       G.phase = "cast"; G.bobberOn = false; G.biteT = -1;
-      G.mon = null; G.tension = 0; G.snapT = 0;
-      G.thrashState = "calm"; G.dodgeT = 0; G.flipP = -1;
+      G.mon = null; G.reel = null; G.reelBtn = false; G.reelKey = false;
       clearMon3D(); hideBobber3D();
       stateWord(null);
       showBtns(); syncHUD();
       if(first){ tryTeach("cast", "Tap CAST to throw your line."); }
-      else if(G.idx>0){ hint(MONSTERS[G.idx].name + " waters. Cast!", false); }
+      else if(G.idx>0 && MONSTERS[G.idx]){ hint(MONSTERS[G.idx].name + " waters. Cast!", false); }
     }
     function doCast(){
       sfx.cast();
@@ -681,175 +825,302 @@
       sfx.splash();
       hideHint();
       showBtns(); syncHUD();
-      if(G.hintStage===0){ G.hintStage=1; }
-    }
-    function startReload(){
-      if(G.phase!=="fight" || G.reloading || G.ammo>=CYLINDER) return false;
-      G.reloading = true; G.reloadT = RELOAD_TIME;
-      tone(320,.09,"square",.1,180); setTimeout(function(){ tone(540,.09,"square",.1,300); },140);
-      hideHint();
-      syncHUD();
-      return true;
-    }
-    function promptReload(){
-      bigWord("EMPTY!", 700);
-      tone(180,.12,"square",.14,120);
-      if(!tryTeach("reload", "Cylinder's empty — SHOOT just swapped to RELOAD. Tap it (or press R) and wait for the click.")){
-        hint("Empty! SHOOT is now RELOAD — tap it.", false);
-      }
     }
     function doHook(){
       sfx.hook();
       G.bobberOn = false; hideBobber3D();
       G.mon = newMonster(G.idx);
-      G.phase = "fight"; G.fireCD = 0;
-      G.ammo = CYLINDER; G.reloading = false; G.reloadT = 0;
-      G.thrashState = "calm"; G.thrashT = rand(2.0,3.0);
       spawnMon3D(G.mon);
       sfx.splash(); sfx.roar();
       bigWord(G.mon.def.name + "!", 1000);
       hideHint();
-      showBtns(); syncHUD();
-      if(G.hintStage===1){ G.hintStage=2; }
-      tryTeach("shoot", "Drag on the water to aim the crosshair, then tap SHOOT to fire where it points.");
+      startReel();
     }
     function missBite(){
       G.bobberOn = false; hideBobber3D();
-      hint("It slipped off the hook. Cast again.", false);
       beginCast(false);
+      hint("It slipped off the hook. Cast again.", false);
     }
-    function snapLine(){
+
+    /* ================= phase 2: the reel minigame ================= */
+    function startReel(){
+      var d = G.mon.def.reel;
+      var zs = Math.min(0.6, d.zone * (1 + 0.14*G.up.reel));
+      G.reel = { c:zs/2 + 0.02, cv:0, zs:zs, f:0.5, ft:0.5, fT:0.6, spd:d.speed, p:0.3, inT:0, totT:0, inside:false };
+      G.phase = "reel"; G.fireCD = 0;
+      showBtns(); syncHUD(); updateReelUI();
+      $("rFishPath").setAttribute("fill", "#" + ("000000" + G.mon.def.col.toString(16)).slice(-6));
+      tryTeach("reel", "Hold REEL to lift the green bar. Keep the monster inside it \u2014 let go to drop!");
+    }
+    function updateReelUI(){
+      var r = G.reel; if(!r) return;
+      rZone.style.bottom = ((r.c - r.zs/2)*100) + "%";
+      rZone.style.height = (r.zs*100) + "%";
+      rZone.classList.toggle("on", r.inside);
+      rFish.style.bottom = (r.f*100) + "%";
+      rFish.classList.toggle("out", !r.inside);
+      rProgFill.style.height = (clamp(r.p,0,1)*100) + "%";
+    }
+    function reelUpdate(dt, m){
+      var r = G.reel, d = m.def.reel; if(!r) return;
+      // the green bar: hold to rise, release to sink
+      r.cv += (reeling() ? 3.4 : -2.6) * dt;
+      r.cv = clamp(r.cv, -1.4, 1.4);
+      r.c += r.cv * dt;
+      var lo = r.zs/2, hi = 1 - r.zs/2;
+      if(r.c < lo){ r.c = lo; r.cv = Math.abs(r.cv)*0.25; }
+      if(r.c > hi){ r.c = hi; r.cv = -Math.abs(r.cv)*0.25; }
+      // the monster: wanders, with the odd sudden dart
+      r.fT -= dt;
+      if(r.fT <= 0){
+        r.fT = rand(d.retarget[0], d.retarget[1]);
+        var dir = (r.f > 0.78) ? -1 : (r.f < 0.22 ? 1 : (Math.random()<0.5 ? -1 : 1));
+        r.ft = clamp(r.f + dir*rand(0.14, d.range), 0.07, 0.93);
+        r.spd = (Math.random() < d.dart) ? d.speed*2.6 : d.speed;
+      }
+      var step = r.spd * dt, df = r.ft - r.f;
+      r.f += clamp(df, -step, step);
+      // progress
+      r.inside = Math.abs(r.f - r.c) <= r.zs/2 - 0.005;
+      r.totT += dt;
+      if(r.inside){
+        r.inT += dt; r.p += d.gain*dt;
+        G.reelTick -= dt;
+        if(G.reelTick<=0){ G.reelTick = 0.16; sfx.reel(r.p); }
+      } else {
+        r.p -= d.drain*dt;
+        G.rod = Math.max(0, G.rod - (3 + 1.2*G.idx)*dt);     // the line bites into the rod
+        if(G.rod<=0){ endRun(false); return; }
+      }
+      r.p = clamp(r.p, 0, 1);
+      // drag the monster closer on screen as the bar fills
+      m.dist = m.startDist + (16 - m.startDist) * r.p;
+      m.pz = -(4 + m.dist*0.85);
+      m.px = (r.f - 0.5) * 8;
+      m.rise = 0.55;
+      updateReelUI();
+      if(r.p >= 1){ reelDone(); }
+      else if(r.p <= 0){ reelFail(); }
+    }
+    function reelFail(){
       sfx.snap();
-      bigWord("SNAP!", 900);
-      G.reelBtn = false; G.reelKey = false;
-      G.tension = 0; G.snapT = 0;
-      G.mon = null;
-      clearMon3D();
+      bigWord("IT SLIPPED!", 900);
+      G.reel = null; G.reelBtn = false; G.reelKey = false;
+      G.mon = null; clearMon3D();
       stateWord(null);
       beginCast(false);
-      hint("Line snapped \u2014 it got away! Cast again for the same monster.", false);
+      hint("It slipped the line \u2014 cast again for the same monster.", false);
+    }
+    function reelDone(){
+      var r = G.reel, m = G.mon;
+      var ratio = r.totT>0 ? r.inT/r.totT : 0;
+      var bonus = Math.round(ratio*30)*10;
+      G.score += bonus;
+      G.reel = null; G.reelBtn = false; G.reelKey = false;
+      G.phase = "monster"; G.streak = 0; G.fireCD = 0.3;
+      m.rise = 0; m.rearP = 0; m.first = true;
+      m.sx = 0.5; m.sy = 0.45;
+      beginHide(m, 1.3);
+      G.aim.x = 0.5; G.aim.y = 0.46; positionCrosshair();
+      sfx.caught();
+      bigWord("HAULED IN! +" + bonus, 1100);
+      hideHint();
+      showBtns(); syncHUD();
+      tryTeach("aim", "Slide the stick to cover the ripples, then tap SHOOT the moment it surfaces. Dead center is a double-damage bullseye.");
+    }
+
+    /* ================= phase 3: shoot the monster ================= */
+    function place(m, sx, sy){
+      var p = unproject(CAMS.high, sx, sy, 1.6);
+      if(p){ m.px = p.x; m.pz = p.z; }
+    }
+    function pickSpot(m, near){
+      var sx, sy, tries = 0, ok;
+      do{
+        sx = rand(0.17, 0.83); sy = rand(0.34, 0.50);
+        ok = Math.sqrt(Math.pow(sx-m.sx,2) + Math.pow((sy-m.sy)*1.6,2)) >= 0.3;
+        tries++;
+      } while(!ok && tries < 14);
+      m.sx = sx; m.sy = sy; m.cx = sx; m.cy = sy; m.hx = sx; m.hy = sy; m.swayP = 0;
+      place(m, sx, sy);
+    }
+    function beginHide(m, t){
+      m.state = "hidden";
+      var enr = m.hp <= m.maxhp*0.4 ? 0.8 : 1;
+      m.stT = t || (m.def.hide * enr);
+      m.warned = false; m.rearP = 0;
+      pickSpot(m);
+    }
+    function motion(m, dt){
+      var k = m.def.move;
+      if(k==="sway"){
+        m.swayP += dt*1.9;
+        place(m, m.sx + Math.sin(m.swayP)*0.12, m.sy);
+      } else if(k==="hop"){
+        m.hopT -= dt;
+        if(m.hopT <= 0){
+          m.hopT = rand(0.65, 0.95);
+          m.hx = clamp(m.cx + (Math.random()<0.5?-1:1)*rand(0.12,0.28), 0.17, 0.83);
+          m.hy = clamp(m.cy + rand(-0.08,0.08), 0.34, 0.50);
+        }
+        var kk = Math.min(1, dt*7);
+        m.cx += (m.hx - m.cx)*kk; m.cy += (m.hy - m.cy)*kk;
+        place(m, m.cx, m.cy);
+      }
+    }
+    function startWarn(m){
+      m.state = "warn";
+      sfx.warn();
+      stateWord("IT'S LASHING!", "windup");
+      tryTeach("warn", "Red eyes \u2014 it's about to lash your rod! Shoot it before it does.");
+    }
+    function lash(m){
+      stateWord(null);
+      m.state = "diving"; m.rearP = Math.max(m.rearP, 0.7);
+      G.streak = 0;
+      var kit = m.def.kit, kind = kit[Math.floor(Math.random()*kit.length)];
+      if(kind==="spit"){ fireSpit3D(m); } else { eruptPillars3D(); }
+      sfx.dive();
+      damageRod(m.def.lash);
+    }
+    function damageRod(n){
+      if(G.screen!=="play") return;
+      G.rod = Math.max(0, G.rod - n);
+      G.boatShake = 0.35;
+      sfx.hurt();
+      bigWord("ROD HIT! -" + n, 800);
+      burst3({x:0,y:1.2,z:3.4}, 14, 0xff4d2e);
+      syncHUD();
+      if(G.rod<=0){ endRun(false); }
+    }
+    function monsterUpdate(dt, m){
+      var d = m.def, enr = m.hp <= m.maxhp*0.4 ? 0.85 : 1;
+      if(m.hp<=0){
+        m.rise = Math.min(1, m.rise + dt*3); m.rearP = Math.max(0, m.rearP - dt*3);
+        m.spentT -= dt;
+        if(m.spentT<=0 && G.phase==="monster"){ caughtMonster(); }
+        return;
+      }
+      switch(m.state){
+        case "hidden":
+          m.rise = Math.max(0, m.rise - dt*4);
+          m.stT -= dt;
+          if(m.stT<=0){
+            m.state = "rising"; m.stT = 0.3;
+            sfx.surface(); burst3({x:m.px, y:0.4, z:m.pz}, 12, 0xbfefff);
+          }
+          break;
+        case "rising":
+          m.rise = Math.min(1, m.rise + dt/0.3);
+          m.stT -= dt;
+          if(m.stT<=0){
+            m.state = "up"; m.rise = 1;
+            m.upT = d.up * enr * (m.first ? 1.25 : 1); m.first = false;
+            m.upAge = 0; m.hopT = 0.7; m.cx = m.sx; m.cy = m.sy; m.hx = m.sx; m.hy = m.sy;
+          }
+          break;
+        case "up":
+        case "warn":
+          m.rise = 1; m.upAge += dt; m.upT -= dt;
+          if(m.state==="up"){ motion(m, dt); }
+          if(m.state==="up" && m.upT <= d.warn){ startWarn(m); }
+          if(m.upT <= 0){ lash(m); }
+          break;
+        case "diving":
+          m.rise = Math.max(0, m.rise - dt/0.28);
+          if(m.rise<=0){ beginHide(m); }
+          break;
+      }
+      if(m.state==="warn"){ m.rearP = Math.min(1, m.rearP + dt*3); }
+      else { m.rearP = Math.max(0, m.rearP - dt*3); }
+    }
+    function fireGun(){
+      if(G.phase!=="monster" || !G.mon || G.fireCD>0 || G.screen!=="play" || G.paused) return;
+      var m = G.mon; if(m.hp<=0) return;
+      G.fireCD = 0.30 - 0.07*G.up.trigger;
+      sfx.shoot();
+      hideHintIfAim();
+      var hi = hitInfo(), vuln = isVulnerable(m);
+      var target = hi.hit ? { x:m.px, y:1.6 + (m.rise-1)*6.5, z:m.pz + 2 } : aimWorldPoint();
+      muzzleFlash3D(target);
+      if(hi.hit){
+        var dmg = (10 + 4*G.up.dmg) * (hi.crit ? 2 : 1);
+        m.hp = Math.max(0, m.hp - dmg);
+        m.flash = 0.13;
+        G.streak++;
+        var pts = (hi.crit ? 150 : 100) * mult();
+        G.score += pts;
+        floatText((hi.crit ? "BULLSEYE! +" : "+") + pts, hi.box.cx, hi.box.cy - 0.07, hi.crit ? "crit" : "");
+        if(hi.crit){ sfx.crit(); } else { sfx.hit(); }
+        burst3(monWorldPos(), hi.crit ? 10 : 6, hi.crit ? 0xffc61a : 0xffe27a);
+        G.boatShake = hi.crit ? 0.2 : 0.1;
+        if(m.hp<=0){ goSpent(m); }
+        else { m.state = "diving"; m.rearP = 0; stateWord(null); sfx.dive(); }
+      } else {
+        // crosshair wasn't on it: the shot is wasted, and a surfaced monster spots you
+        G.streak = 0;
+        sfx.miss();
+        crossEl.classList.add("miss");
+        setTimeout(function(){ crossEl.classList.remove("miss"); }, 220);
+        burst3(target, 5, 0x9fdcf5);
+        floatText("MISS", G.aim.x, G.aim.y - 0.08, "miss");
+        if(vuln && (m.state==="up" || m.state==="warn")){ m.upT -= 0.3; }
+      }
+      syncHUD();
+    }
+    function hideHintIfAim(){ if(G.teach.aim){ hideHint(); } }
+    function goSpent(m){
+      m.state = "spent"; m.spentT = 2.1; m.rearP = 0;
+      stateWord(null);
+      bigWord("SPENT!", 900);
+      if(m.kind===2){ hint("Its mouth gapes open \u2014 the tongue is BRIGHT BLUE. That's the one.", false); }
+      else { hint("Its mouth gapes open \u2014 the tongue is " + m.def.tongueName + ". Not the one.", false); }
     }
     function caughtMonster(){
       G.phase = "caught"; G.catches++;
-      best.catches = Math.max(best.catches, G.catches); saveBest(); saveRun();
+      best.catches = Math.max(best.catches, G.catches); saveBest();
+      var bonus = 500; G.score += bonus;
       sfx.caught();
-      bigWord("LANDED!", 1200);
+      bigWord("LANDED! +" + bonus, 1200);
       stateWord(null);
       burst3(monWorldPos(), 26, 0xffc61a);
       syncHUD(); showBtns();
       setTimeout(function(){
         if(G.screen!=="play") return;
-        G.idx++; saveRun();
-        clearMon3D();
+        G.idx++; G.rod = Math.min(G.rodMax, G.rod + 15);
+        G.phase = "idle"; G.mon = null;
+        clearMon3D(); showBtns(); hideHint();
+        saveRun();
         if(G.idx >= MONSTERS.length){ endRun(true); return; }
         var lines = G.idx===1
           ? ["The Mawfin's in the hold. Something down there just got jealous."]
           : ["Two down. The water just went very, very quiet."];
-        showStory(lines, function(){ beginCast(false); });
+        showUpgrade(function(){ showStory(lines, function(){ beginCast(false); }); });
       }, 1500);
     }
-
-    /* ================= combat ================= */
-    function hurtBoat(){
-      if(G.phase==="caught" || G.screen!=="play") return;
-      G.hull--; G.boatShake = 0.35;
-      sfx.hurt();
-      bigWord("HIT!", 700);
-      burst3({x:0,y:1.2,z:3.4}, 14, 0xff4d2e);
-      syncHUD();
-      if(G.hull<=0){ endRun(false); }
-    }
-    function fireGun(){
-      if(G.phase!=="fight" || !G.mon || G.fireCD>0) return;
-      if(G.reloading) return;                    // no shooting mid-reload
-      if(G.ammo<=0){ promptReload(); return; }    // empty gun cannot fire
-      G.fireCD = 0.28;
-      G.ammo--;
-      sfx.shoot();
-      var m = G.mon;
-      var hit = aimHit();
-      var mp = monWorldPos();
-      var target = hit ? { x:mp.x, y:mp.y, z:mp.z+2 } : aimWorldPoint();
-      muzzleFlash3D(target);
-      if(hit){
-        m.hp = Math.max(0, m.hp - 9);
-        m.flash = 0.13;
-        sfx.hit();
-        burst3(mp, 6, 0xffe27a);
-        if(m.hp<=0){
-          m.atkState = "none"; m.rearP = 0; m.fakeState = "none";
-          stateWord(null);
-          bigWord("SPENT!", 900);
-          // Identification beat: the spent monster gapes and shows its tongue.
-          if(m.kind===2){ hint("Its mouth gapes open — the tongue is BRIGHT BLUE. That's the one. Hold REEL and drag it in.", false); }
-          else { hint("Its mouth gapes open — the tongue is " + m.def.tongueName + ". Not the one. Hold REEL and drag it in.", false); }
-        } else if(G.hintStage===2){ G.hintStage=3; }
-      } else {
-        // crosshair wasn't on the monster — the bullet is wasted
-        tone(190,.08,"square",.08,120);
-        noiseBurst(.06,.06);
-        crossEl.classList.add("miss");
-        setTimeout(function(){ crossEl.classList.remove("miss"); }, 220);
-        burst3(target, 5, 0x9fdcf5);
+    function showUpgrade(done){
+      G.screen = "story";
+      var pool = UPGRADES.filter(function(u){ return u.ok(); }), picks = [];
+      if(G.rod < G.rodMax*0.7){
+        for(var i=0;i<pool.length;i++){ if(pool[i].id==="patch"){ picks.push(pool.splice(i,1)[0]); break; } }
       }
-      syncHUD(); showBtns();
-      if(G.teach.shoot && !G.teach.reel){ tryTeach("reel", "Now hold REEL with your left thumb to drag it closer."); }
-      if(G.ammo<=0 && m.hp>0){
-        tryTeach("reload", "Cylinder's empty — SHOOT just swapped to RELOAD. Tap it (or press R) and wait for the click.");
-      }
-    }
-    function startDodge(){
-      if(G.phase!=="fight" || G.dodgeCD>0 || G.flipP>=0) return false;
-      G.flipP = 0;               // flip animation progress 0..1
-      G.dodgeT = 0.7;            // airborne window — attacks landing now miss
-      G.dodgeCD = 2.0;           // hard 2s lockout
-      sfx.dodge();
-      syncHUD();
-      return true;
-    }
-    function startWindup(m){
-      var kit = m.def.kit;
-      m.atkKind = kit[Math.floor(Math.random()*kit.length)];
-      m.atkState = "windup";
-      m.atkT2 = m.def.windup;
-      m.resolved = false;
-      m.fakeState = "none";           // a real tell cancels any fake-out
-      sfx.roar();
-      stateWord("IT'S REARING UP!", "windup");
-      if(G.hintStage===3){ G.hintStage=4; }
-      // Dodge is taught at the first real tell: tryTeach defers it until
-      // RELOAD has fired, so a later tell delivers the lesson in order.
-      tryTeach("dodge", "Eyes flaring RED with a low roar — that's the REAL tell! Tap DODGE to flip clear before it lands!");
-    }
-    /* Fake tells: close to the real tell but learnably different, and no
-       attack ever follows. Fake 1 = shudder, no eye-flash, no roar.
-       Fake 2 = half-lunge that stops short, no eye-flash. */
-    function startFake(m, kind){
-      m.fakeKind = kind || (Math.random()<0.5 ? 1 : 2);
-      m.fakeState = m.fakeKind===1 ? "fake1" : "fake2";
-      m.fakeT2 = 0.75;
-      m.fakeT = rand(3.4, 5.6) - G.idx*0.3;
-      if(m.fakeKind===1){
-        noiseBurst(.28,.10); tone(65,.25,"sine",.12,50);
-        tryTeach("fake1", "That shudder was a FAKE — no red eye-flash, no roar, no attack. Save your dodge!");
-      } else {
-        tone(240,.3,"sine",.10,520); noiseBurst(.15,.07);
-        tryTeach("fake2", "That half-lunge stopped short — another FAKE. Real tells flash the eyes red.");
-      }
-    }
-    function resolveAttack(m){
-      // the attack lands NOW: only a mid-flip boat avoids it
-      m.resolved = true;
-      stateWord(null);
-      if(G.dodgeT>0){
-        bigWord("MISS!", 800);
-        sfx.splash();
-        burst3({x:0,y:0.6,z:1.5}, 16, 0xbfefff);
-      } else {
-        hurtBoat();
-      }
-      if(m.atkKind==="spit"){ fireSpit3D(m); }
-      if(m.atkKind==="pillars"){ eruptPillars3D(); }
+      while(picks.length < 3 && pool.length){ picks.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]); }
+      var box = $("upChoices"); box.innerHTML = "";
+      picks.forEach(function(u){
+        var b = document.createElement("button");
+        b.className = "upbtn";
+        var t = document.createElement("b"); t.textContent = u.title;
+        var s = document.createElement("span"); s.textContent = u.desc;
+        b.appendChild(t); b.appendChild(s);
+        b.addEventListener("click", function(){
+          ac(); u.apply(); sfx.pick();
+          $("ovUpgrade").classList.remove("show"); box.innerHTML = "";
+          syncHUD(); saveRun();
+          done();
+        });
+        box.appendChild(b);
+      });
+      $("ovUpgrade").classList.add("show");
     }
 
     /* ================= input ================= */
@@ -858,82 +1129,87 @@
       if(G.phase==="cast") doCast();
       else if(G.phase==="wait" && G.biteT>=0) doHook();
     });
-    btnFire.addEventListener("pointerdown", function(e){
-      e.preventDefault(); ac();
-      if(G.phase!=="fight" || G.reloading) return;
-      if(G.ammo<=0){ startReload(); }   // the button IS reload when empty
-      else { fireGun(); }
-    });
-    btnDodge.addEventListener("pointerdown", function(e){ e.preventDefault(); ac(); if(startDodge() && G.teach.dodge) hideHint(); });
-    function reelOn(e){ if(e) e.preventDefault(); ac(); if(G.phase==="fight"){ G.reelBtn = true; if(G.teach.reel) hideHint(); syncHUD(); } }
+    btnFire.addEventListener("pointerdown", function(e){ e.preventDefault(); ac(); fireGun(); });
+    function reelOn(e){ if(e) e.preventDefault(); ac(); if(G.phase==="reel"){ G.reelBtn = true; if(G.teach.reel && !G.teach.aim){ hideHint(); } syncHUD(); } }
     function reelOff(){ G.reelBtn = false; syncHUD(); }
     btnReel.addEventListener("pointerdown", reelOn);
     btnReel.addEventListener("pointerup", reelOff);
     btnReel.addEventListener("pointerleave", reelOff);
     btnReel.addEventListener("pointercancel", reelOff);
-    // Aim: drag anywhere on the play area moves the crosshair.
-    // Mouse fallback: moving the mouse aims, clicking the water fires.
-    var aimDrag = false;
-    function aimFromEvent(e){
-      var r = stage.getBoundingClientRect();
-      if(r.width<=0 || r.height<=0) return;
-      G.aim.x = clamp((e.clientX - r.left)/r.width, 0, 1);
-      G.aim.y = clamp((e.clientY - r.top)/r.height, 0, 1);
-      positionCrosshair();
+    // Analog aim stick: it floats to wherever the thumb lands, then reads
+    // the thumb's offset (with a deadzone and a gentle curve for fine aim).
+    var stickPtr = null, stickOx = 0, stickOy = 0, STICK_R = 46;
+    function centerStick(){ stickBase.style.left = "50%"; stickBase.style.top = "50%"; stickBase.classList.remove("live"); }
+    function stickSet(e){
+      var dx = e.clientX - stickOx, dy = e.clientY - stickOy, l = Math.sqrt(dx*dx + dy*dy);
+      if(l > STICK_R){ dx = dx/l*STICK_R; dy = dy/l*STICK_R; l = STICK_R; }
+      stickKnob.style.transform = "translate(" + dx + "px," + dy + "px)";
+      var mg = l/STICK_R;
+      if(mg < 0.12){ G.stick.x = 0; G.stick.y = 0; }
+      else { var m2 = Math.pow((mg - 0.12)/0.88, 1.4); G.stick.x = dx/l*m2; G.stick.y = dy/l*m2; }
     }
-    stage.addEventListener("pointerdown", function(e){
-      if(G.screen!=="play" || G.paused) return;
-      if(e.target && e.target.closest && e.target.closest(".overlay")) return;
-      aimDrag = true;
-      aimFromEvent(e);
-      if(e.pointerType==="mouse"){ ac(); if(G.phase==="fight") fireGun(); }
+    function releaseStick(){
+      stickPtr = null; G.stick.x = 0; G.stick.y = 0;
+      stickKnob.style.transform = "translate(0,0)";
+      centerStick();
+    }
+    stickZone.addEventListener("pointerdown", function(e){
+      e.preventDefault(); ac();
+      stickPtr = e.pointerId;
+      try{ stickZone.setPointerCapture(e.pointerId); }catch(_){}
+      var r = stickZone.getBoundingClientRect(), br = stickBase.offsetWidth/2;
+      var cx = clamp(e.clientX - r.left, br, Math.max(br, r.width - br));
+      var cy = clamp(e.clientY - r.top, br, Math.max(br, r.height - br));
+      stickBase.style.left = cx + "px"; stickBase.style.top = cy + "px"; stickBase.classList.add("live");
+      stickOx = r.left + cx; stickOy = r.top + cy;
+      stickSet(e);
     });
-    stage.addEventListener("pointermove", function(e){
-      if(G.screen!=="play" || G.paused) return;
-      if(e.pointerType==="mouse" || aimDrag) aimFromEvent(e);
+    stickZone.addEventListener("pointermove", function(e){ if(e.pointerId===stickPtr){ stickSet(e); } });
+    ["pointerup","pointercancel","lostpointercapture"].forEach(function(ev){
+      stickZone.addEventListener(ev, function(e){ if(e.pointerId===stickPtr){ releaseStick(); } });
     });
-    window.addEventListener("pointerup", function(){ aimDrag = false; });
-    window.addEventListener("pointercancel", function(){ aimDrag = false; });
     var keys = {};
     window.addEventListener("keydown", function(e){
       var k = (e.key||"").toLowerCase();
       keys[k] = true;
       if(e.key==="Escape" && G.screen==="play"){ setPaused(!G.paused); return; }
       if(G.screen!=="play" || G.paused) return;
-      if(k==="r" && !e.repeat){ ac(); startReload(); return; }
+      if(["arrowup","arrowdown","arrowleft","arrowright"].indexOf(k) >= 0){ e.preventDefault(); }
       if(e.key===" "){
         e.preventDefault();
         ac();
         if(G.phase==="cast" && !e.repeat) doCast();
         else if(G.phase==="wait" && G.biteT>=0 && !e.repeat) doHook();
-        else if(G.phase==="fight"){ G.reelKey = true; if(G.teach.reel) hideHint(); syncHUD(); }
+        else if(G.phase==="reel"){ G.reelKey = true; if(G.teach.reel && !G.teach.aim){ hideHint(); } syncHUD(); }
+        else if(G.phase==="monster" && !e.repeat){ fireGun(); }
       }
-      if((k==="f") && !e.repeat){ ac(); fireGun(); }
-      if((k==="d") && !e.repeat){ ac(); if(startDodge() && G.teach.dodge) hideHint(); }
+      if(k==="f" && !e.repeat){ ac(); fireGun(); }
     });
     window.addEventListener("keyup", function(e){
       var k = (e.key||"").toLowerCase();
       keys[k] = false;
       if(e.key===" "){ G.reelKey = false; syncHUD(); }
     });
-    window.addEventListener("blur", function(){ G.reelBtn = false; G.reelKey = false; keys = {}; });
+    window.addEventListener("blur", function(){ G.reelBtn = false; G.reelKey = false; keys = {}; releaseStick(); });
 
     /* ================= update ================= */
+    function moveAim(dt){
+      var kx = (keys.arrowright||keys.d ? 1 : 0) - (keys.arrowleft||keys.a ? 1 : 0);
+      var ky = (keys.arrowdown||keys.s ? 1 : 0) - (keys.arrowup||keys.w ? 1 : 0);
+      var x = G.stick.x + kx, y = G.stick.y + ky, l = Math.sqrt(x*x + y*y);
+      if(l > 1){ x /= l; y /= l; }
+      var sp = 0.95 * (hitInfo().hit ? 0.62 : 1);       // slight stickiness when on target
+      G.aim.x = clamp(G.aim.x + x*sp*dt, 0.02, 0.98);
+      G.aim.y = clamp(G.aim.y + y*sp*(W/Math.max(1,H))*dt, 0.1, 0.92);
+      positionCrosshair();
+      crossEl.classList.toggle("lock", hitInfo().hit);
+    }
     function update(dt){
       G.time += dt;
       if(G.screen==="play"){ G.runTime += dt; }
       if(G.boatShake>0) G.boatShake -= dt;
       if(G.fireCD>0) G.fireCD -= dt;
-      if(G.reloading){
-        G.reloadT -= dt;
-        if(G.reloadT<=0){ G.reloading = false; G.reloadT = 0; G.ammo = CYLINDER; tone(660,.08,"square",.1,880); syncHUD(); }
-      }
-      if(G.dodgeCD>0){ G.dodgeCD = Math.max(0, G.dodgeCD - dt); }
-      if(G.dodgeT>0) G.dodgeT -= dt;
-      if(G.flipP>=0){
-        G.flipP += dt/0.7;
-        if(G.flipP>=1){ G.flipP = -1; }
-      }
+      stepCam(dt);
 
       if(G.phase==="wait" && G.bobberOn){
         if(G.biteT<0){
@@ -942,8 +1218,7 @@
             G.biteT = (G.idx===0? 0.95 : 0.8);
             sfx.bite();
             bigWord("!", 500);
-            if(G.hintStage===1){ G.hintStage=2; }
-            tryTeach("hook", "It bit! Tap HOOK — now!");
+            tryTeach("hook", "It bit! Tap HOOK \u2014 now!");
             showBtns();
           }
         } else {
@@ -953,91 +1228,42 @@
       }
 
       var m = G.mon;
-      if(m && (G.phase==="fight" || G.phase==="caught")){
+      if(m){
         m.bobP += dt*2;
         if(m.flash>0) m.flash -= dt;
-        if(G.phase==="caught"){
-          m.sink += dt;
-        } else {
-          fightUpdate(dt, m);
+        if(G.screen==="play"){
+          if(G.phase==="reel"){ reelUpdate(dt, m); }
+          else if(G.phase==="monster"){ monsterUpdate(dt, m); if(G.phase==="monster" && m.hp>0){ moveAim(dt); } }
+          else if(G.phase==="caught"){ m.sink += dt; }
         }
       }
-      if(G.phase==="fight"){ syncHUD(); }
+      if(G.phase==="reel" || G.phase==="monster"){ syncHUD(); }
     }
-    function fightUpdate(dt, m){
-      var spent = m.hp<=0;
-      /* --- thrash cycle (drives tension) --- */
-      if(!spent){
-        G.thrashT -= dt;
-        if(G.thrashT<=0){
-          if(G.thrashState==="calm"){ G.thrashState="warn"; G.thrashT = 0.55; }
-          else if(G.thrashState==="warn"){ G.thrashState="thrash"; G.thrashT = rand(0.9,1.3) * (G.idx===2?1.15:1); sfx.thrash(); if(G.hintStage===4){ G.hintStage=5; if(G.teach.dodge){ hint("It's thrashing — let go of REEL or the line snaps!", false); } } }
-          else { G.thrashState="calm"; G.thrashT = rand(2.0,3.2) - G.idx*0.35; }
-        }
-      } else if(G.thrashState!=="calm"){ G.thrashState = "calm"; }
-      /* --- state word (attack wind-up outranks thrash) --- */
-      if(m.atkState==="windup"){ stateWord("IT'S REARING UP!", "windup"); }
-      else if(G.thrashState==="thrash"){ stateWord("THRASHING!", "thrash"); }
-      else if(G.thrashState==="warn"){ stateWord("IT'S GATHERING…", "warn"); }
-      else { stateWord(null); }
-
-      /* --- attacks --- */
-      if(!spent){
-        /* fake tells run on their own timer; they never resolve to a hit */
-        if(m.fakeState!=="none"){
-          m.fakeT2 -= dt;
-          if(m.fakeT2<=0){ m.fakeState = "none"; }
-        } else if(m.atkState==="none"){
-          m.fakeT -= dt;
-          if(m.fakeT<=0 && m.atkT>1.5){ startFake(m); }
-        }
-        if(m.atkState==="none"){
-          m.rearP = Math.max(0, m.rearP - dt*3);
-          m.atkT -= dt;
-          if(m.atkT<=0){ startWindup(m); }
-        } else if(m.atkState==="windup"){
-          m.rearP = Math.min(1, m.rearP + dt*2.2);
-          m.atkT2 -= dt;
-          if(m.atkT2<=0){
-            resolveAttack(m);
-            m.atkState = "strike"; m.atkT2 = 0.55;
-            if(G.screen!=="play") return; // boat sank on the hit
-          }
-        } else if(m.atkState==="strike"){
-          m.rearP = Math.max(0, m.rearP - dt*2.5);
-          m.atkT2 -= dt;
-          if(m.atkT2<=0){ m.atkState = "none"; m.atkT = m.def.atkEvery * rand(0.85,1.2); }
-        }
-      } else {
-        m.rearP = Math.max(0, m.rearP - dt*3);
-        m.atkState = "none";
-      }
-
-      /* --- reel / tension / distance --- */
-      var rl = reeling();
-      if(rl){
-        var rate = m.def.reelRate * (G.thrashState==="thrash" ? 0.45 : 1) * (spent ? 1.35 : 1);
-        m.dist -= rate*dt;
-        var tenRate = spent ? 3 : (G.thrashState==="thrash" ? 46 : (G.thrashState==="warn" ? 18 : 7));
-        G.tension += tenRate*dt;
-        G.reelTick -= dt;
-        if(G.reelTick<=0){ G.reelTick = 0.14; sfx.reel(); }
-      } else {
-        G.tension -= 34*dt;
-        if(G.thrashState==="thrash"){ m.dist += 1.6*dt; } // it drags line back out mid-thrash
-      }
-      G.tension = clamp(G.tension, 0, 100);
-      m.dist = clamp(m.dist, 0, m.startDist);
-      if(G.tension>=70){ G.snapT += dt; if(G.snapT>=0.9){ snapLine(); return; } }
-      else { G.snapT = Math.max(0, G.snapT - dt*1.5); }
-      if(spent && m.dist<=0.05){ caughtMonster(); }
-    }
-
-    /* ================= THREE.JS SCENE =================
-       If the CDN is blocked, THREE is undefined: every 3D call below
-       no-ops and the game logic still runs end to end. */
     var S3 = null;
-    function mat(col, rough){ return new THREE.MeshStandardMaterial({ color:col, roughness:rough==null?0.85:rough, metalness:0.05, flatShading:true }); }
+    var TOON_GRAD = null;
+    function toonGrad(){
+      if(!TOON_GRAD){
+        TOON_GRAD = new THREE.DataTexture(new Uint8Array([95,170,255]), 3, 1, THREE.LuminanceFormat);
+        TOON_GRAD.minFilter = THREE.NearestFilter; TOON_GRAD.magFilter = THREE.NearestFilter; TOON_GRAD.generateMipmaps = false;
+        TOON_GRAD.needsUpdate = true;
+      }
+      return TOON_GRAD;
+    }
+    function mat(col, rough){ return new THREE.MeshToonMaterial({ color:col, gradientMap:toonGrad() }); }
+    /* thick black outline: a back-face hull pushed outward in view space,
+       with the push growing a little with distance so far monsters keep a bold line */
+    var OUTLINE_VS = "uniform float uThick; void main(){ vec3 n = normalize(normalMatrix * normalize(position)); vec4 mv = modelViewMatrix * vec4(position, 1.0); mv.xyz += n * uThick * (0.55 + 0.04 * (-mv.z)); gl_Position = projectionMatrix * mv; }";
+    var OUTLINE_FS = "void main(){ gl_FragColor = vec4(0.02, 0.03, 0.05, 1.0); }";
+    function addOutlines(root, thick){
+      var list = [];
+      root.traverse(function(o){ if(o.isMesh && o.material && o.material.isMeshToonMaterial && !o.userData.isOutline){ list.push(o); } });
+      for(var i=0;i<list.length;i++){
+        var o = list[i];
+        var h = new THREE.Mesh(o.geometry, new THREE.ShaderMaterial({ vertexShader:OUTLINE_VS, fragmentShader:OUTLINE_FS, side:THREE.BackSide, uniforms:{ uThick:{ value: thick||0.11 } } }));
+        h.userData.isOutline = true;
+        o.add(h);
+      }
+    }
     function box(w,h,d,col,x,y,z){
       var ms = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat(col));
       ms.position.set(x||0,y||0,z||0); return ms;
@@ -1061,7 +1287,8 @@
         scene.fog = new THREE.FogExp2(0x04121f, 0.0105);
         var camera = new THREE.PerspectiveCamera(62, W/H, 0.1, 400);
         camera.position.set(0, 2.3, 7.4);
-        scene.add(new THREE.AmbientLight(0x8fb8d8, 0.55));
+        scene.add(new THREE.AmbientLight(0xa8c8e8, 0.75));
+        var keyLight = new THREE.DirectionalLight(0xffffff, 0.95); keyLight.position.set(7, 14, 12); scene.add(keyLight);
         var moonLight = new THREE.DirectionalLight(0xbfe0ff, 0.9);
         moonLight.position.set(-18, 30, -40); scene.add(moonLight);
         var lamp = new THREE.PointLight(0xffc61a, 1.1, 30);
@@ -1075,7 +1302,7 @@
         scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color:0xcfe8ff, size:0.7, fog:false })));
         // ocean
         var seaGeo = new THREE.PlaneGeometry(340, 340, 44, 44);
-        var sea = new THREE.Mesh(seaGeo, new THREE.MeshStandardMaterial({ color:0x0a3d5c, roughness:0.65, metalness:0.15, flatShading:true }));
+        var sea = new THREE.Mesh(seaGeo, new THREE.MeshStandardMaterial({ color:0x0d5a82, roughness:0.7, metalness:0.05, flatShading:true }));
         sea.rotation.x = -Math.PI/2; sea.position.y = 0; scene.add(sea);
         var seaBase = seaGeo.attributes.position.array.slice();
         // ---- boat (fixed; only bobs, and flips on dodge) ----
@@ -1103,12 +1330,13 @@
         var reelWheel = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.05, 8, 18), mat(0xffc61a));
         reelWheel.position.set(-1.05, 1.35, -0.15); boat.add(reelWheel);
         boat.position.set(0, 0.05, 4.4);
+        addOutlines(boat, 0.1);
         scene.add(boat);
         // bobber
         var bobber = new THREE.Group();
         bobber.add(sph(0.22, 0xe52421, 0, 0, 0));
         bobber.add(box(0.46, 0.1, 0.46, 0xffffff, 0, 0.12, 0));
-        bobber.position.set(2.6, 0.15, -13); bobber.visible = false; scene.add(bobber);
+        addOutlines(bobber, 0.08); bobber.position.set(2.6, 0.15, -13); bobber.visible = false; scene.add(bobber);
         // fishing line
         var lineGeo = new THREE.BufferGeometry();
         lineGeo.setAttribute("position", new THREE.Float32BufferAttribute([0,0,0, 0,0,0], 3));
@@ -1138,11 +1366,6 @@
           parts:[], pGeo:pGeo, pPos:pPos, pCol:pCol, PMAX:PMAX, pNext:0
         };
       }catch(e){ return null; }
-    }
-    function monZ(dist){ return -(4 + dist*0.85); }
-    function monWorldPos(){
-      if(!G.mon) return { x:0, y:2, z:-30 };
-      return { x:0, y:1.6 + G.mon.rearP*1.8, z:monZ(G.mon.dist) };
     }
     function buildMonster3D(m){
       var d = m.def, g = new THREE.Group();
@@ -1201,6 +1424,7 @@
         var sf1 = cone(1.1, 2.4, d.col2, 3.1, -0.4, -0.4, 4); sf1.rotation.z = 1.8; g.add(sf1);
         var sf2 = cone(1.1, 2.4, d.col2, -3.1, -0.4, -0.4, 4); sf2.rotation.z = -1.8; g.add(sf2);
       }
+      addOutlines(g, 0.12);
       // foam ring at the waterline
       var foam = new THREE.Mesh(new THREE.TorusGeometry(3.6, 0.22, 8, 26), new THREE.MeshBasicMaterial({ color:0xdff6ff, transparent:true, opacity:0.55 }));
       foam.rotation.x = Math.PI/2; foam.position.y = -1.15; g.add(foam); parts.foam = foam;
@@ -1234,15 +1458,6 @@
       S3.tracer.geometry.attributes.position.needsUpdate = true;
       S3.tracer.visible = true;
     }
-    function fireSpit3D(m){
-      if(!S3) return;
-      var from = monWorldPos();
-      for(var i=0;i<m.def.spitN;i++){
-        var s = sph(0.34, m.kind===0?0xb8ff5e:(m.kind===1?0xd94f7a:0xffd23e), from.x + rand(-1,1), from.y+0.6, from.z+2.5);
-        s.userData.vx = rand(-0.4,0.4); s.userData.vy = rand(1.2,2.2); s.userData.vz = 16 + i*2.5;
-        S3.scene.add(s); S3.spit.push(s);
-      }
-    }
     function eruptPillars3D(){
       if(!S3) return;
       for(var i=-1;i<=1;i++){
@@ -1265,6 +1480,30 @@
       S3.pGeo.attributes.position.needsUpdate = true;
       S3.pGeo.attributes.color.needsUpdate = true;
     }
+
+    /* the spit arcs from the monster to the boat in ~0.5s, timed to the lash */
+    function fireSpit3D(m){
+      if(!S3) return;
+      var T = 0.5, g = 3.5;
+      for(var i=0;i<m.def.spitN;i++){
+        var s = sph(0.34, m.kind===0?0xb8ff5e:(m.kind===1?0xd94f7a:0xffd23e), m.px + rand(-1,1), 1.6, m.pz + 2.5);
+        var tx = rand(-1.6,1.6), tz = 6.2 + i*0.3;
+        s.userData.vx = (tx - s.position.x)/T;
+        s.userData.vz = (tz - s.position.z)/T;
+        s.userData.vy = (1.5 - s.position.y + 0.5*g*T*T)/T;
+        addOutlines(s, 0.08);
+        S3.scene.add(s); S3.spit.push(s);
+      }
+    }
+    function addSceneExtras(){
+      if(!S3) return;
+      S3.ripples = [];
+      for(var i=0;i<2;i++){
+        var rm = new THREE.Mesh(new THREE.RingGeometry(0.82, 1, 40),
+          new THREE.MeshBasicMaterial({ color:0xbfefff, transparent:true, opacity:0.8, side:THREE.DoubleSide, depthWrite:false }));
+        rm.rotation.x = -Math.PI/2; rm.visible = false; S3.scene.add(rm); S3.ripples.push(rm);
+      }
+    }
     function render3D(dt){
       if(!S3) return;
       var t = G.time;
@@ -1275,54 +1514,55 @@
         pos.array[i*3+2] = Math.sin(bx*0.16 + t*1.4)*0.22 + Math.cos(by*0.13 + t*1.1)*0.22;
       }
       pos.needsUpdate = true;
-      // camera: fixed on the boat, gentle bob only (+ a sway while flipping)
-      var cam = S3.camera;
-      cam.position.set(Math.sin(t*0.6)*0.06, 2.3 + Math.sin(t*1.25)*0.08, 7.4);
-      cam.lookAt(0, 1.5, -14);
-      if(G.flipP>=0){ cam.rotation.z += Math.sin(G.flipP*Math.PI)*0.3; }
-      if(G.boatShake>0){ cam.position.x += rand(-0.05,0.05); cam.position.y += rand(-0.05,0.05); }
-      // boat bob + dodge flip (full barrel roll around its own axis)
+      // camera: the current rig (low for fishing, high for shooting) + a gentle bob and hit-shake
+      var cam = S3.camera, c = G.cam;
+      var sh = G.boatShake>0 ? G.boatShake : 0;
+      cam.position.set(c.px + Math.sin(t*0.6)*0.06 + (sh ? rand(-0.12,0.12)*sh*3 : 0), c.py + Math.sin(t*1.25)*0.08 + (sh ? rand(-0.12,0.12)*sh*3 : 0), c.pz);
+      cam.lookAt(c.lx, c.ly, c.lz);
+      // boat bob
       var boat = S3.boat;
       boat.position.y = 0.05 + Math.sin(t*1.25)*0.07;
       boat.rotation.x = Math.sin(t*0.9)*0.012;
-      if(G.flipP>=0){
-        var p = G.flipP, e = p<0.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
-        boat.rotation.z = e*Math.PI*2;
-        boat.position.y += Math.sin(p*Math.PI)*1.1;
-      } else { boat.rotation.z = 0; }
+      boat.rotation.z = G.boatShake>0 ? Math.sin(t*50)*0.05*G.boatShake*3 : 0;
       // bobber
       if(S3.bobber.visible){
         var dip = (G.biteT>=0) ? 0.3 + Math.sin(t*26)*0.08 : Math.sin(t*2.6)*0.07;
         S3.bobber.position.y = 0.16 - dip*0.4;
         S3.bobber.position.x = 2.6 + Math.sin(t*0.8)*0.3;
       }
+      // ripples that show where the monster will surface
+      var m = G.mon, showR = !!m && G.phase==="monster" && m.state==="hidden";
+      for(var ri=0; ri<S3.ripples.length; ri++){
+        var rg = S3.ripples[ri]; rg.visible = showR;
+        if(showR){
+          var fr = (t*1.3 + ri*0.5) % 1, sc = (1.5 + fr*3.0) * m.def.scale;
+          rg.position.set(m.px, 0.55, m.pz); rg.scale.set(sc, sc, sc);
+          rg.material.opacity = (1 - fr)*0.85;
+        }
+      }
+      if(showR){
+        m.bubT -= dt;
+        if(m.bubT<=0){ m.bubT = 0.22; burst3({x:m.px + rand(-1,1), y:0.3, z:m.pz + rand(-1,1)}, 2, 0xdff6ff); }
+      }
       // monster
-      var m = G.mon;
       if(S3.monGroup && m){
         var g = S3.monGroup, mp = S3.monParts;
-        var targetZ = monZ(m.dist);
-        if(m.atkState==="strike" && m.atkKind==="lunge"){ targetZ = -7.5; }
-        g.position.z += (targetZ - g.position.z) * Math.min(1, dt*7);
-        g.position.y = 0.6 + Math.sin(m.bobP)*0.22 + m.rearP*1.9 - (G.phase==="caught" ? m.sink*2.6 : 0);
-        // fake tells: shudder in place, or a half-lunge that stops short — no eye flare either way
-        if(m.fakeState==="fake1"){
-          var fp1 = Math.sin((0.75 - m.fakeT2)/0.75 * Math.PI);
-          g.position.x += Math.sin(t*64)*0.14*fp1;
-          g.rotation.z = Math.sin(t*52)*0.05*fp1;
-        } else if(m.fakeState==="fake2"){
-          var fp2 = Math.sin((0.75 - m.fakeT2)/0.75 * Math.PI);
-          g.position.z += fp2*5.0;
-          g.position.y += fp2*0.5;
-          g.rotation.z = 0;
+        g.visible = m.rise > 0.02;
+        g.position.x = m.px;
+        g.position.z = m.pz;
+        g.position.y = 0.6 + (m.rise-1)*6.5 + Math.sin(m.bobP)*0.22*m.rise + m.rearP*1.0 - (G.phase==="caught" ? m.sink*2.6 : 0);
+        if(m.state==="warn"){
+          g.position.x += Math.sin(t*70)*0.14;
+          g.rotation.z = Math.sin(t*55)*0.05;
         } else { g.rotation.z = 0; }
         g.rotation.x = -m.rearP*0.42 + Math.sin(m.bobP*0.7)*0.02;
-        g.rotation.y = Math.sin(m.bobP*0.5)*0.14;
+        g.rotation.y = (G.phase==="reel" ? 0 : Math.atan2(-m.px, 4 - m.pz)*0.8) + Math.sin(m.bobP*0.5)*0.14;
         var fl = m.flash>0 ? 1.35 : 1;
         g.scale.setScalar(m.def.scale * fl * (G.phase==="caught" ? Math.max(0.4, 1 - m.sink*0.5) : 1));
         if(mp){
-          // real tell only: eyes flare red and swell while it rears up
+          // the real tell: eyes flare red and swell while it rears up to lash
           if(mp.eyes){
-            var flare = (m.atkState==="windup");
+            var flare = (m.state==="warn");
             for(var ei=0; ei<mp.eyes.length; ei++){
               var eye = mp.eyes[ei];
               if(eye.userData.baseCol==null){ eye.userData.baseCol = eye.material.color.getHex(); }
@@ -1336,14 +1576,15 @@
           if(mp.foam){ var fs = 1 + Math.sin(t*3)*0.07 + m.rearP*0.25; mp.foam.scale.set(fs, fs, 1); }
           for(var ti=0; ti<mp.tentacles.length; ti++){ mp.tentacles[ti].rotation.x += Math.sin(t*2.4 + ti*1.1)*0.0035; }
         }
-        // fishing line: rod tip -> monster mouth
+        // fishing line: rod tip -> monster mouth (it strains red when the monster slips the bar)
         var lp = S3.line.geometry.attributes.position.array;
+        var strain = (G.phase==="reel" && G.reel && !G.reel.inside);
         lp[0]=-1.5; lp[1]=3.1; lp[2]=2.6;
-        lp[3]=0; lp[4]=g.position.y+0.8; lp[5]=g.position.z+2.6*m.def.scale;
+        lp[3]=g.position.x; lp[4]=Math.max(0.3, g.position.y+0.8); lp[5]=g.position.z+2.6*m.def.scale;
         S3.line.geometry.attributes.position.needsUpdate = true;
-        S3.line.visible = true;
-        S3.line.material.opacity = (G.phase==="fight" && G.tension>=70) ? (0.55 + 0.4*Math.sin(t*30)) : 0.75;
-        S3.line.material.color.setHex((G.phase==="fight" && G.tension>=70) ? 0xff5040 : 0xdff4ff);
+        S3.line.visible = (m.state!=="spent");
+        S3.line.material.opacity = strain ? (0.55 + 0.4*Math.sin(t*30)) : 0.75;
+        S3.line.material.color.setHex(strain ? 0xff5040 : 0xdff4ff);
       } else {
         S3.line.visible = S3.bobber.visible;
         if(S3.bobber.visible){
@@ -1353,7 +1594,7 @@
           S3.line.geometry.attributes.position.needsUpdate = true;
         }
       }
-      // spit projectiles fly at the boat (visual only — damage already resolved)
+      // spit projectiles fly at the boat (visual only — the rod damage is already dealt)
       for(var si=S3.spit.length-1; si>=0; si--){
         var s = S3.spit[si];
         s.position.x += s.userData.vx*dt; s.position.y += s.userData.vy*dt; s.position.z += s.userData.vz*dt;
@@ -1395,6 +1636,7 @@
       requestAnimationFrame(loop);
     }
     S3 = initThree();
+    addSceneExtras();
     resize();
     positionCrosshair();
     requestAnimationFrame(loop);
@@ -1410,37 +1652,24 @@
       G: G,
       has3D: function(){ return !!S3; },
       start: function(){ $("startBtn").click(); },
-      skipStory: function(){ while(G.screen==="story"){ $("storyBtn").click(); } },
+      skipStory: function(){ while(G.screen==="story" && $("ovStory").classList.contains("show")){ $("storyBtn").click(); } },
       castNow: function(){ if(G.phase==="cast") doCast(); },
       forceBite: function(){ if(G.phase==="wait"){ G.waitT = 0; } },
       hookNow: function(){ if(G.phase==="wait" && G.biteT>=0) doHook(); },
-      shoot: function(){ G.fireCD = 0; fireGun(); },
-      reload: function(){ return startReload(); },
       step: function(dt){ update(dt||0.1); },
-      tongue: function(){ if(!G.mon) return null; return { hex:G.mon.def.tongue, name:G.mon.def.tongueName, shown:(G.mon.hp<=0) }; },
-      teachLog: function(){ return G.teachLog.slice(); },
-      storyText: function(){ return $("storyText").textContent; },
-      endText: function(){ return $("endText").textContent; },
-      hintText: function(){ return hintEl.textContent; },
-      howto: function(){ return HOWTO; },
-      monsters: function(){ return MONSTERS.map(function(d){ return { name:d.name, hp:d.hp, tongue:d.tongue, tongueName:d.tongueName }; }); },
-      setHP: function(v){ if(G.mon){ G.mon.hp = v; syncHUD(); showBtns(); } },
-      setDist: function(v){ if(G.mon){ G.mon.dist = v; } },
       reelOn: function(){ G.reelKey = true; },
       reelOff: function(){ G.reelKey = false; },
-      dodge: function(){ return startDodge(); },
-      forceWindup: function(){ if(G.mon && G.mon.atkState==="none"){ startWindup(G.mon); } },
+      finishReel: function(){ if(G.reel){ G.reel.c = G.reel.f; G.reel.p = 1; } },
       setAim: function(x,y){ G.aim.x = clamp(x,0,1); G.aim.y = clamp(y,0,1); positionCrosshair(); },
-      aimPos: function(){ return { x:G.aim.x, y:G.aim.y }; },
       aimAtMonster: function(){ var b = monsterBox(); if(b){ G.aim.x = b.cx; G.aim.y = b.cy; positionCrosshair(); } return b; },
       box: function(){ return monsterBox(); },
-      fireLabel: function(){ return $("fireLbl").textContent; },
-      reloadMode: function(){ return btnFire.classList.contains("reloadMode"); },
-      crossShown: function(){ return crossEl.classList.contains("show"); },
-      forceFake: function(kind){ if(G.mon){ startFake(G.mon, kind); } },
-      fakeState: function(){ return G.mon ? G.mon.fakeState : "none"; },
-      forceThrash: function(){ G.thrashState = "thrash"; G.thrashT = 1.2; },
-      hurt: function(){ hurtBoat(); }
+      shoot: function(){ G.fireCD = 0; fireGun(); },
+      stick: function(x,y){ G.stick.x = x; G.stick.y = y; },
+      state: function(){ var m = G.mon; return m ? { state:m.state, hp:m.hp, rise:m.rise, sx:m.sx, sy:m.sy, upT:m.upT } : null; },
+      upgrades: function(){ return $("upChoices").children.length; },
+      pickUpgrade: function(i){ var b = $("upChoices").children[i||0]; if(b){ b.click(); } },
+      hintText: function(){ return hintEl.classList.contains("show") ? hintEl.textContent : ""; },
+      endText: function(){ return $("endText").textContent; }
     };
     </script>
   </body>
