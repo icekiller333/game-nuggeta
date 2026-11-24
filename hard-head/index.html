@@ -107,9 +107,9 @@ button:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
 @keyframes bIn{ from{ transform:translateY(-14px) scale(.92); opacity:0 } to{ transform:none; opacity:1 } }
 #bubble .pic{ width:30px; height:30px; flex:none; border:3px solid var(--line); background:#cfeaf7; overflow:hidden; }
 #bubble .pic svg{ width:100%; height:100%; display:block; }
-#bubble .who{ font-family:var(--display); font-size:10px; line-height:1; color:var(--bonk-d); margin-bottom:1px; }
+#bubble .who{ font-family:var(--display); font-size:12px; line-height:1; color:var(--bonk-d); margin-bottom:1px; }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) #bubble .who{ color:#ff8d6e; } }
-#bubble .tx{ font-weight:700; font-size:12.5px; line-height:1.22; }
+#bubble .tx{ font-weight:700; font-size:14px; line-height:1.22; }
 
 /* ---------- controls ---------- */
 #controls{ position:absolute; inset:0; z-index:25; pointer-events:none; }
@@ -139,7 +139,7 @@ button:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
 #noggin{ display:none !important; }
 #btn-bonk.hinted::after, #btn-bonk.lessglow::after{ content:""; position:absolute; inset:-12px; border-radius:50%; border:5px solid var(--gold); animation:ring 1s ease-out infinite; pointer-events:none; }
 @keyframes ring{ 0%{ transform:scale(.82); opacity:1 } 100%{ transform:scale(1.22); opacity:0 } }
-#bonk-key{ position:absolute; right:calc(18px + var(--safe-r)); bottom:calc(6px + var(--safe-b)); width:clamp(96px,23vmin,128px); text-align:center; font-size:11px; font-weight:800; color:var(--ink); opacity:.75; pointer-events:none; }
+#bonk-key{ position:absolute; right:calc(18px + var(--safe-r)); bottom:calc(6px + var(--safe-b)); width:clamp(96px,23vmin,128px); text-align:center; font-size:12px; font-weight:800; color:var(--ink); opacity:.75; pointer-events:none; }
 #hint-stick{ position:absolute; left:calc(22px + var(--safe-l)); bottom:calc(30px + var(--safe-b)); width:150px; height:130px; pointer-events:none; }
 #hint-stick .base{ position:absolute; left:17px; top:5px; width:116px; height:116px; border-radius:50%; border:4px dashed var(--ink); opacity:.55; }
 #hint-stick .dot{ position:absolute; left:50px; top:38px; width:50px; height:50px; border-radius:50%; background:var(--gold); border:3px solid var(--line); box-shadow:var(--shadow-s); animation:drag 1.6s ease-in-out infinite; }
@@ -170,7 +170,7 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .cost{ flex:1; display:flex; align-items:center; gap:6px; padding:5px 8px; background:var(--panel2); border:2px solid var(--line); font-family:var(--display); font-size:17px; }
 .cost svg{ width:22px; height:22px; flex:none; }
 .cost.ok{ background:#d9f2c8; color:#1f5a2c; }
-.cost small{ font-family:'Archivo',sans-serif; font-weight:800; font-size:11px; opacity:.7; margin-left:auto; }
+.cost small{ font-family:'Archivo',sans-serif; font-weight:800; font-size:12px; opacity:.7; margin-left:auto; }
 .cta{ width:100%; font-family:var(--display); font-size:20px; padding:10px 14px; background:var(--gold); color:#221407; border:3px solid var(--line); box-shadow:var(--shadow-s); }
 .cta[disabled]{ background:var(--panel2); color:var(--muted); box-shadow:none; cursor:default; }
 .cta.ready{ animation:readyPulse .8s ease-in-out infinite alternate; }
@@ -284,14 +284,14 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .end-quote .qpic{ width:44px; height:44px; }
 .end-quote .review{ flex:1; margin:0 !important; border-style:solid; border-width:2px; position:relative; font-size:14px !important; line-height:1.35 !important; }
 .end-quote .review::before{ content:""; position:absolute; left:-9px; top:12px; width:12px; height:12px; background:var(--paper); border-left:2px solid var(--line); border-bottom:2px solid var(--line); transform:rotate(45deg); }
-.end-quote .who{ display:block; font-family:var(--display); font-size:11px; font-weight:400; color:var(--bonk-d); margin-bottom:1px; }
+.end-quote .who{ display:block; font-family:var(--display); font-size:12px; font-weight:400; color:var(--bonk-d); margin-bottom:1px; }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .end-quote .who{ color:#ff8d6e; } }
 :root[data-theme="dark"] .end-quote .who{ color:#ff8d6e; }
 .end-hl{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:0 0 10px; }
 .hl{ background:var(--panel2); border:2px solid var(--line); padding:8px 6px 7px; text-align:center; min-width:0; }
-.hl span{ display:block; font-size:11.5px; font-weight:800; color:var(--muted); }
+.hl span{ display:block; font-size:12px; font-weight:800; color:var(--muted); }
 .hl b{ display:block; font-family:var(--display); font-weight:400; font-size:clamp(22px,6.4vmin,27px); line-height:1.1; font-variant-numeric:tabular-nums; margin:1px 0; }
-.hl small{ display:block; font-size:11px; font-weight:800; color:var(--muted); line-height:1.2; }
+.hl small{ display:block; font-size:12px; font-weight:800; color:var(--muted); line-height:1.2; }
 .hl small.new{ color:var(--good); }
 .end-tabs{ display:flex; gap:8px; }
 .end-tab{ flex:1; display:flex; align-items:center; justify-content:space-between; gap:6px; padding:8px 10px; background:var(--panel); border:2px solid var(--line); font-weight:800; font-size:13.5px; text-align:left; }
@@ -461,7 +461,7 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .slot.main{ background:var(--gold); color:#221407; }
 .slot .hat-ic{ width:36px; height:36px; border-width:2px; }
 .slot .hat-ic svg{ width:28px; height:28px; }
-.slot small{ display:block; font-size:11px; font-weight:800; opacity:.75; }
+.slot small{ display:block; font-size:12px; font-weight:800; opacity:.75; }
 .slot b{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family:var(--display); font-weight:400; font-size:13px; line-height:1.1; overflow-wrap:break-word; hyphens:manual; }
 .slot.empty b{ color:var(--muted); font-family:'Archivo',sans-serif; font-weight:800; font-size:12.5px; white-space:normal; }
 .slot-swap{ flex:none; width:40px; display:grid; place-items:center; padding:0; background:var(--panel); border:2px solid var(--line); box-shadow:var(--shadow-s); }
@@ -478,7 +478,7 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .wi-pk{ margin:0; font-weight:700; font-size:14px; line-height:1.35; }
 .wi-pk b{ font-weight:800; }
 .wi-tags{ display:flex; flex-wrap:wrap; gap:5px; }
-.wi-tags span{ font-size:11.5px; font-weight:800; padding:2px 7px; background:var(--panel); border:2px solid var(--line); }
+.wi-tags span{ font-size:12px; font-weight:800; padding:2px 7px; background:var(--panel); border:2px solid var(--line); }
 .wi-acts{ display:flex; gap:8px; margin-top:auto; }
 .wi-acts .cta{ flex:1; font-size:15px; padding:8px 8px; }
 .wr-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(58px,1fr)); gap:7px; }
@@ -489,7 +489,7 @@ kbd{ font-family:var(--display); font-size:12px; background:var(--panel2); borde
 .wt.locked::after{ content:"?"; position:absolute; font-family:var(--display); font-size:20px; color:var(--muted); }
 .wt.sel{ background:#cfeaf7; border-width:3px; box-shadow:var(--shadow-s); transform:translate(-1px,-1px); }
 .wt.locked.sel{ background:var(--panel2); }
-.wt .bdg{ position:absolute; font-family:var(--display); font-size:10px; line-height:1; padding:2px 4px; border:2px solid var(--line); color:#221407; }
+.wt .bdg{ position:absolute; font-family:var(--display); font-size:12px; line-height:1; padding:2px 4px; border:2px solid var(--line); color:#221407; }
 .wt .bdg.on{ left:-5px; bottom:-6px; background:var(--gold); }
 .wt .bdg.bk{ right:-5px; top:-6px; background:var(--panel); color:var(--ink); }
 .wt .bdg.nw{ right:-5px; top:-6px; background:var(--bonk); color:#fff; }
@@ -530,7 +530,7 @@ body.letterbox #cutbars i{ height:clamp(7vh, calc((100vh - 100vw / 2.39) / 2), 1
 #cutlayer.hidden,#cutskip.hidden,#cutcap.hidden{ display:none; }
 #cutskip{ position:fixed; top:calc(env(safe-area-inset-top,0px) + 14px); right:calc(env(safe-area-inset-right,0px) + 16px); z-index:76; background:rgba(12,10,8,.5); color:#fff; border:1.5px solid rgba(255,255,255,.38);
   border-radius:999px; padding:8px 15px 8px 17px; font:800 12.5px 'Archivo',system-ui,sans-serif; letter-spacing:.14em; text-transform:uppercase; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
-#cutskip i{ font-style:normal; font-size:9px; margin-left:4px; opacity:.8; }
+#cutskip i{ font-style:normal; font-size:11px; margin-left:4px; opacity:.8; }
 #cutskip:hover{ background:rgba(255,255,255,.16); }
 #cutcap{ --spk:#fff; position:fixed; left:50%; transform:translateX(-50%); bottom:calc(clamp(7vh, calc((100vh - 100vw / 2.39) / 2), 12.5vh) + 16px); width:min(92vw,700px); z-index:74; pointer-events:none; box-sizing:border-box;
   display:flex; gap:14px; align-items:center; padding:11px 20px 12px 11px; background:linear-gradient(180deg,rgba(22,17,12,.86),rgba(10,8,6,.92)); border-radius:16px; border:1px solid rgba(255,255,255,.14); border-left:4px solid var(--spk);
@@ -540,7 +540,7 @@ body.letterbox #cutbars i{ height:clamp(7vh, calc((100vh - 100vw / 2.39) / 2), 1
 #cutcap .pic{ width:58px; height:58px; flex:none; border-radius:12px; overflow:hidden; border:2px solid var(--spk); background:#cfeaf7; }
 #cutcap .pic svg{ width:100%; height:100%; display:block; }
 #cutcap .tx{ flex:1; min-width:0; min-height:2.68em; }
-#cutcap .who{ font-family:var(--display); font-size:11.5px; letter-spacing:.16em; color:var(--spk); margin-bottom:2px; }
+#cutcap .who{ font-family:var(--display); font-size:12px; letter-spacing:.16em; color:var(--spk); margin-bottom:2px; }
 #cutcap-n{ align-self:flex-end; font-size:13px; opacity:0; color:var(--spk); }
 #cutcap.done #cutcap-n{ animation:capBlink .9s ease-in-out infinite; }
 @keyframes capBlink{ 0%,100%{ opacity:.15; transform:translateX(0); } 50%{ opacity:1; transform:translateX(3px); } }
@@ -597,14 +597,42 @@ body.letterbox #cutbars i{ height:clamp(7vh, calc((100vh - 100vw / 2.39) / 2), 1
 .ls-art{ width:64px; height:64px; flex:none; border:3px solid var(--line); background:#cfeaf7; overflow:hidden; }
 .ls-art svg{ width:100%; height:100%; display:block; }
 .ls-tx{ flex:1; min-width:0; }
-.ls-k{ font-family:var(--display); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--bonk-d); }
+.ls-k{ font-family:var(--display); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--bonk-d); }
 .ls-t{ font-family:var(--display); font-size:23px; line-height:1.05; margin:1px 0 3px; }
 .ls-p{ font-weight:800; font-size:14px; line-height:1.25; }
 .ls-p:empty{ display:none; }
 #lesson .cta{ width:auto; flex:none; font-size:16px; padding:8px 12px; }
-#ls-skip{ display:block; margin-top:3px; padding:2px 0; background:none; border:0; font-weight:800; font-size:12px; color:var(--muted); text-decoration:underline; }
+#ls-skip{ display:block; margin-top:6px; min-height:44px; padding:8px 16px; background:var(--panel2); color:var(--ink); border:3px solid var(--line); border-radius:12px; box-shadow:var(--shadow-s); font-weight:800; font-size:14px; }
 body.lessoning #objective{ visibility:hidden; }
 @media (max-height:520px){ #lesson{ top:calc(var(--safe-t) + 58px); } }
+
+/* ---- v16 UX: title gear, lesson skip, head-meter cue, reload fade ---- */
+.foot-row{ display:flex; align-items:center; justify-content:center; gap:10px; }
+#title-settings{ width:44px; height:44px; padding:0; display:grid; place-items:center; flex:none; background:var(--panel); }
+#title-settings svg{ width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+#btn-tut-fresh{ min-height:44px; }
+#nog-cue{ position:absolute; right:calc(18px + var(--safe-r)); bottom:calc(24px + var(--safe-b) + clamp(96px,23vmin,128px) + 8px); width:clamp(96px,23vmin,128px); text-align:center; pointer-events:none;
+  font-family:var(--display); font-size:13px; letter-spacing:.04em; padding:3px 0; background:var(--panel); color:var(--ink); border:3px solid var(--line); box-shadow:var(--shadow-s); }
+#nog-cue.warn{ background:var(--gold); color:#221407; }
+#nog-cue.hot{ background:#b3200f; color:#fff; animation:throb .5s ease-in-out infinite alternate; }
+#btn-bonk.nogpulse{ animation:nogPulse .55s ease-in-out 4; }
+@keyframes nogPulse{ 0%,100%{ box-shadow:var(--shadow) } 50%{ box-shadow:var(--shadow), 0 0 0 10px rgba(245,185,33,.85) } }
+@media (prefers-reduced-motion: reduce){ #nog-cue.hot, #btn-bonk.nogpulse{ animation:none; } }
+
+/* ---- v17 UX: larger text, objective emphasis, hint nudges ---- */
+body.bigtext #bubble .tx{ font-size:17px; }
+body.bigtext #bubble .who, body.bigtext #talk .who, body.bigtext #anvilcard .who{ font-size:14px; }
+body.bigtext .ls-p{ font-size:17px; } body.bigtext .ls-t{ font-size:26px; }
+body.bigtext #obj-t{ font-size:18px; } body.bigtext #obj-costs{ font-size:16px; }
+body.bigtext #talk-tx, body.bigtext #anv-tx, body.bigtext #bc-blurb, body.bigtext #qb-text{ font-size:17px; }
+body.bigtext #cutcap-t{ font-size:1.18em; }
+#obj-t{ font-size:16px; } #obj-costs{ font-size:15px; }
+#objective{ transition:transform .25s cubic-bezier(.3,1.5,.5,1); transform-origin:top left; }
+#objective.fresh{ transform:scale(1.16); }
+#objective.nudge{ animation:objNudge .6s ease-in-out 4; }
+@keyframes objNudge{ 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.14) } }
+#btn-bonk.hintpulse{ animation:nogPulse .6s ease-in-out 5; }
+@media (prefers-reduced-motion: reduce){ #objective, #objective.nudge, #btn-bonk.hintpulse{ animation:none; transition:none; } #objective.fresh{ transform:none; outline:4px solid var(--gold); } }
 </style>
 </head>
 <body>
@@ -688,6 +716,7 @@ body.lessoning #objective{ visibility:hidden; }
       <span>BONK</span>
     </button>
     <div id="bonk-key" class="hidden">or hold Space</div>
+    <div id="nog-cue" class="hidden" aria-hidden="true"></div>
     <div id="streak" class="chip hidden" aria-live="polite"></div>
   </div>
 
@@ -696,12 +725,13 @@ body.lessoning #objective{ visibility:hidden; }
       <h1 class="logo"><span class="w1">HARD</span><span class="w2">HEAD</span></h1>
       <p class="tagline">The robots took the jobs, not the foreheads.</p>
     </div>
-    <div id="hub-ui"><button class="cta ghost sm pressable" id="hub-back">&larr; Back</button><div id="hub-tip" class="chip">Level select: Perfect-bonk a node to enter</div><button class="chip pressable" id="hub-settings" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
+    <div id="hub-ui"><button class="cta ghost sm pressable" id="hub-back">&larr; Back</button><div id="hub-tip" class="chip">Level select: hold BONK and release in the green on a level to enter</div><button class="chip pressable" id="hub-settings" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
     <div id="title-ask" class="chip hidden" role="dialog" aria-label="Dunk asks if you are ready to work"><div class="who">Dunk</div><div class="tt">You ready to work?</div><div class="row"><button class="cta sm pressable" id="ta-yes">Yes</button><button class="cta ghost sm pressable" id="ta-no">Not yet</button></div></div>
     <div class="start-foot">
       <p id="webgl-fail" class="hidden">This browser can’t run 3D graphics. Try a recent Chrome, Safari or Firefox.</p>
       <button class="cta big pressable" id="btn-start">Start bonking</button>
-      <button class="cta ghost sm pressable" id="btn-map">Level map</button>
+      <div class="foot-row"><button class="cta sm pressable" id="btn-map">Level map</button><button class="chip pressable" id="title-settings" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
+      <button class="cta ghost sm pressable hidden" id="btn-tut-fresh" type="button">Start tutorial over</button>
     </div>
   </div>
 
@@ -760,6 +790,7 @@ body.lessoning #objective{ visibility:hidden; }
       <div class="set-row"><div>Screen shake<small>Bonks rattle the camera</small></div><div class="seg" data-set="shake"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>Vibration<small>Phone buzzes on bonks</small></div><div class="seg" data-set="vib"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>HR-9000 memos<small>Occasional corporate announcements</small></div><div class="seg" data-set="memos"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
+      <div class="set-row"><div>Larger text<small>Bigger dialogue, lessons and objectives</small></div><div class="seg" data-set="bigtext"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="set-row"><div>Boss assist<small>Widens the green zone everywhere</small></div><div class="seg" data-set="assist"><button data-v="1">On</button><button data-v="0">Off</button></div></div>
       <div class="st-danger">
         <div class="st-dh">Danger zone</div>
@@ -2205,7 +2236,7 @@ body.lessoning #objective{ visibility:hidden; }
   }
 
   /* ---------- state ---------- */
-  const S = { sound: true, music: true, shake: !REDUCED, vib: true, memos: true, assist: false };
+  const S = { sound: true, music: true, shake: !REDUCED, vib: true, memos: true, assist: false, bigtext: false };
   const G = {
     started: false,
     playing: false,
@@ -2253,7 +2284,7 @@ body.lessoning #objective{ visibility:hidden; }
   }
   (function () {
     const sv = loadSave();
-    ["sound", "music", "shake", "vib", "memos", "assist"].forEach(function (k) {
+    ["sound", "music", "shake", "vib", "memos", "assist", "bigtext"].forEach(function (k) {
       if (typeof sv[k] === "boolean") S[k] = sv[k];
     });
   })();
@@ -7186,6 +7217,26 @@ body.lessoning #objective{ visibility:hidden; }
     };
     snd.whoosh();
     vibrate(8);
+    if (G.hub) hubLockedBonk();
+  }
+  /* bonking a locked level node explains why nothing happened */
+  function hubLockedBonk() {
+    if (!HUB.nodes || G.time - (HUB.lockT || -9) < 1.2) return;
+    let best = null,
+      bd = 3.8;
+    HUB.nodes.forEach(function (o) {
+      if (o.unlocked) return;
+      const d = Math.hypot(o.g.position.x - P.pos.x, o.g.position.z - P.pos.z);
+      if (d < bd) {
+        bd = d;
+        best = o;
+      }
+    });
+    if (!best) return;
+    HUB.lockT = G.time;
+    snd.tink();
+    floater(best.g.position.clone().setY(3.2), best.hub > 1 ? "FINISH LEVEL " + (best.hub - 1) + " FIRST" : "LOCKED", "bw", 1.8);
+    toast(best.hub > 1 ? "Level " + best.hub + " unlocks when you finish Level " + (best.hub - 1) + "." : "Locked.");
   }
   function resolveBonk(L) {
     let tg = L.tg;
@@ -9695,6 +9746,23 @@ body.lessoning #objective{ visibility:hidden; }
     bb.classList.toggle("nhot", nv >= 80);
     bb.classList.toggle("mad", P.dizzy > 0); // stars out: the face goes red and angry
     bb.classList.toggle("lock", P.dizzy > 0);
+    const cue = $("nog-cue");
+    if (cue) {
+      const showCue = P.noggin >= 30 || P.dizzy > 0;
+      cue.classList.toggle("hidden", !showCue);
+      if (showCue) {
+        cue.textContent = P.dizzy > 0 ? "DIZZY!" : "HEAD " + Math.round(P.noggin) + "%";
+        cue.classList.toggle("warn", P.dizzy <= 0 && P.noggin >= 55 && P.noggin < 80);
+        cue.classList.toggle("hot", P.dizzy > 0 || P.noggin >= 80);
+      }
+    }
+    if (P.noggin >= 40 && !G.lesson && G.flags && !G.flags.nog40 && canAct()) {
+      G.flags.nog40 = true; // first heads-up: a gentle pulse on the button before the hard stop
+      bb.classList.add("nogpulse");
+      setTimeout(function () {
+        bb.classList.remove("nogpulse");
+      }, 2400);
+    }
     if (P.noggin >= 60 && !G.lesson && G.flags && !G.flags.nog60 && canAct()) {
       G.flags.nog60 = true;
       startLesson("nog", 0);
@@ -10155,6 +10223,7 @@ body.lessoning #objective{ visibility:hidden; }
       card = $("lesson");
     s.active = true;
     s.t = 0;
+    s.skipAt = loadSave().tutDone ? 0 : 4; // veterans can skip at once; new players after 4s
     s.check = L.arm ? L.arm() : null;
     clearMsgs();
     $("ls-k").textContent = L.kicker;
@@ -10169,6 +10238,7 @@ body.lessoning #objective{ visibility:hidden; }
     card.classList.add("in");
     $("lessdim").classList.add("on");
     document.body.classList.add("lessoning");
+    $("bubble").setAttribute("aria-live", "off"); // one voice for screen readers while a lesson is up
     if (L.glow) $("btn-bonk").classList.add("lessglow");
     if (L.freeze) {
       P.charging = false;
@@ -10189,7 +10259,7 @@ body.lessoning #objective{ visibility:hidden; }
       s.waited += rdt;
       if (G.cine || G.ended) return;
       s.wait -= rdt;
-      if (s.wait <= 0 && ((!msgCur && !MQ.length) || s.waited > 5)) lessonShow();
+      if (s.wait <= 0 && ((!msgCur && !MQ.length) || s.waited > 2.5)) lessonShow();
       return;
     }
     s.t += rdt;
@@ -10198,7 +10268,7 @@ body.lessoning #objective{ visibility:hidden; }
       if (s.winT <= 0) lessonEnd();
       return;
     }
-    if (s.t > 10) $("ls-skip").classList.remove("hidden");
+    if (!s.L.info && s.t > (s.skipAt === undefined ? 4 : s.skipAt)) $("ls-skip").classList.remove("hidden");
     if (!s.L.info && s.check && s.check()) lessonWin();
   }
   function lessonWin() {
@@ -10227,6 +10297,7 @@ body.lessoning #objective{ visibility:hidden; }
     $("lesson").classList.add("hidden");
     $("lessdim").classList.remove("on");
     document.body.classList.remove("lessoning");
+    $("bubble").setAttribute("aria-live", "polite");
     $("btn-bonk").classList.remove("lessglow");
     $("ls-skip").classList.add("hidden");
     G.lesson = null;
@@ -10240,6 +10311,108 @@ body.lessoning #objective{ visibility:hidden; }
     lessonEnd();
   });
 
+  /* ---------- tutorial checkpoint: survives a refresh, a crash or a killed tab ---------- */
+  var tutSaveT = 4;
+  function tutSaved() {
+    const sv = loadSave();
+    return !sv.tutDone && !!sv.tut && (sv.tut.s | 0) >= 2;
+  }
+  function saveTut() {
+    if (G.level >= 1 || !G.started || G.title || G.free || G.won || G.ended || G.resetting) return;
+    if (G.step < 0 || G.step >= STEPS.length) return;
+    const built = [],
+      st = {};
+    ["forge", "hut", "bridge"].forEach(function (id) {
+      if (plots[id] && plots[id].built) built.push(id);
+    });
+    for (const k in stats) if (typeof stats[k] === "number") st[k] = stats[k];
+    const fl = G.flags || {};
+    writeSave({
+      tut: {
+        s: G.step,
+        inv: copyI(),
+        gath: copyG(),
+        built: built,
+        st: st,
+        t: G.playTime,
+        x: P.pos.x,
+        z: P.pos.z,
+        hat: !!P.hat,
+        nog: !!fl.nog60,
+        perf: !!fl.hadPerfect
+      }
+    });
+  }
+  window.addEventListener("pagehide", saveTut);
+  function tutInstantBuild(p) {
+    p.built = true;
+    p.active = false;
+    p.ghost.visible = false;
+    p.real.visible = true;
+    if (p.col) colliders.push({ x: p.pos.x, z: p.pos.z, r: p.col });
+    emitters.push({ p: p, t: 0, lvl: G.level });
+    if (p.id === "hut" && mabel && mabel.bird && p.real.userData.roof) {
+      const r = p.real.userData.roof,
+        bd = mabel.bird,
+        to = new V3(p.pos.x + r.x, r.y, p.pos.z + r.z);
+      if (bd.parent === mabel.root) mabel.root.remove(bd);
+      scene.add(bd);
+      bd.position.copy(to);
+      mabel.flying = false;
+      mabel.perched = true;
+      mabel.perch = to;
+    }
+  }
+  function resumeTutorial() {
+    const t = loadSave().tut;
+    if (!t) {
+      showStory();
+      return;
+    }
+    titleFreeEnd();
+    titleAskClose();
+    G.title = false;
+    $("ov-start").classList.add("hidden");
+    audio();
+    startMusic();
+    G.playing = true;
+    G.started = true;
+    for (const k in inv) inv[k] = (t.inv && t.inv[k]) || 0;
+    for (const g in GATH) GATH[g] = (t.gath && t.gath[g]) || 0;
+    for (const sn in seen) seen[sn] = inv[sn] > 0 || GATH[sn] > 0;
+    if (t.s > 5) seen.wood = true;
+    if (t.st) for (const z in t.st) stats[z] = t.st[z];
+    G.playTime = t.t || 0;
+    (t.built || []).forEach(function (id) {
+      if (plots[id] && !plots[id].built) tutInstantBuild(plots[id]);
+    });
+    if (t.hat || (t.built || []).indexOf("forge") >= 0) {
+      P.hat = true;
+      UNL.stone = true;
+      setHat("stone", true);
+    }
+    G.flags = G.flags || {};
+    if (t.nog) G.flags.nog60 = true;
+    if (t.perf) G.flags.hadPerfect = true;
+    if (t.s > 3) G.flags.bigBroke = true;
+    P.pos.set(typeof t.x === "number" ? t.x : 0, 0, typeof t.z === "number" ? t.z : 3.5);
+    P.face.set(0, 0, -1);
+    P.yaw = Math.PI;
+    P.fakeU = 0;
+    P.hop = 0;
+    cam.tgt.set(P.pos.x, 0, P.pos.z);
+    cam.zoom = 1.1;
+    $("hud").classList.remove("hidden");
+    $("controls").classList.remove("hidden");
+    lessonEnd(true);
+    updateRes();
+    gfxFadeNow(1);
+    gfxFade(0, 0.9);
+    startStep(t.s);
+    later(1.2, function () {
+      toast("Welcome back. Checkpoint restored.");
+    });
+  }
   G.stepId = "";
   function startStep(i) {
     G.step = i;
@@ -10249,10 +10422,20 @@ body.lessoning #objective{ visibility:hidden; }
     const st = STEPS[i];
     if (!st) return;
     G.stepId = st.id;
+    saveTut();
+    G.hintTier = 0;
     $("objective").classList.remove("done");
     setObjective(st.obj, st.plot ? plots[st.plot].cost : null);
     if (st.act) actBanner(st.act[0], st.act[1]);
     if (st.plot) activatePlot(st.plot);
+    (function () {
+      const ob = $("objective");
+      ob.classList.remove("nudge");
+      ob.classList.add("fresh"); // the new goal swells for a moment so it is noticed
+      setTimeout(function () {
+        ob.classList.remove("fresh");
+      }, 2200);
+    })();
     G.noSay = !!st.lesson;
     if (st.enter) st.enter();
     G.noSay = false;
@@ -10280,6 +10463,11 @@ body.lessoning #objective{ visibility:hidden; }
     const st = STEPS[G.step];
     if (!st || G.won || G.free) return;
     G.stepT += dt;
+    tutSaveT -= dt;
+    if (tutSaveT <= 0) {
+      tutSaveT = 4;
+      saveTut();
+    }
     refreshObjective(false);
     if (!G.stepDone && !G.lesson && st.check && st.check()) {
       G.stepDone = true;
@@ -10290,11 +10478,52 @@ body.lessoning #objective{ visibility:hidden; }
       if (st.done) st.done();
       nextStepSoon(1.1);
     }
-    if (!G.stepDone && G.time - G.lastProgress > 28 && !G.cine && !G.lesson) {
-      G.lastProgress = G.time;
-      if (st.plot) say(plots[st.plot].built ? TXT.say.keep_going : TXT.say.need_more_materials_rocks_give, 0);
-      else say(TXT.say.follow_the_bouncing_arrow_it, 0);
+    if (!G.stepDone && !G.cine && !G.lesson && !G.paused) {
+      const idle = G.time - G.lastProgress;
+      let tier = idle > 65 ? 3 + Math.floor((idle - 65) / 40) : idle > 40 ? 2 : idle > 20 ? 1 : 0;
+      if (idle < 20) G.hintTier = 0;
+      if (tier > (G.hintTier || 0)) {
+        G.hintTier = tier;
+        giveHint(st, Math.min(tier, 3));
+      }
     }
+  }
+  /* escalating help: arrow nudge, then the right button pulses, then plain words for exactly this step */
+  var STEP_HELP = {
+    move: COARSE ? "Put your thumb on the left side of the screen and drag toward the glowing rock." : "Press W, A, S, D (or the arrow keys) to walk to the glowing rock.",
+    bonk1: "Stand right next to the rock, then tap the big BONK button.",
+    stone: "Bonk the rocks. Each one drops stone that follows you. You need 5.",
+    boulder: "Hold BONK until the ring fills up, then let go to smash the boulder.",
+    forge: "Walk to the blue outline and bonk it. Tap Build when the menu opens.",
+    trees: "Walk up to a tree and bonk it. It drops wood.",
+    hut: "Collect what the objective shows, then bonk the blue outline and tap Build.",
+    bridge: "Collect what the objective shows, then bonk the blue outline at the water\u2019s edge.",
+    cross: "Walk across the new bridge to the shiny island.",
+    gold: "Gold is tough. Hold BONK, then let go in the green for a big hit.",
+    statue: "Collect what the objective shows, then bonk the blue outline to build the statue."
+  };
+  function giveHint(st, tier) {
+    const ob = $("objective"),
+      bb = $("btn-bonk");
+    if (tier === 1) {
+      say(st.plot ? (plots[st.plot].built ? TXT.say.keep_going : TXT.say.need_more_materials_rocks_give) : TXT.say.follow_the_bouncing_arrow_it, 1);
+      return;
+    }
+    ob.classList.remove("nudge");
+    void ob.offsetWidth;
+    ob.classList.add("nudge");
+    setTimeout(function () {
+      ob.classList.remove("nudge");
+    }, 2600);
+    if (/^(bonk1|stone|boulder|gold|trees)$/.test(st.id)) {
+      bb.classList.remove("hintpulse");
+      void bb.offsetWidth;
+      bb.classList.add("hintpulse");
+      setTimeout(function () {
+        bb.classList.remove("hintpulse");
+      }, 3200);
+    }
+    if (tier >= 3 && STEP_HELP[st.id]) say(STEP_HELP[st.id], 2);
   }
 
   /* ---------- finale ---------- */
@@ -10464,7 +10693,7 @@ body.lessoning #objective{ visibility:hidden; }
     $("btn-next").classList.remove("hidden");
     $("btn-next").textContent = "Level 1 \u2192";
     $("btn-again").textContent = "Play again";
-    writeSave({ tutDone: true });
+    writeSave({ tutDone: true, tut: null });
     fillEndDetail({
       stars: stars,
       ft: ft,
@@ -10642,7 +10871,7 @@ body.lessoning #objective{ visibility:hidden; }
     $("btn-restart").classList.toggle("hidden", !inGame);
     $("btn-menu-map").classList.toggle("hidden", !!G.hub);
     $("btn-restart").querySelector(".cf-l").textContent = G.level >= 1 ? "Restart level" : "Restart tutorial";
-    $("btn-restart").querySelector("small").textContent = G.level >= 1 ? "Clears this level\u2019s progress" : "Back to the title screen";
+    $("btn-restart").querySelector("small").textContent = G.level >= 1 ? "Clears this level\u2019s progress" : "Starts the tutorial over";
   }
   /* two-tap confirm for destructive buttons: first tap arms it, second tap (within 3.5 s) does it */
   function disarmBtn(btn) {
@@ -10673,6 +10902,7 @@ body.lessoning #objective{ visibility:hidden; }
     });
   }
   function syncSettings() {
+    document.body.classList.toggle("bigtext", !!S.bigtext);
     document.querySelectorAll(".seg").forEach(function (sg) {
       const k = sg.getAttribute("data-set");
       sg.querySelectorAll("button").forEach(function (b) {
@@ -10718,10 +10948,43 @@ body.lessoning #objective{ visibility:hidden; }
     if (G.level >= 1) {
       const ro = {};
       ro["l" + G.level] = null;
+      ro.autostart = "level:" + G.level; // straight back into the level, no title screen detour
       writeSave(ro);
+      softReload("Restarting level " + G.level + "\u2026");
+    } else {
+      writeSave({ tut: null, autostart: "tutorial:skip" });
+      softReload("Restarting tutorial\u2026");
     }
-    location.reload();
   });
+  /* soft reload: fade to a labelled screen first so the reload never looks like a crash */
+  var reloading = false;
+  function softReload(msg) {
+    if (reloading) return;
+    reloading = true;
+    $("fade-tx").textContent = msg || "";
+    $("fade").classList.add("on");
+    try {
+      snd.pop();
+    } catch (e) {}
+    setTimeout(function () {
+      location.reload();
+    }, 460);
+  }
+  /* browsers keep audio locked after a reload until a gesture: unlock on the first touch/key */
+  (function () {
+    function unlock() {
+      ["pointerdown", "keydown", "touchend"].forEach(function (ev) {
+        window.removeEventListener(ev, unlock, true);
+      });
+      if (S.music && (G.playing || G.level >= 1)) {
+        audio();
+        startMusic();
+      } else audio();
+    }
+    ["pointerdown", "keydown", "touchend"].forEach(function (ev) {
+      window.addEventListener(ev, unlock, true);
+    });
+  })();
   /* settings sheet: reachable from the level select screen (gear) and from the pause menu */
   function openSettings() {
     snd.pop();
@@ -10737,6 +11000,7 @@ body.lessoning #objective{ visibility:hidden; }
   }
   $("btn-menu-settings").addEventListener("click", openSettings);
   $("hub-settings").addEventListener("click", openSettings);
+  $("title-settings").addEventListener("click", openSettings);
   $("st-close").addEventListener("click", function () {
     snd.pop();
     closeSettings();
@@ -10745,17 +11009,17 @@ body.lessoning #objective{ visibility:hidden; }
     // wipes progress, hats, upgrades and level saves; keeps your sound/feel preferences
     const sv = loadSave(),
       keep = {};
-    ["sound", "music", "shake", "vib", "memos", "assist"].forEach(function (k) {
+    ["sound", "music", "shake", "vib", "memos", "assist", "bigtext"].forEach(function (k) {
       if (typeof sv[k] === "boolean") keep[k] = sv[k];
     });
     G.resetting = true; // stops any late autosave from writing the old progress back
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(keep));
     } catch (e) {}
-    location.reload();
+    softReload("Starting fresh\u2026");
   });
   $("btn-again").addEventListener("click", function () {
-    location.reload();
+    softReload("Again!");
   });
   $("btn-share").addEventListener("click", function () {
     const b = $("btn-share"),
@@ -10809,6 +11073,7 @@ body.lessoning #objective{ visibility:hidden; }
     say(TXT.say.fine_bonk_to_your_heart, 0);
   });
   document.addEventListener("visibilitychange", function () {
+    if (document.hidden) saveTut();
     if (document.hidden && G.playing && !G.paused && !G.ended) toggleMenu(true);
   });
 
@@ -10970,7 +11235,7 @@ body.lessoning #objective{ visibility:hidden; }
       // inside a level: the hub lives on a fresh island, so reload straight into it
       if (G.playing && G.level >= 1) saveLevel();
       writeSave({ autostart: "hub" });
-      location.reload();
+      softReload("Back to the map\u2026");
       return;
     }
     if (G.hub) return;
@@ -11120,7 +11385,9 @@ body.lessoning #objective{ visibility:hidden; }
   function refreshStartLabel() {
     const n = resumeLevel(),
       b = $("btn-start");
-    b.textContent = n >= 1 ? "Continue" : n === -1 ? "Pick a level" : "Start bonking";
+    const ts = n === 0 && tutSaved();
+    b.textContent = n >= 1 ? "Continue" : ts ? "Continue tutorial" : n === -1 ? "Pick a level" : "Start bonking";
+    $("btn-tut-fresh").classList.toggle("hidden", !ts);
   }
   $("btn-start").addEventListener("click", function () {
     audio();
@@ -11137,9 +11404,41 @@ body.lessoning #objective{ visibility:hidden; }
       playLevel(n);
       return;
     }
+    if (n === 0 && tutSaved()) {
+      $("ov-start").classList.add("hidden");
+      resumeTutorial();
+      return;
+    }
     $("ov-start").classList.add("hidden");
     showStory();
   });
+  /* "Start tutorial over": two taps so a checkpoint is never lost by accident */
+  (function () {
+    const b = $("btn-tut-fresh");
+    let armed = 0,
+      tm = 0;
+    b.addEventListener("click", function () {
+      if (!armed) {
+        armed = 1;
+        b.textContent = "Tap again to erase checkpoint";
+        tm = setTimeout(function () {
+          armed = 0;
+          b.textContent = "Start tutorial over";
+        }, 3500);
+        return;
+      }
+      clearTimeout(tm);
+      armed = 0;
+      b.textContent = "Start tutorial over";
+      writeSave({ tut: null });
+      refreshStartLabel();
+      audio();
+      startMusic();
+      snd.pop();
+      $("ov-start").classList.add("hidden");
+      showStory();
+    });
+  })();
 
   /* =====================================================================
    D. LEVEL 1: BONK ISLES. Five islands, four resources, five hats, ten quests.
@@ -19634,8 +19933,10 @@ body.lessoning #objective{ visibility:hidden; }
     curMus = DEF_MUS;
     mus.step = 0;
     if (G.started) {
-      writeSave({ autostart: "tutorial" });
-      location.reload();
+      const ao = { autostart: "tutorial" };
+      if (G.level === 0) ao.tut = null; // picking the tutorial from inside it means start over
+      writeSave(ao);
+      softReload("Back to the tutorial\u2026");
       return;
     }
     audio();
@@ -19643,7 +19944,8 @@ body.lessoning #objective{ visibility:hidden; }
     snd.pop();
     $("map").classList.add("hidden");
     $("ov-start").classList.add("hidden");
-    showStory();
+    if (tutSaved()) resumeTutorial();
+    else showStory();
   }
   function playLevel(n) {
     $("map").classList.add("hidden");
@@ -20101,7 +20403,13 @@ body.lessoning #objective{ visibility:hidden; }
   function ldHide() {
     ldTarget = 100;
   }
-  ldSet(10, "Warming up the forehead\u2026");
+  ldSet(
+    10,
+    (function () {
+      const a = loadSave().autostart;
+      return a === "hub" ? "Heading to the map\u2026" : a ? "Restarting\u2026" : "Warming up the forehead\u2026";
+    })()
+  );
   ldRender();
   ldTimer = setInterval(function () {
     if (ldDisp < ldTarget) ldBonk();
@@ -20143,11 +20451,18 @@ body.lessoning #objective{ visibility:hidden; }
         titleFreeStart(true);
       }, 700);
     }
-    if (loadSave().autostart === "tutorial") {
+    const asv = loadSave().autostart;
+    if (asv === "tutorial" || asv === "tutorial:skip") {
       writeSave({ autostart: null });
       setTimeout(function () {
         $("ov-start").classList.add("hidden");
-        showStory();
+        if (asv === "tutorial:skip") beginGame();
+        else showStory();
+      }, 300);
+    } else if (typeof asv === "string" && asv.indexOf("level:") === 0) {
+      writeSave({ autostart: null });
+      setTimeout(function () {
+        playLevel(parseInt(asv.slice(6), 10) || 1);
       }, 300);
     }
     G.title = true;
