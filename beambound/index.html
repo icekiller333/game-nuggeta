@@ -805,8 +805,10 @@ function startDrone() {
   o.start(); o2.start();
   droneNodes = { o: o, o2: o2, g: g };
   if (typeof startAmbience === 'function') startAmbience();
+  if (typeof musicStart === 'function') musicStart();
 }
 function stopDrone() {
+  if (typeof musicStop === 'function') musicStop();
   if (!droneNodes) return;
   try { droneNodes.o.stop(); droneNodes.o2.stop(); } catch (e) {}
   droneNodes = null;
@@ -821,7 +823,7 @@ function syncSoundUI() {
 function toggleMute() {
   muted = !muted;
   syncSoundUI();
-  if (muted) stopDrone(); else if (state === 'playing') startDrone();
+  if (muted) stopDrone(); else if (state === 'playing') startDrone(); else if (state === 'menu' || state === 'story') musicStart();
 }
 document.getElementById('menu-sound-btn').addEventListener('click', function () { audio(); toggleMute(); });
 document.getElementById('pause-sound-btn').addEventListener('click', function () { audio(); toggleMute(); });
@@ -1130,6 +1132,35 @@ function spawnRocks(cx, y, spawnM) {
   }
   if (rockWallCool > 0) rockWallCool--;
 }
+/* Hazards may sit close to a bottle, but never on top of it. Each hazard is treated as the
+   full area it can occupy (including its sweep) plus a margin; a freshly spawned group that
+   would touch a bottle slides along the route until it is clear, or is dropped. */
+var BOTTLE_CLEAR = 58;
+function hazardTouchesBottle(hz, dy) {
+  var cx = hz.baseX !== undefined ? hz.baseX : hz.x;
+  var rangeX = hz.range || 0;
+  var pad = hz.r + BOTTLE_CLEAR + (hz.type === 'whirlpool' ? 20 : (hz.type === 'shark' ? 14 : 0));
+  for (var i = 0; i < bottles.length; i++) {
+    var b = bottles[i];
+    if (b.collected) continue;
+    var ex = Math.max(0, Math.abs(b.x - cx) - rangeX);
+    if (Math.hypot(ex, b.y - (hz.y + dy)) < pad) return true;
+  }
+  return false;
+}
+function clearNewHazardsFromBottles(from) {
+  if (from >= hazards.length) return;
+  var shifts = [0, -40, -80, -120, -160, -200, -260, -320, -400, 40, 80, 120, 160, 220, 300];
+  for (var si = 0; si < shifts.length; si++) {
+    var ok = true;
+    for (var hi = from; hi < hazards.length && ok; hi++) if (hazardTouchesBottle(hazards[hi], shifts[si])) ok = false;
+    if (ok) {
+      if (shifts[si] !== 0) for (var hj = from; hj < hazards.length; hj++) hazards[hj].y += shifts[si];
+      return;
+    }
+  }
+  hazards.length = from;   /* nowhere safe to put it: skip this one */
+}
 function spawnHazard() {
   var y = beam.y - SPAWN_AHEAD;
   /* Keep the wreck and its bottle clear */
@@ -1143,7 +1174,7 @@ function spawnHazard() {
   else if (spawnM < 1000) type = r < 0.45 ? 'rock' : (r < 0.65 ? 'whirlpool' : 'shark');
   else if (spawnM < 1500) type = r < 0.36 ? 'rock' : (r < 0.50 ? 'whirlpool' : (r < 0.76 ? 'shark' : 'mine'));
   else type = r < 0.32 ? 'rock' : (r < 0.45 ? 'whirlpool' : (r < 0.65 ? 'shark' : (r < 0.83 ? 'mine' : 'jelly')));
-  var spacing;
+  var spacing, hz0 = hazards.length;
   if (type === 'rock') {
     spawnRocks(cx, y, spawnM);
     spacing = (spawnM < 500 ? 280 : 360) + Math.random() * 140;
@@ -1151,6 +1182,7 @@ function spawnHazard() {
     hazards.push(makeHazard(type, cx, y, (Math.random() * 2 - 1) * 80));
     spacing = 400 + Math.random() * 170;
   }
+  clearNewHazardsFromBottles(hz0);
   if (spawnM >= 1000 && spawnM <= 2000) spacing *= 0.85;
   nextSpawnY = beam.y - spacing;
 }
@@ -1180,6 +1212,8 @@ function die(type) {
   stickRelease();
   if (type === 'tentacle') beep(90, 0.9, 'sawtooth', 0.16, 38);
   if (type === 'sunk') beep(300, 0.9, 'sine', 0.14, 48);
+  if (type === 'tentacle') { tone(220, 2, 'sawtooth', 0.07, 55); tone(233, 2, 'sawtooth', 0.06, 58); tone(311, 2, 'sawtooth', 0.05, 78); }
+  if (type === 'sunk') { tone(294, 2.4, 'sine', 0.09, 147); tone(220, 2.4, 'sine', 0.07, 110); }
   juiceDie(type);
   if (!REDUCED) shake = 10;
 }
@@ -1326,6 +1360,7 @@ function showMenu() {
   document.getElementById('menu-stats').textContent = statsLine();
   syncSoundUI();
   show('scr-menu');
+  if (!muted && AC && AC.state === 'running') musicStart();
 }
 
 var TUT_ENTRIES = [
@@ -3404,6 +3439,351 @@ function render(t, dt) {
   GL.renderer.render(GL.scene, C);
 }
 
+/* ================= MUSIC: a procedural score driven by depth =================
+   0 - ~900 m    calm, low-key night ocean: soft D-minor pads, glass bells, a faint music-box lullaby
+   ~1000 m       creepy: bells go flat and wrong, dissonant drone, heartbeat, whispers, whale calls, hull creaks
+   2000 m +      horrific: screeching string cluster, sub growl, frantic heartbeat, swells, stabs and screams
+   Being out of the light (and the deep thing surging) adds dread on top, at any depth. */
+var mus = null;
+var MUS = { creep: 0, horror: 0, dread: 0 };
+var MU_VOW = [[300, 870], [400, 2000], [650, 1080], [520, 1800], [280, 2250]];
+var MU_CHORDS = [
+  /* calm: Dm, Bbmaj7, Gm, Asus */
+  [[38, 53, 57, 62], [34, 53, 57, 62], [31, 50, 58, 62], [33, 52, 57, 64]],
+  /* creepy: the same shapes with a flat ninth and a tritone creeping in */
+  [[38, 53, 57, 63], [38, 51, 56, 62], [34, 52, 58, 63], [33, 51, 57, 64]],
+  /* horror: tone clusters */
+  [[26, 50, 51, 56], [27, 51, 57, 62], [26, 56, 62, 63], [25, 49, 55, 61]]
+];
+function muSmooth(a, b, x) { x = Math.max(0, Math.min(1, (x - a) / (b - a))); return x * x * (3 - 2 * x); }
+function muHz(n) { return 440 * Math.pow(2, (n - 69) / 12); }
+function muR(a, b) { return a + Math.random() * (b - a); }
+function muPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function muImpulse(sec, decay) {
+  var len = Math.floor(AC.sampleRate * sec), buf = AC.createBuffer(2, len, AC.sampleRate);
+  for (var c = 0; c < 2; c++) {
+    var d = buf.getChannelData(c);
+    for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+  }
+  return buf;
+}
+
+function musicStart() {
+  if (muted || !audio() || mus) return;
+  var t0 = AC.currentTime;
+  var M = mus = {
+    srcs: [], set: 0, chordI: 0, m: distM(), dread: 0, surge: 0, hbVol: 0,
+    nextChord: t0 + 16, nextBell: t0 + 3, nextBeat: t0 + 1, nextWail: t0 + 14, nextStab: t0 + 5,
+    nextCreak: t0 + 10, nextWhisp: t0, nextGliss: t0 + 3, nextParam: 0
+  };
+  try { muBuild(M, t0); } catch (e) { try { muKill(M); } catch (e2) {} mus = null; }
+}
+
+function muBuild(M, t0) {
+  function osc(type, f) { var o = AC.createOscillator(); o.type = type; o.frequency.value = f; o.start(); M.srcs.push(o); return o; }
+  function gain(v) { var g = AC.createGain(); g.gain.value = v; return g; }
+  function filt(type, f, q) { var x = AC.createBiquadFilter(); x.type = type; x.frequency.value = f; x.Q.value = q || 0.7; return x; }
+  function lfo(rate, depth, target) { var o = osc('sine', rate), g = gain(depth); o.connect(g); g.connect(target); return o; }
+
+  /* shared noise */
+  var nlen = AC.sampleRate * 3;
+  M.nb = AC.createBuffer(1, nlen, AC.sampleRate);
+  var nd = M.nb.getChannelData(0);
+  for (var i = 0; i < nlen; i++) nd[i] = Math.random() * 2 - 1;
+
+  /* bus: master -> compressor -> out, with a big dark reverb */
+  M.out = gain(0);
+  var comp = AC.createDynamicsCompressor();
+  comp.threshold.value = -20; comp.knee.value = 24; comp.ratio.value = 5; comp.attack.value = 0.03; comp.release.value = 0.4;
+  M.out.connect(comp); comp.connect(AC.destination);
+  M.dry = gain(1); M.dry.connect(M.out);
+  var conv = AC.createConvolver(); conv.buffer = muImpulse(3.8, 2.4);
+  var wet = gain(0.7); conv.connect(wet); wet.connect(M.out);
+  M.send = gain(1); M.send.connect(conv);
+  function route(node, w) { node.connect(M.dry); var s = gain(w); node.connect(s); s.connect(M.send); }
+  M.route = route;
+
+  /* bells go through a soft, dark echo */
+  M.bell = gain(1); route(M.bell, 0.8);
+  var dl = AC.createDelay(2); dl.delayTime.value = 0.66;
+  var fb = gain(0.42), dlf = filt('lowpass', 2400, 0.5), dlo = gain(0.5);
+  M.bell.connect(dl); dl.connect(dlf); dlf.connect(fb); fb.connect(dl); dlf.connect(dlo); route(dlo, 0.9);
+  M.fx = gain(1); route(M.fx, 0.5);
+  M.hb = gain(0.4); route(M.hb, 0.12);
+
+  /* layer 1: the pad (always on) */
+  M.pad = gain(0); M.padF = filt('lowpass', 640, 0.6);
+  M.padF.connect(M.pad); route(M.pad, 0.85);
+  lfo(0.055, 220, M.padF.frequency);
+  M.pv = [];
+  var ch = MU_CHORDS[0][0];
+  for (var v = 0; v < 4; v++) {
+    var f = muHz(ch[v]);
+    var a = osc(v === 0 ? 'sine' : 'triangle', f), b = osc('sine', f * 1.004), vg = gain(v === 0 ? 0.9 : 0.35);
+    a.connect(vg); b.connect(vg); vg.connect(M.padF);
+    M.pv.push([a, b]);
+  }
+
+  /* layer 2: creepy drone - semitone and tritone beating against the key */
+  M.cd = gain(0); var cdF = filt('lowpass', 700, 0.8); var cdTr = gain(0.6);
+  lfo(0.17, 0.4, cdTr.gain); cdTr.connect(cdF); cdF.connect(M.cd); route(M.cd, 0.6);
+  [[50, 'triangle'], [51, 'triangle'], [56, 'sine'], [62, 'sine']].forEach(function (n) {
+    var o = osc(n[1], muHz(n[0])), g = gain(0.3); o.connect(g); g.connect(cdTr);
+  });
+
+  /* breathy whispers that move between the speakers and change vowel */
+  M.wh = gain(0);
+  var nz = AC.createBufferSource(); nz.buffer = M.nb; nz.loop = true; nz.start(); M.srcs.push(nz);
+  M.wb1 = filt('bandpass', 700, 9); M.wb2 = filt('bandpass', 1500, 11);
+  var whTr = gain(0.5); lfo(0.37, 0.5, whTr.gain);
+  nz.connect(M.wb1); nz.connect(M.wb2); M.wb1.connect(whTr); M.wb2.connect(whTr);
+  M.whPan = AC.createStereoPanner ? AC.createStereoPanner() : null;
+  if (M.whPan) { whTr.connect(M.whPan); M.whPan.connect(M.wh); } else whTr.connect(M.wh);
+  route(M.wh, 0.9);
+
+  /* layer 3 (horror): sub growl, grinding low saws, screeching cluster */
+  M.sub = gain(0); var subF = filt('lowpass', 190, 1.2); var sg = gain(0.5);
+  osc('sawtooth', 36.71).connect(sg); osc('sawtooth', 38.89).connect(sg);
+  sg.connect(subF); subF.connect(M.sub); route(M.sub, 0.2); lfo(0.23, 22, subF.frequency);
+
+  M.gr = gain(0); var grF = filt('lowpass', 340, 3); var gTr = gain(0.65);
+  lfo(5.3, 0.35, gTr.gain); lfo(0.09, 160, grF.frequency);
+  var gg = gain(0.5);
+  osc('sawtooth', 55).connect(gg); osc('sawtooth', 58.3).connect(gg);
+  gg.connect(gTr); gTr.connect(grF); grF.connect(M.gr); route(M.gr, 0.4);
+
+  M.sc = gain(0); M.scF = filt('lowpass', 2600, 1.5); var scTr = gain(0.7);
+  lfo(8.5, 0.3, scTr.gain); scTr.connect(M.scF); M.scF.connect(M.sc); route(M.sc, 0.6);
+  var vib = osc('sine', 5.7), vibG = gain(35); vib.connect(vibG);
+  M.scO = [];
+  [80, 81, 87, 93].forEach(function (n) {
+    var o = osc('sawtooth', muHz(n)), g = gain(0.22);
+    vibG.connect(o.detune); o.connect(g); g.connect(scTr);
+    M.scO.push({ o: o, n: n });
+  });
+
+  M.out.gain.setTargetAtTime(0.9, t0, 1.8);
+}
+
+function muKill(M) {
+  M.srcs.forEach(function (s) { try { s.stop(); } catch (e) {} });
+  try { M.out.disconnect(); } catch (e) {}
+}
+function musicStop() {
+  var M = mus;
+  if (!M) return;
+  mus = null;
+  MUS.creep = MUS.horror = MUS.dread = 0;
+  try { M.out.gain.setTargetAtTime(0, AC.currentTime, 0.3); } catch (e) {}
+  setTimeout(function () { muKill(M); }, 2400);
+}
+
+/* ---- one-shot voices ---- */
+function muNote(M, t, midi, vol, o) {
+  o = o || {};
+  var dur = o.dur || 3.2, f = muHz(midi) * (o.det || 1);
+  var a = AC.createOscillator(), b = AC.createOscillator(), g = AC.createGain(), gb = AC.createGain();
+  a.type = 'sine'; b.type = 'sine';
+  a.frequency.setValueAtTime(f, t); b.frequency.setValueAtTime(f * 2.76, t);
+  if (o.bend) {
+    a.frequency.exponentialRampToValueAtTime(f * o.bend, t + dur);
+    b.frequency.exponentialRampToValueAtTime(f * 2.76 * o.bend, t + dur);
+  }
+  gb.gain.value = 0.22;
+  a.connect(g); b.connect(gb); gb.connect(g);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  g.connect(M.bell);
+  a.start(t); b.start(t); a.stop(t + dur + 0.05); b.stop(t + dur + 0.05);
+}
+function muBells(M, t, c, h) {
+  if (h > 0.85 && Math.random() < 0.7) return;
+  var vol = 0.05 * (1 - 0.8 * h);
+  if (Math.random() < 0.3 * (1 - c * 0.5)) {
+    /* the music-box lullaby: slows, loses notes and goes flat as it gets creepy */
+    var mot = muPick([[81, 77, 74, 77], [84, 81, 77, 81], [86, 84, 81, 77]]);
+    var step = 0.52 + c * 0.3;
+    for (var i = 0; i < mot.length; i++) {
+      if (c > 0.4 && Math.random() < c * 0.35) continue;
+      muNote(M, t + i * step, mot[i], vol * 0.9, {
+        det: 1 + (c > 0.3 ? muR(-0.03, 0.03) * c : 0),
+        bend: c > 0.3 ? 1 - 0.035 * c : 0, dur: 3
+      });
+    }
+  } else {
+    var note = muPick([74, 77, 81, 84, 86, 89]);
+    if (c > 0.3 && Math.random() < c * 0.6) note = muPick([75, 80, 87, 78]);
+    muNote(M, t, note, vol, { bend: c > 0.3 ? 1 - 0.03 * c : 0, dur: 3.6 });
+    if (Math.random() < 0.25 && c < 0.5) muNote(M, t + 0.18, note + 7, vol * 0.6, { dur: 3 });
+  }
+}
+function muBeat(M, t, vol) {
+  [[0, 1, 70, 0.2], [0.27, 0.65, 60, 0.18]].forEach(function (b) {
+    var o = AC.createOscillator(), g = AC.createGain(), s = t + b[0];
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(b[2], s); o.frequency.exponentialRampToValueAtTime(38, s + b[3]);
+    g.gain.setValueAtTime(0.0001, s);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol * b[1]), s + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, s + b[3]);
+    o.connect(g); g.connect(M.hb);
+    o.start(s); o.stop(s + b[3] + 0.03);
+  });
+}
+function muWail(M, t, h) {
+  var dur = muR(5, 8), o = AC.createOscillator(), vib = AC.createOscillator(), vg = AC.createGain(), g = AC.createGain(), f = AC.createBiquadFilter();
+  var base = h > 0.5 ? muR(300, 520) : muR(110, 190);
+  var end = base * Math.pow(2, (Math.random() < 0.5 ? -1 : 1) * muR(3, 7) / 12);
+  o.type = h > 0.5 ? 'sawtooth' : 'sine';
+  o.frequency.setValueAtTime(base, t); o.frequency.exponentialRampToValueAtTime(end, t + dur);
+  vib.frequency.value = 4.5 + h * 3; vg.gain.value = base * 0.02; vib.connect(vg); vg.connect(o.frequency);
+  f.type = 'lowpass'; f.frequency.value = 500 + h * 2200; f.Q.value = 1;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.05 + 0.07 * h, t + dur * 0.45);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(f); f.connect(g); g.connect(M.fx);
+  o.start(t); vib.start(t); o.stop(t + dur + 0.05); vib.stop(t + dur + 0.05);
+}
+function muCreak(M, t, c) {
+  var dur = muR(0.7, 1.6), o = AC.createOscillator(), f = AC.createBiquadFilter(), tr = AC.createGain(), am = AC.createOscillator(), ag = AC.createGain(), g = AC.createGain();
+  o.type = 'sawtooth';
+  var base = muR(60, 95);
+  o.frequency.setValueAtTime(base, t); o.frequency.linearRampToValueAtTime(base * 0.8, t + dur);
+  f.type = 'bandpass'; f.Q.value = 5;
+  f.frequency.setValueAtTime(250, t); f.frequency.linearRampToValueAtTime(muR(380, 700), t + dur);
+  tr.gain.value = 0.5; am.frequency.value = muR(14, 24); ag.gain.value = 0.5; am.connect(ag); ag.connect(tr.gain);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.06 * c, t + dur * 0.3);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(f); f.connect(tr); tr.connect(g); g.connect(M.fx);
+  o.start(t); am.start(t); o.stop(t + dur + 0.05); am.stop(t + dur + 0.05);
+}
+function muSwell(M, t, dur, h) {
+  var s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = M.nb; s.loop = true;
+  f.type = 'bandpass'; f.Q.value = 3;
+  f.frequency.setValueAtTime(250, t); f.frequency.exponentialRampToValueAtTime(3200, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.2 * h, t + dur); g.gain.linearRampToValueAtTime(0, t + dur + 0.04);
+  s.connect(f); f.connect(g); g.connect(M.fx);
+  s.start(t); s.stop(t + dur + 0.06);
+}
+function muStab(M, t, h) {
+  var root = muPick([50, 51, 56, 62]), notes = [root, root + 1, root + 6, root + 13];
+  notes.forEach(function (n) {
+    var o = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain();
+    o.type = 'sawtooth'; o.frequency.value = muHz(n);
+    f.type = 'lowpass'; f.frequency.setValueAtTime(2800, t); f.frequency.exponentialRampToValueAtTime(400, t + 1.1);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.06 * h, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+    o.connect(f); f.connect(g); g.connect(M.fx);
+    o.start(t); o.stop(t + 1.25);
+  });
+  var s = AC.createBufferSource(), nf = AC.createBiquadFilter(), ng = AC.createGain();
+  s.buffer = M.nb; nf.type = 'bandpass'; nf.frequency.value = 1800; nf.Q.value = 1;
+  ng.gain.setValueAtTime(0.18 * h, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+  s.connect(nf); nf.connect(ng); ng.connect(M.fx); s.start(t); s.stop(t + 0.5);
+}
+function muScream(M, t, h) {
+  var dur = 1.2, o = AC.createOscillator(), vib = AC.createOscillator(), vg = AC.createGain(), f = AC.createBiquadFilter(), g = AC.createGain();
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(muR(1100, 1600), t); o.frequency.exponentialRampToValueAtTime(muR(300, 450), t + dur);
+  vib.frequency.value = 11; vg.gain.value = 40; vib.connect(vg); vg.connect(o.frequency);
+  f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 3;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.1 * h, t + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(f); f.connect(g); g.connect(M.fx);
+  o.start(t); vib.start(t); o.stop(t + dur + 0.05); vib.stop(t + dur + 0.05);
+}
+function muChord(M, tc, k) {
+  var ch = MU_CHORDS[M.set][M.chordI];
+  for (var i = 0; i < 4; i++) {
+    var f = muHz(ch[i]);
+    M.pv[i][0].frequency.setTargetAtTime(f, tc, k);
+    M.pv[i][1].frequency.setTargetAtTime(f * 1.004, tc, k);
+  }
+}
+
+function updateMusic(dt) {
+  var M = mus;
+  if (!M || !AC) return;
+  var tc = AC.currentTime;
+  M.m += (distM() - M.m) * Math.min(1, dt * 0.6);
+  var c = muSmooth(780, 1200, M.m), h = muSmooth(1780, 1990, M.m);
+  var live = state === 'playing' || state === 'msgpause';
+  var dT = live ? Math.min(1, boat.out / OUT_LIMIT) : 0;
+  M.dread += (dT - M.dread) * Math.min(1, dt * 1.5);
+  var sT = (live && typeof deepSh !== 'undefined' && deepSh.awake && deepSh.phase === 'surge') ? 1 : 0;
+  M.surge += (sT - M.surge) * Math.min(1, dt * 1.2);
+  var d = M.dread, s = M.surge;
+  MUS.creep = c; MUS.horror = h; MUS.dread = d;
+
+  /* mix: updated ten times a second */
+  if (tc >= M.nextParam) {
+    M.nextParam = tc + 0.1;
+    var set = function (p, v) { p.setTargetAtTime(v, tc, 0.8); };
+    set(M.pad.gain, 0.04 * (1 - 0.4 * h) * (1 - 0.3 * d));
+    set(M.padF.frequency, 640 - 160 * c - 80 * h);
+    set(M.cd.gain, 0.07 * c + 0.04 * h);
+    set(M.sub.gain, 0.05 * c + 0.2 * h + 0.1 * s * (0.3 + 0.7 * c) + 0.05 * d);
+    set(M.gr.gain, 0.16 * h + 0.03 * s * c);
+    set(M.sc.gain, 0.05 * h + d * (0.012 + 0.02 * c + 0.03 * h));
+    set(M.wh.gain, 0.8 * c + 0.6 * h + 0.3 * d);
+    M.hbVol = Math.min(1, c * 0.5 + h * 0.4 + d * 0.5);
+  }
+
+  /* chords: the harmony itself sours with depth */
+  var setI = h > 0.45 ? 2 : (c > 0.35 ? 1 : 0);
+  if (setI !== M.set) {
+    M.set = setI; muChord(M, tc, 0.9);
+    M.nextChord = tc + [16, 12, 9][setI];
+  } else if (tc >= M.nextChord) {
+    M.chordI = (M.chordI + 1) % 4; muChord(M, tc, 2.5);
+    M.nextChord = tc + [16, 12, 9][setI];
+  }
+
+  /* the screeching cluster slides around when it is audible */
+  if (tc >= M.nextGliss) {
+    M.nextGliss = tc + muR(2.5, 5);
+    var wide = 1 + 2 * Math.max(h, d);
+    for (var i = 0; i < M.scO.length; i++) M.scO[i].o.frequency.setTargetAtTime(muHz(M.scO[i].n + muR(-1, 1) * wide), tc, 1.2);
+  }
+
+  /* whispers shift vowel and drift across the stereo field */
+  if (c > 0.05 && tc >= M.nextWhisp) {
+    var vw = muPick(MU_VOW);
+    M.wb1.frequency.setTargetAtTime(vw[0], tc, 0.25); M.wb2.frequency.setTargetAtTime(vw[1], tc, 0.25);
+    if (M.whPan) M.whPan.pan.setTargetAtTime(muR(-1, 1), tc, 0.6);
+    M.nextWhisp = tc + muR(0.5, 1.5);
+  }
+
+  /* events */
+  if (tc >= M.nextBell) {
+    muBells(M, tc + 0.05, c, h);
+    M.nextBell = tc + muR(3, 7) * (1 + 0.8 * c + 1.5 * h);
+  }
+  if (tc >= M.nextBeat) {
+    if (c > 0.04 || d > 0.08) {
+      muBeat(M, tc + 0.03, 0.9 * M.hbVol);
+      var iv = 1.5 - 0.35 * c - 0.5 * h - 0.35 * d;
+      if (h > 0.4) iv *= muR(0.8, 1.2);
+      M.nextBeat = tc + Math.max(0.42, iv);
+    } else M.nextBeat = tc + 0.5;
+  }
+  if (c > 0.15 && tc >= M.nextWail) {
+    muWail(M, tc + 0.05, h);
+    M.nextWail = tc + muR(14, 24) * (1 - 0.5 * h);
+  }
+  if (c > 0.2 && tc >= M.nextCreak) {
+    muCreak(M, tc + 0.05, c);
+    M.nextCreak = tc + muR(8, 17);
+  }
+  if (h > 0.3 && tc >= M.nextStab) {
+    var lead = 0;
+    if (Math.random() < 0.55) { muSwell(M, tc + 0.05, 1.4, h); lead = 1.45; }
+    if (h > 0.6 && Math.random() < 0.4) muScream(M, tc + 0.05 + lead, h); else muStab(M, tc + 0.05 + lead, h);
+    M.nextStab = tc + muR(4, 9) * (1.25 - 0.5 * h) + lead;
+  }
+}
+
 /* Rain hiss and storm wind, mixed by the weather */
 var amb = null;
 function startAmbience() {
@@ -3417,11 +3797,13 @@ function startAmbience() {
     src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
     return { src: src, f: f, g: g };
   }
-  amb = { rain: chain('highpass', 1800, 0.4), wind: chain('bandpass', 380, 0.8) };
+  amb = { rain: chain('highpass', 1800, 0.4), wind: chain('bandpass', 380, 0.8), swell: chain('lowpass', 420, 0.5) };
+  amb.lfo = AC.createOscillator(); amb.lfo.frequency.value = 0.11;
+  var lfoG = AC.createGain(); lfoG.gain.value = 0.014; amb.lfo.connect(lfoG); lfoG.connect(amb.swell.g.gain); amb.lfo.start();
 }
 function stopAmbience() {
   if (!amb) return;
-  try { amb.rain.src.stop(); amb.wind.src.stop(); } catch (e) {}
+  try { amb.rain.src.stop(); amb.wind.src.stop(); amb.swell.src.stop(); amb.lfo.stop(); } catch (e) {}
   amb = null;
 }
 function updateAmbience() {
@@ -3430,6 +3812,7 @@ function updateAmbience() {
   amb.rain.g.gain.setTargetAtTime(WX.rain * 0.05, tc, 0.5);
   amb.wind.g.gain.setTargetAtTime(WX.storm * 0.07 + WX.fog * 0.01, tc, 0.6);
   amb.wind.f.frequency.setTargetAtTime(300 + Math.sin(tc * 0.7) * 120 + WX.storm * 200, tc, 0.4);
+  amb.swell.g.gain.setTargetAtTime(0.02 + WX.storm * 0.02, tc, 0.6);
 }
 
 /* ================= JUICE ================= */
@@ -3623,6 +4006,8 @@ function tone(freq, dur, type, vol, slideTo, delay) {
   o.start(t); o.stop(t + dur + 0.02);
 }
 function chime(freqs, step, vol) {
+  var dm = MUS.horror > 0.5 ? 0.9439 : (MUS.creep > 0.6 ? 0.9716 : 1);
+  freqs = freqs.map(function (f) { return f * dm; });
   for (var i = 0; i < freqs.length; i++) {
     tone(freqs[i], 0.34, 'triangle', vol || 0.08, null, i * step);
     tone(freqs[i] * 2, 0.2, 'sine', (vol || 0.08) * 0.35, null, i * step);
@@ -3660,6 +4045,11 @@ function juiceHit(kind, hz) {
   floatWorld(boat.x, boat.y, kind === 'jelly' ? 'ZAP! -1' : '-1 HULL', '#ff6b4a', 26);
   noiseBurst(heavy ? 0.45 : 0.3, heavy ? 0.3 : 0.2, 3200, 180);
   tone(120, 0.25, 'sine', 0.3, 38);
+  if (kind === 'jelly') { for (var zi = 0; zi < 6; zi++) tone(rnd(900, 2400), 0.05, 'sawtooth', 0.05, rnd(300, 900), zi * 0.045); }
+  else if (kind === 'mine') { noiseBurst(1.1, 0.3, 900, 40); tone(52, 0.9, 'sine', 0.3, 28); }
+  else if (kind === 'whirlpool') { noiseBurst(0.9, 0.22, 500, 2400); tone(220, 0.8, 'sine', 0.1, 70); }
+  else if (kind === 'shark') tone(90, 0.35, 'triangle', 0.18, 45);
+  else if (kind === 'rock') tone(180, 0.12, 'square', 0.08, 90);
   var h = document.getElementById('hull'); if (h) { h.classList.remove('hurt'); void h.offsetWidth; h.classList.add('hurt'); }
   if (hpips[boat.hull]) popEl(hpips[boat.hull]);
 }
@@ -3715,6 +4105,7 @@ function countUp(el, target, suffix) {
 
 document.addEventListener('click', function (e) {
   if (e.target.closest && e.target.closest('.big-btn, #pause-btn, #mute-btn')) tone(520, 0.07, 'square', 0.05, 820);
+  if ((state === 'menu' || state === 'story') && !muted) { audio(); musicStart(); }
 });
 
 /* ---------------- Loading ---------------- */
@@ -3752,6 +4143,7 @@ function frame(now) {
   if (!frozen) simT += dt * (REDUCED ? 0.5 : 1);
   lastDrawT = simT;
   update(gdt);
+  try { updateMusic(dt); } catch (e) { musicStop(); }
   layoutSoft();
   if (GL) render(lastDrawT, frozen ? 0 : dt);
   drawOverlayFX(lastDrawT);
