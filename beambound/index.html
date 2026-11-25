@@ -192,6 +192,14 @@
          still capped at 92vw so it fits a 390px screen with no overflow. */
       #toast.bottle { max-width: min(92vw, 602px); width: min(92vw, 602px); }
 
+      /* ---------- Story swipe cards ---------- */
+      #scr-story .deck { width: min(94vw, 460px); overflow: hidden; padding: 0 10px 10px 0; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+      #scr-story .track { display: flex; gap: 24px; will-change: transform; }
+      #scr-story .story-card { flex: 0 0 100%; width: auto; box-sizing: border-box; animation: none; }
+      #scr-story .story-card .art svg { height: 64px; }
+      #scr-story .story-card:first-child .art svg { height: 104px; }
+      #scr-story .swipe-hint { margin: 2px 0 10px; }
+
       /* ---------- Screens ---------- */
       .screen {
         position: absolute; inset: 0; z-index: 10;
@@ -416,7 +424,7 @@
           </div>
           <div id="bottles-hud" aria-label="Bottles found">
             <svg viewBox="0 0 20 34" aria-hidden="true"><path d="M8 2 h4 v5 l3 4 v17 a3 3 0 0 1 -3 3 H8 a3 3 0 0 1 -3 -3 V11 l3 -4 Z" fill="#3fa08a" stroke="#000" stroke-width="2" stroke-linejoin="round"/><rect x="7.5" y="0.5" width="5" height="3" fill="#8a5a2b" stroke="#000" stroke-width="1.5"/><rect x="7" y="15" width="6" height="10" rx="1" fill="#f4f1e6" stroke="#000" stroke-width="1.2" transform="rotate(-8 10 20)"/></svg>
-            <span id="bottle-count">0/5</span>
+            <span id="bottle-count">0/6</span>
           </div>
           <button id="pause-btn" aria-label="Pause"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="11" y="9" width="10" height="30" fill="currentColor" stroke="#000" stroke-width="2.5"/><rect x="27" y="9" width="10" height="30" fill="currentColor" stroke="#000" stroke-width="2.5"/></svg></button>
           <button id="mute-btn" aria-label="Toggle sound"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 18 H14 L25 8 V40 L14 30 H7 Z" fill="currentColor" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><path d="M30 17 Q36 24 30 31" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M35 12 Q44 24 35 36" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></button>
@@ -450,23 +458,31 @@
         </div>
       </div>
 
-      <!-- Story panel 1 -->
-      <div class="screen" id="scr-story1">
-        <div class="card">
-          <div class="art"><svg viewBox="0 0 230 74" aria-hidden="true"><g fill="#aebdd2" stroke="#000" stroke-width="2.5"><ellipse cx="26" cy="46" rx="17" ry="9"/><ellipse cx="42" cy="36" rx="19" ry="12"/><ellipse cx="56" cy="47" rx="14" ry="8"/><ellipse cx="174" cy="47" rx="14" ry="8"/><ellipse cx="188" cy="36" rx="19" ry="12"/><ellipse cx="204" cy="46" rx="17" ry="9"/></g><g transform="translate(115 37)"><path d="M0 -19 Q11 -8 10 8 Q8 17 0 18 Q-8 17 -10 8 Q-11 -8 0 -19Z" fill="#e4572e" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><rect x="-7" y="-4" width="14" height="4" fill="#f4f1e6"/><rect x="-6" y="3" width="12" height="9" fill="#ffd97a" stroke="#000" stroke-width="2"/><rect x="-3.5" y="5.5" width="7" height="4" fill="#12314f"/><line x1="0" y1="-4" x2="0" y2="-15" stroke="#000" stroke-width="2"/><circle cx="0" cy="-16" r="3.2" fill="#fff3c4" stroke="#000" stroke-width="1.5"/></g><path d="M84 62 q8 -5 16 0 t16 0 t16 0 t16 0" fill="none" stroke="#7ebae4" stroke-width="2" stroke-linecap="round"/></svg></div>
-          <p>You went out for eels, as you have every night for twenty years. Dawn was due at six. It never came.</p><p>Instead the fog closed in &mdash; and beneath the hull, something vast turned over in the deep, as if waking.</p>
-          <div class="dots"><i class="here"></i><i></i></div>
-          <button class="big-btn alt" id="btn-story1">Next <svg class="nxt-ic" viewBox="0 0 12 14" aria-hidden="true"><path d="M2 1 L11 7 L2 13 Z" fill="currentColor" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
-        </div>
-      </div>
-
-      <!-- Story panel 2 -->
-      <div class="screen" id="scr-story2">
-        <div class="card">
-          <div class="art"><svg viewBox="0 0 230 74" aria-hidden="true"><polygon points="37,12 178,27 178,59" fill="#ffd97a" opacity="0.30"/><path d="M20 68 L25 24 H35 L40 68 Z" fill="#f4f1e6" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><path d="M22.5 44 H37.5 L38.7 54 H21.3 Z" fill="#e4572e" stroke="#000" stroke-width="2"/><rect x="24" y="13" width="12" height="11" fill="#ffd97a" stroke="#000" stroke-width="2.5"/><path d="M21 13 L30 5 L39 13 Z" fill="#e4572e" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><circle cx="30" cy="18.5" r="3" fill="#fffbe0"/><path d="M196 74 C188 54 202 46 195 32 C190 21 199 13 206 20 C213 27 205 36 207 48 C208 59 211 67 215 74 Z" fill="#5b2a86" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><circle cx="200" cy="56" r="3" fill="#c99df0"/><circle cx="204" cy="42" r="2.6" fill="#c99df0"/><circle cx="202" cy="28" r="2.2" fill="#c99df0"/></svg></div>
-          <p>Then, far ahead: a light. No lighthouse has ever stood on this coast.</p><p>You don't know who lit it, or why it moves. You only know the dark behind you has begun to count &mdash; and the light is the one place it cannot reach.</p>
-          <div class="dots"><i></i><i class="here"></i></div>
-          <button class="big-btn" id="btn-start">Follow the light</button>
+            <!-- Story: swipe cards, shown before the game loads -->
+      <div class="screen" id="scr-story">
+        <div class="deck" id="story-deck">
+          <div class="track" id="story-track">
+            <div class="card story-card">
+              <div class="art"><svg viewBox="0 0 230 100" aria-hidden="true"><circle cx="150" cy="38" r="30" fill="#f4f1e6" opacity="0.2"/><circle cx="150" cy="38" r="20" fill="#f4f1e6" opacity="0.14"/><path d="M12 86 q8 -5 16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0" fill="none" stroke="#7ebae4" stroke-width="2" stroke-linecap="round"/><path d="M34 62 L196 62 Q188 84 162 86 L68 86 Q46 82 34 62Z" fill="#e4572e" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><path d="M38 68 L192 68" stroke="#f4f1e6" stroke-width="4"/><rect x="56" y="40" width="38" height="22" fill="#f4f1e6" stroke="#000" stroke-width="2.5"/><rect x="63" y="47" width="14" height="8" fill="#ffd97a" stroke="#000" stroke-width="2"/><rect x="52" y="35" width="46" height="6" fill="#c22e12" stroke="#000" stroke-width="2.5"/><line x1="75" y1="35" x2="75" y2="12" stroke="#000" stroke-width="2.5"/><circle cx="75" cy="11" r="4" fill="#fff3c4" stroke="#000" stroke-width="2"/><g fill="#04060c" stroke="#000" stroke-width="1.5" stroke-linejoin="round"><path d="M133 62 L135 42 L149 42 L151 62Z"/><path d="M132 44 L134 28 Q142 22 150 28 L152 44Z"/><circle cx="142" cy="20" r="5.5"/><path d="M130 17 Q142 6 154 17 Q142 14 130 17Z"/><path d="M150 32 L178 14" fill="none" stroke="#04060c" stroke-width="3" stroke-linecap="round"/></g><path d="M178 14 L178 44" stroke="#aebdd2" stroke-width="1" fill="none"/></svg></div>
+              <p>You went out for eels, as you have every night for twenty years. Dawn was due at six. It never came.</p>
+              <div class="dots"><i class="here"></i><i></i><i></i></div>
+              <p class="dim swipe-hint">Swipe &#8592; to continue</p>
+              <button class="big-btn alt story-next" type="button">Next <svg class="nxt-ic" viewBox="0 0 12 14" aria-hidden="true"><path d="M2 1 L11 7 L2 13 Z" fill="currentColor" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+            </div>
+            <div class="card story-card">
+              <div class="art"><svg viewBox="0 0 230 74" aria-hidden="true"><g fill="#aebdd2" stroke="#000" stroke-width="2.5"><ellipse cx="26" cy="46" rx="17" ry="9"/><ellipse cx="42" cy="36" rx="19" ry="12"/><ellipse cx="56" cy="47" rx="14" ry="8"/><ellipse cx="174" cy="47" rx="14" ry="8"/><ellipse cx="188" cy="36" rx="19" ry="12"/><ellipse cx="204" cy="46" rx="17" ry="9"/></g><g transform="translate(115 37)"><path d="M0 -19 Q11 -8 10 8 Q8 17 0 18 Q-8 17 -10 8 Q-11 -8 0 -19Z" fill="#e4572e" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><rect x="-7" y="-4" width="14" height="4" fill="#f4f1e6"/><rect x="-6" y="3" width="12" height="9" fill="#ffd97a" stroke="#000" stroke-width="2"/><rect x="-3.5" y="5.5" width="7" height="4" fill="#12314f"/><line x1="0" y1="-4" x2="0" y2="-15" stroke="#000" stroke-width="2"/><circle cx="0" cy="-16" r="3.2" fill="#fff3c4" stroke="#000" stroke-width="1.5"/></g><path d="M84 62 q8 -5 16 0 t16 0 t16 0 t16 0" fill="none" stroke="#7ebae4" stroke-width="2" stroke-linecap="round"/></svg></div>
+              <p>Instead the fog closed in &mdash; and beneath the hull, something vast turned over in the deep, as if waking.</p>
+              <div class="dots"><i></i><i class="here"></i><i></i></div>
+              <p class="dim swipe-hint">Swipe &#8592; to continue</p>
+              <button class="big-btn alt story-next" type="button">Next <svg class="nxt-ic" viewBox="0 0 12 14" aria-hidden="true"><path d="M2 1 L11 7 L2 13 Z" fill="currentColor" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+            </div>
+            <div class="card story-card">
+              <div class="art"><svg viewBox="0 0 230 74" aria-hidden="true"><polygon points="37,12 178,27 178,59" fill="#ffd97a" opacity="0.30"/><path d="M20 68 L25 24 H35 L40 68 Z" fill="#f4f1e6" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><path d="M22.5 44 H37.5 L38.7 54 H21.3 Z" fill="#e4572e" stroke="#000" stroke-width="2"/><rect x="24" y="13" width="12" height="11" fill="#ffd97a" stroke="#000" stroke-width="2.5"/><path d="M21 13 L30 5 L39 13 Z" fill="#e4572e" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><circle cx="30" cy="18.5" r="3" fill="#fffbe0"/><path d="M196 74 C188 54 202 46 195 32 C190 21 199 13 206 20 C213 27 205 36 207 48 C208 59 211 67 215 74 Z" fill="#5b2a86" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/><circle cx="200" cy="56" r="3" fill="#c99df0"/><circle cx="204" cy="42" r="2.6" fill="#c99df0"/><circle cx="202" cy="28" r="2.2" fill="#c99df0"/></svg></div>
+              <p>Then, far ahead: a light. No lighthouse has ever stood on this coast.</p><p>You don't know who lit it, or why it moves. You only know the dark behind you has begun to count &mdash; and the light is the one place it cannot reach.</p>
+              <div class="dots"><i></i><i></i><i class="here"></i></div>
+              <button class="big-btn" id="btn-start" type="button">Follow the light</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -580,7 +596,6 @@ var lastMilestone = 0, wasInside = true;
 var FX_MAX = 520;
 var atmosSeen = {};
 var ATMOS = [
-  { m: 120,  t: 'No gulls. No wind. Only the engine, and the swell listening.' },
   { m: 620,  t: 'Something is keeping pace beneath you. You feel it through the hull.' },
   { m: 1100, t: 'The light flickers, just once, as if it blinked.' },
   { m: 1700, t: 'The fog smells of salt and old iron. The light is moving faster now.' },
@@ -624,37 +639,44 @@ function statsLine() {
 
 /* ---------------- Bottles ---------------- */
 var FRAGMENTS = [
-  "Third night, and the traps come up empty. Not one eel. The water under the hull has gone warm, and something down there keeps pace with me. I think it is learning the shape of my boat. — T., eel fisher",
+  "I know this light is leading me astray. I can feel it. But I can't help it. I can't stop following. The darkness behind is worse. If you found this beside my boat, then you are already where I was. Keep going. — you",
+  "No gulls out here. No wind either. Only the engine, and the swell listening. I can't say when the birds went quiet. I only noticed when I tried to whistle for them, and nothing answered.",
   "Keeper's log, undated. There is no tower under this light. I have looked: only black water, and a flame that burns without oil. The sun did not fail. It rose somewhere else, for someone else. Follow the light if you must. Never believe it knows your name.",
   "In the fog I passed my own boat. Same paint, same dent in the bow, lamp burning, no one at the wheel. I waved. She slowed, just for a moment, as if she were deciding something.",
   "We wrecked where the light stopped. The reef was waiting under the still water, patient, as though it had been told to expect us. I have seen deep fish that hang a small lamp above their teeth. We were following one. Only larger.",
   "There is no last boat. The light keeps one of us sailing always, and the sea keeps the rest. If you are reading this, you wrote it, in a boat like this one, in this same fog. Throw it back for whoever comes next. Watch for the water that goes still."
 ];
 var FRAG_TOAST = [
-  "Third night, and the traps come up empty. The water has gone warm. Something below is learning the shape of my boat.",
+  "This light is leading me astray. I can't help it. The darkness is worse.",
+  "No gulls. No wind. Only the engine, and the swell listening.",
   "Keeper's log: there is no tower under this light. Only black water, and a flame that burns without oil. Never believe it knows your name.",
   "I passed my own boat in the fog. Same paint, same dent in the bow, no one at the wheel. She slowed, as if deciding something.",
   "We wrecked where the light stopped. Deep fish hang a small lamp above their teeth. We were following one. Only larger.",
   "There is no last boat. If you are reading this, you wrote it. Watch for the water that goes still."
 ];
-var BOTTLE_MS = [400, 900, 1400, 1900, 2300];
-var BOTTLE_OFFS = [24, -28, 18, -22, 26];
-var unlocked = [false, false, false, false, false];
+var N_BOTTLES = 6;
+var BOTTLE_MS = [200, 450, 900, 1400, 1900, 2300];
+var BOTTLE_OFFS = [24, -30, -28, 18, -22, 26];
+var unlocked = [false, false, false, false, false, false];
 try {
-  var savedFr = JSON.parse(localStorage.getItem('beambound-fragments') || '[]');
-  if (Array.isArray(savedFr)) for (var fi = 0; fi < 5; fi++) unlocked[fi] = !!savedFr[fi];
+  var savedFr = JSON.parse(localStorage.getItem('beambound-fragments6') || '[]');
+  if (Array.isArray(savedFr)) for (var fi = 0; fi < N_BOTTLES; fi++) unlocked[fi] = !!savedFr[fi];
 } catch (e) {}
 function persistFragments() {
-  try { localStorage.setItem('beambound-fragments', JSON.stringify(unlocked)); } catch (e) {}
+  try { localStorage.setItem('beambound-fragments6', JSON.stringify(unlocked)); } catch (e) {}
 }
-function unlockedCount() { var n = 0; for (var i = 0; i < 5; i++) if (unlocked[i]) n++; return n; }
+function unlockedCount() { var n = 0; for (var i = 0; i < N_BOTTLES; i++) if (unlocked[i]) n++; return n; }
 var bottles = [];
 var bottleHinted = false;
 var nextBottleM = 2800;
 function makeBottle(m, fragIdx) {
+  if (fragIdx === 0) {
+    /* Bottle 1 floats right beside the wrecked boat: you, from before or after the loop */
+    return { m: m, fragIdx: 0, x: WRECK.x - 52, y: WRECK.y + 14, phase: Math.random() * 6.28, collected: false };
+  }
   return {
     m: m, fragIdx: fragIdx,
-    x: beamPathX(-m * PX_PER_M) + BOTTLE_OFFS[Math.abs(Math.round((m - 400) / 500)) % 5],
+    x: beamPathX(-m * PX_PER_M) + BOTTLE_OFFS[(fragIdx !== null && fragIdx !== undefined ? fragIdx : Math.round(m / 500)) % BOTTLE_OFFS.length],
     y: -m * PX_PER_M,
     phase: Math.random() * 6.28, collected: false
   };
@@ -668,6 +690,10 @@ function seedBottles() {
 function fmtBest() { return bestM > 0 ? bestM + ' m' : '—'; }
 function fmtWins() { return save.wins > 0 ? String(save.wins) : '—'; }
 
+var beamDash = { phase: 'idle', t: 0, dir: 1, amp: 0, next: 24 };
+var beamSize = { phase: 'idle', t: 0, mul: 1, min: 0.62, weave: 0, next: 0 };
+var deepSh = { x: 0, y: 0, R: 230, w: 0, gap: 560, phase: 'lurk', t: 0, next: 0, awake: false };
+var deepGrip = false;
 var boat, beam, hazards, camX, camY, nextSpawnY, shake, hintFlags, taught;
 var keys = {};
 
@@ -678,10 +704,14 @@ var WRECK = { x: beamPathX(-200 * PX_PER_M) + 60, y: -200 * PX_PER_M };
 
 function resetRun() {
   boat = { x: 0, y: 0, vx: 0, vy: 0, angVel: 0, angle: -Math.PI / 2, out: 0, hull: 3, invuln: 0, slowT: 0 };
-  beam = { x: beamPathX(-70), y: -70, r: BEAM_R };
+  beam = { x: beamPathX(-70), y: -70, r: BEAM_R, offX: 0 };
+  beamDash = { phase: 'idle', t: 0, dir: 1, amp: 0, next: 24 };
+  beamSize = { phase: 'idle', t: 0, mul: 1, min: 0.62, weave: 0, next: 18 };
+  deepSh = { x: 0, y: 400, R: 230, w: 0, gap: 560, phase: 'lurk', t: 0, next: 0, awake: false };
+  deepGrip = false;
   hazards = [];
   camX = boat.x; camY = boat.y;
-  nextSpawnY = -2600;
+  nextSpawnY = -260; rockWallCool = 0;
   shake = 0; runTime = 0;
   deathType = null; deathT = 0;
   hintFlags = { beam: false, dark: false, carry: false };
@@ -840,7 +870,10 @@ function showNextMsg() {
   toastTextEl.textContent = item.msg;
   toastEl.classList.toggle('bottle', item.kind === 'bottle');
   var hr = document.querySelector('.hud-row');
-  toastEl.style.top = (hr ? Math.round(hr.getBoundingClientRect().bottom + 12) : 76) + 'px';
+  var toastTop = hr ? Math.round(hr.getBoundingClientRect().bottom + 12) : 76;
+  toastEl.style.top = toastTop + 'px';
+  toastEl.style.maxHeight = Math.max(120, window.innerHeight - toastTop - 14) + 'px';
+  toastEl.style.overflowY = 'auto';
   toastEl.classList.add('on');
   toastEl.classList.add('msg');
   var dEl = document.getElementById('dread');
@@ -879,11 +912,11 @@ function collectBottle(b) {
   var idx = b.fragIdx;
   if (idx === null || idx === undefined) {
     idx = -1;
-    for (var i = 0; i < 5; i++) if (!unlocked[i]) { idx = i; break; }
+    for (var i = 0; i < N_BOTTLES; i++) if (!unlocked[i]) { idx = i; break; }
   }
   if (idx >= 0) {
     if (!unlocked[idx]) { unlocked[idx] = true; persistFragments(); }
-    toast('Bottle ' + (idx + 1) + ' of 5 — ' + FRAG_TOAST[idx], 7, 'bottle');
+    toast('Bottle ' + (idx + 1) + ' of ' + N_BOTTLES + ' — ' + FRAG_TOAST[idx], 7, 'bottle');
   } else {
     toast('Another bottle. Empty. Whoever threw it ran out of words — or time.', 4.2, 'bottle');
   }
@@ -897,14 +930,14 @@ var journalFrom = 'menu';
 function renderJournal() {
   var list = document.getElementById('journal-list');
   var html = '';
-  for (var i = 0; i < 5; i++) {
+  for (var i = 0; i < N_BOTTLES; i++) {
     if (unlocked[i]) {
       html += '<div class="j-entry"><div class="j-head">Bottle ' + (i + 1) + ' · ' + BOTTLE_MS[i] + ' m</div><p>' + FRAGMENTS[i] + '</p></div>';
     } else {
       html += '<div class="j-entry locked"><div class="j-head">Bottle ' + (i + 1) + ' · ' + BOTTLE_MS[i] + ' m</div><p>Unread. Still drifting somewhere along the light\'s path.</p></div>';
     }
   }
-  if (unlockedCount() === 5) html += '<div class="j-entry"><div class="j-head">Look closer</div><p>Five bottles. Five voices. The same handwriting in all of them.</p></div>';
+  if (unlockedCount() === N_BOTTLES) html += '<div class="j-entry"><div class="j-head">Look closer</div><p>Six bottles. Six voices. The same handwriting in all of them.</p></div>';
   list.innerHTML = html;
 }
 function openJournal(from) {
@@ -945,7 +978,7 @@ function updateHUD() {
     hpips[hi].classList.toggle('spent', hi >= boat.hull);
     hpips[hi].classList.toggle('crit', boat.hull === 1);
   }
-  if (bottleCountEl) bottleCountEl.textContent = unlockedCount() + '/5';
+  if (bottleCountEl) bottleCountEl.textContent = unlockedCount() + '/' + N_BOTTLES;
   if (boat.out > 0.05) {
     dreadEl.classList.add('on');
     var left = Math.max(0, OUT_LIMIT - boat.out);
@@ -957,13 +990,6 @@ function updateHUD() {
 }
 
 /* ---------------- Hazards ---------------- */
-var TEACH = {
-  whirlpool: 'The water ahead is turning. A whirlpool — skirt its edge and keep to the light.',
-  shark: 'A fin cuts through the light, sweeping side to side. Slip past behind it.',
-  mine: 'A drifting mine, its lamp still blinking. Who laid it here? One touch costs a hull.',
-  jelly: 'A pale bloom of jellyfish, drifting toward the light. A sting costs a hull and slows you down.'
-};
-
 function makeHazard(type, cx, y, off) {
   if (type === 'whirlpool') {
     return { type: type, x: cx + off, y: y, r: 46, spin: Math.random() * 6.28, dead: false };
@@ -974,6 +1000,9 @@ function makeHazard(type, cx, y, off) {
       phase: Math.random() * 6.28, range: 85 + Math.random() * 35,
       speed: 0.75 + Math.random() * 0.4, x: cx, dead: false
     };
+  }
+  if (type === 'rock') {
+    return { type: type, x: cx + off, y: y, r: 22 + Math.random() * 8, seed: Math.random() * 100, dead: false };
   }
   if (type === 'mine') {
     var mx = cx + off * 0.6;
@@ -997,20 +1026,50 @@ function makeHazard(type, cx, y, off) {
 }
 
 var SPAWN_AHEAD = 760;
+var rockWallCool = 0;
+function spawnRocks(cx, y, spawnM) {
+  var r = Math.random();
+  var side = Math.random() < 0.5 ? -1 : 1;
+  if (spawnM >= 300 && spawnM <= 1100 && rockWallCool <= 0 && r < 0.22) {
+    /* A reef line across the whole beam: the way round is out in the dark, then back into the light */
+    rockWallCool = 3;
+    for (var k = -2; k <= 2; k++) {
+      var rk = makeHazard('rock', cx, y + (Math.random() * 2 - 1) * 10, k * 64);
+      rk.r = 27 + Math.random() * 3;
+      hazards.push(rk);
+    }
+  } else if (r < 0.55) {
+    /* A rocky gate: three rocks leaving a gap to slip through */
+    for (var q = 0; q < 3; q++) hazards.push(makeHazard('rock', cx, y + (Math.random() * 2 - 1) * 14, side * (150 - q * 78)));
+  } else {
+    var offR = (Math.random() * 2 - 1) * 120;
+    hazards.push(makeHazard('rock', cx, y, offR));
+    if (Math.random() < 0.5) hazards.push(makeHazard('rock', cx, y - 150 - Math.random() * 80, -offR * 0.8));
+  }
+  if (rockWallCool > 0) rockWallCool--;
+}
 function spawnHazard() {
   var y = beam.y - SPAWN_AHEAD;
+  /* Keep the wreck and its bottle clear */
+  if (Math.abs(y - WRECK.y) < 170) { nextSpawnY = beam.y - 110; return; }
   var cx = beamPathX(y);
   var spawnM = Math.floor(-y / PX_PER_M);
   var r = Math.random();
   var type;
-  if (spawnM < 500) type = 'whirlpool';
-  else if (spawnM < 1000) type = r < 0.5 ? 'whirlpool' : 'shark';
-  else if (spawnM < 1500) type = r < 0.34 ? 'whirlpool' : (r < 0.67 ? 'shark' : 'mine');
-  else type = r < 0.30 ? 'whirlpool' : (r < 0.58 ? 'shark' : (r < 0.79 ? 'mine' : 'jelly'));
-  var off = (Math.random() * 2 - 1) * 80;
-  hazards.push(makeHazard(type, cx, y, off));
-  var spacing = 430 + Math.random() * 190;      // more room between hazards (was 340–500)
-  if (spawnM >= 1000 && spawnM <= 2000) spacing *= 0.8; // busier stretch, gentler than before
+  if (spawnM < 300) type = 'rock';
+  else if (spawnM < 500) type = r < 0.78 ? 'rock' : 'whirlpool';
+  else if (spawnM < 1000) type = r < 0.45 ? 'rock' : (r < 0.65 ? 'whirlpool' : 'shark');
+  else if (spawnM < 1500) type = r < 0.36 ? 'rock' : (r < 0.50 ? 'whirlpool' : (r < 0.76 ? 'shark' : 'mine'));
+  else type = r < 0.32 ? 'rock' : (r < 0.45 ? 'whirlpool' : (r < 0.65 ? 'shark' : (r < 0.83 ? 'mine' : 'jelly')));
+  var spacing;
+  if (type === 'rock') {
+    spawnRocks(cx, y, spawnM);
+    spacing = (spawnM < 500 ? 280 : 360) + Math.random() * 140;
+  } else {
+    hazards.push(makeHazard(type, cx, y, (Math.random() * 2 - 1) * 80));
+    spacing = 400 + Math.random() * 170;
+  }
+  if (spawnM >= 1000 && spawnM <= 2000) spacing *= 0.85;
   nextSpawnY = beam.y - spacing;
 }
 
@@ -1021,7 +1080,7 @@ function hitHull(kind, hz) {
   boat.invuln = 2.2;
   var dx = boat.x - hz.x, dy = boat.y - hz.y;
   var d = Math.hypot(dx, dy) || 1;
-  var power = kind === 'whirlpool' ? 420 : kind === 'mine' ? 380 : kind === 'jelly' ? 220 : 300;
+  var power = kind === 'whirlpool' ? 420 : kind === 'rock' ? 340 : kind === 'mine' ? 380 : kind === 'jelly' ? 220 : 300;
   boat.vx = (dx / d) * power;
   boat.vy = (dy / d) * power;
   beep(150, 0.22, 'square', 0.15, 65);
@@ -1059,10 +1118,10 @@ var DEATHS = {
 };
 function deathHint() {
   var n = unlockedCount();
-  if (save.wins > 0 && n === 5) return 'You know what the light is now. And still you go back.';
+  if (save.wins > 0 && n === N_BOTTLES) return 'You know what the light is now. And still you go back.';
   if (save.wins > 0) return 'You have seen the reef, and the empty boat. Something about that boat will not let you rest.';
-  if (n === 5) return 'Five voices, one handwriting. You know what you are following. Do you still follow it?';
-  if (n >= 3) return n + ' of 5 messages read. Someone wanted you to know something.';
+  if (n === N_BOTTLES) return 'Six voices, one handwriting. You know what you are following. Do you still follow it?';
+  if (n >= 3) return n + ' of ' + N_BOTTLES + ' messages read. Someone wanted you to know something.';
   if (n >= 1) return 'Somewhere out there, more bottles are drifting. Someone wanted you to read them.';
   return 'Something glints on the swell, out along the light. Perhaps it was left for you.';
 }
@@ -1158,6 +1217,8 @@ function startEndless() {
   crashTilt = 0;
   newBoat = null;
   beam.y = boat.y - 70;
+  beam.offX = 0; beamDash.phase = 'idle'; beamDash.next = runTime + 14;
+  beamSize.phase = 'idle'; beamSize.mul = 1; beamSize.weave = 0; beamSize.next = runTime + 18;
   beam.x = beamPathX(beam.y);
   nextSpawnY = beam.y - 320;
   camX = boat.x; camY = boat.y;
@@ -1169,7 +1230,7 @@ function startEndless() {
 }
 
 /* ---------------- Screens ---------------- */
-var screens = ['scr-loading', 'scr-menu', 'scr-story1', 'scr-story2', 'scr-over', 'scr-win', 'scr-pause', 'scr-journal', 'scr-tutorial'];
+var screens = ['scr-loading', 'scr-menu', 'scr-story', 'scr-over', 'scr-win', 'scr-pause', 'scr-journal', 'scr-tutorial'];
 function show(id) {
   screens.forEach(function (s) { document.getElementById(s).classList.toggle('on', s === id); });
 }
@@ -1187,11 +1248,6 @@ var TUT_ENTRIES = [
   ['Steering', 'Touch anywhere on the sea and drag toward where you want to go. Drag further to go faster; let go to ease off. On a keyboard, use WASD or the arrow keys.'],
   ['The light', 'Stay inside the beam. While you are in it, the sea carries you along with it.'],
   ['The dark', 'Leave the light and the pips fill. A golden arrow on the water points the way back. When the pips run out, something below takes you.'],
-  ['Whirlpool', TEACH.whirlpool],
-  ['Shark', TEACH.shark],
-  ['Mine', TEACH.mine],
-  ['Jellyfish', TEACH.jelly],
-  ['Weather', 'Mist, rain, squalls and fog roll in along the route. The boat handles the same in all of them — only the view changes.'],
   ['Bottles', 'Bottles ride the swell along the beam. Sail into one — someone left you a message. Read them again under Bottles.']
 ];
 function openTutorial() {
@@ -1206,27 +1262,63 @@ function openTutorial() {
   list.scrollTop = 0;
   show('scr-tutorial');
 }
-function spawnTutorialHazard(type) {
-  var y = beam.y - SPAWN_AHEAD;
-  hazards.push(makeHazard(type, beamPathX(y), y, 0));
-}
 document.getElementById('menu-tutorial-btn').addEventListener('click', function () { audio(); beep(660, 0.08, 'sine', 0.07); openTutorial(); });
 document.getElementById('btn-tutorial-back').addEventListener('click', function () { audio(); show('scr-menu'); });
 document.getElementById('btn-tutorial-run').addEventListener('click', function () {
   tutReplay = true;
   startGame();
-  ['whirlpool', 'shark', 'mine', 'jelly'].forEach(function (type, i) {
-    scheduleHint(11000 + i * 9000, function () { if (state === 'playing' && tutReplay) spawnTutorialHazard(type); });
-  });
 });
 
 document.getElementById('btn-play').addEventListener('click', function () {
   audio(); beep(660, 0.08, 'sine', 0.07);
   tutReplay = false;
   state = 'story';
-  show('scr-story1');
+  setStory(0, false);
+  show('scr-story');
 });
-document.getElementById('btn-story1').addEventListener('click', function () { audio(); beep(660, 0.08, 'sine', 0.07); show('scr-story2'); });
+
+/* Story swipe cards */
+var STORY_N = 3, storyIdx = 0, storyDrag = null, storySwiped = false;
+var storyDeck = document.getElementById('story-deck'), storyTrack = document.getElementById('story-track');
+function setStory(i, animate, dx) {
+  storyIdx = Math.max(0, Math.min(STORY_N - 1, i));
+  storyTrack.style.transition = animate ? 'transform .35s cubic-bezier(.2,.9,.3,1)' : 'none';
+  storyTrack.style.transform = 'translateX(calc(' + (-storyIdx) + ' * (100% + 24px) + ' + (dx || 0) + 'px))';
+}
+function storyGo(d) { if (storyIdx + d < 0 || storyIdx + d > STORY_N - 1) { setStory(storyIdx, true); return; } audio(); beep(660, 0.08, 'sine', 0.07); setStory(storyIdx + d, true); }
+storyDeck.addEventListener('pointerdown', function (e) {
+  storyDrag = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false };
+  storySwiped = false;
+});
+storyDeck.addEventListener('pointermove', function (e) {
+  if (!storyDrag || e.pointerId !== storyDrag.id) return;
+  var dx = e.clientX - storyDrag.x, dy = e.clientY - storyDrag.y;
+  if (!storyDrag.moved && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
+    storyDrag.moved = true;
+    try { storyDeck.setPointerCapture(e.pointerId); } catch (er) {}
+  }
+  if (storyDrag.moved) {
+    var edge = (storyIdx === 0 && dx > 0) || (storyIdx === STORY_N - 1 && dx < 0);
+    setStory(storyIdx, false, edge ? dx * 0.3 : dx);
+  }
+});
+function storyEnd(e) {
+  if (!storyDrag || e.pointerId !== storyDrag.id) return;
+  var dx = e.clientX - storyDrag.x, moved = storyDrag.moved;
+  storyDrag = null;
+  if (moved) {
+    storySwiped = true;
+    if (dx < -50) storyGo(1); else if (dx > 50) storyGo(-1); else setStory(storyIdx, true);
+  }
+}
+storyDeck.addEventListener('pointerup', storyEnd);
+storyDeck.addEventListener('pointercancel', storyEnd);
+storyDeck.addEventListener('click', function (e) { if (storySwiped) { e.stopPropagation(); e.preventDefault(); storySwiped = false; } }, true);
+Array.prototype.forEach.call(document.querySelectorAll('.story-next'), function (b) { b.addEventListener('click', function () { storyGo(1); }); });
+window.addEventListener('keydown', function (e) {
+  if (state !== 'story') return;
+  if (e.key === 'ArrowRight') storyGo(1); else if (e.key === 'ArrowLeft') storyGo(-1);
+});
 
 function pauseGame() {
   if (state !== 'playing') return;
@@ -1286,6 +1378,103 @@ document.getElementById('btn-tomenu').addEventListener('click', function () {
 /* ---------------- Update ---------------- */
 var lastTickSecond = -1;
 
+/* The light sometimes wavers, then lurches sideways, away from you. Get back inside. */
+function updateBeamDash(dt, m) {
+  var d = beamDash;
+  if (d.phase === 'idle') {
+    beam.offX = 0;
+    if (state === 'playing' && m >= 250 && runTime >= d.next && boat.out < 0.5 && !msgActive && beamSize.phase === 'idle') {
+      d.phase = 'warn'; d.t = 0; d.dir = Math.random() < 0.5 ? -1 : 1; d.amp = 270 + Math.random() * 70;
+      floatScreen(W / 2, H * 0.3, 'THE LIGHT WAVERS', '#ffd97a', 30, 1.1);
+      tone(330, 0.5, 'triangle', 0.09, 520);
+    }
+    return;
+  }
+  d.t += dt;
+  if (d.phase === 'warn') {
+    var wk = Math.min(1, d.t / 0.9);
+    beam.offX = d.dir * 9 * Math.sin(d.t * 45) * wk;
+    if (d.t >= 0.9) {
+      d.phase = 'go'; d.t = 0;
+      tone(520, 0.3, 'sawtooth', 0.1, 150);
+      flash('255,225,140', 0.2); bumpCam(0.035);
+    }
+  } else if (d.phase === 'go') {
+    var gk = Math.min(1, d.t / 0.32), ge = 1 - Math.pow(1 - gk, 3);
+    beam.offX = d.dir * d.amp * ge;
+    if (gk >= 1) { d.phase = 'hold'; d.t = 0; }
+  } else if (d.phase === 'hold') {
+    beam.offX = d.dir * d.amp;
+    if (d.t >= 1.1) { d.phase = 'back'; d.t = 0; }
+  } else if (d.phase === 'back') {
+    var bk = Math.min(1, d.t / 2.6), bs = bk * bk * (3 - 2 * bk);
+    beam.offX = d.dir * d.amp * (1 - bs);
+    if (bk >= 1) {
+      d.phase = 'idle'; d.t = 0; beam.offX = 0;
+      d.next = runTime + Math.max(9, 22 - m * 0.004) + Math.random() * 7;
+    }
+  }
+}
+
+/* After 500 m the light starts to shrink and weave: keep up with it. */
+function updateBeamSize(dt, m) {
+  var z = beamSize;
+  if (z.phase === 'idle') {
+    z.mul = 1; z.weave = 0;
+    if (state === 'playing' && m >= 500 && runTime >= z.next && boat.out < 0.5 && !msgActive && beamDash.phase === 'idle') {
+      z.phase = 'shrink'; z.t = 0; z.min = 0.55 + Math.random() * 0.15; z.hold = 4.5 + Math.random() * 3; z.wph = Math.random() * 6.28;
+      floatScreen(W / 2, H * 0.3, 'THE LIGHT NARROWS', '#ffd97a', 30, 1.2);
+      tone(440, 0.45, 'triangle', 0.09, 260);
+    }
+    return;
+  }
+  z.t += dt;
+  var amt;
+  if (z.phase === 'shrink') {
+    var sk = Math.min(1, z.t / 1.1); amt = sk * sk * (3 - 2 * sk);
+    z.mul = 1 - (1 - z.min) * amt;
+    if (sk >= 1) { z.phase = 'hold'; z.t = 0; }
+  } else if (z.phase === 'hold') {
+    z.mul = z.min;
+    if (z.t >= z.hold) { z.phase = 'grow'; z.t = 0; }
+  } else {
+    var gk = Math.min(1, z.t / 1.8), gs = gk * gk * (3 - 2 * gk);
+    z.mul = z.min + (1 - z.min) * gs;
+    if (gk >= 1) { z.phase = 'idle'; z.t = 0; z.mul = 1; z.weave = 0; z.next = runTime + Math.max(10, 24 - m * 0.003) + Math.random() * 8; return; }
+  }
+  /* while it is small, the light also drifts side to side */
+  var wamp = Math.min(1, (1 - z.mul) / (1 - z.min));
+  z.weave = Math.sin(runTime * 1.5 + z.wph) * 85 * wamp;
+}
+
+/* Something under the water, keeping pace. It wakes when the message says so. */
+function updateDeep(dt, m) {
+  var d = deepSh;
+  if (!d.awake) {
+    if (m < 640) { d.w = 0; return; }
+    d.awake = true; d.next = runTime + 7; d.x = boat.x; d.y = boat.y + 560;
+  }
+  d.w = Math.min(0.92, d.w + dt * 0.3);
+  d.t += dt;
+  var wantGap;
+  if (d.phase === 'lurk') {
+    wantGap = 430 + Math.sin(runTime * 0.5) * 50;
+    if (runTime >= d.next) {
+      d.phase = 'surge'; d.t = 0;
+      tone(58, 1.4, 'sine', 0.22, 38);
+    }
+  } else if (d.phase === 'surge') {
+    wantGap = 105;
+    if (d.t >= 4.2) { d.phase = 'lurk'; d.t = 0; d.next = runTime + 14 + Math.random() * 14; }
+  }
+  var rate = d.phase === 'surge' ? 1.5 : 0.7;
+  d.gap += (wantGap - d.gap) * Math.min(1, dt * rate);
+  var ty = boat.y + d.gap, tx = boat.x + Math.sin(runTime * 0.8) * 40;
+  d.y += (ty - d.y) * Math.min(1, dt * 3);
+  d.x += (tx - d.x) * Math.min(1, dt * 1.4);
+  deepGrip = d.w > 0.5 && Math.hypot(boat.x - d.x, boat.y - d.y) < d.R * 0.75;
+}
+
 function update(dt) {
   if (state === 'crashing' || state === 'cutscene') { updateEnding(dt); return; }
   if (state !== 'playing' && state !== 'dying') return;
@@ -1294,12 +1483,17 @@ function update(dt) {
 
   /* Beam travels the route, gently faster as you go (slower than before) */
   var m = distM();
-  var beamSpeed = 96 + Math.min(32, m * 0.034);
-  var pbx = beam.x, pby = beam.y;
+  /* Starts slow, climbs steadily with progress, and always stays under what the boat can match */
+  var beamSpeed = 66 + 134 * Math.min(1, m / GOAL_M) + Math.min(16, Math.max(0, m - GOAL_M) * 0.01);
+  var pbx = beamPathX(beam.y), pby = beam.y;
   beam.y -= beamSpeed * dt;
-  beam.x = beamPathX(beam.y);
-  beam.r = BEAM_R - Math.min(14, m * 0.01);
-  if (dt > 0) { beamVX = (beam.x - pbx) / dt; beamVY = (beam.y - pby) / dt; }
+  var newPathX = beamPathX(beam.y);
+  updateBeamSize(dt, m);
+  updateBeamDash(dt, m);
+  beam.x = newPathX + beam.offX + beamSize.weave;
+  beam.r = (BEAM_R - Math.min(14, m * 0.01)) * beamSize.mul;
+  /* the sideways lurch is NOT carried: only the route's own motion drags you along */
+  if (dt > 0) { beamVX = (newPathX - pbx) / dt; beamVY = (beam.y - pby) / dt; }
   spawnMotes(dt);
 
   if (state === 'dying') {
@@ -1394,6 +1588,8 @@ function update(dt) {
         boat.vy += (pdy / pd) * pull * dt + (pdx / pd) * pull * 0.35 * dt;
       }
       if (pd < 18) hitHull('whirlpool', hz);
+    } else if (hz.type === 'rock') {
+      if (!hz.dead && Math.hypot(hz.x - boat.x, hz.y - boat.y) < hz.r + 9) hitHull('rock', hz);
     } else if (hz.type === 'mine') {
       hz.phase += dt * hz.speed;
       hz.x = hz.baseX + Math.sin(hz.phase) * hz.range;
@@ -1436,15 +1632,8 @@ function update(dt) {
       }
     }
   }
-  if (state === 'playing' && performance.now() > toastUntil) {
-    for (var ti = 0; ti < hazards.length; ti++) {
-      var th = hazards[ti];
-      if (!taught[th.type] && Math.abs(th.y - boat.y) < 470 && Math.abs(th.x - boat.x) < 340) {
-        taught[th.type] = true;
-        if (tutToast('hz-' + th.type, TEACH[th.type], 3.2)) break;
-      }
-    }
-  }
+
+  updateDeep(dt, m);
 
   /* In / out of the beam */
   var bd = Math.hypot(boat.x - beam.x, boat.y - beam.y);
@@ -1468,7 +1657,7 @@ function update(dt) {
     boat.out = Math.max(0, boat.out - dt * 3);
     lastTickSecond = -1;
   } else {
-    boat.out += dt;
+    boat.out += dt * (deepGrip ? 1.5 : 1);
     if (!hintFlags.dark) { hintFlags.dark = true; tutToast('dark', 'You have left the light. Follow the golden arrow back before the pips run out.', 3); }
     var whole = Math.floor(boat.out);
     if (whole !== lastTickSecond && boat.out > 0.4) {
@@ -1487,10 +1676,6 @@ function update(dt) {
       var bt = bottles[bi];
       if (bt.collected) continue;
       var bdist = Math.hypot(bt.x - boat.x, bt.y - boat.y);
-      if (!bottleHinted && bdist < 480 && performance.now() > toastUntil) {
-        bottleHinted = true;
-        tutToast('bottle', 'A bottle, riding the swell. Sail into it — someone left you a message.', 3.4);
-      }
       if (bdist < 180 && bdist > 1) {
         var mg = (1 - bdist / 180) * 320 * dt;
         bt.x += (boat.x - bt.x) / bdist * mg; bt.y += (boat.y - bt.y) / bdist * mg;
@@ -1537,10 +1722,6 @@ function update(dt) {
     }
   }
 
-  if (!wreckSeen && boat.y <= WRECK.y + 24) {
-    wreckSeen = true;
-    toast("A wreck, drifting in the light. Your boat's colors. Your boat's name. It isn't yours. Not yet.", 4.2);
-  }
   if (!reefSeen && m >= GOAL_M - 260) reefSeen = true;
   if (endless && m > bestM) { bestM = m; persist(); }
   if (!endless && m >= GOAL_M) { startCrash(); return; }
@@ -1610,7 +1791,6 @@ function updateWeather(dt, t) {
   WX.fog += (tg.fog - WX.fog) * k;
   WX.wind = 0.35 + WX.storm * 0.9 + WX.rain * 0.2;
   if (band !== WX.band) {
-    if (WX.band && tg.label && state === 'playing') floatScreen(W / 2, H * 0.24, tg.label.toUpperCase(), '#b9d4f0', 22, 2.4);
     WX.band = band;
   }
   /* Lightning */
@@ -1676,7 +1856,7 @@ var OCEAN_FS = [
   'precision highp float;',
   'uniform float uTime; uniform float uAmp; uniform vec3 uBeam; uniform vec2 uBoat; uniform float uLamp;',
   'uniform vec3 uCam; uniform vec3 uFog; uniform float uFogNear; uniform float uFogFar; uniform float uDread;',
-  'uniform float uRain; uniform float uStorm; uniform float uFlash; uniform vec4 uWhirl[4];',
+  'uniform float uRain; uniform float uStorm; uniform float uFlash; uniform vec4 uWhirl[4]; uniform vec4 uDeep;',
   'varying vec3 vWorld; varying vec3 vN; varying float vH;',
   GLSL_NOISE,
   'vec2 ripple(vec2 p, float t){',
@@ -1735,6 +1915,11 @@ var OCEAN_FS = [
   '  float bl = length(p - uBoat);',
   '  col += vec3(1.0, 0.88, 0.62) * uLamp * (1.0 - smoothstep(0.0, 8.0, bl)) * 0.18;',
   '  col *= mix(1.0, 0.5, smoothstep(r*1.1, r*2.6, d));',
+  '  vec2 dp = p - uDeep.xy; float dl2 = length(dp); float da = atan(dp.y, dp.x);',
+  '  float dEdge = uDeep.z * (1.0 + 0.2 * sin(da * 5.0 + uTime * 0.7) + 0.12 * sin(da * 9.0 - uTime * 1.2) + (noise(p * 0.22 + uTime * 0.15) - 0.5) * 0.35);',
+  '  float dsh = (1.0 - smoothstep(dEdge * 0.25, dEdge, dl2)) * uDeep.w * (1.0 - inside * 0.8);',
+  '  col = mix(col, vec3(0.003, 0.004, 0.009), dsh * 0.93);',
+  '  col += vec3(0.16, 0.05, 0.26) * smoothstep(0.0, 0.5, dsh) * (1.0 - smoothstep(0.5, 0.95, dsh)) * 0.35;',
   '  col = mix(col, col * vec3(1.25, 0.6, 0.65), uDread * (1.0 - inside));',
   '  col += vec3(0.5, 0.56, 0.75) * uFlash * (0.12 + 0.28 * n.y + fres * 0.6);',
   '  float f = smoothstep(uFogNear, uFogFar, length(uCam - vWorld));',
@@ -2100,6 +2285,18 @@ function buildMine() {
   g.userData.inner = inner; g.userData.light = light; g.userData.glow = glow;
   return g;
 }
+function buildRock(hz) {
+  var g = new THREE.Group();
+  var R = hz.r * S;
+  var main = mesh(GL.geo.rock, GL.mat.rock); main.scale.setScalar(R * 1.05); main.rotation.y = hz.seed; main.position.y = R * 0.15; g.add(main);
+  var wet = mesh(GL.geo.rock, GL.mat.rockWet); wet.scale.set(R * 1.12, R * 0.5, R * 1.12); wet.rotation.y = hz.seed * 2; wet.position.y = -R * 0.2; g.add(wet);
+  var a1 = hz.seed * 3.1, a2 = hz.seed * 5.3;
+  var l1 = mesh(GL.geo.rock, GL.mat.rock); l1.scale.setScalar(R * 0.55); l1.position.set(Math.cos(a1) * R * 0.85, R * 0.0, Math.sin(a1) * R * 0.85); l1.rotation.y = a1; g.add(l1);
+  var l2 = mesh(GL.geo.rock, GL.mat.rock); l2.scale.setScalar(R * 0.38); l2.position.set(Math.cos(a2) * R * 0.9, -R * 0.05, Math.sin(a2) * R * 0.9); l2.rotation.y = a2; g.add(l2);
+  var foam = mesh(GL.geo.rockFoam, GL.mat.rockFoam); foam.scale.setScalar(R * 1.15); foam.position.y = 0.05; g.add(foam);
+  g.userData.foam = foam; g.userData.R = R;
+  return g;
+}
 function buildJelly(hz) {
   var g = new THREE.Group();
   var jg = glowSprite(GL.mat.purpleGlow, 11); jg.position.y = 0.5; g.add(jg);
@@ -2394,6 +2591,9 @@ function initGL() {
   M.hornCap = std('#a9b4ba', 0.35, 0.7);
   M.mineOn = new THREE.MeshBasicMaterial({ color: 0xff6a4a });
   M.mineOff = std('#4a1a12', 0.3);
+  M.rock = std('#4b525b', 0.95, 0.02, { flatShading: true });
+  M.rockWet = std('#2c3239', 0.6, 0.05, { flatShading: true });
+  M.rockFoam = new THREE.MeshBasicMaterial({ color: 0xe6f8ff, transparent: true, opacity: 0.4, depthWrite: false });
   M.jellyBell = new THREE.ShaderMaterial({ vertexShader: JELLY_VS, fragmentShader: JELLY_FS, uniforms: { uT: { value: 0 }, uCol: { value: new THREE.Color('#c99df0') } }, transparent: true, depthWrite: false, side: THREE.DoubleSide });
   M.jellyCore = new THREE.MeshBasicMaterial({ color: 0xff9ad5, transparent: true, opacity: 0.85 });
   M.jellyFrill = new THREE.MeshBasicMaterial({ color: 0xe3b8ff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false });
@@ -2498,6 +2698,20 @@ function initGL() {
   Gg.lampBase = new THREE.CylinderGeometry(0.22, 0.26, 0.16, 12);
   Gg.mineLight = new THREE.SphereGeometry(0.2, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
   Gg.chain = new THREE.TorusGeometry(0.11, 0.03, 4, 10);
+  /* Rock: a jittered, faceted lump, plus a ring of foam */
+  Gg.rock = new THREE.IcosahedronGeometry(1, 1);
+  (function () {
+    var pa = Gg.rock.attributes.position;
+    for (var ri = 0; ri < pa.count; ri++) {
+      var rx = pa.getX(ri), ry = pa.getY(ri), rz = pa.getZ(ri);
+      var hsh = Math.sin(Math.round(rx * 50) * 12.9898 + Math.round(ry * 50) * 78.233 + Math.round(rz * 50) * 37.719) * 43758.5453;
+      hsh -= Math.floor(hsh);
+      var f = 0.78 + hsh * 0.45;
+      pa.setXYZ(ri, rx * f, ry * f * 0.85, rz * f);
+    }
+    Gg.rock.computeVertexNormals();
+  })();
+  Gg.rockFoam = new THREE.RingGeometry(0.95, 1.55, 24); Gg.rockFoam.rotateX(-Math.PI / 2);
   GL.hornDirs = [];
   for (var hi2 = 0; hi2 < 8; hi2++) {
     var ha = hi2 * Math.PI / 4 + (hi2 % 2) * 0.3, hy = hi2 % 2 ? 0.15 : 0.55;
@@ -2548,7 +2762,7 @@ function initGL() {
       uTime: { value: 0 }, uAmp: { value: 1 }, uChop: { value: 0.55 }, uBeam: { value: new THREE.Vector3() },
       uBoat: { value: new THREE.Vector2() }, uLamp: { value: 1 }, uCam: { value: new THREE.Vector3() },
       uFog: { value: new THREE.Color(0x050a13) }, uFogNear: { value: 40 }, uFogFar: { value: 120 }, uDread: { value: 0 },
-      uRain: { value: 0 }, uStorm: { value: 0 }, uFlash: { value: 0 }, uWhirl: { value: wh }
+      uRain: { value: 0 }, uStorm: { value: 0 }, uFlash: { value: 0 }, uWhirl: { value: wh }, uDeep: { value: new THREE.Vector4(0, 0, 1, 0) }
     }
   });
   GL.ocean = new THREE.Mesh(og, GL.oceanMat);
@@ -2743,6 +2957,12 @@ function updHazard(hz, g, t, dt) {
       var fx0 = hz.x - dir * 16, fy0 = hz.y;
       burst(fx0, fy0, 1, { dir: dir > 0 ? Math.PI : 0, spread: 0.9, min: 10, max: 45, lmin: 0.5, lmax: 1, smin: 2.5, smax: 4.5, cols: ['#e6f8ff', '#bfe3ff'], drag: 0.9, up: 0.25 });
     }
+  } else if (hz.type === 'rock') {
+    g.position.set(X, h * 0.3 + 0.15, Z);
+    var fp = 1 + Math.sin(t * 1.6 + hz.seed) * 0.08;
+    g.userData.foam.scale.setScalar(g.userData.R * 1.15 * fp);
+    g.userData.foam.position.y = h * 0.7 + 0.08 - 0.15 + 0.1;
+    g.visible = !hz.dead || Math.floor(t * 8) % 2 === 0;
   } else if (hz.type === 'mine') {
     g.position.set(X, h - 0.45 + Math.sin(t * 1.7 + hz.phase) * 0.12, Z);
     g.userData.inner.rotation.set(Math.sin(t * 1.1 + hz.phase) * 0.1, hz.phase * 0.5, Math.cos(t * 0.9 + hz.phase) * 0.1);
@@ -2840,6 +3060,7 @@ function render(t, dt) {
   if (REDUCED) ampT *= 0.5;
   waveAmp += (ampT - waveAmp) * Math.min(1, dt * 0.5);
   var U = GL.oceanMat.uniforms;
+  U.uDeep.value.set(deepSh.x * S, deepSh.y * S, deepSh.R * S, deepSh.w);
   U.uTime.value = t; U.uAmp.value = waveAmp;
   U.uRain.value = WX.rain; U.uStorm.value = WX.storm; U.uFlash.value = WX.flash;
 
@@ -2964,7 +3185,7 @@ function render(t, dt) {
 
   GL.mat.jellyBell.uniforms.uT.value = t;
   syncList(hazards, GL.hazG, function (hz) {
-    return hz.type === 'whirlpool' ? buildWhirlpool() : hz.type === 'shark' ? buildShark() : hz.type === 'mine' ? buildMine() : buildJelly(hz);
+    return hz.type === 'whirlpool' ? buildWhirlpool() : hz.type === 'shark' ? buildShark() : hz.type === 'mine' ? buildMine() : hz.type === 'rock' ? buildRock(hz) : buildJelly(hz);
   }, updHazard, t, dt);
   syncList(bottles, GL.botG, buildBottle, updBottle, t, dt);
 
@@ -3079,6 +3300,18 @@ function ringAt(x, y, r0, r1, dur, col, w) {
   if (rings.length > 23) rings.shift();
   rings.push({ x: x, y: y, r0: r0, r1: r1, life: 0, max: dur, col: col, w: w || 3 });
 }
+var safeTopCache = 0, safeTopAt = 0;
+function hudSafeTop() {
+  var now = performance.now();
+  if (now - safeTopAt < 150) return safeTopCache;
+  safeTopAt = now;
+  var b = 0, el;
+  el = document.querySelector('.hud-row'); if (el && el.offsetParent !== null) b = Math.max(b, el.getBoundingClientRect().bottom);
+  el = document.getElementById('dread'); if (el && el.classList.contains('on')) b = Math.max(b, el.getBoundingClientRect().bottom);
+  el = document.getElementById('toast'); if (el && el.classList.contains('on')) b = Math.max(b, el.getBoundingClientRect().bottom);
+  safeTopCache = b;
+  return b;
+}
 function floatScreen(x, y, text, col, size, dur) {
   if (floaters.length > 8) floaters.shift();
   floaters.push({ x: x, y: y, text: text, col: col, size: size || 22, life: 0, max: dur || 0.9 });
@@ -3165,10 +3398,16 @@ function drawOverlayFX(t) {
     var sc = REDUCED ? 1 : (inT < 1 ? 0.4 + 0.85 * inT : 1.25 - 0.25 * Math.min(1, (f.life - 0.16) / 0.12));
     var a = u > 0.7 ? 1 - (u - 0.7) / 0.3 : 1;
     var y = f.y - (REDUCED ? 0 : 46 * (1 - Math.pow(1 - u, 2)));
+    /* never drift under the HUD, the pips or a message box */
+    y = Math.max(y, hudSafeTop() + f.size * 0.75 + 10);
+    var fx0 = f.x;
+    ctx.font = f.size + 'px "Archivo Black", system-ui, sans-serif';
+    var tw = ctx.measureText(f.text).width * 1.25 + 24;
+    var fit = tw > W - 16 ? (W - 16) / tw : 1;
+    fx0 = Math.max(tw * fit / 2 + 8, Math.min(W - tw * fit / 2 - 8, fx0));
     ctx.save();
     ctx.globalAlpha = Math.max(0, a);
-    ctx.translate(f.x, y); ctx.scale(sc, sc);
-    ctx.font = f.size + 'px "Archivo Black", system-ui, sans-serif';
+    ctx.translate(fx0, y); ctx.scale(sc * fit, sc * fit);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(4, f.size * 0.22);
     ctx.strokeStyle = '#000'; ctx.strokeText(f.text, 0, 0);
@@ -3213,6 +3452,7 @@ function juiceHit(kind, hz) {
   var pal = {
     shark: ['#ffffff', '#9fd3ff', '#5aa0d8', '#e6f8ff'],
     mine: ['#fff3c4', '#ffd97a', '#ff8a3d', '#e4572e'],
+    rock: ['#ffffff', '#c9d3dc', '#7b8794', '#e6f8ff'],
     whirlpool: ['#e6f8ff', '#9fd3ff', '#2f6fb4', '#ffffff'],
     jelly: ['#c99df0', '#e3c8ff', '#8a5bd0', '#ffffff']
   }[kind] || ['#ffffff'];
@@ -3241,7 +3481,7 @@ function juiceBottle(b, idx) {
   bumpCam(0.042);
   stopWorld(0.05);
   boatPop = Math.max(boatPop, 0.9);
-  floatWorld(b.x, b.y, idx >= 0 ? 'BOTTLE ' + (idx + 1) + '/5' : 'EMPTY…', '#ffd97a', 26);
+  floatWorld(b.x, b.y, idx >= 0 ? 'BOTTLE ' + (idx + 1) + '/' + N_BOTTLES : 'EMPTY…', '#ffd97a', 26);
   chime([784, 988, 1175, 1568], 0.075, 0.1);
   popEl(document.getElementById('bottles-hud'));
 }
