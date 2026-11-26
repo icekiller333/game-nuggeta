@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="data:," />
+    <title>Daily Roguelike — Final Cut (2026-11-25)</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: ui-rounded, "Arial Rounded MT Bold", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+        background: #d8d4cc;
+        color: #191919;
+        overflow: hidden;
+        -webkit-tap-highlight-color: transparent;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        min-height: 44px;
+        border: 3px solid #191919;
+        border-radius: 0;
+        color: #191919;
+        font-weight: 900;
+        box-shadow: 4px 4px 0 #191919;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #191919; }
+
+      #app {
+        height: 100dvh;
+        max-width: 520px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        background: #ece9e1;
+        overflow: hidden;
+        position: relative;
+      }
+      #app.shake { animation: shake .38s linear; }
+      @keyframes shake {
+        0%,100% { transform: translateX(0); }
+        15% { transform: translateX(-9px); }
+        30% { transform: translateX(8px); }
+        45% { transform: translateX(-7px); }
+        60% { transform: translateX(6px); }
+        75% { transform: translateX(-4px); }
+        90% { transform: translateX(3px); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #app.shake { animation: none; }
+      }
+
+      /* ---------- TOP BAR : runtime ---------- */
+      #topbar {
+        flex: 0 0 96px;
+        background: #2f3e46;
+        color: #fff;
+        border-bottom: 3px solid #191919;
+        padding: 8px 10px;
+        overflow: hidden;
+      }
+      .tb-row { display: flex; align-items: center; gap: 8px; }
+      #runtimeLabel { font-size: 15px; font-weight: 900; letter-spacing: .4px; white-space: nowrap; }
+      #runtimeLabel b { font-size: 25px; color: #ffd23f; }
+      #sceneLabel {
+        margin-left: auto;
+        background: #191919; color: #ffd23f;
+        font-size: 13px; font-weight: 900;
+        padding: 4px 8px; white-space: nowrap;
+      }
+      #muteBtn {
+        min-height: 36px; width: 44px; padding: 0;
+        background: #fff; font-size: 17px;
+        box-shadow: 3px 3px 0 #191919;
+      }
+      #barTrack {
+        position: relative;
+        height: 20px;
+        margin-top: 7px;
+        background: #fff;
+        border: 3px solid #191919;
+        overflow: hidden;
+      }
+      #goldBand {
+        position: absolute; top: 0; bottom: 0;
+        background: #ffb800;
+        border-left: 3px solid #191919; border-right: 3px solid #191919;
+      }
+      #barFill {
+        position: absolute; top: 0; bottom: 0; left: 0;
+        width: 0%;
+        background: #2a9d8f;
+        transition: width .45s cubic-bezier(.2,1.4,.4,1);
+      }
+      .tb-sub {
+        display: flex; justify-content: space-between; gap: 8px;
+        font-size: 11.5px; font-weight: 900; margin-top: 4px; color: #fff;
+        white-space: nowrap; overflow: hidden;
+      }
+      #bandState { color: #ffd23f; }
+
+      /* ---------- STAGE ---------- */
+      #stage {
+        flex: 1 1 auto;
+        min-height: 0;
+        position: relative;
+        overflow: hidden;
+        background: #ece9e1;
+      }
+      .layer { position: absolute; inset: 0; visibility: hidden; overflow: hidden; }
+      .layer.on { visibility: visible; }
+
+      /* pick layer */
+      #pickLayer { display: flex; flex-direction: column; align-items: center; padding: 16px 12px 10px; }
+      .pick-title { font-size: 21px; font-weight: 900; letter-spacing: .5px; }
+      .pick-line {
+        margin-top: 6px;
+        font-size: 13.5px; font-weight: 900; text-align: center;
+        background: #191919; color: #ffd23f; padding: 5px 10px;
+      }
+      .cards { display: flex; gap: 12px; margin-top: 16px; width: 100%; max-width: 440px; }
+      .slot { flex: 1 1 0; display: flex; min-height: 216px; }
+      .slot .card { flex: 1 1 auto; width: 100%; }
+      .card {
+        min-height: 216px;
+        padding: 10px 8px 12px;
+        background: #fff;
+        display: flex; flex-direction: column; align-items: center; gap: 5px;
+        box-shadow: 5px 5px 0 #191919;
+        text-align: center;
+      }
+      .card .cgenre {
+        font-size: 12px; font-weight: 900; letter-spacing: 1px;
+        background: #191919; color: #fff; padding: 3px 9px;
+      }
+      .card .cname { font-size: 16px; font-weight: 900; line-height: 1.1; }
+      .card .cmin { font-size: 40px; font-weight: 900; line-height: 1; }
+      .card .cunit { font-size: 11px; font-weight: 900; color: #44403a; }
+      .card .cdiff { font-size: 12.5px; font-weight: 900; padding: 4px 8px; border: 2px solid #191919; line-height: 1.25; }
+      .card .cdiff.easy { background: #b7e4c7; }
+      .card .cdiff.med { background: #ffe066; }
+      .card .cdiff.hard { background: #ffb3c1; }
+      .card .cproj { font-size: 14px; font-weight: 900; margin-top: auto; }
+      .card .cproj.inband { color: #146c43; }
+      .card .cflag {
+        font-size: 12px; font-weight: 900; line-height: 1.25;
+        background: #b00020; color: #fff; padding: 4px 8px;
+      }
+      .card .cflag:empty { display: none; }
+      .pick-hint { margin-top: 14px; font-size: 12px; font-weight: 900; color: #44403a; }
+
+      /* strip layer */
+      #stripLayer { display: flex; flex-direction: column; align-items: center; padding: 16px 12px 10px; }
+      #slate {
+        font-size: 18px; font-weight: 900;
+        background: #fff; border: 3px solid #191919;
+        padding: 6px 14px; box-shadow: 4px 4px 0 #191919;
+        text-align: center; max-width: 92vw;
+        white-space: nowrap; overflow: hidden;
+      }
+      #passRow {
+        margin-top: 16px; height: 22px;
+        display: flex; align-items: center; gap: 8px;
+        font-size: 12px; font-weight: 900; letter-spacing: 1px; color: #44403a;
+      }
+      .pip {
+        width: 16px; height: 16px; border: 3px solid #191919; background: #ffb800;
+        display: inline-block;
+      }
+      .pip.spent { background: #fff; }
+      #strip {
+        position: relative;
+        width: 100%; max-width: 460px;
+        height: 124px;
+        margin-top: 10px;
+        background: #101018;
+        border: 4px solid #191919;
+        box-shadow: 6px 6px 0 #191919;
+        overflow: hidden;
+      }
+      #strip::before, #strip::after {
+        content: ""; position: absolute; left: 0; right: 0; height: 12px; z-index: 1;
+        background-image: radial-gradient(circle, #fff 3.2px, transparent 4px);
+        background-size: 24px 12px; background-position: 6px center;
+      }
+      #strip::before { top: 3px; }
+      #strip::after { bottom: 3px; }
+      #frames {
+        position: absolute; inset: 20px 0;
+        background: repeating-linear-gradient(90deg, rgba(255,255,255,.25) 0 3px, transparent 3px 58px);
+      }
+      #mark {
+        position: absolute; top: 0; bottom: 0; z-index: 2;
+        width: 26px; margin-left: -13px;
+        background: #ffb800;
+        border-left: 4px solid #191919; border-right: 4px solid #191919;
+        box-shadow: 0 0 0 3px rgba(255,184,0,.5), 0 0 22px 6px rgba(255,184,0,.85);
+      }
+      #mark::before {
+        content: ""; position: absolute; top: 13px; left: 50%; margin-left: -9px;
+        border: 9px solid transparent; border-top: 12px solid #ffb800;
+        filter: drop-shadow(0 0 1px #191919);
+      }
+      #blackout { position: absolute; inset: 0; background: #000; opacity: 0; z-index: 3; pointer-events: none; }
+      #blackout.on { opacity: 1; }
+      #playhead {
+        position: absolute; top: 0; bottom: 0; z-index: 4;
+        width: 8px; margin-left: -4px;
+        background: #e63946;
+        box-shadow: 0 0 0 2px #191919;
+      }
+      #playhead::before {
+        content: ""; position: absolute; top: -1px; left: 50%; margin-left: -10px;
+        border: 10px solid transparent; border-top: 13px solid #e63946;
+        filter: drop-shadow(0 0 1px #191919);
+      }
+      #resultFlash {
+        margin-top: 20px;
+        min-height: 54px;
+        display: flex; align-items: flex-start; justify-content: center;
+        opacity: 0; transform: scale(.7);
+        pointer-events: none;
+        width: 100%;
+      }
+      #resultFlash.show { opacity: 1; transform: scale(1); transition: transform .16s cubic-bezier(.2,1.8,.4,1), opacity .1s; }
+      #resultMain {
+        font-size: 17px; font-weight: 900; line-height: 1.3;
+        background: #fff; border: 3px solid #191919; box-shadow: 5px 5px 0 #191919;
+        padding: 8px 12px; text-align: center; max-width: 94vw;
+      }
+      #resultFlash.perfect #resultMain { background: #ffb800; }
+      #resultFlash.good #resultMain { background: #b7e4c7; }
+      #resultFlash.miss #resultMain { background: #ffb3c1; }
+      #resultFlash.info #resultMain { background: #fff; }
+      #ruleLine {
+        margin-top: 10px;
+        font-size: 13px; font-weight: 900; text-align: center;
+        color: #191919;
+      }
+      #stripHint { margin-top: auto; font-size: 13px; font-weight: 900; letter-spacing: .5px; color: #44403a; text-align: center; }
+
+      #fx, #fxTop { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+      #fx { z-index: 8; }
+      #fxTop { position: fixed; z-index: 55; }
+      .particle { position: absolute; border: 2px solid #191919; }
+
+      /* ---------- CONTROLS ---------- */
+      #controls {
+        flex: 0 0 102px;
+        background: #e0dcd2;
+        border-top: 3px solid #191919;
+        display: flex; align-items: center; gap: 12px;
+        padding: 10px 12px;
+        overflow: hidden;
+      }
+      #skipSlot { flex: 0 0 104px; height: 70px; }
+      #skipBtn {
+        width: 100%; height: 100%;
+        background: #fff; font-size: 15px; line-height: 1.15;
+      }
+      #clapBtn {
+        flex: 1 1 auto; height: 74px;
+        background: #e63946; color: #fff; font-size: 30px; letter-spacing: 2px;
+        box-shadow: 6px 6px 0 #191919;
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+      }
+      #clapBtn svg { width: 36px; height: 36px; }
+      #clapBtn:active { box-shadow: 3px 3px 0 #191919; }
+      #clapBtn.watching { background: #8a8578; color: #fff; pointer-events: none; }
+      .ghost { visibility: hidden; }
+
+      /* ---------- OVERLAY / SHEETS ---------- */
+      #scrim {
+        position: fixed; inset: 0; z-index: 40;
+        background: rgba(20, 18, 14, .62);
+        display: none;
+      }
+      #scrim.solid { background: #2b2822; }
+      #scrim.on { display: block; }
+      .spot { position: relative !important; z-index: 50 !important; outline: 4px solid #ffd23f; outline-offset: 3px; }
+      #sheet {
+        position: fixed; z-index: 60;
+        left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        width: min(92vw, 430px);
+        background: #fff;
+        border: 4px solid #191919;
+        box-shadow: 8px 8px 0 #191919;
+        padding: 20px 18px 18px;
+        display: none;
+        text-align: center;
+      }
+      #sheet.on { display: block; }
+      #sheet.low { top: auto; bottom: 118px; transform: translateX(-50%); }
+      #sheet.high { top: 100px; bottom: auto; transform: translateX(-50%); }
+      #sheet .tag {
+        display: inline-block; font-size: 12px; font-weight: 900;
+        background: #191919; color: #ffd23f; padding: 3px 9px; margin-bottom: 12px;
+      }
+      #sheet .big { font-size: 21px; font-weight: 900; line-height: 1.35; }
+      #sheet .msg { font-size: 19px; font-weight: 900; line-height: 1.4; }
+      #sheet .sub { font-size: 15px; font-weight: 900; margin-top: 10px; }
+      #sheet svg.art { width: 74px; height: 74px; margin-bottom: 8px; }
+      #sheet button {
+        margin-top: 16px; width: 100%; height: 56px;
+        background: #ffd23f; font-size: 20px; letter-spacing: .5px;
+      }
+      #sheet button.gold { background: #ffb800; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header id="topbar">
+        <div class="tb-row">
+          <span id="runtimeLabel">RUNTIME <b id="totalMin">0</b> MIN</span>
+          <span id="sceneLabel">SCENE 1/8</span>
+          <button id="muteBtn" aria-label="Toggle sound">🔊</button>
+        </div>
+        <div id="barTrack">
+          <div id="goldBand"></div>
+          <div id="barFill"></div>
+        </div>
+        <div class="tb-sub"><span>TARGET 80–92 — FIT THE BAND, DON'T MAX IT</span><span id="bandState"></span></div>
+      </header>
+
+      <section id="stage">
+        <div id="pickLayer" class="layer">
+          <div class="pick-title">PICK A SCENE</div>
+          <div class="pick-line">FIT 80–92 MIN — THE LONGEST ISN'T ALWAYS BEST</div>
+          <div class="cards" id="cardsRow">
+            <div class="slot" id="slot0"></div>
+            <div class="slot" id="slot1"></div>
+          </div>
+          <div class="pick-hint">TAP A CARD · KEYS 1 / 2</div>
+        </div>
+
+        <div id="stripLayer" class="layer on">
+          <div id="slate">OPENING SHOT · 12 MIN</div>
+          <div id="passRow"><span>PASSES LEFT</span><span id="pips"></span></div>
+          <div id="strip">
+            <div id="frames"></div>
+            <div id="mark"></div>
+            <div id="blackout"></div>
+            <div id="playhead"></div>
+          </div>
+          <div id="resultFlash"><span id="resultMain"></span></div>
+          <div id="ruleLine">PERFECT = full minutes • GOOD = minutes − 3 • MISS = 0</div>
+          <div id="stripHint">THE REEL RUNS ITSELF…</div>
+        </div>
+
+        <div id="fx"></div>
+      </section>
+
+      <div id="controls">
+        <div id="skipSlot"></div>
+        <button id="clapBtn">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="20" width="38" height="23" fill="#fff" stroke="#191919" stroke-width="3.5"/><path d="M5 20 L43 12 L43 20 Z" fill="#191919"/><path d="M11 18.6 L15 11 M20 17.2 L24 10 M29 15.8 L33 9" stroke="#fff" stroke-width="3.4"/></svg>
+          <span id="clapLabel">CLAP</span>
+        </button>
+      </div>
+
+      <div id="scrim"></div>
+      <div id="sheet" role="dialog" aria-live="polite"></div>
+      <div id="fxTop"></div>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+        function $(id) { return document.getElementById(id); }
+        var app = $("app"), topbar = $("topbar"), totalMin = $("totalMin"),
+          sceneLabel = $("sceneLabel"), barFill = $("barFill"), goldBand = $("goldBand"),
+          bandState = $("bandState"),
+          pickLayer = $("pickLayer"), stripLayer = $("stripLayer"),
+          cardsRow = $("cardsRow"),
+          slate = $("slate"), strip = $("strip"), mark = $("mark"),
+          playhead = $("playhead"), blackout = $("blackout"),
+          resultFlash = $("resultFlash"), resultMain = $("resultMain"),
+          ruleLine = $("ruleLine"), stripHint = $("stripHint"), pips = $("pips"),
+          slot0 = $("slot0"), slot1 = $("slot1"),
+          skipSlot = $("skipSlot"),
+          clapBtn = $("clapBtn"), clapLabel = $("clapLabel"), muteBtn = $("muteBtn"),
+          scrim = $("scrim"), sheet = $("sheet"), fx = $("fx"), fxTop = $("fxTop");
+
+        var SCALE = 120, GOLD_LO = 80, GOLD_HI = 92, N_SCENES = 8;
+        goldBand.style.left = (GOLD_LO / SCALE * 100) + "%";
+        goldBand.style.width = ((GOLD_HI - GOLD_LO) / SCALE * 100) + "%";
+
+        var ICONS = {
+          clapper: '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="20" width="36" height="22" fill="#fff" stroke="#191919" stroke-width="3.5"/><path d="M6 20 L42 12 L42 20 Z" fill="#191919"/><path d="M12 18.6 L16 11 M21 17.2 L25 10 M30 15.8 L34 9" stroke="#fff" stroke-width="3.4"/></svg>',
+          scissors: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="13" cy="35" r="6" fill="#fff" stroke="#191919" stroke-width="3.5"/><circle cx="35" cy="35" r="6" fill="#fff" stroke="#191919" stroke-width="3.5"/><path d="M17 30 L38 8 M31 30 L10 8" stroke="#191919" stroke-width="4" stroke-linecap="square"/></svg>',
+          bolt: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M27 3 L10 27 L22 27 L19 45 L38 19 L26 19 Z" fill="#ffb800" stroke="#191919" stroke-width="3.5" stroke-linejoin="round"/></svg>',
+          heart: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 42 C8 30 6 20 12 13 C17 7 24 10 24 17 C24 10 31 7 36 13 C42 20 40 30 24 42 Z" fill="#e63946" stroke="#191919" stroke-width="3.5" stroke-linejoin="round"/></svg>',
+          moon: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M32 4 A19 19 0 1 0 44 30 A15 15 0 0 1 32 4 Z" fill="#6bcbff" stroke="#191919" stroke-width="3.5" stroke-linejoin="round"/></svg>',
+          twist: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 34 C20 34 16 14 28 14 L36 14 M30 6 L38 14 L30 22" fill="none" stroke="#191919" stroke-width="4.5"/></svg>',
+          rewind: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 10 L8 24 L24 38 Z M42 10 L26 24 L42 38 Z" fill="#95d5b2" stroke="#191919" stroke-width="3.5" stroke-linejoin="round"/></svg>',
+          grid: '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="6" width="36" height="36" fill="#fff" stroke="#191919" stroke-width="3.5"/><path d="M24 6 L24 42 M6 24 L42 24" stroke="#191919" stroke-width="3.5"/></svg>',
+          star: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 L29 18 L44 18 L32 27 L36 42 L24 33 L12 42 L16 27 L4 18 L19 18 Z" fill="#ffe066" stroke="#191919" stroke-width="3.5" stroke-linejoin="round"/></svg>',
+          drop: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 C24 4 9 24 9 32 A15 15 0 0 0 39 32 C39 24 24 4 24 4 Z" fill="#6bcbff" stroke="#191919" stroke-width="3.5" stroke-linejoin="round"/></svg>',
+          mountain: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M3 42 L18 16 L26 28 L33 18 L45 42 Z" fill="#95d5b2" stroke="#191919" stroke-width="3.5" stroke-linejoin="round"/><circle cx="38" cy="10" r="5" fill="#ffb800" stroke="#191919" stroke-width="3"/></svg>',
+          spot: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M18 4 L30 4 L38 42 L10 42 Z" fill="#ffe066" stroke="#191919" stroke-width="3.5" stroke-linejoin="round"/><ellipse cx="24" cy="43" rx="9" ry="3" fill="#191919"/></svg>',
+          stairs: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M4 44 L4 34 L14 34 L14 26 L24 26 L24 18 L34 18 L34 10 L44 10 L44 44 Z" fill="#ff8fab" stroke="#191919" stroke-width="3.5" stroke-linejoin="round"/></svg>',
+          roof: '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="9" y="18" width="30" height="26" fill="#fff" stroke="#191919" stroke-width="3.5"/><path d="M4 19 L24 5 L44 19" fill="none" stroke="#191919" stroke-width="4.5"/><rect x="20" y="30" width="8" height="14" fill="#ffb800" stroke="#191919" stroke-width="3"/></svg>',
+          flag: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 44 L10 5" stroke="#191919" stroke-width="4.5"/><path d="M10 6 L40 12 L10 20 Z" fill="#e63946" stroke="#191919" stroke-width="3.5" stroke-linejoin="round"/></svg>',
+          sun: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="10" fill="#ffb800" stroke="#191919" stroke-width="3.5"/><path d="M24 3 L24 9 M24 39 L24 45 M3 24 L9 24 M39 24 L45 24 M9 9 L13 13 M35 35 L39 39 M39 9 L35 13 M13 35 L9 39" stroke="#191919" stroke-width="4"/></svg>'
+        };
+        var POOL = [
+          { name: "LONG TAKE", genre: "DRAMA", icon: "clapper" }, { name: "QUICK CUT", genre: "COMEDY", icon: "scissors" },
+          { name: "CHASE SCENE", genre: "ACTION", icon: "bolt" }, { name: "LOVE SCENE", genre: "ROMANCE", icon: "heart" },
+          { name: "DREAM SCENE", genre: "DREAM", icon: "moon" }, { name: "PLOT TWIST", genre: "THRILLER", icon: "twist" },
+          { name: "FLASHBACK", genre: "DRAMA", icon: "rewind" }, { name: "MONTAGE", genre: "MUSICAL", icon: "grid" },
+          { name: "NIGHT SHOOT", genre: "HORROR", icon: "star" }, { name: "RAIN SCENE", genre: "ROMANCE", icon: "drop" },
+          { name: "WIDE SHOT", genre: "WESTERN", icon: "mountain" }, { name: "SOLO SHOT", genre: "DREAM", icon: "spot" },
+          { name: "STAIRWELL", genre: "HORROR", icon: "stairs" }, { name: "ROOFTOP", genre: "ACTION", icon: "roof" },
+          { name: "THE FINALE", genre: "EPIC", icon: "flag" }, { name: "DAWN SHOT", genre: "DRAMA", icon: "sun" }
+        ];
+        var LAW_BY_SCENE = {
+          3: { key: "drift", name: "THE MARK DRIFTS", line: "The gold mark slides while you watch." },
+          5: { key: "flicker", name: "FLICKER", line: "The strip blacks out mid-sweep." },
+          7: { key: "speed", name: "DOUBLE SPEED", line: "Every pass sweeps twice as fast." }
+        };
+        var REEL_ART = '<svg class="art" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21" fill="#ffe066" stroke="#191919" stroke-width="3.5"/><circle cx="24" cy="24" r="5" fill="#191919"/><circle cx="24" cy="12" r="4.5" fill="#fff" stroke="#191919" stroke-width="2.5"/><circle cx="35" cy="24" r="4.5" fill="#fff" stroke="#191919" stroke-width="2.5"/><circle cx="24" cy="36" r="4.5" fill="#fff" stroke="#191919" stroke-width="2.5"/><circle cx="13" cy="24" r="4.5" fill="#fff" stroke="#191919" stroke-width="2.5"/></svg>';
+        var CLAP_ART = '<svg class="art" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="20" width="38" height="23" fill="#6bcbff" stroke="#191919" stroke-width="3.5"/><path d="M5 20 L43 12 L43 20 Z" fill="#191919"/><path d="M11 18.6 L15 11 M20 17.2 L24 10 M29 15.8 L33 9" stroke="#fff" stroke-width="3.4"/></svg>';
+
+        var S = {
+          phase: "boot", scene: 1, total: 0,
+          current: null, options: [], laws: [],
+          muted: false, raf: 0, sweep: null, timer: 0,
+          flowNext: null, tutorialLock: false,
+          taughtPick: false, taughtSkip: false
+        };
+
+        /* ---------- audio (all wrapped) ---------- */
+        var AC = null;
+        function ac() {
+          try {
+            if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+            if (AC.state === "suspended") AC.resume();
+            return AC;
+          } catch (e) { return null; }
+        }
+        function tone(freq, delay, dur, type, vol) {
+          if (S.muted) return;
+          var c = ac(); if (!c) return;
+          try {
+            var o = c.createOscillator(), g = c.createGain();
+            o.type = type || "square"; o.frequency.value = freq;
+            var t = c.currentTime + (delay || 0);
+            g.gain.setValueAtTime(vol || 0.1, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+            o.connect(g); g.connect(c.destination);
+            o.start(t); o.stop(t + dur + 0.03);
+          } catch (e) { /* audio is decoration only */ }
+        }
+        function sndClap() { tone(185, 0, 0.06, "square", 0.16); tone(1200, 0, 0.03, "square", 0.05); }
+        function sndPerfect() { tone(660, 0, 0.1); tone(880, 0.07, 0.1); tone(1318, 0.14, 0.16); }
+        function sndGood() { tone(540, 0, 0.13, "square", 0.11); }
+        function sndMiss() { tone(130, 0, 0.3, "sawtooth", 0.13); tone(98, 0.05, 0.3, "sawtooth", 0.1); }
+        function sndPick() { tone(440, 0, 0.07, "triangle", 0.12); }
+        function sndWin() { [523, 659, 784, 1046, 1318].forEach(function (f, i) { tone(f, i * 0.11, 0.18, "square", 0.11); }); }
+
+        /* ---------- difficulty: longer = thinner mark + faster sweep ---------- */
+        function diffInfo(len) {
+          var markW = Math.max(13, Math.min(32, Math.round(34 - (len - 7) * 1.9)));
+          var base = Math.max(1900, Math.min(3050, Math.round(3050 - (len - 7) * 115)));
+          if (len <= 10) return { tier: "easy", label: "EASY — wide mark · slow sweep", markW: markW, base: base };
+          if (len <= 13) return { tier: "med", label: "MEDIUM — mid mark · steady sweep", markW: markW, base: base };
+          return { tier: "hard", label: "HARD — thin mark · fast sweep", markW: markW, base: base };
+        }
+
+        /* ---------- rendering ---------- */
+        function renderTop() {
+          totalMin.textContent = S.total;
+          sceneLabel.textContent = "SCENE " + Math.min(S.scene, N_SCENES) + "/" + N_SCENES;
+          barFill.style.width = Math.min(S.total / SCALE * 100, 100) + "%";
+          bandState.textContent = S.total >= GOLD_LO && S.total <= GOLD_HI ? "★ IN THE GOLD" :
+            (S.total > GOLD_HI ? "OVER — BURNING" : "");
+        }
+        function showLayer(which) {
+          pickLayer.classList.toggle("on", which === "pick");
+          stripLayer.classList.toggle("on", which === "strip");
+        }
+        var cardEls = [null, null], skipBtn = null;
+        function clearPickControls() {
+          slot0.innerHTML = ""; slot1.innerHTML = "";
+          cardEls = [null, null];
+          skipSlot.innerHTML = ""; skipBtn = null;
+        }
+        function updateChrome() {
+          var picking = S.phase === "pick";
+          clapBtn.classList.toggle("ghost", picking);
+          clapBtn.classList.toggle("watching", S.phase === "watch");
+          clapLabel.textContent = S.phase === "watch" ? "WATCH…" : "CLAP";
+          muteBtn.style.visibility = (picking && S.scene >= 3 && !skipBtn) ? "hidden" : "visible";
+        }
+        function setPhase(p) { S.phase = p; updateChrome(); }
+        function renderPips(total, remaining) {
+          var html = "";
+          for (var i = 0; i < total; i++) html += '<span class="pip' + (i < remaining ? "" : " spent") + '"></span>';
+          pips.innerHTML = html;
+        }
+
+        /* ---------- sheets (one message at a time) ---------- */
+        function clearSpots() {
+          var els = document.querySelectorAll(".spot");
+          for (var i = 0; i < els.length; i++) els[i].classList.remove("spot");
+        }
+        function showSheet(html, posClass) {
+          sheet.className = "on" + (posClass ? " " + posClass : "");
+          sheet.innerHTML = html;
+          scrim.classList.add("on");
+        }
+        function setScrimSolid(solid) { scrim.classList.toggle("solid", !!solid); }
+        function hideSheet() {
+          sheet.className = ""; sheet.innerHTML = "";
+          scrim.classList.remove("on"); scrim.classList.remove("solid"); clearSpots();
+        }
+        function flowSheet(tag, bodyHtml, btnLabel, next, spotEl, posClass) {
+          S.flowNext = next;
+          if (spotEl) { clearSpots(); spotEl.classList.add("spot"); }
+          showSheet('<div class="tag">' + tag + "</div>" + bodyHtml +
+            '<button data-act="flow" class="gold">' + btnLabel + "</button>", posClass);
+        }
+
+        /* ---------- juice ---------- */
+        var COLORS = ["#ffb800", "#e63946", "#2a9d8f", "#6bcbff", "#95d5b2", "#ffe066"];
+        function burstAtMark() {
+          try {
+            var sr = strip.getBoundingClientRect(), ar = $("stage").getBoundingClientRect();
+            var mf = S.sweep ? markFrac(performance.now() - S.sweep.start) : 0.5;
+            var x = sr.left - ar.left + mf * sr.width, y = sr.top - ar.top + sr.height / 2;
+            for (var i = 0; i < 16; i++) {
+              var p = document.createElement("div");
+              p.className = "particle";
+              var sz = 7 + Math.random() * 8;
+              p.style.width = sz + "px"; p.style.height = sz + "px";
+              p.style.background = COLORS[i % COLORS.length];
+              p.style.left = x + "px"; p.style.top = y + "px";
+              fx.appendChild(p);
+              var ang = Math.random() * Math.PI * 2, dist = 46 + Math.random() * 90;
+              var dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist - 26;
+              var anim = p.animate([
+                { transform: "translate(-50%,-50%) rotate(0deg)", opacity: 1 },
+                { transform: "translate(" + (dx - sz / 2) + "px," + (dy - sz / 2) + "px) rotate(" + (Math.random() * 260 - 130) + "deg)", opacity: 0 }
+              ], { duration: 620 + Math.random() * 320, easing: "cubic-bezier(.1,.8,.3,1)" });
+              anim.onfinish = (function (el) { return function () { el.remove(); }; })(p);
+            }
+          } catch (e) { /* juice is decoration only */ }
+        }
+        function confetti() {
+          try {
+            for (var i = 0; i < 70; i++) {
+              var p = document.createElement("div");
+              p.className = "particle";
+              var w = 7 + Math.random() * 7;
+              p.style.width = w + "px"; p.style.height = (w * 1.5) + "px";
+              p.style.background = COLORS[i % COLORS.length];
+              p.style.left = Math.random() * 100 + "%"; p.style.top = "-24px";
+              fxTop.appendChild(p);
+              var fall = p.animate([
+                { transform: "translateY(0) rotate(0deg)", opacity: 1 },
+                { transform: "translateY(105vh) rotate(" + (Math.random() * 720 - 360) + "deg)", opacity: 0.9 }
+              ], { duration: 1900 + Math.random() * 1600, delay: Math.random() * 500, easing: "cubic-bezier(.2,.6,.4,1)" });
+              fall.onfinish = (function (el) { return function () { el.remove(); }; })(p);
+            }
+          } catch (e) { /* juice is decoration only */ }
+        }
+        function shake() {
+          app.classList.remove("shake");
+          void app.offsetWidth;
+          app.classList.add("shake");
+        }
+
+        /* ---------- flow: ONE story card, then WATCH, then GUIDED ---------- */
+        function startStory() {
+          setPhase("story");
+          showLayer("strip");
+          S.flowNext = function () { startWatch(); };
+          showSheet(REEL_ART +
+            '<div class="tag">STARDUST STUDIO</div>' +
+            '<div class="big">The Stardust Film Studio burned down in 1974 — except for one cutting room, where the last reel still runs itself. Tonight, you are the only cutter left.</div>' +
+            '<button data-act="flow" class="gold">ENTER THE CUTTING ROOM</button>');
+          setScrimSolid(true);
+        }
+
+        function startWatch() {
+          S.scene = 1;
+          S.current = { name: "OPENING SHOT", genre: "DRAMA", len: 12 };
+          renderTop();
+          setPhase("watch");
+          showLayer("strip");
+          hideResult();
+          slate.textContent = "DRAMA · OPENING SHOT · 12 MIN";
+          stripHint.textContent = "WATCH — THE REEL CLAPS ITSELF";
+          ruleLine.textContent = "PERFECT = full minutes • GOOD = minutes − 3 • MISS = 0";
+          startSweep("watch");
+        }
+        function finishWatch() {
+          setPhase("result");
+          var off = 6 + Math.floor(Math.random() * 11);
+          S.total += S.current.len;
+          renderTop();
+          sndClap(); sndPerfect(); burstAtMark();
+          showResult("perfect", "PERFECT — off by " + off + "ms — +" + S.current.len + " MIN");
+          stripHint.textContent = "THE MINUTES LAND IN THE BAR UP TOP";
+          S.timer = setTimeout(function () {
+            flowSheet("YOUR TURN",
+              '<div class="msg">Tap CLAP when the playhead crosses the gold mark — this one can\'t be lost.</div>',
+              "TRY IT",
+              function () { startGuided(); }, clapBtn, "high");
+          }, 1700);
+        }
+
+        function startGuided() {
+          S.scene = 2;
+          S.current = { name: "FIRST LAUGH", genre: "COMEDY", len: 10 };
+          renderTop();
+          setPhase("guided");
+          showLayer("strip");
+          hideResult();
+          slate.textContent = "COMEDY · FIRST LAUGH · 10 MIN";
+          stripHint.textContent = "YOUR TURN — CLAP ON THE GOLD MARK";
+          startSweep("guided");
+        }
+        function guidedRetry(diffMs) {
+          cancelAnimationFrame(S.raf);
+          sndMiss();
+          showResult("info", "OFF BY " + Math.round(Math.abs(diffMs)) + "ms — REWINDING, TRY AGAIN");
+          stripHint.textContent = "NO SCENE LOST — THE REEL REWINDS";
+          S.timer = setTimeout(function () {
+            if (S.phase !== "guided") return;
+            hideResult();
+            stripHint.textContent = "YOUR TURN — CLAP ON THE GOLD MARK";
+            startSweep("guided");
+          }, 1100);
+        }
+        function guidedPass() {
+          setPhase("result");
+          var off = Math.round(Math.abs(S.lastDiff || 0));
+          S.total += S.current.len;
+          renderTop();
+          sndClap(); sndPerfect(); burstAtMark();
+          showResult("perfect", "PERFECT — off by " + off + "ms — +" + S.current.len + " MIN");
+          stripHint.textContent = "THAT'S THE CUT. NOW IT COUNTS.";
+          S.timer = setTimeout(function () { startScene(3); }, 1600);
+        }
+
+        /* ---------- scenes ---------- */
+        function hasLaw(key) { return S.laws.some(function (l) { return l.key === key; }); }
+        function startScene(n) {
+          S.scene = n; S.current = null;
+          renderTop();
+          var law = LAW_BY_SCENE[n];
+          if (law && !hasLaw(law.key)) {
+            S.laws.push(law);
+            setPhase("law");
+            showLayer("strip");
+            flowSheet("NEW LAW",
+              '<div class="big">' + law.name + "</div>" + '<div class="sub">' + law.line + "</div>",
+              "GOT IT",
+              function () { beginScene(); }, strip, "low");
+            return;
+          }
+          beginScene();
+        }
+        function beginScene() { pickPhase(); }
+
+        function genOptions() {
+          var remaining = N_SCENES - S.scene + 1;
+          var needed = (86 - S.total) / remaining;
+          var a = POOL[Math.floor(Math.random() * POOL.length)], b;
+          do { b = POOL[Math.floor(Math.random() * POOL.length)]; } while (b === a);
+          var lo = Math.max(7, Math.min(17, Math.round(needed - 2 + (Math.random() * 2 - 1))));
+          var hi = Math.max(7, Math.min(17, Math.round(needed + 2 + (Math.random() * 2 - 1))));
+          if (hi - lo < 3) { hi = Math.min(17, lo + 4); }
+          if (S.scene === N_SCENES) {
+            var fit = Math.max(6, Math.min(17, 86 - S.total));
+            lo = fit;
+            hi = Math.max(7, Math.min(17, fit + (Math.random() < 0.5 ? 4 : -4)));
+            if (hi === lo) hi = lo + 1;
+          }
+          var pair = [
+            { name: a.name, genre: a.genre, icon: a.icon, len: lo },
+            { name: b.name, genre: b.genre, icon: b.icon, len: hi }
+          ];
+          if (Math.random() < 0.5) pair.reverse();
+          return pair;
+        }
+        function fillCard(el, opt) {
+          var d = diffInfo(opt.len);
+          var proj = S.total + opt.len;
+          var over = proj > GOLD_HI;
+          var inBand = proj >= GOLD_LO && proj <= GOLD_HI;
+          el.innerHTML =
+            '<span class="cgenre">' + opt.genre + "</span>" +
+            '<span class="cname">' + opt.name + "</span>" +
+            '<span class="cmin">' + opt.len + '</span><span class="cunit">MINUTES</span>' +
+            '<span class="cdiff ' + d.tier + '">' + d.label + "</span>" +
+            '<span class="cproj' + (inBand ? " inband" : "") + '">→ ' + proj + " MIN if PERFECT" + (inBand ? " ★" : "") + "</span>" +
+            '<span class="cflag">' + (over ? "TOO LONG — burns the projector" : "") + "</span>";
+        }
+        function pickPhase() {
+          setPhase("pick");
+          S.options = genOptions();
+          clearPickControls();
+          [slot0, slot1].forEach(function (slot, i) {
+            var b = document.createElement("button");
+            b.className = "card";
+            b.setAttribute("aria-label", "Pick " + S.options[i].genre + " " + S.options[i].name + ", " + S.options[i].len + " minutes");
+            fillCard(b, S.options[i]);
+            b.addEventListener("click", (function (idx) { return function () { pickOption(idx); }; })(i));
+            slot.appendChild(b);
+            cardEls[i] = b;
+          });
+          if (S.scene >= 3) {
+            skipBtn = document.createElement("button");
+            skipBtn.id = "skipBtn";
+            skipBtn.innerHTML = "SKIP<br />+0 MIN";
+            skipBtn.addEventListener("click", function () { skipScene(); });
+            skipSlot.appendChild(skipBtn);
+          }
+          showLayer("pick");
+          updateChrome();
+          maybeTeachPick();
+        }
+        function maybeTeachPick() {
+          if (S.taughtPick) return;
+          S.taughtPick = true;
+          S.tutorialLock = true;
+          flowSheet("CHOOSING SCENES",
+            '<div class="msg">Fit the film into 80–92 minutes — longer scenes pay more, but sweep faster with a thinner gold mark.</div>',
+            "GOT IT",
+            function () { maybeTeachSkip(); }, cardsRow, "low");
+        }
+        function maybeTeachSkip() {
+          if (S.taughtSkip || S.scene < 3) { S.tutorialLock = false; return; }
+          S.taughtSkip = true;
+          flowSheet("SKIPPING",
+            '<div class="msg">Neither scene fits? SKIP banks +0 minutes and moves on.</div>',
+            "GOT IT",
+            function () { S.tutorialLock = false; }, skipBtn, "high");
+        }
+        function pickOption(i) {
+          if (S.phase !== "pick" || S.tutorialLock || !S.options[i]) return;
+          S.current = S.options[i];
+          sndPick();
+          clearPickControls();
+          clapPhase();
+        }
+        function skipScene() {
+          if (S.phase !== "pick" || S.tutorialLock || S.scene < 3) return;
+          clearPickControls();
+          setPhase("result");
+          showLayer("strip");
+          slate.textContent = "SCENE " + S.scene + " — SKIPPED";
+          renderPips(0, 0);
+          stripHint.textContent = "NOTHING SPLICED IN";
+          showResult("info", "SKIPPED — +0 MIN");
+          sndPick();
+          S.timer = setTimeout(nextScene, 1100);
+        }
+
+        /* ---------- ping-pong sweep ---------- */
+        function markFrac(t) {
+          var f = S.sweep.markBase;
+          if (hasLaw("drift") && S.sweep.mode === "real") f += 0.085 * Math.sin(t / 520);
+          return Math.max(0.05, Math.min(0.95, f));
+        }
+        function startSweep(mode) {
+          blackout.classList.remove("on");
+          var passDurs, markW, markBase;
+          if (mode === "watch") {
+            passDurs = [2300];
+            markW = 26; markBase = 0.55;
+          } else if (mode === "guided") {
+            passDurs = [3400, 3150, 2900];
+            markW = 36; markBase = 0.55;
+          } else {
+            var d = diffInfo(S.current.len);
+            var speedMul = hasLaw("speed") ? 0.5 : 1;
+            passDurs = [d.base, d.base * 0.88, d.base * 0.76].map(function (x) { return Math.round(x * speedMul); });
+            markW = d.markW;
+            markBase = 0.18 + Math.random() * 0.64;
+          }
+          var total = 0, starts = [];
+          passDurs.forEach(function (x) { starts.push(total); total += x; });
+          var flicks = [];
+          if (mode === "real" && hasLaw("flicker")) {
+            flicks = [
+              { s: total * (0.22 + Math.random() * 0.08), e: 0 },
+              { s: total * (0.58 + Math.random() * 0.1), e: 0 }
+            ];
+            flicks.forEach(function (f) { f.e = f.s + 300; });
+          }
+          S.sweep = {
+            mode: mode, start: performance.now(),
+            passDurs: passDurs, starts: starts, totalDur: total,
+            markBase: markBase, flicks: flicks, passIdx: 0, crossed: false
+          };
+          mark.style.width = markW + "px";
+          mark.style.marginLeft = (-markW / 2) + "px";
+          mark.style.left = (markFrac(0) * 100) + "%";
+          playhead.style.left = "0%";
+          renderPips(passDurs.length, passDurs.length);
+          cancelAnimationFrame(S.raf);
+          S.raf = requestAnimationFrame(loop);
+        }
+        function passAt(t) {
+          var sw = S.sweep;
+          for (var i = sw.passDurs.length - 1; i >= 0; i--) {
+            if (t >= sw.starts[i]) {
+              var local = Math.min((t - sw.starts[i]) / sw.passDurs[i], 1);
+              var frac = (i % 2 === 0) ? local : 1 - local;
+              return { idx: i, frac: frac, dur: sw.passDurs[i], dir: (i % 2 === 0) ? 1 : -1 };
+            }
+          }
+          return { idx: 0, frac: 0, dur: sw.passDurs[0], dir: 1 };
+        }
+        function currentDiffMs() {
+          var t = performance.now() - S.sweep.start;
+          var p = passAt(t);
+          var vel = p.dir / p.dur; /* strip-fractions per ms */
+          return (p.frac - markFrac(t)) / vel;
+        }
+        function loop() {
+          var sw = S.sweep;
+          if (!sw) return;
+          if (S.phase !== "clap" && S.phase !== "guided" && S.phase !== "watch") return;
+          var t = performance.now() - sw.start;
+          var p = passAt(t);
+          sw.passIdx = p.idx;
+          playhead.style.left = (p.frac * 100) + "%";
+          mark.style.left = (markFrac(t) * 100) + "%";
+          renderPips(sw.passDurs.length, sw.passDurs.length - p.idx);
+          var dark = sw.flicks.some(function (f) { return t >= f.s && t <= f.e; });
+          blackout.classList.toggle("on", dark);
+          if (sw.mode === "watch" && !sw.crossed && t >= sw.markBase * sw.passDurs[0]) {
+            sw.crossed = true;
+            cancelAnimationFrame(S.raf);
+            finishWatch();
+            return;
+          }
+          if (t > sw.totalDur + 240) {
+            cancelAnimationFrame(S.raf);
+            blackout.classList.remove("on");
+            if (sw.mode === "guided") { guidedRetry(999); }
+            else if (sw.mode === "real") { resolveTimeout(); }
+            return;
+          }
+          S.raf = requestAnimationFrame(loop);
+        }
+        function showResult(kind, main) {
+          resultFlash.className = "show " + kind;
+          resultMain.textContent = main;
+        }
+        function hideResult() { resultFlash.className = ""; resultMain.textContent = ""; }
+
+        /* ---------- clap phase (real play) ---------- */
+        function clapPhase() {
+          setPhase("clap");
+          showLayer("strip");
+          hideResult();
+          slate.textContent = S.current.genre + " · " + S.current.name + " · " + S.current.len + " MIN";
+          stripHint.textContent = "CLAP ON ANY PASS — EACH PASS IS FASTER";
+          ruleLine.textContent = "PERFECT = full minutes • GOOD = minutes − 3 • MISS = 0";
+          startSweep("real");
+        }
+        /* Outcomes resolve HERE, synchronously, inside the input handler. */
+        function doClap() {
+          if (S.phase === "guided") {
+            var d = currentDiffMs();
+            S.lastDiff = d;
+            if (Math.abs(d) <= 380) { cancelAnimationFrame(S.raf); blackout.classList.remove("on"); guidedPass(); }
+            else guidedRetry(d);
+            return;
+          }
+          if (S.phase !== "clap") return;
+          resolveClap(currentDiffMs());
+        }
+        function resolveClap(diff) {
+          cancelAnimationFrame(S.raf);
+          setPhase("result");
+          blackout.classList.remove("on");
+          var len = S.current.len, adiff = Math.abs(diff), off = Math.round(adiff);
+          var kind, main, added = 0;
+          if (adiff <= 90) {
+            kind = "perfect"; added = len;
+            main = "PERFECT — off by " + off + "ms — +" + added + " MIN";
+            sndClap(); sndPerfect(); burstAtMark();
+          } else if (adiff <= 220) {
+            kind = "good"; added = len - 3;
+            main = "GOOD — off by " + off + "ms — +" + added + " MIN (" + len + " − 3)";
+            sndClap(); sndGood();
+          } else {
+            kind = "miss";
+            main = "MISS — off by " + off + "ms — +0 MIN, scene lost";
+            sndMiss(); shake();
+          }
+          S.total += added;
+          renderTop();
+          showResult(kind, main);
+          stripHint.textContent = "TOTAL " + S.total + " MIN · GOLD IS 80–92";
+          S.timer = setTimeout(nextScene, 1500);
+        }
+        function resolveTimeout() {
+          setPhase("result");
+          sndMiss(); shake();
+          showResult("miss", "MISS — 3 passes gone — +0 MIN, scene lost");
+          stripHint.textContent = "TOTAL " + S.total + " MIN · GOLD IS 80–92";
+          S.timer = setTimeout(nextScene, 1500);
+        }
+        function nextScene() {
+          if (S.scene >= N_SCENES) { endRun(); return; }
+          startScene(S.scene + 1);
+        }
+
+        /* ---------- end / retry ---------- */
+        function endRun() {
+          setPhase("end");
+          var win = S.total >= GOLD_LO && S.total <= GOLD_HI;
+          var title = win ? "PREMIERE A SUCCESS" :
+            (S.total < GOLD_LO ? "TOO SHORT — the premiere flops" : "TOO LONG — the projector burns");
+          S.flowNext = function () { retry(); };
+          showSheet((win ? REEL_ART : CLAP_ART) +
+            '<div class="tag">' + (win ? "MIDNIGHT PREMIERE" : "PREMIERE NIGHT") + "</div>" +
+            '<div class="big">' + title + "</div>" +
+            '<div class="sub">FINAL RUNTIME: ' + S.total + ' MIN · GOLD 80–92</div>' +
+            '<button data-act="flow" class="gold">RETRY</button>');
+          setScrimSolid(true);
+          if (win) { sndWin(); confetti(); } else { sndMiss(); }
+        }
+        function retry() {
+          clearTimeout(S.timer);
+          cancelAnimationFrame(S.raf);
+          S.total = 0; S.scene = 1; S.laws = []; S.current = null; S.options = [];
+          S.tutorialLock = false;
+          hideResult();
+          renderTop();
+          startWatch();
+        }
+
+        /* ---------- input ---------- */
+        sheet.addEventListener("click", function (e) {
+          var b = e.target.closest("[data-act]");
+          if (!b) return;
+          ac();
+          var act = b.getAttribute("data-act");
+          if (act === "flow") {
+            hideSheet();
+            var f = S.flowNext; S.flowNext = null;
+            if (f) f();
+          }
+        });
+        clapBtn.addEventListener("click", function () { ac(); doClap(); });
+        muteBtn.addEventListener("click", function () {
+          S.muted = !S.muted;
+          muteBtn.textContent = S.muted ? "🔇" : "🔊";
+          if (!S.muted) sndPick();
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.repeat) return;
+          if (e.code === "Space") {
+            if (S.phase === "clap" || S.phase === "guided") { e.preventDefault(); ac(); doClap(); }
+          } else if (e.key === "1") pickOption(0);
+          else if (e.key === "2") pickOption(1);
+          else if (e.key === "s" || e.key === "S") skipScene();
+        });
+
+        /* ---------- init ---------- */
+        renderTop(); updateChrome();
+        startStory();
+      })();
+    </script>
+  </body>
+</html>
