@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cosmic Slap-Off</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#efe6ff; --bg2:#cfe0ff; --ink:#1d1440; --muted:#5b5384;
+  --panel:rgba(255,255,255,.8); --line:rgba(29,20,64,.22);
+  --pink:#ff3d81; --orange:#ff8a3d; --gold:#ffc21a; --good:#1fa86a; --bad:#e5384f; --blue:#3d6bff;
+  --stage1:#f6eeff; --stage2:#bfa8ff; --floor:#8f78e6; --starop:.18; --chip:rgba(255,255,255,.88);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0a0524; --bg2:#1d1050; --ink:#f4efff; --muted:#aaa0d8;
+    --panel:rgba(26,18,68,.85); --line:rgba(255,255,255,.2);
+    --stage1:#34208a; --stage2:#120a3a; --floor:#2a1a78; --starop:.9; --chip:rgba(14,8,48,.82);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0a0524; --bg2:#1d1050; --ink:#f4efff; --muted:#aaa0d8;
+  --panel:rgba(26,18,68,.85); --line:rgba(255,255,255,.2);
+  --stage1:#34208a; --stage2:#120a3a; --floor:#2a1a78; --starop:.9; --chip:rgba(14,8,48,.82);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;height:100%;overflow:hidden;color:var(--ink);
+  font-family:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:500;
+  background-color:var(--bg);
+  background-image:radial-gradient(ellipse at 50% -10%,var(--bg2),transparent 70%);
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:var(--starop);
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%,#fff,transparent),
+    radial-gradient(1px 1px at 70% 8%,#fff,transparent),
+    radial-gradient(2px 2px at 85% 40%,#ffe9a8,transparent),
+    radial-gradient(1px 1px at 30% 62%,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 55% 85%,#fff,transparent),
+    radial-gradient(1px 1px at 92% 78%,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 6% 90%,#cfd8ff,transparent),
+    radial-gradient(1px 1px at 45% 30%,#fff,transparent);
+}
+.disp{font-family:"Bungee",Impact,"Arial Black",sans-serif;letter-spacing:.5px;font-weight:400}
+
+/* app frame: landscape by default, rotated to landscape on touch devices held upright */
+#app{
+  position:relative;width:100%;max-width:1100px;height:100%;margin:0 auto;
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);
+}
+@media (orientation: portrait) and (pointer: coarse){
+  #app{
+    position:fixed;top:0;left:100vw;width:100vh;height:100vw;max-width:none;margin:0;
+    transform-origin:0 0;transform:rotate(90deg);
+    padding:env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px) env(safe-area-inset-top,0px);
+  }
+  @supports (height:100dvh){ #app{left:100dvw;width:100dvh;height:100dvw} }
+  .tip{display:block !important}
+}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;padding:8px 14px 10px;overflow:hidden}
+.screen[hidden]{display:none}
+.tip{display:none;margin:0;font-size:12px;color:var(--muted)}
+
+/* buttons */
+.big{
+  appearance:none;border:0;cursor:pointer;width:100%;min-height:54px;border-radius:18px;
+  font-family:"Bungee",Impact,"Arial Black",sans-serif;font-size:20px;color:#fff;
+  background:linear-gradient(180deg,var(--orange),var(--pink));
+  box-shadow:0 5px 0 rgba(90,10,50,.45),0 10px 22px rgba(255,61,129,.3);
+  transition:transform .06s,box-shadow .06s,opacity .15s;
+}
+.big:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(90,10,50,.45)}
+.big:focus-visible,.buy:focus-visible,.icon:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.icon{appearance:none;border:2px solid var(--line);background:var(--panel);color:var(--ink);border-radius:12px;width:36px;height:36px;font-size:16px;cursor:pointer;flex:none}
+
+/* title */
+#title:not([hidden]){display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center;padding:10px 18px}
+.tcol{display:flex;flex-direction:column;gap:10px;min-width:0}
+.tcol.l{text-align:center;align-items:center}
+.logo{font-size:clamp(34px,8.5vw,64px);line-height:.95;margin:0;
+  background:linear-gradient(180deg,#ffe36b,#ff7a3d 55%,#ff3d81);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 0 rgba(60,10,90,.5));transform:rotate(-3deg)}
+.tag{margin:0;color:var(--muted);font-size:15px}
+.duel{display:flex;justify-content:center;align-items:flex-end;gap:4px;width:100%;position:relative;height:clamp(90px,28vh,150px)}
+.duel .fi{height:100%;aspect-ratio:140/160}
+.duel .fi svg{width:100%;height:100%}
+.duel .fi.flip{transform:scaleX(-1)}
+.duel .bobA{animation:bob 1.8s ease-in-out infinite}
+.duel .bobB{animation:bob 1.8s ease-in-out .5s infinite}
+.vs{position:absolute;left:50%;top:28%;transform:translateX(-50%) rotate(-6deg);font-size:30px;color:var(--gold);text-shadow:0 3px 0 rgba(60,10,90,.6)}
+.rules{list-style:none;margin:0;padding:10px 12px;background:var(--panel);border:2px solid var(--line);border-radius:16px;text-align:left;font-size:13px;line-height:1.35;display:grid;gap:5px}
+.rules b{color:var(--pink)}
+
+/* fight: top line, stage, bottom strip */
+#fight{gap:6px}
+.topline{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;flex:none}
+.hbox{min-width:0}
+.hname{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:2px}
+.hname b{font-family:"Bungee",Impact,sans-serif;font-weight:400;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hname span{color:var(--muted);font-size:12px;white-space:nowrap}
+.bar{height:12px;border-radius:7px;background:rgba(0,0,0,.28);border:2px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:linear-gradient(180deg,#58e6a0,#1fa86a);transition:width .4s cubic-bezier(.2,.8,.2,1)}
+.bar.low i{background:linear-gradient(180deg,#ff8b6b,#e5384f)}
+.sub{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap}
+.hbox.e{text-align:right}
+.mid{display:flex;align-items:center;gap:8px}
+#roundLbl{font-size:13px;white-space:nowrap}
+.coins{font-weight:700;font-size:13px;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:5px 10px;white-space:nowrap}
+
+#stage{
+  position:relative;flex:1;min-height:140px;border-radius:20px;overflow:hidden;border:2px solid var(--line);
+  background:radial-gradient(ellipse at 50% 0%,var(--stage1),var(--stage2) 75%);
+  touch-action:none;container-type:size;
+}
+#stage.shake{animation:shake .32s linear}
+.beams{position:absolute;inset:0;background:
+  conic-gradient(from 200deg at 20% -10%,transparent 0 20deg,rgba(255,255,255,.14) 28deg,transparent 36deg),
+  conic-gradient(from 145deg at 80% -10%,transparent 0 20deg,rgba(255,255,255,.14) 28deg,transparent 36deg)}
+.floor{position:absolute;left:-5%;right:-5%;bottom:0;height:20%;background:var(--floor);border-radius:50% 50% 0 0/40% 40% 0 0;opacity:.85}
+.fighter{position:absolute;bottom:6px;width:min(150px,24%);z-index:1}
+@supports (width:1cqh){ .fighter{width:min(170px,24%,68cqh)} }
+.fighter.p{left:3%}
+.fighter.e{right:3%}
+.fi svg{display:block;width:100%;height:auto;overflow:visible}
+.fighter.e .fi{transform:scaleX(-1)}
+.bob{animation:bob 1.8s ease-in-out infinite}
+.fighter.e .bob{animation-delay:.6s}
+.fighter .eye-hurt,.fighter .m-hurt{display:none}
+.fighter.hurt .eye-ok,.fighter.hurt .m-ok,.fighter.ko .eye-ok,.fighter.ko .m-ok{display:none}
+.fighter.hurt .eye-hurt,.fighter.hurt .m-hurt,.fighter.ko .eye-hurt,.fighter.ko .m-hurt{display:inline}
+.fighter.snapL{animation:snapL .5s ease-out}
+.fighter.snapR{animation:snapR .5s ease-out}
+.fighter.p.ko{animation:koL .9s ease-in forwards}
+.fighter.e.ko{animation:koR .9s ease-in forwards}
+
+/* effect layers, back to front: target 0, fighters 1, trail 2, hand 4, stars 5, damage 6, flash 7, banner 8, callout 9 */
+#tgt{position:absolute;top:10px;bottom:6px;right:6px;z-index:0;pointer-events:none;border:3px dashed var(--gold);border-radius:20px;background:rgba(255,194,26,.1);display:flex;justify-content:center;align-items:flex-start;animation:tgtPulse 1.1s ease-in-out infinite}
+#tgt[hidden]{display:none}
+#tgt span{margin-top:6px;font-family:"Bungee",Impact,"Arial Black",sans-serif;font-size:11px;color:var(--ink);background:var(--chip);padding:3px 8px;border-radius:9px;white-space:nowrap}
+#trail{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+#hand{position:absolute;left:0;top:0;opacity:0;pointer-events:none;z-index:4}
+#hand svg{width:100%;height:100%;display:block}
+.star{position:absolute;z-index:5;pointer-events:none;color:var(--gold);font-size:18px;transform:translate(-50%,-50%)}
+.pop{position:absolute;z-index:6;pointer-events:none;font-family:"Bungee",Impact,sans-serif;font-size:26px;color:#fff;
+  text-shadow:0 3px 0 rgba(0,0,0,.6),0 0 12px rgba(255,61,129,.85);transform:translate(-50%,-50%);animation:rise .95s ease-out forwards;white-space:nowrap}
+.pop.crit{font-size:36px;color:var(--gold)}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:7}
+#banner{position:absolute;inset:0;display:grid;place-content:center;text-align:center;z-index:8;pointer-events:none;opacity:0}
+#banner.show{animation:banner .9s ease-out forwards}
+#banner.hold{animation:bannerHold .45s ease-out forwards}
+#banner .big1{font-size:clamp(30px,9vh,52px);color:#fff;text-shadow:0 5px 0 var(--pink),0 10px 20px rgba(0,0,0,.4);transform:rotate(-4deg)}
+#banner .sub1{margin-top:8px;font-weight:700;font-size:15px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.7);padding:0 18px}
+#callout{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:9;pointer-events:none;text-align:center;opacity:0;
+  padding:4px 16px 5px;border-radius:14px;background:var(--chip);border:2px solid var(--line);white-space:nowrap}
+#callout b{display:block;font-size:20px;line-height:1.1}
+#callout span{display:block;font-size:12px;font-weight:700;color:var(--muted)}
+#callout.gold b{color:var(--gold)} #callout.good b{color:var(--good)} #callout.bad b{color:var(--bad)}
+#callout.show{animation:calloutIn 1.5s ease-out forwards}
+#braceRing{position:absolute;left:50%;top:56%;width:0;height:0;z-index:3;pointer-events:none}
+#braceRing[hidden]{display:none}
+.ring{position:absolute;left:0;top:0;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:5px solid}
+.ring.t{border-color:var(--gold);box-shadow:0 0 14px var(--gold)}
+.ring.s{border-color:var(--pink);box-shadow:0 0 12px var(--pink)}
+
+.strip{flex:none;height:56px;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center}
+#cheer{font-size:13px;line-height:1.25;font-weight:700;display:flex;align-items:center;min-width:0}
+.ctl{position:relative;height:100%}
+.ctl>div{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:5px}
+.ctl [hidden]{display:none}
+.meter{position:relative;height:28px;border-radius:14px;border:2px solid var(--line);overflow:hidden;background:rgba(0,0,0,.28)}
+.fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--blue),var(--gold) 60%,var(--pink));border-radius:12px 0 0 12px}
+.mlabel{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:13px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.85)}
+.hint{text-align:center;font-size:12px;color:var(--muted)}
+
+/* shop & end */
+#shop:not([hidden]){display:grid;grid-template-columns:minmax(210px,.8fr) 1.2fr;gap:14px;padding:10px 14px}
+.scol{min-height:0;min-width:0;display:flex;flex-direction:column;gap:8px}
+.scol.r{overflow-y:auto;padding-right:4px}
+.shopHead{text-align:center}
+.shopHead h2{margin:0;font-size:24px;line-height:1.05}
+.shopHead p{margin:5px 0 0;color:var(--muted);font-size:13px}
+.wallet{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:8px 12px}
+.wallet .c{font-size:22px}
+.wallet .st{font-size:12px;color:var(--muted);text-align:right;line-height:1.4}
+.sec{font-family:"Bungee",Impact,sans-serif;font-size:13px;margin:8px 2px 4px}
+.sec:first-child{margin-top:0}
+.item{display:grid;grid-template-columns:38px 1fr auto;gap:10px;align-items:center;background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:8px 10px;margin-bottom:6px}
+.item .ic{font-size:26px;text-align:center}
+.item b{display:block;font-size:14px}
+.item span{font-size:12px;color:var(--muted)}
+.buy{appearance:none;border:0;border-radius:12px;padding:9px 12px;font:inherit;font-weight:700;font-size:14px;cursor:pointer;color:#241400;background:var(--gold);min-width:72px;box-shadow:0 3px 0 rgba(0,0,0,.3)}
+.buy:active{transform:translateY(2px)}
+.buy:disabled{background:rgba(128,128,160,.35);color:var(--muted);box-shadow:none;cursor:default}
+.item.owned{opacity:.7}
+.next{padding:10px 12px;background:var(--panel);border:2px dashed var(--line);border-radius:14px;font-size:13px;line-height:1.35}
+.next b{font-family:"Bungee",Impact,sans-serif;font-weight:400}
+.scol.l .big{margin-top:auto}
+#end:not([hidden]){flex-direction:row;align-items:center;justify-content:center;gap:24px;padding:12px 24px}
+#endFight{flex:0 1 38%;display:flex;justify-content:center;align-items:flex-end;max-height:80%}
+#endFight .fi{width:min(100%,220px)}
+.ecol{flex:0 1 52%;display:flex;flex-direction:column;gap:10px;text-align:center}
+#end h2{font-size:clamp(30px,7vw,52px);margin:0;line-height:1}
+#end p{margin:0;color:var(--muted);font-size:15px;line-height:1.35}
+
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-7px,3px)}40%{transform:translate(6px,-4px)}60%{transform:translate(-5px,2px)}80%{transform:translate(4px,-2px)}}
+@keyframes snapL{0%{transform:none}28%{transform:translateX(-38px) rotate(-18deg)}100%{transform:none}}
+@keyframes snapR{0%{transform:none}28%{transform:translateX(38px) rotate(18deg)}100%{transform:none}}
+@keyframes koL{0%{transform:none}30%{transform:translateX(-30px) rotate(-20deg)}100%{transform:translate(-20px,70px) rotate(-82deg)}}
+@keyframes koR{0%{transform:none}30%{transform:translateX(30px) rotate(20deg)}100%{transform:translate(20px,70px) rotate(82deg)}}
+@keyframes rise{0%{opacity:0;transform:translate(-50%,-30%) scale(.5)}15%{opacity:1;transform:translate(-50%,-55%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-125%) scale(1)}}
+@keyframes banner{0%{opacity:0;transform:scale(.4)}20%{opacity:1;transform:scale(1.08)}30%{transform:scale(1)}85%{opacity:1}100%{opacity:0;transform:scale(1.05)}}
+@keyframes bannerHold{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:scale(1)}}
+@keyframes calloutIn{0%{opacity:0;transform:translateX(-50%) translateY(-8px) scale(.8)}10%{opacity:1;transform:translateX(-50%) scale(1.06)}16%{transform:translateX(-50%) scale(1)}75%{opacity:1}100%{opacity:0}}
+@keyframes tgtPulse{50%{opacity:.6}}
+@media (prefers-reduced-motion:reduce){
+  .bob,.duel .bobA,.duel .bobB,#tgt{animation:none}
+  #stage.shake{animation:none}
+}
+/* narrow non-touch windows (desktop preview): stack the two-column screens */
+@media (max-aspect-ratio:1/1) and (pointer:fine){
+  #title:not([hidden]){grid-template-columns:1fr;overflow-y:auto;align-content:start}
+  #shop:not([hidden]){grid-template-columns:1fr;overflow-y:auto}
+  .scol.r{overflow:visible}
+  #end:not([hidden]){flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section id="title" class="screen">
+    <div class="tcol l">
+      <h1 class="logo disp">Cosmic<br>Slap-Off</h1>
+      <p class="tag">The galaxy’s favorite sport. Last head standing wins the belt.</p>
+      <button class="big" id="startBtn">Start tournament</button>
+      <p class="tip">Tip: turn your phone sideways. If rotation is locked, the game turns itself.</p>
+    </div>
+    <div class="tcol r">
+      <div class="duel" id="duel"><div class="vs disp">VS</div></div>
+      <ul class="rules">
+        <li><b>Slap:</b> circle your finger fast to build momentum, then swipe through your opponent. Faster swipe, bigger damage.</li>
+        <li><b>Brace:</b> when they swing, tap as the pink ring hits the gold ring. Only a perfect brace really saves you.</li>
+        <li><b>Upgrade:</b> win coins, then buy knuckles, elbows and armor between rounds.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="fight" class="screen" hidden>
+    <div class="topline">
+      <div class="hbox p">
+        <div class="hname"><b>You</b><span id="pHp"></span></div>
+        <div class="bar" id="pBarWrap"><i id="pBar"></i></div>
+        <div class="sub" id="pStats"></div>
+      </div>
+      <div class="mid">
+        <div id="roundLbl" class="disp"></div>
+        <div class="coins">🪙 <span id="coinsTop">0</span></div>
+        <button class="icon" id="muteBtn" aria-label="Toggle sound">🔊</button>
+      </div>
+      <div class="hbox e">
+        <div class="hname"><b id="eName"></b><span id="eHp"></span></div>
+        <div class="bar" id="eBarWrap"><i id="eBar"></i></div>
+        <div class="sub" id="eStats"></div>
+      </div>
+    </div>
+    <div id="stage">
+      <div class="beams"></div>
+      <div class="floor"></div>
+      <div id="tgt" hidden><span>Swipe through!</span></div>
+      <div id="pF" class="fighter p"><div class="bob"><div class="fi"></div></div></div>
+      <div id="eF" class="fighter e"><div class="bob"><div class="fi"></div></div></div>
+      <canvas id="trail"></canvas>
+      <div id="braceRing" hidden><div class="ring t"></div><div class="ring s" id="ringS"></div></div>
+      <div id="hand"><svg viewBox="0 0 80 90" aria-hidden="true"><g fill="var(--hand)" stroke="rgba(0,0,0,.4)" stroke-width="2" stroke-linejoin="round"><rect x="19" y="8" width="10" height="44" rx="5"/><rect x="31" y="2" width="10" height="48" rx="5"/><rect x="43" y="4" width="10" height="46" rx="5"/><rect x="55" y="12" width="9" height="40" rx="4.5"/><rect x="18" y="38" width="46" height="44" rx="16"/><rect x="2" y="44" width="24" height="12" rx="6" transform="rotate(-25 14 50)"/></g></svg></div>
+      <div id="flash"></div>
+      <div id="banner"></div>
+      <div id="callout" aria-live="polite"></div>
+    </div>
+    <div class="strip">
+      <div id="cheer" aria-live="polite"></div>
+      <div class="ctl">
+        <div id="attackUI" hidden>
+          <div class="meter"><div class="fill" id="fill"></div><div class="mlabel" id="mlabel">Momentum</div></div>
+          <div class="hint" id="atkHint">Circle your finger fast, then swipe through</div>
+        </div>
+        <div id="braceUI" hidden>
+          <div class="hint">Tap anywhere when the pink ring hits the gold ring</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="shop" class="screen" hidden>
+    <div class="scol l">
+      <div class="shopHead">
+        <h2 class="disp" id="shopTitle"></h2>
+        <p id="shopNote"></p>
+      </div>
+      <div class="wallet"><div class="c disp">🪙 <span id="shopCoins"></span></div><div class="st" id="shopStats"></div></div>
+      <div class="next" id="nextUp"></div>
+      <button class="big" id="nextBtn">Next round</button>
+    </div>
+    <div class="scol r" id="shopList"></div>
+  </section>
+
+  <section id="end" class="screen" hidden>
+    <div id="endFight"></div>
+    <div class="ecol">
+      <h2 class="disp" id="endTitle"></h2>
+      <p id="endSub"></p>
+      <p id="endStats"></p>
+      <button class="big" id="againBtn">Play again</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const rotMQ = window.matchMedia("(orientation: portrait) and (pointer: coarse)");
+const coarseMQ = window.matchMedia("(pointer: coarse)");
+
+/* ---------- data ---------- */
+const PLAYER = {color:"#ffc46b", dark:"#d9993a", suit:"#3d5bff", accent:"#ffd23f", eyes:2, band:true};
+const ENEMIES = [
+  {name:"Blorp the Squishy", short:"Blorp", color:"#7be07f", dark:"#3ea84a", suit:"#2f7d8c", accent:"#ffe14d", eyes:2, antennae:2, hp:110, power:14,
+   taunt:"Blorp has never lost a slap. That he remembers."},
+  {name:"Zyx the Tentacled", short:"Zyx", color:"#c39bff", dark:"#7d52d6", suit:"#4b2f8c", accent:"#ff7ad9", eyes:3, tentacles:true, hp:180, power:22,
+   taunt:"Zyx slaps like a wet noodle. A very fast wet noodle."},
+  {name:"Gnarla the Crusher", short:"Gnarla", color:"#ff9a57", dark:"#d1622a", suit:"#6b2a1a", accent:"#fff3c4", eyes:1, spikes:true, hp:280, power:32,
+   taunt:"One eye is all she needs to watch you fall."},
+  {name:"Madame Vortex", short:"Vortex", color:"#5fd3e6", dark:"#2a95ad", suit:"#17406b", accent:"#ff5fa2", eyes:2, swirl:true, hp:400, power:44,
+   taunt:"Gravity bends around her palm. Brace yourself."},
+  {name:"Grand Slapmaster Zorg", short:"Zorg", color:"#ff6b6b", dark:"#c23a3a", suit:"#3a1230", accent:"#ffd23f", eyes:3, crown:true, hp:550, power:60,
+   taunt:"Eleven-time galactic slap champion. Bow."}
+];
+const ITEMS = [
+  {id:"knuck", sec:"Slap force", icon:"🥊", name:"Brass Knuckles", desc:"+5 slap force", price:70, fx:g=>{g.power+=5}},
+  {id:"elbow", sec:"Slap force", icon:"💪", name:"Kinetic Elbow", desc:"+8 slap force", price:125, fx:g=>{g.power+=8}},
+  {id:"grav", sec:"Slap force", icon:"🧤", name:"Gravity Glove", desc:"+13 slap force", price:210, fx:g=>{g.power+=13}},
+  {id:"plasma", sec:"Slap force", icon:"⚡", name:"Plasma Palm", desc:"+20 slap force", price:330, fx:g=>{g.power+=20}},
+  {id:"jaw", sec:"Defense", icon:"🦷", name:"Jaw Plating", desc:"+12 armor", price:60, fx:g=>{g.def+=12}},
+  {id:"gel", sec:"Defense", icon:"🧴", name:"Gel Cheeks", desc:"+16 armor", price:110, fx:g=>{g.def+=16}},
+  {id:"neck", sec:"Defense", icon:"🦴", name:"Titanium Neck Brace", desc:"+22 armor", price:190, fx:g=>{g.def+=22}},
+  {id:"field", sec:"Defense", icon:"🛡️", name:"Force-Field Face", desc:"+34 armor", price:300, fx:g=>{g.def+=34}},
+  {id:"spinner", sec:"Training", icon:"🌀", name:"Turbo Bearings", desc:"Build momentum 30% faster", price:100, fx:g=>{g.spinBonus+=0.3}},
+  {id:"reflex", sec:"Training", icon:"⏱️", name:"Reflex Implant", desc:"Easier brace timing", price:100, fx:g=>{g.braceBonus+=0.35}},
+  {id:"spin", sec:"Training", icon:"🥬", name:"Space Spinach", desc:"+25 max HP and heal 25", price:80, fx:g=>{g.maxHp+=25;g.hp+=25}},
+  {id:"heal", sec:"Training", icon:"💊", name:"Nano-Heal", desc:"Restore 35 HP (buy again anytime)", price:90, repeat:true, fx:g=>{g.hp=Math.min(g.maxHp,g.hp+35)}}
+];
+
+/* ---------- state ---------- */
+let G = null, phase = "idle", raf = 0, timers = [], muted = false, ac = null;
+function later(fn, ms){ const id = setTimeout(fn, ms); timers.push(id); return id; }
+function clearAll(){ timers.forEach(clearTimeout); timers = []; cancelAnimationFrame(raf); }
+function armor(){ return Math.round(G.def / (G.def + 40) * 100); }
+function buzz(p){ try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+
+/* ---------- audio ---------- */
+function ctx(){
+  if (muted) return null;
+  try {
+    if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === "suspended") ac.resume();
+  } catch (e) { ac = null; }
+  return ac;
+}
+function noise(c, dur, type, f0, f1, vol){
+  const n = Math.floor(c.sampleRate * dur), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const s = c.createBufferSource(); s.buffer = b;
+  const f = c.createBiquadFilter(); f.type = type;
+  f.frequency.setValueAtTime(f0, c.currentTime); f.frequency.exponentialRampToValueAtTime(f1, c.currentTime + dur);
+  const g = c.createGain(); g.gain.setValueAtTime(vol, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
+  s.connect(f); f.connect(g); g.connect(c.destination); s.start();
+}
+function tone(c, type, f0, f1, dur, vol, delay){
+  const t = c.currentTime + (delay || 0), o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.03);
+}
+const sfx = {
+  swish(){ try{ const c = ctx(); if(!c) return; noise(c, .22, "bandpass", 500, 2800, .22); }catch(e){} },
+  slap(crit){ try{ const c = ctx(); if(!c) return; noise(c, .16, "highpass", 1400, 3600, .9); tone(c, "sine", 170, 45, .2, .8); if(crit){ tone(c, "triangle", 880, 1900, .28, .28, .04); } }catch(e){} },
+  ko(){ try{ const c = ctx(); if(!c) return; tone(c, "sawtooth", 500, 60, .9, .25); }catch(e){} },
+  coin(){ try{ const c = ctx(); if(!c) return; tone(c, "square", 988, 988, .08, .12); tone(c, "square", 1319, 1319, .16, .12, .08); }catch(e){} },
+  win(){ try{ const c = ctx(); if(!c) return; [523,659,784,1047].forEach((f,i)=>tone(c,"triangle",f,f,.25,.2,i*.12)); }catch(e){} },
+  brace(){ try{ const c = ctx(); if(!c) return; tone(c, "square", 300, 200, .12, .12); }catch(e){} }
+};
+
+/* ---------- fighter art ---------- */
+function fighterSVG(f){
+  const c = f.color, d = f.dark;
+  let back = "", top = "", eyes = "";
+  if (f.tentacles) back += [[44,92,26,112,36,138],[50,98,40,120,52,146],[60,102,60,126,70,148]].map(p=>`<path d="M${p[0]} ${p[1]} Q${p[2]} ${p[3]} ${p[4]} ${p[5]}" stroke="${d}" stroke-width="9" fill="none" stroke-linecap="round"/>`).join("");
+  if (f.antennae) top += [56,84].map((x,i)=>{ const x2 = x + (i ? 14 : -12); return `<path d="M${x} 30 Q${x + (i?6:-6)} 14 ${x2} 6" stroke="${d}" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="${x2}" cy="6" r="6.5" fill="${f.accent}"/>`; }).join("");
+  if (f.spikes) top += `<polygon points="38,40 46,12 58,30" fill="${d}"/><polygon points="60,28 70,2 82,28" fill="${d}"/><polygon points="84,30 96,12 104,40" fill="${d}"/>`;
+  if (f.crown) top += `<polygon points="40,36 42,8 56,24 70,4 84,24 98,8 100,36" fill="${f.accent}" stroke="#b9820a" stroke-width="3" stroke-linejoin="round"/><circle cx="70" cy="22" r="4" fill="#ff3d81"/>`;
+  if (f.swirl) top += `<path d="M70 26 C38 4 16 42 48 46 M70 26 C102 4 124 42 92 46" stroke="${f.accent}" stroke-width="7" fill="none" stroke-linecap="round"/>`;
+  if (f.band) top += `<path d="M31 56 Q70 38 109 56" stroke="#e63946" stroke-width="10" fill="none"/><path d="M33 58 L10 70 M33 56 L14 46" stroke="#e63946" stroke-width="6" stroke-linecap="round"/>`;
+  const E = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="#2b1030" stroke-width="2" class="eye-ok"/><circle cx="${x+r*.28}" cy="${y}" r="${r*.5}" fill="#2b1030" class="eye-ok"/><path class="eye-hurt" d="M${x-r*.7} ${y-r*.7} L${x+r*.7} ${y+r*.7} M${x+r*.7} ${y-r*.7} L${x-r*.7} ${y+r*.7}" stroke="#2b1030" stroke-width="4" stroke-linecap="round"/>`;
+  if (f.eyes === 1) eyes = E(88, 56, 14);
+  else if (f.eyes === 2) eyes = E(76, 56, 9) + E(98, 56, 8.5);
+  else eyes = E(76, 58, 8.5) + E(98, 58, 8) + E(87, 38, 6);
+  return `<svg viewBox="0 0 140 160" aria-hidden="true">${back}
+    <path d="M16 160 Q20 112 70 108 Q120 112 124 160Z" fill="${f.suit}"/>
+    <circle cx="70" cy="138" r="9" fill="${f.accent}" opacity=".9"/>
+    <rect x="56" y="96" width="28" height="18" fill="${d}"/>
+    <ellipse cx="70" cy="66" rx="40" ry="42" fill="${c}" stroke="${d}" stroke-width="3"/>
+    ${top}${eyes}
+    <circle cx="97" cy="80" r="12" fill="#ff8fa3" opacity=".4"/>
+    <circle cx="100" cy="80" r="17" fill="#ff2e63" style="opacity:var(--cheek,0)"/>
+    <path class="m-ok" d="M78 90 Q92 100 104 88" stroke="#2b1030" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <ellipse class="m-hurt" cx="92" cy="93" rx="10" ry="8" fill="#4a0f2a"/>
+  </svg>`;
+}
+
+/* ---------- screens & UI helpers ---------- */
+function show(id){ ["title","fight","shop","end"].forEach(s => $(s).hidden = (s !== id)); if (id === "shop") $("shopList").scrollTop = 0; }
+function cheer(t){ $("cheer").textContent = t; }
+function banner(big, sub, hold){
+  const b = $("banner");
+  b.className = ""; void b.offsetWidth;
+  b.innerHTML = `<div class="big1 disp">${big}</div>${sub ? `<div class="sub1">${sub}</div>` : ""}`;
+  b.className = hold ? "hold" : "show";
+}
+function hideBanner(){ $("banner").className = ""; $("banner").innerHTML = ""; }
+function callout(big, small, cls){
+  const c = $("callout");
+  c.className = ""; void c.offsetWidth;
+  c.innerHTML = `<b class="disp">${big}</b>${small ? `<span>${small}</span>` : ""}`;
+  c.className = "show " + (cls || "");
+}
+function clearCallout(){ const c = $("callout"); c.className = ""; c.innerHTML = ""; }
+function setMode(m){
+  $("attackUI").hidden = m !== "attack";
+  $("braceUI").hidden = m !== "brace";
+  $("braceRing").hidden = m !== "brace";
+}
+function retrig(el, cls){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+function updateHUD(){
+  const e = G.enemy;
+  $("pBar").style.width = Math.max(0, G.hp / G.maxHp * 100) + "%";
+  $("pBarWrap").classList.toggle("low", G.hp / G.maxHp < .3);
+  $("pHp").textContent = Math.max(0, G.hp) + "/" + G.maxHp;
+  $("pStats").textContent = `Force ${G.power} · Armor ${armor()}%`;
+  $("eBar").style.width = Math.max(0, e.hpNow / e.hp * 100) + "%";
+  $("eBarWrap").classList.toggle("low", e.hpNow / e.hp < .3);
+  $("eHp").textContent = Math.max(0, e.hpNow) + "/" + e.hp;
+  $("eStats").textContent = `Force ${e.power}`;
+  $("coinsTop").textContent = G.coins;
+  $("pF").style.setProperty("--cheek", Math.min(1, (1 - Math.max(0, G.hp) / G.maxHp) * 1.1));
+  $("eF").style.setProperty("--cheek", Math.min(1, (1 - Math.max(0, e.hpNow) / e.hp) * 1.1));
+}
+function cheekPos(side){
+  const p = $("pF"), e = $("eF"), fh = p.offsetHeight;
+  return side === "e"
+    ? {x: e.offsetLeft + e.offsetWidth * .29, y: e.offsetTop + fh * .5}
+    : {x: p.offsetLeft + p.offsetWidth * .71, y: p.offsetTop + fh * .5};
+}
+function headPos(side){
+  const f = $(side === "e" ? "eF" : "pF");
+  return {x: f.offsetLeft + f.offsetWidth * .5, y: f.offsetTop + f.offsetHeight * .2};
+}
+function handSize(){ const st = $("stage"); return Math.round(Math.min(96, st.clientWidth * .14, st.clientHeight * .42)); }
+
+/* ---------- effects ---------- */
+function slapAnim(from){
+  const hs = handSize(), hand = $("hand");
+  hand.style.width = hs + "px"; hand.style.height = hs + "px";
+  hand.style.setProperty("--hand", from === "p" ? PLAYER.color : G.enemy.color);
+  const p = $("pF"), e = $("eF"), s = from === "p" ? 1 : -1;
+  const tgt = cheekPos(from === "p" ? "e" : "p");
+  const x1 = tgt.x - hs / 2, y1 = tgt.y - hs / 2;
+  const x0 = from === "p" ? p.offsetLeft - hs * .1 : e.offsetLeft + e.offsetWidth - hs * .9, y0 = y1 - hs * .9;
+  const T = (x, y, r) => `translate(${x}px,${y}px) scale(${s},1) rotate(${r}deg)`;
+  hand.animate([
+    {transform: T(x0, y0, -80), opacity: 0},
+    {transform: T(x0, y0, -80), opacity: 1, offset: .35},
+    {transform: T(x1, y1, 12), opacity: 1, offset: .62},
+    {transform: T(x1 + s * 24, y1 + 10, 28), opacity: 0}
+  ], {duration: 480, easing: "ease-in-out"});
+}
+function burst(x, y, n, crit){
+  const st = $("stage");
+  for (let i = 0; i < n; i++){
+    const sp = document.createElement("span");
+    sp.className = "star"; sp.textContent = crit ? "★" : "✦";
+    sp.style.left = x + "px"; sp.style.top = y + "px";
+    st.appendChild(sp);
+    const a = (Math.PI * 2 * i) / n + Math.random() * .5, dist = (crit ? 60 : 38) + Math.random() * 24;
+    const an = sp.animate([{transform:"translate(-50%,-50%) scale(1)", opacity:1},{transform:`translate(calc(-50% + ${Math.cos(a)*dist}px),calc(-50% + ${Math.sin(a)*dist}px)) scale(.3)`, opacity:0}], {duration: 560, easing: "ease-out"});
+    an.onfinish = () => sp.remove();
+  }
+}
+function pop(x, y, text, cls){
+  const d = document.createElement("div");
+  d.className = "pop " + (cls || ""); d.textContent = text;
+  d.style.left = x + "px"; d.style.top = y + "px";
+  $("stage").appendChild(d);
+  setTimeout(() => d.remove(), 1000);
+}
+
+/* ---------- game flow ---------- */
+function startTournament(){
+  clearAll();
+  G = {round:0, coins:0, hp:100, maxHp:100, power:12, def:0, spinBonus:0, braceBonus:0, owned:[], stats:{slaps:0, crits:0, perfect:0}, over:false, shopNote:"", atk:null};
+  startRound();
+}
+function startRound(){
+  clearAll();
+  const e = ENEMIES[G.round];
+  G.enemy = Object.assign({}, e, {hpNow: e.hp});
+  G.over = false; phase = "intro"; resetAttack(); clearCallout();
+  show("fight");
+  $("roundLbl").textContent = `Round ${G.round + 1}/${ENEMIES.length}`;
+  $("eName").textContent = e.short;
+  $("pF").querySelector(".fi").innerHTML = fighterSVG(PLAYER);
+  $("eF").querySelector(".fi").innerHTML = fighterSVG(e);
+  ["pF", "eF"].forEach(id => $(id).classList.remove("ko", "hurt", "snapL", "snapR"));
+  updateHUD(); setMode("none");
+  cheer(e.taunt);
+  banner(`Round ${G.round + 1}`, e.name, true);
+  later(() => banner("FIGHT!", "", false), 1500);
+  later(() => { hideBanner(); playerTurn(); }, 2300);
+}
+
+/* player attack: circle for momentum, swipe through the opponent */
+function swipeThr(){ const e = $("eF"); return e.offsetLeft + e.offsetWidth * .1; }
+function placeHand(x, y, glow, lift){
+  const hand = $("hand"), hs = handSize(), g = glow || 0;
+  hand.style.width = hs + "px"; hand.style.height = hs + "px";
+  hand.style.setProperty("--hand", PLAYER.color);
+  hand.style.transform = `translate(${x - hs / 2}px,${y - hs / 2 - (lift || 0) * hs}px) rotate(-15deg)`;
+  hand.style.opacity = 1;
+  hand.style.filter = g > .05 ? `drop-shadow(0 0 ${Math.round(4 + g * 18)}px rgba(255,${Math.round(194 - g * 110)},26,${(.4 + g * .6).toFixed(2)}))` : "none";
+}
+function restHand(){ const p = $("pF"); placeHand(p.offsetLeft + p.offsetWidth * 1.02, p.offsetTop + p.offsetHeight * .55, 0, 0); $("hand").style.opacity = .85; }
+function hideHand(){ const h = $("hand"); h.style.opacity = ""; h.style.filter = ""; h.style.transform = ""; }
+function sizeTrail(){
+  const cv = $("trail"), st = $("stage"), dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.max(1, Math.round(st.clientWidth * dpr)); cv.height = Math.max(1, Math.round(st.clientHeight * dpr)); cv._dpr = dpr;
+}
+function clearTrail(){ const cv = $("trail"); const c = cv.getContext("2d"); c.clearRect(0, 0, cv.width, cv.height); }
+function drawTrail(now, a){
+  const cv = $("trail"), c = cv.getContext("2d"), dpr = cv._dpr || 1, pts = a.trail, life = 380;
+  c.clearRect(0, 0, cv.width, cv.height);
+  while (pts.length && now - pts[0].t > life) pts.shift();
+  if (pts.length < 2) return;
+  c.lineCap = "round"; c.lineJoin = "round";
+  for (let i = 1; i < pts.length; i++){
+    const al = 1 - (now - pts[i].t) / life;
+    c.strokeStyle = `rgba(255,${Math.round(200 - a.m * 130)},50,${(al * .85).toFixed(2)})`;
+    c.lineWidth = (3 + a.m * 9) * al * dpr;
+    c.beginPath(); c.moveTo(pts[i - 1].x * dpr, pts[i - 1].y * dpr); c.lineTo(pts[i].x * dpr, pts[i].y * dpr); c.stroke();
+  }
+}
+function resetAttack(){ if (G) G.atk = null; $("tgt").hidden = true; hideHand(); clearTrail(); }
+function layoutAttack(){
+  $("tgt").style.left = (swipeThr() - 8) + "px";
+  sizeTrail();
+  if (G && G.atk && !G.atk.down) restHand();
+}
+function playerTurn(){
+  if (G.over) return;
+  phase = "attack"; setMode("attack");
+  cheer(pick(["Your turn. Spin that fist, then swipe through!", "Build momentum… then slap ’em silly!", "Faster circles, harder slap!"]));
+  $("atkHint").textContent = `Circle your finger fast, then swipe right through ${G.enemy.short}`;
+  $("tgt").hidden = false;
+  G.atk = {down:false, id:null, m:0, ang:0, cx:0, cy:0, lx:0, ly:0, prx:0, pry:0, hasPrev:false, samples:[], trail:[], lift:0, last:performance.now()};
+  $("fill").style.width = "0%"; $("mlabel").textContent = "Momentum";
+  layoutAttack();
+  const loop = now => {
+    const a = G.atk;
+    if (!a || phase !== "attack") return;
+    const dt = Math.max(.001, Math.min(.1, (now - a.last) / 1000)); a.last = now;
+    const spin = a.down ? a.ang / dt : 0; a.ang = 0;
+    const target = Math.min(1, spin / 14 * (1 + G.spinBonus));
+    if (target > a.m) a.m = Math.min(1, a.m + (target - a.m) * Math.min(1, dt * 3.2));
+    else a.m = Math.max(0, a.m - dt * .55);
+    $("fill").style.width = (a.m * 100) + "%";
+    $("mlabel").textContent = a.m > .85 ? "MAX POWER! Swipe now!" : a.m > .35 ? "Building…" : "Momentum";
+    if (a.down) placeHand(a.lx, a.ly, a.m, a.lift);
+    drawTrail(now, a);
+    raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+}
+function stagePt(e){
+  const r = $("stage").getBoundingClientRect(), t = performance.now();
+  if (rotMQ.matches) return {x: e.clientY - r.top, y: r.right - e.clientX, t};
+  return {x: e.clientX - r.left, y: e.clientY - r.top, t};
+}
+function onStageDown(e){
+  if (!G) return;
+  if (phase === "brace"){ e.preventDefault(); act(); return; }
+  const a = G.atk;
+  if (phase !== "attack" || !a) return;
+  e.preventDefault();
+  try { $("stage").setPointerCapture(e.pointerId); } catch (x) {}
+  const p = stagePt(e);
+  a.down = true; a.id = e.pointerId; a.samples = [p]; a.lx = p.x; a.ly = p.y; a.cx = p.x; a.cy = p.y; a.hasPrev = false;
+  a.lift = e.pointerType === "touch" ? .3 : 0;
+  a.trail.push(p);
+  placeHand(p.x, p.y, a.m, a.lift);
+}
+function onStageMove(e){
+  const a = G && G.atk;
+  if (phase !== "attack" || !a || !a.down || e.pointerId !== a.id) return;
+  e.preventDefault();
+  const p = stagePt(e), thr = swipeThr();
+  a.cx += (p.x - a.cx) * .12; a.cy += (p.y - a.cy) * .12;
+  const rx = p.x - a.cx, ry = p.y - a.cy;
+  if (Math.hypot(rx, ry) > 16){
+    if (a.hasPrev) a.ang += Math.abs(Math.atan2(a.prx * ry - a.pry * rx, a.prx * rx + a.pry * ry));
+    a.prx = rx; a.pry = ry; a.hasPrev = true;
+  } else a.hasPrev = false;
+  a.samples.push(p); a.trail.push(p);
+  while (a.samples.length > 2 && p.t - a.samples[0].t > 110) a.samples.shift();
+  const prevX = a.lx; a.lx = p.x; a.ly = p.y;
+  if (prevX < thr && p.x >= thr && p.x > prevX) doSwipe();
+}
+function onStageUp(e){
+  const a = G && G.atk;
+  if (phase !== "attack" || !a || !a.down || e.pointerId !== a.id) return;
+  a.down = false; restHand();
+}
+function doSwipe(){
+  const a = G.atk; phase = "anim"; cancelAnimationFrame(raf);
+  const W = $("stage").clientWidth, s = a.samples, first = s[0], last = s[s.length - 1];
+  const dt = Math.max(.016, (last.t - first.t) / 1000);
+  const speed = Math.hypot(last.x - first.x, last.y - first.y) / dt;
+  const sn = Math.min(1, speed / (W * 3));
+  const q = Math.min(1, sn * (.08 + .92 * a.m * a.m));
+  const crit = q >= .85;
+  const dmg = Math.max(1, Math.round(G.power * (.3 + 1.9 * q) * (.95 + Math.random() * .1)));
+  const kmh = Math.round(40 + q * 360);
+  G.stats.slaps++; if (crit) G.stats.crits++;
+  const tag = crit ? "PERFECT!" : q >= .45 ? "Solid hit" : "Weak slap";
+  const lastX = a.lx, lastY = a.ly - a.lift * handSize();
+  a.down = false; G.atk = null;
+  $("tgt").hidden = true; clearTrail(); setMode("none"); sfx.swish();
+  const hand = $("hand"), hs = handSize(), ep = cheekPos("e");
+  hand.animate([
+    {transform: hand.style.transform, opacity: 1},
+    {transform: `translate(${ep.x + 30 - hs / 2}px,${ep.y - hs / 2 + 8}px) rotate(25deg)`, opacity: 0}
+  ], {duration: 200, easing: "ease-out"});
+  later(hideHand, 215);
+  later(() => impact("e", dmg, crit, tag, kmh + " km/h", crit ? "gold" : ""), 90);
+  later(() => { if (!G.over) enemyTurn(); }, 1550);
+}
+function enemyTurn(){
+  clearCallout();
+  phase = "brace"; setMode("brace");
+  cheer(pick([`${G.enemy.short} is winding up. Get ready!`, "Incoming! Watch the ring.", "Here it comes!"]));
+  const Tl = Math.max(.7, 1.15 - .09 * G.round), t0 = performance.now();
+  G.brace = {t0, Tl, done: false};
+  const ring = $("ringS");
+  const loop = now => {
+    const t = (now - t0) / 1000;
+    ring.style.transform = `scale(${Math.max(.55, 2.4 - 1.4 * (t / Tl)).toFixed(3)})`;
+    if (t > Tl + .17 * (1 + G.braceBonus)) { resolveBrace("late"); return; }
+    raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+}
+function judgeBrace(){
+  const t = (performance.now() - G.brace.t0) / 1000, diff = t - G.brace.Tl, a = Math.abs(diff);
+  const k = (1 + G.braceBonus) * Math.max(.4, 1 - .08 * G.round);
+  if (a < .05 * k) return "perfect";
+  if (a < .12 * k) return "good";
+  return diff < 0 ? "early" : "late";
+}
+function resolveBrace(grade){
+  if (!G.brace || G.brace.done) return;
+  G.brace.done = true; cancelAnimationFrame(raf); phase = "anim";
+  const red = grade === "perfect" ? .75 : grade === "good" ? .2 : 0;
+  const eCrit = Math.random() < .22;
+  let dmg = G.enemy.power * (.85 + Math.random() * .3) * (eCrit ? 1.8 : 1);
+  dmg = Math.max(1, Math.round(dmg * (40 / (40 + G.def)) * (1 - red)));
+  if (grade === "perfect") G.stats.perfect++;
+  setMode("none"); sfx.swish(); slapAnim("e");
+  const label = {perfect:"PERFECT BRACE!", good:"Good brace", early:"Too early!", late:"Too slow!"}[grade];
+  const small = eCrit ? "Critical slap!" : red ? `-${Math.round(red * 100)}% damage` : "";
+  later(() => impact("p", dmg, eCrit, label, small, red ? "good" : "bad", grade), 300);
+  later(() => { if (!G.over) playerTurn(); }, 1550);
+}
+function impact(side, dmg, crit, big, small, cls, grade){
+  const vE = side === "e", f = $(vE ? "eF" : "pF"), cp = cheekPos(side), hp = headPos(side);
+  if (vE) G.enemy.hpNow = Math.max(0, G.enemy.hpNow - dmg); else G.hp = Math.max(0, G.hp - dmg);
+  updateHUD();
+  sfx.slap(crit); buzz(crit ? [30, 20, 60] : 25);
+  retrig(f, vE ? "snapR" : "snapL");
+  f.classList.add("hurt"); later(() => { if (!f.classList.contains("ko")) f.classList.remove("hurt"); }, 650);
+  retrig($("stage"), "shake"); later(() => $("stage").classList.remove("shake"), 400);
+  burst(cp.x, cp.y, crit ? 10 : 6, crit);
+  pop(hp.x, hp.y, "-" + dmg, crit ? "crit" : "");
+  callout(big, small, cls);
+  if (crit) $("flash").animate([{opacity:.6},{opacity:0}], {duration: 300});
+  if (vE) cheer(crit ? pick(["Perfect! That one rattled the moons!", "Sweet spot! Heads are spinning!"]) : big === "Solid hit" ? pick(["Clean smack!", "That’ll leave a mark."]) : pick(["That was more of a pat…", "More spin, more speed!"]));
+  else cheer(grade === "perfect" ? "You rode out the slap." : grade === "good" ? "Took the edge off." : grade === "early" ? "Too early. Wait for the rings to meet." : "Too slow. Your cheek takes it.");
+  if (vE ? G.enemy.hpNow <= 0 : G.hp <= 0) knockout(side);
+}
+function knockout(side){
+  G.over = true; phase = "over"; cancelAnimationFrame(raf);
+  $(side === "e" ? "eF" : "pF").classList.add("ko");
+  sfx.ko(); setMode("none");
+  later(() => { clearCallout(); banner("KNOCKOUT!", side === "e" ? `${G.enemy.name} is out cold!` : "You’re out cold!", false); }, 900);
+  later(() => { if (side === "e") winRound(); else endScreen(false); }, 2900);
+}
+function winRound(){
+  if (G.round === ENEMIES.length - 1){ endScreen(true); return; }
+  const reward = 70 + (G.round + 1) * 35 + Math.round(G.hp / G.maxHp * 30);
+  G.coins += reward;
+  G.shopNote = `+${reward} coins. No medics this time. You go into the next fight as you are.`;
+  sfx.coin(); renderShop(); show("shop");
+}
+function act(){
+  if (!G || phase !== "brace") return;
+  if ((performance.now() - G.brace.t0) / 1000 < .25) return;
+  sfx.brace(); resolveBrace(judgeBrace());
+}
+
+/* ---------- shop ---------- */
+function renderShop(){
+  const next = ENEMIES[G.round + 1];
+  $("shopTitle").textContent = `Round ${G.round + 1} cleared!`;
+  $("shopNote").textContent = G.shopNote;
+  $("shopCoins").textContent = G.coins;
+  $("shopStats").innerHTML = `Slap force ${G.power}<br>Armor ${armor()}% · HP ${G.hp}/${G.maxHp}`;
+  let html = "", sec = "";
+  ITEMS.forEach(it => {
+    if (it.sec !== sec){ sec = it.sec; html += `<div class="sec">${sec}</div>`; }
+    const owned = !it.repeat && G.owned.includes(it.id);
+    const full = it.id === "heal" && G.hp >= G.maxHp;
+    const dis = owned || full || G.coins < it.price;
+    html += `<div class="item${owned ? " owned" : ""}"><div class="ic">${it.icon}</div><div><b>${it.name}</b><span>${it.desc}</span></div><button class="buy" data-id="${it.id}" ${dis ? "disabled" : ""}>${owned ? "Owned" : full ? "Full HP" : "🪙 " + it.price}</button></div>`;
+  });
+  $("shopList").innerHTML = html;
+  $("nextUp").innerHTML = `<b>Up next: ${next.name}</b><br>${next.hp} HP · slap force ${next.power}. ${next.taunt}`;
+  $("nextBtn").textContent = `Fight ${next.short}`;
+}
+function buy(id){
+  const it = ITEMS.find(x => x.id === id);
+  if (!it || G.coins < it.price) return;
+  if (!it.repeat && G.owned.includes(id)) return;
+  if (id === "heal" && G.hp >= G.maxHp) return;
+  const y = $("shopList").scrollTop;
+  G.coins -= it.price; it.fx(G);
+  if (!it.repeat) G.owned.push(id);
+  sfx.coin(); renderShop(); $("shopList").scrollTop = y;
+}
+
+/* ---------- end ---------- */
+function endScreen(win){
+  clearAll(); phase = "idle"; show("end");
+  const s = G.stats;
+  $("endFight").innerHTML = `<div class="fi">${fighterSVG(PLAYER)}</div>`;
+  if (win){
+    sfx.win();
+    $("endTitle").textContent = "Galactic champion!";
+    $("endTitle").style.color = "var(--gold)";
+    $("endSub").textContent = "Zorg is on the floor and the belt is yours. Every moon is chanting your name.";
+  } else {
+    $("endTitle").textContent = "Knocked out!";
+    $("endTitle").style.color = "var(--pink)";
+    $("endSub").textContent = `You went down in round ${G.round + 1} against ${G.enemy.short}. Rub some gel on that cheek and try again.`;
+  }
+  $("endStats").textContent = `${s.slaps} slaps thrown · ${s.crits} perfect hits · ${s.perfect} perfect braces`;
+  $("againBtn").textContent = win ? "Defend the title" : "Try again";
+}
+
+/* ---------- landscape lock (works where the browser allows it) ---------- */
+function tryLandscape(){
+  try {
+    if (!coarseMQ.matches) return;
+    const lock = () => { if (screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {}); };
+    const d = document.documentElement;
+    if (d.requestFullscreen && !document.fullscreenElement) d.requestFullscreen().then(lock).catch(() => {});
+    else lock();
+  } catch (e) {}
+}
+
+/* ---------- init ---------- */
+$("duel").insertAdjacentHTML("afterbegin", `<div class="fi bobA">${fighterSVG(PLAYER)}</div>`);
+$("duel").insertAdjacentHTML("beforeend", `<div class="fi flip bobB">${fighterSVG(ENEMIES[4])}</div>`);
+$("startBtn").addEventListener("click", () => { ctx(); tryLandscape(); startTournament(); });
+$("againBtn").addEventListener("click", () => { ctx(); startTournament(); });
+$("nextBtn").addEventListener("click", () => { G.round++; startRound(); });
+$("shopList").addEventListener("click", e => { const b = e.target.closest("button[data-id]"); if (b) buy(b.dataset.id); });
+$("stage").addEventListener("pointerdown", onStageDown);
+$("stage").addEventListener("pointermove", onStageMove);
+$("stage").addEventListener("pointerup", onStageUp);
+$("stage").addEventListener("pointercancel", onStageUp);
+$("muteBtn").addEventListener("click", () => { muted = !muted; $("muteBtn").textContent = muted ? "🔇" : "🔊"; });
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && !$("fight").hidden){ e.preventDefault(); if (!e.repeat) act(); }
+});
+window.addEventListener("resize", () => { if (G && phase === "attack") layoutAttack(); });
+})();
+</script>
+</body>
+</html>

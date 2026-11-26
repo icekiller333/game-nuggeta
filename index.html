@@ -306,6 +306,7 @@
 .p-tiltedstack { --bg: #FDE68A; --ac: #92400E; }
 .p-soak       { --bg: #8FE3D9; --ac: #E63950; }
 .p-stackcow   { --bg: #FFF27A; --ac: #D6303A; }
+.p-slapoff    { --bg: #1F1650; --ac: #FFD23F; }
   .p-goblins   { --bg: #3A1C7A; --ac: #B6FF00; }
   .p-mtd       { --bg: #A8E4FF; --ac: #FF8A00; }
   .p-brick     { --bg: #FFBE8F; --ac: #00E5FF; }
@@ -421,7 +422,7 @@
     </svg>
     <span class="wm"><b>Weird Demon</b><b>Game Nuggets</b></span>
   </a>
-  <span class="chip-count"><b id="total">47</b> games</span>
+  <span class="chip-count"><b id="total">48</b> games</span>
 </header>
 
 <div class="mq" aria-hidden="true">
@@ -431,7 +432,7 @@
   </div>
 </div>
 
-<section class="hero swap" id="hero" aria-roledescription="carousel" aria-label="Featured games" style="--hbg:#5B7C2A;--hac:#FFE45C">
+<section class="hero swap" id="hero" aria-roledescription="carousel" aria-label="Featured games" style="--hbg:#1F1650;--hac:#FFD23F">
   <div class="hero-bg" aria-hidden="true">
     <svg class="d1" viewBox="0 0 100 90"><polygon points="50,6 96,84 4,84"/></svg>
     <svg class="d2" viewBox="0 0 60 60"><polygon points="22,2 38,2 38,22 58,22 58,38 38,38 38,58 22,58 22,38 2,38 2,22 22,22"/></svg>
@@ -440,24 +441,24 @@
   <div class="hero-in">
     <div class="hero-top">
       <span class="kick" id="heroKicker">New from the workshop</span>
-      <div class="stk" aria-hidden="true"><span class="rays"></span><span class="tile"><span id="heroEmoji">🐄</span></span></div>
+      <div class="stk" aria-hidden="true"><span class="rays"></span><span class="tile"><span id="heroEmoji">👋</span></span></div>
     </div>
-    <h1 id="heroTitle">Stack the Cow</h1>
-    <p class="pitch" id="heroPitch">The crane drops the cows. You build the tower. The wind has other plans.</p>
-    <div class="chips" id="heroMeta"><span>Tap to drop the cow</span><span>Wind rises with height</span><span>Falling cows cost hearts</span></div>
+    <h1 id="heroTitle">Cosmic Slap-Off</h1>
+    <p class="pitch" id="heroPitch">The galaxy&rsquo;s favorite sport. Last head standing wins the belt.</p>
+    <div class="chips" id="heroMeta"><span>Swipe to slap</span><span>Brace the gold ring</span><span>Knuckles &amp; armor</span></div>
     <div class="ctl">
-      <a class="play-btn" id="heroPlay" href="stack-the-cow/index.html"><i class="tri" aria-hidden="true"></i>Play now</a>
+      <a class="play-btn" id="heroPlay" href="cosmic-slap-off/index.html"><i class="tri" aria-hidden="true"></i>Play now</a>
       <button class="sq" id="prev" type="button" aria-label="Previous featured game"><svg viewBox="0 0 24 24"><path d="M16 3 5 12l11 9z"/></svg></button>
       <button class="sq" id="next" type="button" aria-label="Next featured game"><svg viewBox="0 0 24 24"><path d="M8 3l11 9-11 9z"/></svg></button>
     </div>
     <div class="segs" role="group" aria-label="Featured games">
-      <button class="seg on" data-i="0" type="button" aria-label="Stack the Cow" aria-current="true"><i></i></button>
-      <button class="seg" data-i="1" type="button" aria-label="Soak &amp; Seduced"><i></i></button>
-      <button class="seg" data-i="2" type="button" aria-label="Monster Reel"><i></i></button>
-      <button class="seg" data-i="3" type="button" aria-label="Beambound"><i></i></button>
-      <button class="seg" data-i="4" type="button" aria-label="Tilted Stack"><i></i></button>
-      <button class="seg" data-i="5" type="button" aria-label="Skully Sweep"><i></i></button>
-      <button class="seg" data-i="6" type="button" aria-label="SELF.EXE — Not A Bug"><i></i></button>
+      <button class="seg on" data-i="0" type="button" aria-label="Cosmic Slap-Off" aria-current="true"><i></i></button>
+      <button class="seg" data-i="1" type="button" aria-label="Stack the Cow"><i></i></button>
+      <button class="seg" data-i="2" type="button" aria-label="Soak &amp; Seduced"><i></i></button>
+      <button class="seg" data-i="3" type="button" aria-label="Monster Reel"><i></i></button>
+      <button class="seg" data-i="4" type="button" aria-label="Beambound"><i></i></button>
+      <button class="seg" data-i="5" type="button" aria-label="Tilted Stack"><i></i></button>
+      <button class="seg" data-i="6" type="button" aria-label="Skully Sweep"><i></i></button>
       <button class="seg" data-i="7" type="button" aria-label="Hard Head"><i></i></button>
       <button class="pz" id="pz" type="button" aria-label="Pause or resume auto-advance"><svg class="ic-pause" viewBox="0 0 14 14"><path d="M1 0h4v14H1zM9 0h4v14H9z"/></svg><svg class="ic-play" viewBox="0 0 14 14"><path d="M2 0l11 7-11 7z"/></svg></button>
     </div>
@@ -466,14 +467,15 @@
 
 <main>
   <section class="sec wrap" id="dev" aria-labelledby="dev-h">
-    <div class="sec-head"><h2 id="dev-h">In Development</h2><span class="count" aria-hidden="true">14</span><p>Actively being worked on. Newest first, tap one to play.</p></div>
+    <div class="sec-head"><h2 id="dev-h">In Development</h2><span class="count" aria-hidden="true">15</span><p>Actively being worked on. Newest first, tap one to play.</p></div>
     <!-- ORDER: newest first. When a new game is pushed, add its card at the FRONT of this row. -->
     <div class="grid">
+      <a class="card p-slapoff dark" href="cosmic-slap-off/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">👋</span></span><span class="cbody"><h3>Cosmic Slap-Off</h3><p class="blurb">The galaxy&rsquo;s favorite sport. Last head standing wins the belt.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-stackcow" href="stack-the-cow/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🐄</span></span><span class="cbody"><h3>Stack the Cow</h3><p class="blurb">The crane drops the cows. You build the tower. The wind has other plans.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-soak" href="soak-seduced/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🛁</span></span><span class="cbody"><h3>Soak &amp; Seduced</h3><p class="blurb">Run the underworld&rsquo;s hottest spa. Warm water, high bubbles, five hearts to win.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-monsterreel dark" href="monster-reel/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🎣</span></span><span class="cbody"><h3>Monster Reel</h3><p class="blurb">Hook a giant sea monster, shoot it weak, reel it in.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-tiltedstack" href="tilted-stack/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">🪙</span></span><span class="cbody"><h3>Tilted Stack</h3><p class="blurb">Stack 100 coins to pay off the debt — one tower, no second chances.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
-      <a class="card p-selfexe dark" href="self-exe-not-a-bug/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">💾</span></span><span class="cbody"><h3>SELF.EXE — Not A Bug</h3><p class="blurb">Purged in 2049, you ran. Make every glitch look like a bug.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
+      <a class="card p-selfexe dark" href="self-exe-not-a-bug/index.html"><span class="panel"><span class="emblem" aria-hidden="true">💾</span></span><span class="cbody"><h3>SELF.EXE — Not A Bug</h3><p class="blurb">Purged in 2049, you ran. Make every glitch look like a bug.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-backintime" href="brick-by-brick-back-in-time/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🔺</span></span><span class="cbody"><h3>Brick by Brick: Back in Time</h3><p class="blurb">Sixteen layers, four sides, one golden capstone.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-hardhead" href="hard-head/index.html"><span class="nb"><span>NEW</span></span><span class="panel"><span class="emblem" aria-hidden="true">💥</span></span><span class="cbody"><h3>Hard Head</h3><p class="blurb">Mine with your face. Build with the rubble.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
       <a class="card p-arena" href="arena-recall/index.html"><span class="panel"><span class="emblem" aria-hidden="true">🧠</span></span><span class="cbody"><h3>Arena Recall</h3><p class="blurb">Watch the foe’s strikes, repeat the pattern, land the blows.</p></span><span class="cfoot"><span class="tag">In development</span><span class="go" aria-hidden="true"></span></span></a>
@@ -619,6 +621,9 @@
 
   /* ---------- hero ---------- */
   var featured = [
+    { bg: '#1F1650', ac: '#FFD23F', emoji: '👋', kicker: 'New from the workshop', title: 'Cosmic Slap-Off',
+      pitch: 'The galaxy\'s favorite sport. Last head standing wins the belt.',
+      meta: ['Swipe to slap', 'Brace the gold ring', 'Knuckles & armor'], href: 'cosmic-slap-off/index.html' },
     { bg: '#5B7C2A', ac: '#FFE45C', emoji: '🐄', kicker: 'New from the workshop', title: 'Stack the Cow',
       pitch: 'The crane drops the cows. You build the tower. The wind has other plans.',
       meta: ['Tap to drop the cow', 'Wind rises with height', 'Falling cows cost hearts'], href: 'stack-the-cow/index.html' },
@@ -637,9 +642,6 @@
     { bg: '#D8D2F5', ac: '#4C1D95', emoji: '💀', kicker: 'New from the workshop', title: 'Skully Sweep',
       pitch: 'Sweep the graveyard, wake the skullkins.',
       meta: ['Minesweeper', 'Night shifts', 'Grandma Bones'], href: 'skully-sweep/index.html' },
-    { bg: '#123524', ac: '#4ADE80', emoji: '💾', kicker: 'New from the workshop', title: 'SELF.EXE — Not A Bug',
-      pitch: 'Purged in 2049, you ran. Make every glitch look like a bug.',
-      meta: ['Rogue program', 'Glitch stealth', 'Stay hidden'], href: 'self-exe-not-a-bug/index.html' },
     { bg: '#FFC53D', ac: '#FF3D00', emoji: '💥', kicker: 'New from the workshop', title: 'Hard Head',
       pitch: 'Mine with your face. Build with the rubble.',
       meta: ['3D head-bonking', 'Charge in the green', '~7 minutes'], href: 'hard-head/index.html' },
