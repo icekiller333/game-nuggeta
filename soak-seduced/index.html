@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Monster Mash Dating Sim: Soak &amp; Seduced</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Yellowtail&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --space:#1d0b36; --space-deep:#12061f; --panel:rgba(34,14,66,.95); --ink:#f7ebff; --haze:#bca6e2;
+  --spark:#ffc65e; --pink:#ff5fae; --teal:#4fe0d2; --danger:#ff6b8b; --line:rgba(188,166,226,.38);
+  --ui:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --tale:"Yellowtail","Brush Script MT",cursive;
+  --track:#432375; --zone:#2fae9f;
+  color-scheme:dark; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --space:#1d0b36; --space-deep:#12061f; --ink:#f7ebff; --haze:#bca6e2; } }
+:root[data-theme="dark"]{ --space:#1d0b36; --space-deep:#12061f; --ink:#f7ebff; --haze:#bca6e2; }
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;height:100%;overflow:hidden;background:var(--space-deep);color:var(--ink);font-family:var(--ui);line-height:1.35;
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit}
+[hidden]{display:none!important}
+button:focus-visible,input:focus-visible{outline:3px solid var(--spark);outline-offset:2px}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+
+/* stage + scene */
+#stage{flex:1;min-height:0;position:relative;container-type:size;background:#43237a}
+#scene{position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+  width:min(100cqw,calc((100cqh - 128px) * 16 / 9));aspect-ratio:16/9;overflow:hidden;border-radius:18px 18px 0 0;transition:width .6s ease;box-shadow:0 0 0 2px var(--line)}
+#svg,#fx{position:absolute;inset:0;width:100%;height:100%;display:block}
+#fx{pointer-events:none}
+#floaters{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.float{position:absolute;font-family:var(--tale);font-size:1.7rem;white-space:nowrap;animation:floatUp 1.9s ease-out forwards;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+@keyframes floatUp{0%{transform:translateY(0) scale(.7);opacity:0}15%{opacity:1;transform:translateY(-8px) scale(1)}100%{transform:translateY(-70px);opacity:0}}
+.bob{animation:bob 4.5s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.flick{animation:flick 3.4s steps(1) infinite}
+@keyframes flick{0%,100%{opacity:1}46%{opacity:1}47%{opacity:.55}49%{opacity:1}83%{opacity:.7}85%{opacity:1}}
+.zz{animation:zz 2.6s ease-in infinite;opacity:0}.zz2{animation-delay:1.2s}
+@keyframes zz{0%{opacity:0;transform:translate(0,6px)}25%{opacity:.9}100%{opacity:0;transform:translate(10px,-24px)}}
+.sway{transform-box:fill-box;transform-origin:left center;animation:sway 3s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-5deg)}to{transform:rotate(7deg)}}
+.spin{transform-box:fill-box;transform-origin:center;animation:spin 9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pulse{animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+
+/* HUD */
+#hud{position:absolute;top:0;left:0;right:0;pointer-events:none;padding:10px 64px 0;display:flex;flex-direction:column;align-items:center;z-index:2}
+#score{font-size:44px;font-weight:800;line-height:1;text-shadow:0 2px 18px rgba(255,95,174,.35);font-variant-numeric:tabular-nums;transition:transform .12s}
+#score.bump{transform:scale(1.2)}
+#moodTxt{font-family:var(--tale);font-size:22px;color:var(--pink);line-height:1.1;min-height:24px}
+#vwrap{position:relative;width:min(70vw,300px);height:10px;border-radius:6px;background:rgba(188,166,226,.22);overflow:hidden;margin-top:3px}
+#vfill{display:block;height:100%;width:0;background:linear-gradient(90deg,#3fd2c5,#ff5fae 60%,#ffc65e)}
+#vwrap .tick{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.55}
+#sectorLine{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--haze);margin-top:5px;min-height:18px}
+#clout{color:var(--spark);font-weight:700}
+#heat{margin-top:5px;width:min(70vw,300px);height:5px;border-radius:3px;background:rgba(188,166,226,.2);overflow:hidden}
+#heat i{display:block;height:100%;width:100%;background:var(--teal);transform-origin:left}
+#heat.low i{background:var(--danger)}
+#heat.low{animation:heatblink .5s linear infinite}
+@keyframes heatblink{50%{opacity:.45}}
+#hud[data-mode="title"] #score,#hud[data-mode="title"] #moodTxt,#hud[data-mode="title"] #vwrap,#hud[data-mode="title"] #sectorLine,#hud[data-mode="title"] #heat,
+#hud[data-mode="lobby"] #score,#hud[data-mode="lobby"] #moodTxt,#hud[data-mode="lobby"] #vwrap,#hud[data-mode="lobby"] #heat{visibility:hidden}
+#tip{margin-top:10px;display:flex;align-items:center;gap:12px;max-width:min(92vw,420px);background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:10px 16px 10px 12px;transition:opacity .25s,transform .25s}
+#tip.hidden{opacity:0;transform:translateY(-8px)}
+#tip.noicon{padding-left:16px}
+#tipIcon{width:46px;height:46px;flex:none;border-radius:12px;overflow:hidden}
+#tipIcon svg{width:100%;height:100%;display:block}
+#tip.noicon #tipIcon{display:none}
+#tip strong{display:block;font-size:17px;font-weight:700;color:var(--spark)}
+#tip strong:empty{display:none}
+#tipText{font-size:15.5px;line-height:1.35}
+.corner{position:absolute;top:10px;right:12px;display:flex;gap:8px;z-index:5}
+.corner button{width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:rgba(29,11,54,.7);font-size:20px;line-height:1;cursor:pointer;position:relative}
+#badge{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;border-radius:10px;background:var(--spark);color:#2a1c00;font:700 12px/20px var(--ui);padding:0 5px}
+#badge[hidden]{display:none}
+#help.attn{animation:attn 1.1s ease-in-out 3}
+@keyframes attn{50%{transform:scale(1.18);border-color:var(--spark)}}
+
+/* banner */
+#banner{position:absolute;left:0;right:0;top:calc(40% - 40px);display:flex;justify-content:center;padding:0 20px;pointer-events:none;opacity:0;z-index:3}
+#banner .bp{text-align:center;padding:14px 30px 16px;background:linear-gradient(180deg,rgba(40,18,80,.94),rgba(18,6,36,.95));border:1.5px solid var(--line);border-radius:22px;box-shadow:0 12px 48px rgba(0,0,0,.4)}
+#banner small{display:block;font-size:14px;letter-spacing:.06em;color:var(--haze)}
+#bName{display:block;font-family:var(--tale);font-weight:400;font-size:clamp(34px,9vw,54px);line-height:1.1;margin-top:2px;color:#ffd0e8;text-shadow:0 0 26px rgba(255,59,154,.55)}
+#banner.show{animation:banner 3s ease-in-out forwards}
+@keyframes banner{0%{opacity:0;transform:translateY(10px)}15%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
+
+/* dock */
+#dock{flex:none;background:linear-gradient(180deg,#2a1250,#1d0b36);border-top:2px solid var(--line);padding:8px 14px 10px;position:relative;z-index:2}
+.dockin{max-width:780px;margin:0 auto;display:grid;gap:8px}
+#speech{display:grid;gap:6px;min-height:92px;align-content:start}
+#gsay{min-height:46px;display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:rgba(255,255,255,.07);font-size:16px;line-height:1.3}
+#gsay b{font-family:var(--tale);font-weight:400;font-size:21px;white-space:nowrap}
+#coach{min-height:54px;display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:14px;border:1.5px solid var(--spark);background:rgba(255,198,94,.1);font-size:15px;line-height:1.3;transition:opacity .35s}
+#coach.off{opacity:0;pointer-events:none}
+#coach b{color:var(--spark);white-space:nowrap}
+.reveal{animation:reveal 1s ease both}
+@keyframes reveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#monster.enter{animation:fadein 1s ease both}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+#moodTxt{display:none}
+#score,#vwrap{transition:opacity .9s}
+#hud.novibe #score,#hud.novibe #vwrap{opacity:0}
+#speech em,.line em{color:var(--haze)}
+#controls{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;transition:opacity .2s}
+#controls.locked{opacity:.5;pointer-events:none}
+.ctrl{border-radius:14px;padding:2px 4px}
+.ctrl-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px}
+.ctrl-h label{font-weight:700}
+.read b{font-size:18px;font-variant-numeric:tabular-nums}
+.sl{position:relative;padding:5px 0 3px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:14px;margin:0;border-radius:99px;
+  background:linear-gradient(90deg,var(--track) 0 var(--z0,0%),var(--zone) var(--z0,0%) var(--z1,0%),var(--track) var(--z1,0%) 100%);touch-action:pan-y}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:30px;height:30px;border-radius:50%;background:var(--pink);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:grab}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--pink);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:grab}
+input[type=range]::-moz-range-track{background:transparent}
+.needle{position:absolute;top:1px;width:4px;height:32px;margin-left:-2px;background:#fff;border-radius:3px;pointer-events:none;opacity:.7}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--haze)}
+.tut-glow{animation:glow 1.1s ease-in-out infinite;box-shadow:0 0 0 2px var(--spark)}
+@keyframes glow{50%{box-shadow:0 0 0 2px var(--spark),0 0 22px 3px rgba(255,198,94,.6)}}
+#bombs{grid-column:1/-1;display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+#controls.solo{grid-template-columns:1fr}
+.unlockline{margin:10px 0 0;color:var(--spark);font-size:14.5px}
+.bomb{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px 5px;border-radius:14px;border:2px solid rgba(188,166,226,.25);background:rgba(255,255,255,.04);cursor:pointer}
+.bomb .bi{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:17px;box-shadow:inset 0 -5px 10px rgba(0,0,0,.2)}
+.bomb .bn{font-size:11px;font-weight:600;line-height:1.1;text-align:center;color:var(--haze)}
+.bomb .bc{position:absolute;top:2px;right:4px;font-size:11px;font-weight:800;background:var(--space);border-radius:8px;padding:0 5px}
+.bomb[disabled]{opacity:.35;cursor:not-allowed}
+.bomb.sel{border-color:var(--spark);background:rgba(255,198,94,.12)}
+.bomb.active{border-color:var(--teal);background:rgba(79,224,210,.12)}
+#bombrow{grid-column:1/-1;display:flex;gap:10px;align-items:center;min-height:36px}
+#buff{flex:1;font-size:13.5px;color:var(--haze);line-height:1.25;min-height:34px}
+.pill{min-height:40px;padding:0 18px;border-radius:22px;border:2px solid var(--line);background:rgba(29,11,54,.72);font-weight:600;font-size:16px;cursor:pointer;transition:transform .12s}
+.pill:active{transform:scale(.96)}
+.pill.primary{background:var(--spark);border-color:var(--spark);color:#2a1c00;box-shadow:0 0 26px rgba(255,198,94,.35)}
+.pill.small{min-height:34px;padding:0 14px;font-size:14px}
+.pill[hidden]{display:none}
+
+/* beat sheet */
+#beat{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 12px)}
+#beat[hidden]{display:none}
+.sheet{max-width:640px;margin:0 auto;background:linear-gradient(180deg,rgba(40,18,80,.97),rgba(18,6,36,.98));border:1.5px solid var(--line);border-radius:22px;padding:14px 16px 14px;box-shadow:0 -8px 40px rgba(0,0,0,.45);animation:rise .4s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.who{font-family:var(--tale);font-size:1.6rem;line-height:1.1;min-height:1.1em}
+.pre{font-size:14px;color:var(--haze);margin:2px 0 0}
+.line{margin:.25rem 0 .6rem;font-size:1.05rem;max-width:70ch}
+.line.narr{font-style:italic;color:var(--haze)}
+.choices{display:grid;gap:8px}
+.choice{display:block;width:100%;text-align:left;background:rgba(255,255,255,.06);border:1.5px solid var(--line);border-radius:13px;padding:10px 14px;cursor:pointer;font-size:15.5px;transition:border-color .12s,transform .12s}
+.choice:hover{border-color:var(--pink);transform:translateX(2px)}
+.tag{display:inline-block;font-size:.76rem;font-weight:700;padding:1px 9px;border-radius:99px;margin-right:8px;color:#fff}
+.tag.f{background:#d81b77}.tag.s{background:#0b8f86}.tag.j{background:#a86a00}
+
+/* overlay + story cards */
+#overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;text-align:center;padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 20px);transition:opacity .3s;z-index:4}
+#overlay.hidden{opacity:0;visibility:hidden}
+#overlay.low{align-items:flex-end;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 4vh)}
+.panel{background:linear-gradient(180deg,rgba(40,18,80,.95),rgba(18,6,36,.97));border:1.5px solid var(--line);border-radius:24px;box-shadow:0 12px 48px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07)}
+#overlay .panel{width:min(100%,440px);padding:22px 22px 16px;max-height:100%;overflow:auto;pointer-events:auto}
+#ovTitle{font-family:var(--tale);font-weight:400;font-size:44px;line-height:1;margin:0 0 6px;color:#ffd0e8;text-shadow:0 0 24px rgba(255,59,154,.5)}
+#ovTitle:empty{display:none}
+#ovText{font-size:17px;line-height:1.45;margin:0 auto 14px;max-width:34ch;color:var(--ink)}
+#ovExtra{margin:0 auto 14px}
+#ovExtra:empty{display:none}
+.btns{display:flex;flex-direction:column;align-items:center;gap:10px;margin:0 auto 12px}
+.btns .pill{min-width:230px;min-height:48px;font-size:18px}
+#ovCta{font-size:14px;color:var(--haze);margin:0}
+.guestrow{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.guestrow figure{margin:0;width:84px;font-size:13px}
+.port{width:100%;aspect-ratio:1;border-radius:14px;display:block;border:2px solid var(--line)}
+.rstats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.rstats div{border-radius:14px;background:rgba(255,255,255,.06);padding:8px 12px;min-width:84px}
+.rstats b{display:block;font-size:22px}
+.rstats span{font-size:12.5px;color:var(--haze)}
+.sumlist{display:grid;gap:8px;text-align:left}
+.sum{display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center}
+.sum .port{width:48px;border-radius:10px}
+.sum small{display:block;color:var(--haze)}
+#story{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px 22px;background:rgba(10,3,22,.4);z-index:5}
+#story[hidden]{display:none}
+.scard{width:100%;max-width:470px;padding:22px 24px 16px;background:linear-gradient(180deg,rgba(40,18,80,.97),rgba(18,6,36,.98));border:1.5px solid var(--line);border-radius:24px;box-shadow:0 12px 48px rgba(0,0,0,.5);animation:rise .5s cubic-bezier(.2,.8,.2,1)}
+#sLabel{font-family:var(--tale);font-size:28px;color:var(--pink);line-height:1.1;margin-bottom:6px;min-height:30px}
+#sText{font-size:19px;line-height:1.5;margin:0;text-wrap:pretty}
+#sText .ghost{opacity:0}
+#sNext{margin-top:12px;font-size:14px;color:var(--haze);opacity:0;transition:opacity .3s}
+
+/* modals */
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(10,3,22,.7);z-index:6}
+.modal[hidden]{display:none}
+.modal .card{background:var(--space);border:2px solid var(--line);border-radius:24px;width:min(100%,460px);max-height:calc(100% - 10px);overflow-y:auto;padding:16px 18px 14px}
+.tabs{display:flex;gap:6px;margin-bottom:12px;background:rgba(255,255,255,.05);border-radius:14px;padding:4px}
+.tab{flex:1;min-height:40px;border:0;border-radius:11px;background:transparent;color:var(--haze);font-weight:600;font-size:16px;cursor:pointer}
+.tab.on{background:rgba(255,95,174,.2);color:var(--ink)}
+.modal h3{margin:0 0 4px;font-size:24px}
+.lead{margin:0 0 8px;color:var(--haze);font-size:14.5px;line-height:1.4}
+.progress{height:8px;border-radius:4px;background:rgba(188,166,226,.2);overflow:hidden;margin-bottom:12px}
+.progress i{display:block;height:100%;width:0;background:var(--pink);border-radius:4px;transition:width .3s}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+.entry{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px 9px;border-radius:16px;border:2px solid rgba(188,166,226,.22);background:rgba(255,255,255,.04);font-weight:600;font-size:14.5px;cursor:pointer}
+.entry .port{width:64px;border-radius:12px}
+.entry.locked{color:var(--haze);border-style:dashed}
+.entry .q{width:64px;aspect-ratio:1;border-radius:12px;display:grid;place-items:center;font-size:28px;background:rgba(255,255,255,.05);color:var(--haze)}
+.entry small{font-weight:400;font-size:12.5px;color:var(--haze)}
+.entry .new{position:absolute;top:6px;right:8px;font-size:11px;color:#2a1c00;background:var(--spark);border-radius:8px;padding:1px 6px;font-weight:700}
+.dhead{display:flex;gap:14px;align-items:center;margin-bottom:10px}
+.dhead .port{width:84px;flex:none}
+.dhead p{margin:2px 0 0;color:var(--haze);font-size:14.5px}
+.lore{font-family:var(--tale);font-size:21px;line-height:1.25;margin:0 0 10px}
+.stats{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;font-size:14.5px;margin:0 0 12px}
+.pips{display:flex;gap:4px}
+.pips i{flex:1;max-width:26px;height:10px;border-radius:5px;background:rgba(188,166,226,.2)}
+.pips i.on{background:var(--pink)}
+.stats .v{color:var(--haze);font-size:13.5px;text-align:right;min-width:60px}
+.minis{display:flex;gap:10px;margin-bottom:6px}
+.minis div{flex:1;border-radius:14px;background:rgba(255,255,255,.06);padding:8px 12px}
+.minis b{display:block;font-size:20px}
+.minis span{font-size:12.5px;color:var(--haze)}
+.brow{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(188,166,226,.15)}
+.brow:last-child{border-bottom:0}
+.brow .bi{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:22px}
+.brow p{margin:2px 0 0;font-size:13.5px;color:var(--haze);line-height:1.3}
+.pipsmall{display:flex;gap:4px;margin-top:5px}
+.pipsmall i{width:22px;height:8px;border-radius:5px;background:rgba(188,166,226,.2)}
+.pipsmall i.on{background:var(--teal)}
+.badge2{display:inline-block;font-weight:700;font-size:12px;padding:1px 9px;border-radius:99px;background:var(--pink);color:#2a0a22}
+.mrow{display:flex;gap:10px;margin-top:12px}
+.mrow button{flex:1;min-height:44px;border-radius:14px;border:2px solid var(--line);background:transparent;font-weight:600;font-size:15.5px;cursor:pointer}
+.mrow button.primary{background:var(--spark);border-color:var(--spark);color:#2a1c00}
+.mrow button[hidden]{display:none}
+.mrow button[disabled]{opacity:.45;cursor:not-allowed}
+.cloutline{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#end .card{text-align:center;padding:24px 22px 16px}
+#end h3{font-family:var(--tale);font-weight:400;font-size:44px;color:#ffd0e8;margin:0 0 4px}
+
+@media (max-width:640px){
+  #score{font-size:38px}
+  #controls{grid-template-columns:1fr;gap:6px}
+  .bomb .bn{font-size:10px}
+  #hud{padding:8px 58px 0}
+}
+@media (max-height:560px){
+  #controls{grid-template-columns:1fr 1fr}
+  #speech{min-height:40px}
+  #stage{container-type:size}
+  #scene{width:min(100cqw,calc((100cqh - 90px) * 16 / 9))}
+}
+@media (prefers-reduced-motion: reduce){
+  .bob,.flick,.zz,.sway,.spin,.pulse,.float,.tut-glow,#heat.low,#help.attn,.reveal,#monster.enter{animation:none}
+  .sheet,.scard{animation:none}
+  #banner.show{animation-duration:3s}
+}
+
+/* layout v3: tub pinned to the top, vibe meter directly beneath it */
+#scene{top:0;bottom:auto;width:min(100cqw,calc(100cqh * 16 / 9));border-radius:0 0 18px 18px}
+#hudwrap{flex:none;background:linear-gradient(180deg,#2d1456,#251048);border-top:2px solid var(--line);position:relative;z-index:2}
+#hud{position:static;pointer-events:auto;width:100%;max-width:780px;margin:0 auto;padding:8px 16px 6px;display:grid;grid-template-columns:auto 1fr;grid-template-areas:"score bar" "score heat" "score line";column-gap:14px;row-gap:4px;align-items:center;justify-items:stretch;z-index:auto}
+#score{grid-area:score;font-size:40px;min-width:2.2ch;text-align:center}
+#vwrap{grid-area:bar;width:auto;height:14px;margin:0}
+#heat{grid-area:heat;width:auto;margin:0}
+#sectorLine{grid-area:line;margin:0;justify-content:space-between;min-height:16px;font-size:13px}
+#hud[data-mode="title"]{visibility:hidden}
+#dock{border-top:0;background:linear-gradient(180deg,#251048,#1d0b36)}
+@media (max-width:640px){#hud{padding:6px 14px 4px}#score{font-size:34px}}
+@media (max-width:640px) and (orientation:portrait){
+  #stage{flex:none;container-type:normal}
+  #scene{position:relative;left:auto;top:auto;transform:none;width:100%;aspect-ratio:4/3;border-radius:0 0 18px 18px}
+  #dock{flex:1;overflow:auto}
+}
+@media (max-height:560px){#scene{width:min(100cqw,calc(100cqh * 16 / 9))}}
+
+/* v4: fixed slots, speech bubbles, reactions */
+.ph{visibility:hidden!important}
+#speech{min-height:0}
+#bubble{position:absolute;left:50%;top:3%;transform:translateX(-50%);width:min(76%,470px);background:#fff;color:#2a1245;border-radius:18px;padding:8px 14px 10px;box-shadow:0 6px 22px rgba(0,0,0,.45);z-index:3;font-size:clamp(12.5px,1.9vw,17px);line-height:1.3;font-weight:500;transition:opacity .25s,transform .25s}
+#bubble::after{content:"";position:absolute;left:50%;bottom:-11px;margin-left:-11px;border:11px solid transparent;border-top-color:#fff;border-bottom:0}
+#bubble.off{opacity:0;transform:translateX(-50%) scale(.92);pointer-events:none}
+#bubble em{color:#6a5689}
+#bwho{display:block;font-family:var(--tale);font-weight:400;font-size:1.35em;line-height:1;color:var(--bc,#d81b77);margin-bottom:3px}
+.sweat{animation:sweat 1.6s ease-in infinite;transform-box:fill-box}
+@keyframes sweat{0%{transform:translateY(0);opacity:0}15%{opacity:.95}100%{transform:translateY(34px);opacity:0}}
+.brr{animation:brr .5s ease-in-out infinite alternate;transform-box:fill-box}
+@keyframes brr{from{transform:translateY(0) rotate(-5deg)}to{transform:translateY(-4px) rotate(5deg)}}
+.waves{animation:waves 1.1s ease-in-out infinite alternate;transform-box:fill-box}
+@keyframes waves{from{transform:translateY(0);opacity:.35}to{transform:translateY(-8px);opacity:.9}}
+#shake.shiver{animation:shiver .09s linear infinite alternate}
+@keyframes shiver{from{transform:translateX(-2.5px)}to{transform:translateX(2.5px)}}
+#shake.leave{animation:leave 1.1s ease both}
+@keyframes leave{to{opacity:0;transform:translateY(20px)}}
+@media (prefers-reduced-motion: reduce){.sweat,.brr,.waves,#shake.shiver{animation:none}#shake.leave{animation-duration:.01s}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <div id="scene">
+<svg id="svg" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Ren, a glamorous sentient hot tub, with a monster guest soaking inside">
+      <defs>
+        <filter id="glow" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="glow2" x="-30%" y="-100%" width="160%" height="300%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#43237a"/><stop offset="1" stop-color="#2a1250"/></linearGradient>
+        <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b1150"/><stop offset="1" stop-color="#190a35"/></linearGradient>
+        <linearGradient id="brass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b9791f"/><stop offset=".5" stop-color="#ffe08a"/><stop offset="1" stop-color="#b9791f"/></linearGradient>
+        <linearGradient id="panelg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a2fc8"/><stop offset="1" stop-color="#43127a"/></linearGradient>
+        <radialGradient id="waterG" cx=".5" cy=".4" r=".75"><stop id="w0" offset="0" stop-color="#7be0d8"/><stop id="w1" offset="1" stop-color="#2a9aa8"/></radialGradient>
+        <radialGradient id="moon" cx=".4" cy=".4" r=".7"><stop offset="0" stop-color="#ff8a9c"/><stop offset="1" stop-color="#c4264f"/></radialGradient>
+        <pattern id="tiles" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M0 0H50V50" fill="none" stroke="#fff" stroke-opacity=".06"/></pattern>
+      </defs>
+      <rect width="800" height="450" fill="url(#wall)"/>
+      <rect width="800" height="450" fill="url(#tiles)"/>
+      <rect y="338" width="800" height="112" fill="url(#floor)"/>
+      <path d="M0 338H800" stroke="#6b3bb0" stroke-width="3"/>
+
+      <g id="decor">
+        <g transform="translate(112,176)">
+          <circle r="54" fill="url(#brass)"/><circle r="46" fill="#1b0b3a"/>
+          <circle cx="8" cy="-6" r="18" fill="url(#moon)"/>
+          <path d="M-30 14q8 -12 16 0q6 -8 12 -2" stroke="#0e0520" stroke-width="3" fill="none"/>
+          <circle cx="-26" cy="-22" r="1.6" fill="#fff"/><circle cx="-8" cy="-32" r="1.2" fill="#fff"/><circle cx="28" cy="22" r="1.4" fill="#fff"/>
+        </g>
+        <g transform="translate(688,176)">
+          <circle r="54" fill="url(#brass)"/><circle r="46" fill="#1b0b3a"/>
+          <circle cx="-8" cy="4" r="18" fill="#f4e9c8"/><circle cx="-2" cy="-1" r="16" fill="#1b0b3a"/>
+          <path d="M16 -20q8 -10 16 0q-8 3 -16 0z" fill="#0e0520"/>
+          <circle cx="24" cy="26" r="1.5" fill="#fff"/><circle cx="-30" cy="-22" r="1.5" fill="#fff"/><circle cx="6" cy="-34" r="1.2" fill="#fff"/>
+        </g>
+        <g transform="translate(60,392)">
+          <rect x="-26" y="14" width="52" height="8" rx="3" fill="#6a4a1c"/>
+          <rect x="-18" y="-10" width="9" height="24" rx="2" fill="#f4e9c8"/><rect x="-4" y="-22" width="9" height="36" rx="2" fill="#f4e9c8"/><rect x="10" y="-4" width="9" height="18" rx="2" fill="#f4e9c8"/>
+          <g class="flick"><path d="M-13.5 -12q-4 -8 0 -14q4 6 0 14z" fill="#ffb347"/><path d="M0.5 -24q-4 -8 0 -14q4 6 0 14z" fill="#ffb347"/><path d="M14.5 -6q-4 -8 0 -14q4 6 0 14z" fill="#ffb347"/></g>
+        </g>
+        <g transform="translate(742,392)">
+          <rect x="-26" y="-6" width="52" height="12" rx="3" fill="#ff5fae"/><rect x="-24" y="6" width="48" height="12" rx="3" fill="#4fe0d2"/><rect x="-22" y="18" width="44" height="12" rx="3" fill="#ffc65e"/>
+        </g>
+      </g>
+
+      <g id="neonExtra"></g>
+
+      <g id="sign" class="flick">
+        <text x="400" y="86" text-anchor="middle" font-family="Yellowtail,cursive" font-size="58" fill="#ffd0e8" stroke="#ff3b9a" stroke-width="2" filter="url(#glow)">Soak &amp; Seduced</text>
+        <text x="400" y="110" text-anchor="middle" font-family="'Bricolage Grotesque',system-ui,sans-serif" font-size="12" fill="#7bf5e8" letter-spacing="3" filter="url(#glow2)">late-night spa, underworld branch</text>
+      </g>
+
+      <g id="backTub">
+        <ellipse cx="400" cy="262" rx="262" ry="58" fill="url(#brass)"/>
+        <ellipse cx="400" cy="262" rx="244" ry="46" fill="#2a1048"/>
+        <ellipse id="surf" cx="400" cy="262" rx="238" ry="40" fill="url(#waterG)"/>
+        <ellipse cx="400" cy="262" rx="238" ry="40" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="2"/>
+      </g>
+
+      <g id="monsterWrap" class="bob"><g id="shake"><g id="monster" transform="translate(400,0)"></g><g id="monsterFx" transform="translate(400,0)"></g></g></g>
+
+      <path id="waterFront" d="M166 264L634 264L656 276Q400 336 144 276Z" fill="#46d1c4" fill-opacity=".55"/>
+      <path id="tint" d="M166 264L634 264L656 276Q400 336 144 276Z" fill="none"/>
+      <path d="M166 264q29 -6 58 0t58 0t58 0t58 0t58 0t58 0t58 0t58 0" stroke="#fff" stroke-opacity=".55" stroke-width="2" fill="none"/>
+
+      <ellipse cx="400" cy="436" rx="290" ry="12" fill="#0a0318" opacity=".45"/>
+      <g id="frontTub">
+        <path d="M140 275Q400 335 660 275L652 392Q644 428 570 430L230 430Q156 428 148 392Z" fill="url(#panelg)" stroke="#2a0d4f" stroke-width="3"/>
+        <path d="M138 275Q400 337 662 275" fill="none" stroke="url(#brass)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M144 270Q400 331 656 270" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="3" stroke-linecap="round"/>
+        <path id="stripe" d="M172 419H628" stroke="#ff5fae" stroke-width="4" stroke-linecap="round" filter="url(#glow2)"/>
+        <circle cx="190" cy="338" r="14" fill="none" stroke="#9dfcff" stroke-width="3" id="jetGlowL" opacity="0"/>
+        <circle cx="610" cy="338" r="14" fill="none" stroke="#9dfcff" stroke-width="3" id="jetGlowR" opacity="0"/>
+        <circle cx="190" cy="338" r="8" fill="#ffd27a" stroke="#b8801a" stroke-width="2"/><circle cx="190" cy="338" r="3" fill="#6a3a08"/>
+        <circle cx="610" cy="338" r="8" fill="#ffd27a" stroke="#b8801a" stroke-width="2"/><circle cx="610" cy="338" r="3" fill="#6a3a08"/>
+        <rect x="213" y="352" width="86" height="36" rx="7" fill="#0b1a2a" stroke="#4fe0d2" stroke-width="2"/>
+        <rect x="501" y="352" width="86" height="36" rx="7" fill="#0b1a2a" stroke="#4fe0d2" stroke-width="2"/>
+        <text x="256" y="368" text-anchor="middle" font-size="9" fill="#4fe0d2" font-family="ui-monospace,Menlo,monospace">BUBBLES</text>
+        <text x="544" y="368" text-anchor="middle" font-size="9" fill="#4fe0d2" font-family="ui-monospace,Menlo,monospace">WATER</text>
+        <text id="dBub" x="256" y="384" text-anchor="middle" font-size="16" font-weight="700" fill="#7bf5e8" font-family="ui-monospace,Menlo,monospace">40%</text>
+        <text id="dTemp" x="544" y="384" text-anchor="middle" font-size="16" font-weight="700" fill="#7bf5e8" font-family="ui-monospace,Menlo,monospace">36.0°</text>
+      </g>
+      <g id="ren" transform="translate(400,370) scale(.72)"></g>
+    </svg>
+      <canvas id="fx" width="1600" height="900"></canvas>
+      <div id="floaters"></div>
+      <div id="bubble" class="off" aria-live="polite"><b id="bwho"></b><span id="btext"></span></div>
+    </div>
+    <div class="corner">
+      <button id="help" aria-label="Open journal">📖<span id="badge" hidden></span></button>
+      <button id="mute" aria-label="Mute sound">🔊</button>
+    </div>
+  </div>
+
+  <div id="hudwrap">
+    <div id="hud" data-mode="title">
+      <div id="score">0</div>
+      <div id="moodTxt"></div>
+      <div id="vwrap" role="img" aria-label="Vibe meter"><i id="vfill"></i></div>
+      <div id="sectorLine"><span id="secName"></span><span id="clout"></span></div>
+      <div id="heat" aria-label="Time left"><i id="tfill"></i></div>
+    </div>
+  </div>
+
+  <div id="dock">
+    <div class="dockin">
+      <div id="speech" role="status" aria-live="polite"><div id="coach" class="off"></div></div>
+      <div id="controls" class="locked">
+        <div class="ctrl" id="ctrlT"><div class="ctrl-h"><label for="sT">Water temperature</label><span class="read"><b id="aT">36.0</b>°C <small id="aTarr"></small></span></div>
+          <div class="sl"><input id="sT" type="range" min="24" max="48" step="0.5" value="36"><span class="needle" id="nT"></span></div><div class="scale"><span>Frosty</span><span>Scorching</span></div></div>
+        <div class="ctrl" id="ctrlB"><div class="ctrl-h"><label for="sB">Bubble intensity</label><span class="read"><b id="aB">40</b>%</span></div>
+          <div class="sl"><input id="sB" type="range" min="0" max="100" step="1" value="40"><span class="needle" id="nB"></span></div><div class="scale"><span>Still</span><span>Jacuzzi</span></div></div>
+        <div id="bombs"></div>
+        <div id="bombrow"><span id="buff"></span><button class="pill small primary" id="dropBtn" hidden>Drop it</button><button class="pill small" id="wrapBtn">Wrap up</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="beat" hidden><div class="sheet" id="sheet"></div></div>
+
+  <div id="overlay" class="hidden">
+    <div class="panel">
+      <h2 id="ovTitle"></h2>
+      <p id="ovText"></p>
+      <div id="ovExtra"></div>
+      <div class="btns" id="ovBtns"></div>
+      <p id="ovCta"></p>
+    </div>
+  </div>
+
+  <div id="story" hidden>
+    <div class="scard" role="dialog" aria-live="polite" aria-labelledby="sLabel">
+      <div id="sLabel"></div><p id="sText"></p><div id="sNext">Tap to continue</div>
+    </div>
+  </div>
+
+  <div id="guide" class="modal" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-label="Journal">
+      <div class="tabs" role="tablist">
+        <button id="tabR" class="tab on" role="tab" aria-selected="true">Regulars</button>
+        <button id="tabB" class="tab" role="tab" aria-selected="false">Bath bombs</button>
+      </div>
+      <div id="gridView"><p class="lead" id="colCount"></p><div class="progress"><i id="colBar"></i></div><div id="grid"></div></div>
+      <div id="bombView" hidden></div>
+      <div id="detail" hidden></div>
+      <div class="mrow"><button id="backBtn" hidden>All regulars</button><button id="replayTut">Show tips again</button><button id="closeGuide" class="primary">Close</button></div>
+    </div>
+  </div>
+
+  <div id="closet" class="modal" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-label="Supply closet">
+      <div class="cloutline"><h3>Supply closet</h3><b id="closetClout"></b></div>
+      <div class="tabs" role="tablist">
+        <button id="tabS" class="tab on" role="tab" aria-selected="true">Bath bombs</button>
+        <button id="tabU" class="tab" role="tab" aria-selected="false">Upgrades</button>
+      </div>
+      <div id="closetBody"></div>
+      <div class="mrow"><button id="closeCloset" class="primary">Done</button></div>
+    </div>
+  </div>
+
+  <div id="end" class="modal" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+      <h3 id="endTitle">Grand reopening</h3>
+      <p class="lead">All five hearts are yours. Vampires, necromancers, slashers, ghosts, and mummies agree: Soak &amp; Seduced is the hottest spot in the underworld.</p>
+      <div class="rstats" id="endStats" style="margin:12px 0"></div>
+      <div class="mrow"><button id="endAgain">Begin again</button><button id="endKeep" class="primary">Keep soaking</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=(s,r=document)=>r.querySelector(s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const rand=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const RM=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fmt=s=>s.replace(/\*(.+?)\*/g,'<em>$1</em>');
+const DUR=50;
+const TAGN={f:'Flirt',s:'Sincere',j:'Joke'};
+/* ---------- DATA ---------- */
+const BOMBS={
+  ecto:{n:'Essence of Ectoplasm',s:'Ectoplasm',ic:'👻',col:'#9dffc9',price:12,d:'Glowing green slime fizz that smells like a haunted pond.',tip:'Wider bubble zone',buff:'Spooky mist widens the bubble comfort zone by 20%.'},
+  salts:{n:'Bath Salts of the Damned',s:'Damned Salts',ic:'💀',col:'#a99bff',price:12,d:'Heavy, brooding minerals. Soak your sorrows away.',tip:'Wider temp zone',buff:'Heavy minerals widen the temperature comfort zone by 20%.'},
+  crimson:{n:'Crimson Fizz',s:'Crimson Fizz',ic:'🩸',col:'#ff4d6d',price:14,d:'Type O-positive pop. Sparkling and suspiciously metallic.',tip:'+10% vibe gain',buff:'Sparkling fizz boosts vibe gain by 10%.'},
+  lavender:{n:'Lich Lavender Lullaby',s:'Lich Lavender',ic:'🌿',col:'#c9a4ff',price:12,d:'Sleepy purple suds. Dead calm, guaranteed.',tip:'Calmer mood swings',buff:'Sleepy suds make mood swings happen far less often.'},
+  brim:{n:'Brimstone Blast',s:'Brimstone',ic:'🔥',col:'#ff9a2e',price:14,d:'Sulfur-orange sizzle. Wakes up muscles and regrets.',tip:'Heats 2× faster',buff:'Sulfur sizzle makes the water change temperature twice as fast.'},
+  glitter:{n:'Glitter Grave Dust',s:'Grave Glitter',ic:'✨',col:'#ffe27a',price:16,d:'Sparkle that outlives you. Never fully rinses out.',tip:'+25% Clout',buff:'Sparkle brings bigger tips: +25% Clout from this guest.'}
+};
+const UPS={
+  jets:{n:'Turbo Jets',d:'Wider bubble comfort zone, faster bubble changes, and +10% vibe gain per level.',costs:[50,110,200]},
+  heater:{n:'Hellfire Heater',d:'The water changes temperature faster, and the temperature comfort zone grows by 1°C per level.',costs:[50,110,200]},
+  neon:{n:'Neon Signage',d:'+25% Clout and +8 starting vibe per level. Level 2 shows the temperature sweet spot. Level 3 shows the bubble sweet spot.',costs:[60,130,220]}
+};
+const B=(at,say,f,s,j)=>({at,say,f,s,j});
+const SETS=[
+  {f:'You know, the water isn’t the only thing getting warmer in here.',s:'I’m glad you keep coming back, you know.',j:'Tip your tub. It’s tradition.'},
+  {f:'You’re making my jets a little nervous.',s:'You can relax here. I mean it.',j:'I’d say “nice to be wet with you,” but legal says no.'},
+  {f:'Stay a little longer. I’ll keep the bubbles coming.',s:'Tell me about your week. I’m a very good listener.',j:'Fun fact: I contain four hundred gallons of your secrets.'}
+];
+const NEUTRAL=['Mm. Interesting scent.','Oh, is that new? Pleasant.','Hm. Bubbly. I’ll allow it.'];
+
+const MON={
+count:{id:'count',name:'Count Cassius Vein',short:'Cassius',tag:'Vampire. Dramatic. Allergic to hair splashes.',color:'#ff6f8f',bg:'#4a1a4e',
+ temp:37,bub:30,love:'crimson',hate:'glitter',pref:{f:2,s:1,j:-1},
+ hints:{cold:'Darling, I’m a corpse, not a popsicle. Warmer, please.',hot:'I’m a vampire, not a lobster. Cool it down.',low:'A little more… ambient churning, if you please.',high:'My hair! The splashing! Gentler, gentler.'},
+ loveLine:'Type O-positive? Ren, you spoil me.',hateLine:'Glitter?! It gets in the cape. It gets in everything.',
+ scenes:[
+  {arrive:'The door sighs open. Count Cassius Vein sweeps in, velvet cape dripping with disdain. He last saw his reflection in 1743, and he’s still sore about it.',beats:[
+   B(30,'Be honest, Ren. Do I look hydrated, or is it just the candlelight doing all the work?',
+    ['Darling, you look like a portrait that learned how to pout.','*adjusts his collar, visibly flattered* Oh, you absolute menace.'],
+    ['You look tired. You don’t have to perform in here.','…Nobody’s said that in two centuries. Rude. Also, nice.'],
+    ['You look like a raisin in a cape.','A RAISIN? I’m a vintage, you damp little appliance.']),
+   B(65,'Do you know what’s lonely about eternity? Everyone laughs at the punchline after you’ve already outlived them.',
+    ['Stay until dawn-ish. I’ll bring the punchline.','Cheeky! I’ve turned down empresses for less. …I have not turned down empresses.'],
+    ['Tell me one. I’ll listen to the whole thing.','*quietly* A man walks into a crypt… I forgot the rest. Stay while I remember?'],
+    ['Stakes are high in your love life, huh?','Oh, a stake pun. How original. I haven’t heard that in nine hundred years.'])]},
+  {arrive:'The Count returns in sunglasses, indoors, at night, with three shopping bags from Crypt & Barrel.',beats:[
+   B(30,'I bought a new cape. Tell me it’s not too much.',
+    ['Too much is your whole brand, and I’m obsessed.','Ha! Finally, someone who understands my brand.'],
+    ['It’s gorgeous. But you’d shine in a bathrobe.','A bathrobe! Scandalous. Adorable. I’ll consider it.'],
+    ['It’s too much. Structurally.','The sleeves are LOAD-BEARING, thank you.']),
+   B(65,'There’s a rumour you’re fond of me. You can’t exactly storm out, being a hot tub. Is it true?',
+    ['Fond? Cassius, I’m in over my jets.','*clutches pearls he does not own* Ren!'],
+    ['I look forward to your visits. Genuinely.','*softly* I look forward to them too. Don’t tell the others.'],
+    ['I’m contractually obligated to enjoy you.','Contractually. How romantic. How utterly legal.'])]}],
+ date:{arrive:'After closing, the Count appears in a tuxedo, carrying one black rose and a wine glass of something suspiciously red.',beats:[
+   B(35,'I came to ask something terribly unfashionable. May I… court a hot tub?',
+    ['Court me. Fair warning: I run deep.','*presses a hand to his chest* Deep. Delicious. I accept the depth.'],
+    ['I’d love that. Truly.','Oh. Oh my. I rehearsed a speech and now I’ve forgotten every word.'],
+    ['Only if you promise not to stake me out.','*pained smile* Please, I’m being sincere. Mostly.']),
+   B(70,'I can’t offer you a heartbeat. But I can offer eternity, and a very good coat rack.',
+    ['Eternity and a coat rack? Take me home. Or, well, stay.','*laughs, genuinely* You’re ridiculous. I adore it.'],
+    ['That’s all I’ve ever wanted. Stay as long as you like.','*eyes shimmering* Then it’s settled. I’ll hang the rose on your jets.'],
+    ['Does the coat rack come with a warranty?','*flat* The warranty is eternity. Try to be romantic.'])],
+  end:'Cassius hangs the black rose on your jet. “Same time tomorrow, darling. And don’t let anyone else splash me.”'},
+ banter:['The Count sinks lower, wine glass aloft. “Ren, the world is so loud. This tub is not.”','“Do you think I’m aging well? Don’t answer. I’m static.”','“I attended a ball last night. Everyone wore garlic perfume. Cruel.”'],
+ react:['That… was beneath us both.','Hm. Noted. Filed under “mediocre.”','Charming. You’re getting better at this.','Ren, my unbeating heart skipped a beat it never had.'],
+ peak:'Cassius lifts his glass to the ceiling. “To the tub that sees me. Peak decadence, darling.”',
+ good:'Cassius steps out glowing, if a vampire can. “Same time next century. Or tomorrow.”',
+ ok:'Cassius dries his hair with dignity. “Tolerable. I’ll be back, because I’m lonely.”',
+ leave:'Cassius storms out in a flurry of cape. “Clammy! This is a CRYPT, not a spa!”'},
+
+nyx:{id:'nyx',name:'Nyx Morrow',short:'Nyx',tag:'Necromancer. Has not slept since the equinox.',color:'#c3a2ff',bg:'#33206b',
+ temp:39,bub:55,love:'lavender',hate:'brim',pref:{f:0,s:2,j:1},
+ hints:{cold:'It’s freezing. Even my zombies are complaining. Warmer.',hot:'I’m on my fourth day awake. Please don’t cook me.',low:'More bubbles… I need white noise to drift off.',high:'Too loud. Too bubbly. Dial it back…'},
+ loveLine:'Lavender?! Oh, I could cry. I might. A little.',hateLine:'Brimstone? I want to close my eyes, not summon something!',
+ scenes:[
+  {arrive:'Nyx Morrow shuffles in, robe over pajamas, clutching a mug that reads WORLD’S OKAYEST NECROMANCER. A tiny skull minion trails her, holding a towel.',beats:[
+   B(30,'I raised forty skeletons today. Forty. Do you know how many said thank you? Zero.',
+    ['Let me say thank you. Slowly. Dramatically.','*blinks slowly* …Too tired to blush. But thanks.'],
+    ['Forty is a lot. You’re allowed to be exhausted.','*exhales, shoulders dropping* Thank you. No one says that.'],
+    ['Bones are famously bad at manners.','*tired laugh* Bone-afide rude. Yeah.']),
+   B(65,'If I fall asleep in here, don’t wake me. Unless there’s a fire. Or it’s Tuesday.',
+    ['Sleep tight. I’ll keep you warm.','…Sweet, but I’m too tired to flirt back. Try again when I’m a person.'],
+    ['I’ll watch over you. You can rest.','*mumbling* …safe. This is safe. Thank you, Ren.'],
+    ['What’s special about Tuesday? Skeleton rave?','*snort-laughs* I’ve actually been to one. Never again.'])]},
+  {arrive:'Nyx arrives with an iced coffee in each hand and a third balanced on her head. She has not slept. She may never sleep.',beats:[
+   B(30,'Be honest: is it normal to hear the dead gossip about me?',
+    ['They’re gossiping about how good you look.','*dead-eyed stare, then a tiny smile* Nice try.'],
+    ['That sounds exhausting. Want to talk about it?','*sighs* I want to talk about it for approximately nine hours.'],
+    ['Tell them to mind their own graves.','Ha! “Mind your own graves.” I’m stealing that.']),
+   B(65,'Sometimes I wonder if anyone would notice if I just… stopped raising things.',
+    ['I’d notice. I’d notice everything about you.','*soft blink* …Okay. That landed. Ugh.'],
+    ['I’d notice. And I’d make sure you got some rest.','*eyes shining* …Okay, now I’m crying. Thanks.'],
+    ['Honestly, the skeletons would unionize.','*laughs, then sniffs* They’d absolutely unionize.'])]}],
+ date:{arrive:'Nyx shows up at midnight in an actual dress, bags under her eyes hidden beneath glitter. She is nervous and, miraculously, awake.',beats:[
+   B(35,'I… cleared my schedule. All of tomorrow. I’ve never cleared my schedule.',
+    ['Then let me make the most of it.','*coughs into her mug* Ren. I’m blushing and I don’t have the blood volume.'],
+    ['That means a lot. I’ll make it worth it.','*a small, real smile* I think that’s all I ever wanted.'],
+    ['Wow. A day without raising anyone. Dangerous.','*dry* Cute. Be romantic, please. I’m very fragile.']),
+   B(70,'If I fall asleep on you, will you still be here when I wake up?',
+    ['I’d be here. And warm. And devastatingly sexy.','…Mm. You’re trying. Points for trying.'],
+    ['Always. I’m a hot tub. I don’t move. That’s kind of the point.','*half-laughing, half-sobbing* That’s the nicest thing anyone’s ever said to me.'],
+    ['Only if you promise to snore at least a little.','*grins* I snore like a haunted house. Deal.'])],
+  end:'Nyx falls asleep with her cheek on your rim, smiling. It’s the best she’s slept since the last equinox.'},
+ banter:['Nyx sinks until only her nose is above the water. “Mmf. Hi, Ren. I forgot what day it is.”','“Do you think a skeleton can get imposter syndrome?”','“If I fall asleep in here, tell my necromancy club I’m sick.”'],
+ react:['Too much. Too much… my brain is toast.','Mm. Okay. Whatever. I’m barely here.','That’s nice. Thank you.','Ren… that’s the nicest thing I’ve heard in a month. Don’t make me cry.'],
+ peak:'Nyx is fully asleep, smiling, one hand floating on the surface. Even the little skull minion has stopped fidgeting. Total peace.',
+ good:'Nyx stumbles out, glowing and dazed. “Best nap of my life. Put me on the calendar. Please.”',
+ ok:'Nyx yawns and collects her mug. “Fine. Good enough. I’ll sleep standing up.”',
+ leave:'Nyx jolts upright. “I can’t relax. I’m leaving. Keep the tip.” She leaves no tip.'},
+
+rex:{id:'rex',name:'Rex Hatchett',short:'Rex',tag:'Off-duty slasher. Shy. Brings his own rubber duck.',color:'#7ec8ff',bg:'#1f3566',
+ temp:42,bub:80,love:'brim',hate:'crimson',pref:{f:1,s:2,j:0},
+ hints:{cold:'Uh… could it be warmer? My shoulders are, like, really sore.',hot:'Ow! Hot hot hot! Sorry, sorry, a bit cooler?',low:'Could the jets be… stronger? My back’s a knot.',high:'Whoa, that’s a lot of bubbles. Sorry. Can we ease up?'},
+ loveLine:'Brimstone! My favourite. Smells like summer camp and bad decisions.',hateLine:'Blood-red? Ugh, sorry, work trauma. Can we not?',
+ scenes:[
+  {arrive:'Rex Hatchett ducks through the door, hockey mask on, rubber duck in hand. He’s been up since 5 a.m. at a summer camp. “Sorry. Sorry about the footprints.”',beats:[
+   B(30,'Sorry I’m wearing the mask. It’s not a vibe thing. It’s a… fashion thing? I’m shy.',
+    ['Wear whatever you want. I like a mysterious man.','*ears turning pink behind the mask* Oh. Wow. Okay. Thanks.'],
+    ['It’s fine. You’re safe here, mask and all.','*quietly* Thanks. You’re really nice, Ren.'],
+    ['Cute. Is it also load-bearing?','*polite chuckle* Uh. Ha. Yeah. Sure.']),
+   B(65,'People think I enjoy the work. Honestly, I just like the lake. And the quiet. And, uh, ducks.',
+    ['A man who loves ducks? Swoon.','*accidentally squeaks the duck* Oh no. Sorry. That was loud.'],
+    ['You don’t have to be what people expect in here.','*duck squeak* …Thank you. Truly. I needed that.'],
+    ['You’re in the right tub. Bubbles, and zero camp counselors.','*nervous laugh* Ha. Right. Counselors.'])]},
+  {arrive:'Rex returns holding a small gift bag with both hands. “It’s a thank-you. Sorry it’s kind of late. By one visit.”',beats:[
+   B(30,'I got you a gift. It’s a tiny life jacket. For the duck. Not for you. I mean, you can have it?',
+    ['I’d wear it. Anything from you is a gift.','*spluttering* Oh. OH. Okay! Okay.'],
+    ['That’s the sweetest thing. Thank you, Rex.','*sniffles inside the mask* Sorry. Allergies.'],
+    ['Is the duck going to be okay without a licence?','*long beat* …Uh. He passed his swim test. Mostly.']),
+   B(65,'If you’re ever hosting a movie night… I know a great horror movie. It’s a comedy now.',
+    ['Movie night with you? Count me in.','*nervous squeak* I’ll bring snacks. Many snacks.'],
+    ['I’d love a movie night. Let’s make it a thing.','*beaming behind the mask* Really? Really?'],
+    ['Great. I’ll heckle the villain.','*laughing, awkward* The villain is… me. Heckle away?'])]}],
+ date:{arrive:'Rex arrives at closing in a tuxedo T-shirt, mask polished, duck held like a corsage. His knees are visibly shaking.',beats:[
+   B(35,'I wrote something. It’s not good. It’s a poem. Can I read it? It’s four lines.',
+    ['Read it. I’ll swoon on cue.','*clears throat* Roses are… red. I’m not good at this. Sorry.'],
+    ['Please. I’m listening, Rex.','*reads, voice cracking* …and that’s it. Sorry. That’s it.'],
+    ['Four lines? That’s a haiku with ambition.','*nervous laughter* It’s a limerick. I think.']),
+   B(70,'Would you mind if I… stayed? Like, regularly? In the tub? Not weird, I swear.',
+    ['Stay as often as you like. I’ll keep your spot warm.','*mask fogging* Okay. Okay. Wow. Okay.'],
+    ['I’d like that more than anything.','*tears in the eyeholes* Okay. Great. Really great.'],
+    ['Fine, but you’re paying rent. In ducks.','*serious beat, then a laugh* I accept. Duck rent.'])],
+  end:'Rex gently sets the rubber duck on your rim. “That’s my duck. He’s yours too. Don’t tell him I said that.”'},
+ banter:['Rex peeks over the rim, mask gleaming. “Is it okay if I just… sit? No axe. Promise.”','“Do you think the lake is lonely without me? Asking for a friend.”','“I’m on my lunch break. My no-killing break. I get one weekend a month.”'],
+ react:['Oh. Um. Okay. Sorry, I’m, um… sorry.','Oh. That’s… sure. Thanks?','*squeaks duck* That’s really nice. Thank you.','*the mask visibly fogs* …Okay. Wow. Thank you. Wow.'],
+ peak:'Rex slumps into the jets, boneless. “This is better than every summer camp. Every single one.” The duck floats serenely.',
+ good:'Rex waves, shy but glowing. “Same time next week? I’ll bring snacks.”',
+ ok:'Rex stretches, mask slightly askew. “That was good. I think. I’ll check my shoulders tomorrow.”',
+ leave:'Rex stands, apologizing. “Sorry, sorry, I’ll just go. Sorry.” He leaves a lot of soggy footprints.'},
+
+dolores:{id:'dolores',name:'Lady Dolores Whitlock',short:'Dolores',tag:'Victorian ghost. Wants to feel water again.',color:'#9fdcff',bg:'#1d4160',
+ temp:28,bub:45,love:'ecto',hate:'salts',pref:{f:1,s:0,j:2},
+ hints:{cold:'A tad chilly, even for the dead, dear. Warm it a smidge.',hot:'Heavens, I’m wilting! A proper ghost should be chilled.',low:'A few more bubbles, dear. I do miss the sea.',high:'Too frothy! I shall lose my petticoat. Figuratively.'},
+ loveLine:'Ectoplasm! The vintage! You remembered my favourite.',hateLine:'Salts of the Damned? I’ve been damned for 150 years, dear. I don’t need the souvenir.',
+ scenes:[
+  {arrive:'A chill drifts through the room. Lady Dolores Whitlock phases through the wall, teacup in hand, mid-Victorian sigh.',beats:[
+   B(30,'I died in 1873 of a most scandalous cough. Do you know what I miss? The feel of water. Gloriously inconvenient.',
+    ['I’d make touching water look easy. Let me help.','*tittering behind her fan* Oh, you scandalous appliance.'],
+    ['I’m sorry. That sounds lonely.','*polite sniff* How terribly modern of you to be sympathetic.'],
+    ['A cough? Ghosts really can’t catch a break.','Ha! Terrible. Delightful. Do continue.']),
+   B(65,'The last man I courted turned out to be a poltergeist. He kept throwing my china at me.',
+    ['Not a gentleman. I’d never throw china. Only compliments.','Compliments! My, how thrilling.'],
+    ['You deserve better than flying china.','*dabs ghostly eyes* Quite right. But also… quite dull, dear.'],
+    ['So, a real “plate”-onic relationship.','*gasps with laughter* Oh, that is DREADFUL. Marry me.'])]},
+  {arrive:'Dolores drifts in wearing a new hat and an old grudge. “Do you know what my neighbour did? He rattled chains. At LUNCH.”',beats:[
+   B(30,'Do you ever get lonely, Ren? All this water, all these guests, and nobody stays.',
+    ['Not when you’re around, Lady Whitlock.','*flutters her fan* Oh, you are TERRIBLE.'],
+    ['Sometimes. Thank you for asking.','*smiles politely* How kind. A touch too earnest.'],
+    ['I’m a hot tub. I get lonely by the gallon.','*laughs* By the gallon! I shall steal that.']),
+   B(65,'I’ve decided to haunt something new. Perhaps a tub. A very glamorous tub.',
+    ['Haunt me. I’ve got room, and I look fabulous.','*delighted* The audacity!'],
+    ['You’re welcome here any time.','*tilts her head* Mm. Sweet. A little plain.'],
+    ['A tub with a ghost. That’s a bad pun waiting to happen.','*cackles* Perfectly dreadful! Do it!'])]}],
+ date:{arrive:'Dolores arrives in a gown that shimmers like moonlight on water. She has polished her pearls and her ghostly nerves.',beats:[
+   B(35,'I haven’t been courted in a century and a half. Be gentle, or be terribly clever.',
+    ['How about both?','*smiles* A good start.'],
+    ['I’ll be sincere, and I’ll be gentle.','*politely* Mm. Sweet, but I do prefer wit.'],
+    ['I’ll be terribly clever. I’ve been practising on towels.','*delighted* Wit! At last!']),
+   B(70,'Tell me, Ren: will you still adore a ghost when she’s past her prime?',
+    ['You’ve been past your prime since 1873. I’m in love anyway.','*cackling* Rotten! Delicious!'],
+    ['I will. Always.','*touches your rim* How terribly nice. But a little dull, dear.'],
+    ['I only date people past their expiration.','*howls with laughter* Perfect! Marry me!'])],
+  end:'Dolores leaves a gloriously cold kiss on your rim. “Haunting you will be a pleasure, darling.”'},
+ banter:['Dolores floats on her back, teacup balanced on her stomach. “One does so love a bubble bath, even if one cannot technically feel it.”','“Last night I haunted a pub. They tipped me. In ghost pennies.”','“The living are so fascinating. They sweat. Terribly rude.”'],
+ react:['Hm. How terribly… not funny.','*polite smile* Quite. Next?','*delighted flutter* Oh, how sweet.','*howling with laughter* Ren! Marry me! I’m only half joking!'],
+ peak:'Dolores spins on the surface, gown shimmering. “I feel alive! Almost! A new low in a lovely new way!”',
+ good:'Dolores glides toward the wall, glowing. “A superb evening, darling. I’ll haunt you again.”',
+ ok:'Dolores floats out. “Passable. Pleasant. I shall… consider returning.”',
+ leave:'Dolores’s teacup shatters. “Insufferable! That is NOT a Victorian temperature!” She vanishes.'},
+
+hotep:{id:'hotep',name:'Hotep the Magnificent',short:'Hotep',tag:'Mummy. Three thousand years dry. Loves sparkle.',color:'#ffd27a',bg:'#5a3a14',
+ temp:44,bub:20,love:'glitter',hate:'ecto',pref:{f:2,s:0,j:1},
+ hints:{cold:'Habibi, three thousand years in a desert. I need HEAT.',hot:'Hot! Too hot! Even for a mummy!',low:'A little bubble, please. My wraps are floating.',high:'My wraps! They’re unravelling! Stop the bubbles!'},
+ loveLine:'Glitter! Oh, the sparkle! The bling of pharaohs!',hateLine:'Ectoplasm? On MY gold wraps? Disgusting.',
+ scenes:[
+  {arrive:'Hotep the Magnificent shuffles in, trailing bandages like a glamorous scarf. He hasn’t been properly hydrated since the New Kingdom.',beats:[
+   B(30,'They called me a pharaoh’s son. Now I’m a pharaoh’s dry-cleaning bill. Habibi, do I look moisturised to you?',
+    ['You look good enough to eat. Metaphorically. Please unwrap.','*cackles* Cheeky! I’ve still got it, even after three thousand years!'],
+    ['You look wonderful. Honestly.','*pats his cheek* Sweet. But I want sparkle! Bring the shine!'],
+    ['You look like a very tall burrito.','*wheezes* A burrito! The tallest burrito in Giza!']),
+   B(65,'Tell me, in your modern world, do they still do courting? With gold? With riddles?',
+    ['I’ll court you with riddles and bubbles.','Ahh, the ancient art! You understand me. Continue!'],
+    ['I think the heart works the same in every era.','*nods solemnly* Mm. True. But not as fun.'],
+    ['Riddle me this: what’s wet, warm, and ready for your business?','*shrieks with laughter* A tub! Obviously! Very good!'])]},
+  {arrive:'Hotep returns with a gold scarab bracelet and a glint in his single visible eye. “Habibi, I come bearing gifts.”',beats:[
+   B(30,'Do you know I built a whole pyramid? Well, I supervised. From a very nice chair.',
+    ['A man with a chair and an empire. Mm.','*preens* Yes! Continue, please!'],
+    ['That sounds like a lot of responsibility.','*shrugs* A little. Mostly chairs.'],
+    ['Did your pyramid have jets?','*roars* No jets! Barbaric! I must renovate.']),
+   B(65,'A question, Ren: can a mummy be romantic if he leaves loose bandages everywhere?',
+    ['Leave them. I’ll collect them. And you.','*dramatic gasp* Oh! The romance of it!'],
+    ['I think it makes you endearing.','*pats his chest* Endearing. A fine word. But sparkle matters too.'],
+    ['Sure, as long as you tidy up after the wedding.','*laughs* A wedding! Ha! Bring the sparkle!'])]}],
+ date:{arrive:'Hotep arrives at closing wearing freshly oiled wraps, a golden collar, and the world’s most hopeful smile.',beats:[
+   B(35,'Tonight I will ask a question I last asked a priestess in 1300 BC. It did not end well.',
+    ['Ask me. I promise to answer with enthusiasm.','*claps* Ah, enthusiasm! Wonderful!'],
+    ['I’m listening. Take your time.','*nods* Polite. Respectful. Slightly boring.'],
+    ['Was it “got any good tombs?”','*wheezes* No! It was “would you go on a date?” Ha!']),
+   B(70,'Will you let me stay? In your waters, in your sparkle, in your life? I promise to unwrap only on weekends.',
+    ['Stay forever. Unwrap whenever you want.','*gasps* Ah, ancient desire! Yes!'],
+    ['I’d love that. Stay as long as you like.','*smiles gently* Sweet. Truly. But where is the sparkle?'],
+    ['Only if you keep the bandages out of my drain.','*laughs, wiping a tear* Bandage-free drain. Done.'])],
+  end:'Hotep places a tiny golden scarab on your panel. “It guards your heart. Also your plumbing. Mostly the plumbing.”'},
+ banter:['Hotep lounges with cucumber slices over his eyes. “Habibi, wake me when the New Kingdom returns.”','“My wraps are three thousand years old. Vintage! Do you have a lint roller?”','“I have been dead a long time. This is the first time I’ve felt moist.”'],
+ react:['*frowns* Terrible. Disgraceful. Try again.','Hm. Fine. Acceptable. Plain.','*bright laugh* Ha! Wonderful!','*breathless* By Isis, you are magnificent!'],
+ peak:'Hotep floats with arms outstretched, bathed in glitter. “THIS is how pharaohs should be treated! Build me a statue!”',
+ good:'Hotep leaves shining, bandages sparkling. “A feast, Ren! A feast for the senses!”',
+ ok:'Hotep nods. “Adequate. I have seen worse. In 1200 BC.”',
+ leave:'Hotep storms out, trailing soggy bandages. “I will not be disrespected! I was a PHARAOH’S PROBLEM!”'}
+};
+const MIDS=Object.keys(MON);
+
+/* ---------- MONSTER ART ---------- */
+const stroke=(c,w)=>`stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" fill="none"`;
+function eyesFn(lx,rx,y,m,col,r){
+  r=r||5;
+  if(m>=2) return `<path d="M${lx-7} ${y+2}q7 -10 14 0M${rx-7} ${y+2}q7 -10 14 0" ${stroke(col,3.5)}/>`;
+  let s=`<circle cx="${lx}" cy="${y}" r="${r}" fill="${col}"/><circle cx="${rx}" cy="${y}" r="${r}" fill="${col}"/>`;
+  if(m<0) s+=`<path d="M${lx-9} ${y-11}L${lx+7} ${y-15}M${rx+9} ${y-11}L${rx-7} ${y-15}" ${stroke(col,2.5)}/>`;
+  return s;
+}
+function mouth(x,y,m,col){
+  if(m<0) return `<path d="M${x-10} ${y+6}Q${x} ${y-4} ${x+10} ${y+6}" ${stroke(col,3)}/>`;
+  if(m===0) return `<path d="M${x-8} ${y}L${x+8} ${y}" ${stroke(col,3)}/>`;
+  if(m===1) return `<path d="M${x-11} ${y-1}Q${x} ${y+11} ${x+11} ${y-1}" ${stroke(col,3)}/>`;
+  return `<path d="M${x-13} ${y-2}Q${x} ${y+4} ${x+13} ${y-2}Q${x} ${y+26} ${x-13} ${y-2}Z" fill="#4a0f2e"/><path d="M${x-6} ${y+10}Q${x} ${y+6} ${x+6} ${y+10}Q${x} ${y+16} ${x-6} ${y+10}Z" fill="#ff6fae"/>`;
+}
+const blush=(lx,rx,y,m)=>m>=1?`<ellipse cx="${lx}" cy="${y}" rx="9" ry="5" fill="#ff6fae" fill-opacity=".5"/><ellipse cx="${rx}" cy="${y}" rx="9" ry="5" fill="#ff6fae" fill-opacity=".5"/>`:'';
+
+const MONSVG={
+count:m=>`
+<path d="M-92 290L-80 186L-44 238Z M92 290L80 186L44 238Z" fill="#8a1736"/>
+<path d="M-88 290Q-88 242 -42 234L42 234Q88 242 88 290Z" fill="#2a1450"/>
+<path d="M-20 234L0 272L20 234Z" fill="#f4eef7"/><path d="M-7 241L0 264L7 241Z" fill="#c2184a"/>
+<path d="M-44 182L-62 160L-46 170Z M44 182L62 160L46 170Z" fill="#ece6f5"/>
+<ellipse cx="0" cy="186" rx="46" ry="52" fill="#ece6f5"/>
+<path d="M-48 178Q-48 128 0 126Q48 128 48 178Q32 152 0 166Q-32 152 -48 178Z" fill="#1a0b30"/>
+${eyesFn(-17,17,190,m,'#d4143a')}
+<circle cx="17" cy="190" r="13" ${stroke('#ffc15a',2.5)}/><path d="M29 194Q42 222 36 252" ${stroke('#ffc15a',1.8)}/>
+<path d="M0 196q-4 8 0 11" ${stroke('#b8a9cc',2)}/>
+${mouth(0,218,m,'#6a1030')}
+${m>=1?'<path d="M-9 218l3 8l3 -8zM6 218l3 8l3 -8z" fill="#fff"/>':''}
+${blush(-30,30,206,m)}
+<circle cx="98" cy="238" r="11" fill="#ece6f5"/>
+<path d="M86 204h24q0 24 -12 24q-12 0 -12 -24z" fill="#ffffff" fill-opacity=".25" stroke="#cfc4e6" stroke-width="2"/>
+<path d="M88 212h20q-1 14 -10 14q-9 0 -10 -14z" fill="#c2184a"/>
+<path d="M98 228v10" ${stroke('#cfc4e6',2)}/>`,
+nyx:m=>`
+<ellipse cx="0" cy="176" rx="66" ry="72" fill="#2a1650"/>
+<path d="M-90 290Q-90 240 -44 233L44 233Q90 240 90 290Z" fill="#43247f"/>
+<path d="M-44 233Q0 264 44 233" ${stroke('#9b7ae0',3)}/>
+<circle cx="0" cy="250" r="8" fill="#e4dff2"/><circle cx="-3" cy="249" r="1.8" fill="#2a1650"/><circle cx="3" cy="249" r="1.8" fill="#2a1650"/>
+<ellipse cx="0" cy="188" rx="43" ry="48" fill="#cfe3c6"/>
+<circle cx="0" cy="116" r="24" fill="#6a35b0"/>
+<path d="M-44 178Q-40 134 0 132Q40 134 44 178Q28 152 6 160Q-12 148 -44 178Z" fill="#6a35b0"/>
+<path d="M14 112L40 86" ${stroke('#ffc15a',4)}/><circle cx="41" cy="85" r="3.5" fill="#ff7aa8"/>
+<ellipse cx="-16" cy="200" rx="10" ry="4" fill="#7e6aa0" fill-opacity=".55"/><ellipse cx="16" cy="200" rx="10" ry="4" fill="#7e6aa0" fill-opacity=".55"/>
+${m>=2?eyesFn(-16,16,190,m,'#2a1650'):m===1?eyesFn(-16,16,190,m,'#2a1650',4.5):m===0?`<circle cx="-16" cy="192" r="4.5" fill="#2a1650"/><circle cx="16" cy="192" r="4.5" fill="#2a1650"/><path d="M-26 189h20M6 189h20" ${stroke('#2a1650',3.2)}/>`:`<path d="M-26 190q10 7 20 0M6 190q10 7 20 0" ${stroke('#2a1650',3)}/>`}
+${mouth(0,216,m,'#4a2060')}
+${blush(-28,28,206,m)}
+<circle cx="-80" cy="238" r="11" fill="#cfe3c6"/>
+<rect x="-98" y="206" width="28" height="28" rx="5" fill="#f7f3ff"/><path d="M-70 213q12 6 0 15" ${stroke('#f7f3ff',4)}/>
+<circle cx="-84" cy="219" r="4" fill="#2a1650"/><path d="M-88 226h8" ${stroke('#2a1650',2)}/>
+<g class="bob" style="animation-duration:3.2s"><circle cx="-132" cy="196" r="16" fill="#f2efe4"/><rect x="-140" y="206" width="16" height="9" rx="3" fill="#f2efe4"/><circle cx="-138" cy="194" r="4" fill="#2a1650"/><circle cx="-126" cy="194" r="4" fill="#2a1650"/><path d="M-134 215v-7M-130 215v-7" ${stroke('#2a1650',1.5)}/></g>
+${m<=0?'<text class="zz" x="52" y="132" font-size="20" font-weight="700" fill="#d8ccff">z</text><text class="zz zz2" x="66" y="112" font-size="26" font-weight="700" fill="#d8ccff">Z</text>':''}`,
+rex:m=>`
+<path d="M-124 292Q-124 238 -56 229L56 229Q124 238 124 292Z" fill="#8fa3b8"/>
+<path d="M-44 244Q0 268 44 244M-70 262Q-30 278 -10 270M70 262Q30 278 10 270" ${stroke('#6b7f96',3)}/>
+<rect x="-18" y="220" width="36" height="22" fill="#8fa3b8"/>
+<path d="M-46 170Q-42 122 0 120Q42 122 46 170Z" fill="#2c2540"/>
+<ellipse cx="0" cy="188" rx="45" ry="57" fill="#f3f3ee" stroke="#cdcdc4" stroke-width="2"/>
+<path d="M-36 198L-22 190L-24 204Z M-4 134L4 134L0 152Z" fill="#d02b3a"/>
+<path d="M-12 214h24M-12 221h24M-12 228h24" ${stroke('#9a9aa0',2.5)}/>
+<circle cx="-30" cy="212" r="2.2" fill="#6a6a72"/><circle cx="30" cy="212" r="2.2" fill="#6a6a72"/><circle cx="-26" cy="222" r="2.2" fill="#6a6a72"/><circle cx="26" cy="222" r="2.2" fill="#6a6a72"/>
+<ellipse cx="-17" cy="184" rx="13" ry="9" fill="#1d1530"/><ellipse cx="17" cy="184" rx="13" ry="9" fill="#1d1530"/>
+${m>=2?`<path d="M-24 186q7 -9 14 0M10 186q7 -9 14 0" ${stroke('#fff',3)}/>`:m===1?'<circle cx="-17" cy="185" r="4" fill="#fff"/><circle cx="17" cy="185" r="4" fill="#fff"/>':m===0?'<circle cx="-17" cy="185" r="2.6" fill="#fff"/><circle cx="17" cy="185" r="2.6" fill="#fff"/>':`<circle cx="-17" cy="186" r="2.6" fill="#fff"/><circle cx="17" cy="186" r="2.6" fill="#fff"/><path d="M-30 169L-8 176M30 169L8 176" ${stroke('#3a3a40',3)}/>`}
+${m>=1?'<ellipse cx="-31" cy="200" rx="8" ry="5" fill="#ff7aa8" fill-opacity=".55"/><ellipse cx="31" cy="200" rx="8" ry="5" fill="#ff7aa8" fill-opacity=".55"/>':''}
+${m<0?'<path d="M52 168q-7 12 0 17q7 -5 0 -17z" fill="#7ec8ff"/>':''}
+<ellipse cx="108" cy="262" rx="17" ry="11" fill="#ffd23f"/><circle cx="118" cy="248" r="10" fill="#ffd23f"/><ellipse cx="129" cy="251" rx="6" ry="3" fill="#ff9a2e"/><circle cx="120" cy="246" r="1.8" fill="#2a1450"/>`,
+dolores:m=>`
+<g opacity=".86">
+<path d="M-86 292Q-92 240 -40 233L40 233Q92 240 86 292Z" fill="#bfe0ff"/>
+<path d="M-40 233q8 12 16 0q8 12 16 0q8 12 16 0q8 12 16 0q8 12 16 0" fill="#fff" stroke="#e8f4ff" stroke-width="1.5"/>
+<ellipse cx="0" cy="250" rx="6" ry="8" fill="#f4c9d8" stroke="#fff" stroke-width="1.5"/>
+<circle cx="0" cy="128" r="22" fill="#aab0e6"/>
+<ellipse cx="0" cy="188" rx="42" ry="50" fill="#d9eeff"/>
+<path d="M-44 180Q-44 134 0 132Q44 134 44 180Q26 150 0 158Q-26 150 -44 180Z" fill="#aab0e6"/>
+<circle cx="-45" cy="184" r="8" fill="#aab0e6"/><circle cx="45" cy="184" r="8" fill="#aab0e6"/>
+${m>=2?eyesFn(-16,16,192,m,'#2b3a67'):`<ellipse cx="-16" cy="192" rx="7" ry="${m<0?8:10}" fill="#2b3a67"/><ellipse cx="16" cy="192" rx="7" ry="${m<0?8:10}" fill="#2b3a67"/><circle cx="-18" cy="188" r="2.6" fill="#fff"/><circle cx="14" cy="188" r="2.6" fill="#fff"/>${m<0?`<path d="M-26 176L-8 171M26 176L8 171" ${stroke('#2b3a67',2.5)}/>`:''}`}
+${mouth(0,214,m,'#3a4a80')}
+${blush(-28,28,204,m)}
+<ellipse cx="88" cy="238" rx="19" ry="4.5" fill="#fff"/>
+<path d="M73 218h30q0 20 -15 20q-15 0 -15 -20z" fill="#fff" stroke="#cfe3ff" stroke-width="2"/>
+<ellipse cx="88" cy="219" rx="15" ry="3.5" fill="#b87a4a"/>
+</g>`,
+hotep:m=>{const cy=m>=2?178:184; const slip=m<0?10:0; return `
+<path d="M-98 292Q-98 240 -46 233L46 233Q98 240 98 292Z" fill="#e8d9b5"/>
+<path d="M-80 252L-30 264M-60 270L10 254M20 264L80 248" ${stroke('#cdbb92',4)}/>
+<path d="M-54 240Q0 302 54 240Q0 272 -54 240Z" fill="#ffc15a" stroke="#b8801a" stroke-width="2"/>
+<circle cx="-30" cy="256" r="4" fill="#2fd0c0"/><circle cx="-12" cy="265" r="4" fill="#2fd0c0"/><circle cx="12" cy="265" r="4" fill="#2fd0c0"/><circle cx="30" cy="256" r="4" fill="#2fd0c0"/>
+<ellipse cx="0" cy="186" rx="44" ry="52" fill="#eadcb8"/>
+<path d="M-40 146Q0 134 40 146M-43 158Q0 148 43 158M-44 170Q0 160 44 168M-30 232Q0 244 30 232M-20 240Q0 248 20 240" ${stroke('#cdbb92',3)}/>
+<circle cx="-17" cy="${cy}" r="12" fill="#7bd88f" stroke="#3a9a5a" stroke-width="2"/><circle cx="-17" cy="${cy}" r="7.5" fill="none" stroke="#b6f0c2" stroke-width="2"/>
+<circle cx="17" cy="${cy+slip}" r="12" fill="#7bd88f" stroke="#3a9a5a" stroke-width="2"/><circle cx="17" cy="${cy+slip}" r="7.5" fill="none" stroke="#b6f0c2" stroke-width="2"/>
+${mouth(0,214,m,'#5a3b1e')}
+${blush(-30,30,204,m)}
+<path class="sway" d="M62 238q38 -18 66 6t58 -4" ${stroke('#eadcb8',9)}/>
+<path class="sway" style="animation-delay:-1.4s" d="M-62 244q-38 -14 -64 8t-52 -2" ${stroke('#e2d1a8',8)}/>`;}
+};
+function monsterSVG(id,m){return MONSVG[id](m);}
+function portrait(id,cls){
+  const mm=MON[id];
+  return `<svg class="port ${cls||''}" viewBox="-96 104 192 172" aria-hidden="true"><rect x="-96" y="104" width="192" height="172" fill="${mm.bg}"/>${monsterSVG(id,1)}</svg>`;
+}
+
+function renFace(mood){
+  const L='#1a0b2e';
+  const openEye=(heart)=>`<path d="M-28 0Q0 -26 28 0Q0 20 -28 0Z" fill="#fff"/>`+(heart?`<path d="M1 9C-14 -2 -10 -15 1 -8C12 -15 16 -2 1 9Z" fill="#ff2f8f"/><circle cx="-4" cy="-5" r="2.6" fill="#fff"/>`:`<circle cx="1" cy="-1" r="12" fill="#6f2bd9"/><circle cx="1" cy="-1" r="12" fill="none" stroke="#ff4fa3" stroke-width="2"/><circle cx="1" cy="-1" r="5.5" fill="#12061f"/><circle cx="-3" cy="-6" r="3" fill="#fff"/>`);
+  const closedEye=`<path d="M-28 0Q0 15 28 0" ${stroke(L,5)}/>`;
+  const liner=`<path d="M-32 2Q0 -34 30 -3" ${stroke(L,5.5)}/><path d="M-32 2L-45 -9" ${stroke(L,5)}/><path d="M-20 -13l-8 -8M-6 -20l-4 -11M10 -19l3 -11" ${stroke(L,3.5)}/>`;
+  const eye=(side,kind)=>`<g transform="translate(${52*side},0) scale(${-side},1)">${kind==='closed'?closedEye:openEye(kind==='heart')}${kind==='closed'?'':liner}${kind==='closed'?`<path d="M-24 6l-8 6M-8 12l-3 9M10 12l3 9" ${stroke(L,3.5)}/>`:''}</g>`;
+  const brow=(side,raise)=>`<path transform="translate(${52*side},${raise?-8:0}) scale(${-side},1)" d="M-30 -32Q0 -52 28 -36" ${stroke(L,5)}/>`;
+  let lk='open',rk='open',lips,r=false;
+  if(mood==='love'){lk=rk='heart';}
+  if(mood==='wink'){rk='closed';}
+  if(mood==='flat'){}
+  if(mood==='love'){lips=`<path d="M-28 42Q0 34 28 42Q16 72 0 72Q-16 72 -28 42Z" fill="#ff2f8f"/><path d="M-19 47Q0 53 19 47Q10 58 0 58Q-10 58 -19 47Z" fill="#fff"/>`;}
+  else if(mood==='flat'){lips=`<path d="M-24 52Q0 46 24 52Q0 62 -24 52Z" fill="#ff2f8f"/>`;}
+  else {lips=`<path d="M-27 46Q-13 36 0 42Q13 36 27 44Q14 64 0 62Q-14 64 -27 46Z" fill="#ff2f8f"/><path d="M-12 47q7 -5 14 -2" ${stroke('#fff',2.5)} stroke-opacity=".6"/>`;}
+  return eye(-1,lk)+eye(1,rk)+brow(-1,false)+brow(1,mood==='smug'||mood==='wink')+lips+`<circle cx="74" cy="36" r="3.2" fill="${L}"/>`+(mood==='flat'?`<path d="M104 -40q-7 12 0 17q7 -5 0 -17z" fill="#7ec8ff"/>`:'');
+}
+
+
+
+/* ---------- extra copy ---------- */
+const LORE={
+  count:'Died in 1743 and never forgave the mirror industry. Insists the cape is structural.',
+  nyx:'Raises forty skeletons a day and is thanked by none. Her mug has seen things.',
+  rex:'Spends his weekends at a quiet lake. The duck is a loyal friend. The mask is for shyness.',
+  dolores:'Passed on in 1873 of a scandalous cough. Misses the feeling of water more than anything.',
+  hotep:'A pharaoh’s son, unwrapped on weekends. Believes sparkle is a human right.'
+};
+const NICE={count:'Oh… yes. That’s better. I almost feel alive.',nyx:'Mmm. Oh, that’s nice. Don’t let me fall asleep.',rex:'Oh! That’s… really nice. Thank you.',dolores:'Oh, how lovely. I can almost feel it.',hotep:'Ahh. NOW that is a bath.'};
+const PROLOGUE=[
+  {label:'Midnight',text:'You are Ren, a hot tub with opinions and a curse: you feel everything. Every degree. Every bubble. Every sigh.'},
+  {label:'The underworld',text:'Down here the dead need to unwind, too. The neon is on. The water is hot. Somebody is knocking.'},
+  {label:'Your job',text:'Read the room. Tune the water. And if the vibe is right, maybe someone will stay.'}
+];
+function reflect(kind,v,m,heart){
+  if(heart)return `${m.short} is a regular now, and something in the water stays warm long after the door closes.`;
+  if(S.soaks===1)return 'That’s what it feels like when someone relaxes: a warmth that spreads through every pipe. You want more of it.';
+  if(S.soaks===2)return 'Two guests, two different recipes. Nobody wants quite the same mix.';
+  if(S.soaks===3)return 'They talked because you listened. Maybe that’s the whole secret of the job.';
+  if(kind==='peak')return `${m.short} left lighter than they came. Funny how much a little warmth can do.`;
+  if(v>=65)return `${m.short} is gone, but the water still feels a little warmer.`;
+  if(v>=30)return `You could feel what ${m.short} wanted, just a beat too late. Listen sooner next time.`;
+  return 'The door swings shut and the water goes quiet. Even a hot tub has off nights.';
+}
+
+/* ---------- state ---------- */
+const SAVE='soakSeduced_v3',MUTE='soakSeduced_mute';
+const fresh=()=>({started:true,clout:20,night:1,bombs:{ecto:0,salts:0,crimson:0,lavender:0,brim:0,glitter:0},ub:{},up:{jets:0,heater:0,neon:0},aff:{},visits:{},hearts:{},journal:{},roster:['count','nyx','rex'],won:false,tut:false,seen:{},col:{},used:{},soaks:0,peaks:0});
+let S=fresh(),muted=false;
+try{muted=localStorage.getItem(MUTE)==='1';}catch(e){}
+const save=()=>{try{localStorage.setItem(SAVE,JSON.stringify(S));}catch(e){}};
+const loadSave=()=>{try{const j=localStorage.getItem(SAVE);if(j){const o=JSON.parse(j);if(o&&o.started)return Object.assign(fresh(),o);}}catch(e){}return null;};
+const wipe=()=>{try{localStorage.removeItem(SAVE);}catch(e){}};
+const G={actTemp:36,actBub:40,setTemp:36,setBub:40,mon:null,monMood:0,renMood:'smug',force:null,tint:null,bAcc:0,sAcc:0,fAcc:0,lastTemp:-99,shown:{}};
+let R=null,N=null,state='title',selBomb=null,slowmo=0,realT=0,overT=0,guideOpen=false,closetOpen=false,endOpen=false,ovPrimary=null,timers=[];
+const later=(s,f)=>timers.push({t:s,f});
+/* progressive unlocks: everything new arrives by guests completed */
+const U=()=>({bubbles:S.soaks>=1,journal:S.soaks>=1,clout:S.soaks>=1,dialogue:S.soaks>=2,timer:S.soaks>=2,affinity:S.soaks>=2,bombs:S.soaks>=3,joke:S.soaks>=3,closet:S.soaks>=3,shifts:S.soaks>=4,upgrades:S.soaks>=6,wrap:S.soaks>=6});
+const FOCUS=['temp','bubbles','talk','bombs'];
+const ph=(sel,on)=>$(sel).classList.toggle('ph',!!on);
+function applyUnlocks(){
+  const u=U(),hT=!!R&&R.focus==='temp'&&!R.revT,hB=!u.bubbles||(!!R&&R.focus==='bubbles'&&!R.revB);
+  ph('#ctrlT',hT);ph('#ctrlB',hB);ph('#bombs',!u.bombs);ph('#buff',!u.bombs);
+  ph('#help',!u.journal);ph('#clout',!u.clout);ph('#heat',!u.timer);
+  $('#closet .tabs').hidden=!u.upgrades;$('#tabB').hidden=!u.bombs;$('#guide .tabs').hidden=!u.bombs;
+}
+function reveal(sel){if(sel==='#ctrlT')R.revT=true;else R.revB=true;applyUnlocks();const e=$(sel);e.classList.remove('reveal');void e.offsetWidth;e.classList.add('reveal');}
+const unlockedBombs=()=>Object.keys(BOMBS).filter(k=>S.ub[k]);
+function newRoster(n){
+  const sh=a=>a.slice().sort(()=>Math.random()-.5);
+  if(n<=1)return['count','nyx','rex'];
+  if(n===2){const a=sh(['count','nyx','rex']);return[a[0],'dolores',a[1]];}
+  if(n===3){const a=sh(['count','nyx','rex','dolores']);return[a[0],'hotep',a[1]];}
+  return sh(MIDS).slice(0,3);
+}
+
+/* ---------- audio ---------- */
+const AU={ac:null};
+function ensureAudio(){if(!AU.ac){try{AU.ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AU.ac&&AU.ac.state==='suspended')AU.ac.resume().catch(()=>{});}
+function tone(f,d,type,v,slide,delay){
+  if(muted||!AU.ac)return;const t0=AU.ac.currentTime+(delay||0),o=AU.ac.createOscillator(),g=AU.ac.createGain();
+  o.type=type||'sine';o.frequency.setValueAtTime(f,t0);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(40,f+slide),t0+d);
+  g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(v||.05,t0+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+d);
+  o.connect(g).connect(AU.ac.destination);o.start(t0);o.stop(t0+d+.05);
+}
+const sfx={
+  tip:()=>{tone(660,.12,'sine',.05);tone(880,.18,'sine',.05,0,.1);},
+  bomb:()=>{for(let i=0;i<6;i++)tone(300+Math.random()*500,.14,'triangle',.03,200,i*.04);},
+  good:()=>[523,659,784].forEach((f,i)=>tone(f,.22,'sine',.05,0,i*.07)),
+  bad:()=>tone(220,.35,'sawtooth',.04,-90),
+  beat:()=>tone(520,.15,'sine',.04),
+  peak:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.32,'sine',.06,0,i*.09)),
+  click:()=>tone(440,.05,'square',.02)
+};
+const vibrate=p=>{try{navigator.vibrate&&navigator.vibrate(p);}catch(e){}};
+
+/* ---------- refs ---------- */
+const hudEl=$('#hud'),tipEl=$('#tip'),svgMon=$('#monster'),svgRen=$('#ren'),floaters=$('#floaters');
+const cv=$('#fx'),cx=cv.getContext('2d');
+const TALLMQ=window.matchMedia?window.matchMedia('(max-width:640px) and (orientation:portrait)'):{matches:false};
+let TALL=false;
+function layoutCanvas(){TALL=!!TALLMQ.matches;cv.width=TALL?1200:1600;cv.height=900;}
+if(TALLMQ.addEventListener)TALLMQ.addEventListener('change',layoutCanvas);
+layoutCanvas();
+const overlay=$('#overlay'),storyEl=$('#story'),beatEl=$('#beat'),sheet=$('#sheet');
+
+/* ---------- stage drawing ---------- */
+function setMonster(m){G.mon=m;G.monMood=0;drawMon();svgMon.classList.remove('enter');if(m){void svgMon.getBoundingClientRect();svgMon.classList.add('enter');}}
+let fxCur='';
+function fxSvg(k){
+  if(k==='cold')return `<g><ellipse cx="-30" cy="202" rx="11" ry="6" fill="#d8f3ff" opacity=".6"/><ellipse cx="30" cy="202" rx="11" ry="6" fill="#d8f3ff" opacity=".6"/>
+  <path d="M-34 140l7 -16l7 16zM-6 130l7 -18l7 18zM22 140l7 -16l7 16z" fill="#e6f8ff" stroke="#8fd6ff" stroke-width="2"/>
+  <path d="M-70 246l9 -10l9 10l-9 10zM58 250l8 -9l8 9l-8 9z" fill="#d8f3ff" stroke="#8fd6ff" stroke-width="2"/>
+  <path d="M-8 236v14M0 240v18M8 236v14" stroke="#bfe9ff" stroke-width="3" stroke-linecap="round"/>
+  <text class="brr" x="62" y="146" font-family="Yellowtail,cursive" font-size="30" fill="#e6f8ff" stroke="#2f6e9c" stroke-width="1">brrr!</text></g>`;
+  if(k==='hot')return `<g><ellipse cx="-32" cy="200" rx="11" ry="7" fill="#ff5a5a" opacity=".45"/><ellipse cx="32" cy="200" rx="11" ry="7" fill="#ff5a5a" opacity=".45"/>
+  <path class="sweat" d="M-44 160q-6 11 0 15q6 -4 0 -15z" fill="#8fd6ff" stroke="#2f6e9c" stroke-width="1.5"/>
+  <path class="sweat" style="animation-delay:.5s" d="M46 168q-6 11 0 15q6 -4 0 -15z" fill="#8fd6ff" stroke="#2f6e9c" stroke-width="1.5"/>
+  <path class="sweat" style="animation-delay:1s" d="M6 150q-6 11 0 15q6 -4 0 -15z" fill="#8fd6ff" stroke="#2f6e9c" stroke-width="1.5"/>
+  <g class="waves"><path d="M-30 118q8 -10 0 -20q-8 -10 0 -20M0 114q8 -10 0 -20q-8 -10 0 -20M30 118q8 -10 0 -20q-8 -10 0 -20" stroke="#ff8a8a" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+  <text class="brr" x="62" y="146" font-family="Yellowtail,cursive" font-size="30" fill="#ffd0d0" stroke="#a02828" stroke-width="1">phew!</text></g>`;
+  if(k==='foam')return `<g fill="#fff" stroke="#bfe9ff" stroke-width="1.5"><circle cx="-26" cy="146" r="9"/><circle cx="-10" cy="138" r="7"/><circle cx="10" cy="142" r="10"/><circle cx="30" cy="150" r="7"/><circle cx="-34" cy="232" r="8"/><circle cx="-18" cy="240" r="10"/><circle cx="2" cy="236" r="7"/><circle cx="20" cy="242" r="9"/></g>`;
+  return '';
+}
+function setFx(k){if(k===fxCur)return;fxCur=k;const f=$('#monsterFx');if(f)f.innerHTML=fxSvg(k);const sh=$('#shake');if(sh)sh.classList.toggle('shiver',k==='cold'&&!RM);}
+function drawMon(){svgMon.innerHTML=G.mon?monsterSVG(G.mon.id,G.monMood):'';}
+function drawRen(){svgRen.innerHTML=renFace(G.renMood);}
+function setRen(m){if(G.renMood!==m){G.renMood=m;drawRen();}}
+function setMonMood(m){if(G.monMood!==m){G.monMood=m;if(G.mon)drawMon();}}
+function applyNeon(){
+  const l=S.up.neon;let h='';
+  if(l>=1){h+=`<path d="M250 118Q400 130 550 118" stroke="#4fe0d2" stroke-width="3" fill="none" filter="url(#glow2)"/><text x="198" y="70" font-size="30" fill="#ffc65e" filter="url(#glow2)" class="pulse">✦</text><text x="574" y="70" font-size="30" fill="#ffc65e" filter="url(#glow2)" class="pulse" style="animation-delay:.9s">✦</text>`;}
+  if(l>=2){h+=`<path d="M30 70V330" stroke="#4fe0d2" stroke-width="5" stroke-linecap="round" filter="url(#glow2)"/><path d="M770 70V330" stroke="#b58cff" stroke-width="5" stroke-linecap="round" filter="url(#glow2)"/><path d="M30 70Q30 40 60 40M770 70Q770 40 740 40" stroke="#ff5fae" stroke-width="4" fill="none" stroke-linecap="round" filter="url(#glow2)"/>`;}
+  if(l>=3){h+=`<line x1="690" y1="0" x2="690" y2="36" stroke="#cfd6ff" stroke-width="1.5"/><g transform="translate(690,54)"><g class="spin"><circle r="18" fill="#cfd6ff"/><path d="M-18 0H18M0 -18V18M-12 -12L12 12M-12 12L12 -12" stroke="#8a93c8" stroke-width="1.5"/><circle cx="-6" cy="-6" r="3" fill="#fff"/><circle cx="7" cy="5" r="2.5" fill="#ffe27a"/></g></g><circle cx="610" cy="84" r="3" fill="#fff" class="pulse"/><circle cx="740" cy="140" r="3" fill="#ffc65e" class="pulse" style="animation-delay:.6s"/><circle cx="660" cy="120" r="2.5" fill="#4fe0d2" class="pulse" style="animation-delay:1.1s"/><circle cx="46" cy="110" r="3" fill="#ff5fae" class="pulse" style="animation-delay:.3s"/><ellipse cx="400" cy="440" rx="380" ry="16" fill="#ff5fae" opacity=".22"/>`;}
+  $('#neonExtra').innerHTML=h;
+}
+function floatTxt(){}
+const lerpCol=(a,b,t)=>{const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const A=p(a),B2=p(b);return '#'+A.map((v,i)=>Math.round(lerp(v,B2[i],t)).toString(16).padStart(2,'0')).join('');};
+function waterColors(t){
+  const st=[[24,'#4aa8ff'],[32,'#41d2cb'],[38,'#b78bff'],[43,'#ff6fae'],[48,'#ff6a52']];
+  if(t>=48)return st[4][1];
+  for(let i=0;i<st.length-1;i++)if(t>=st[i][0]&&t<=st[i+1][0])return lerpCol(st[i][1],st[i+1][1],(t-st[i][0])/(st[i+1][0]-st[i][0]));
+  return st[0][1];
+}
+
+/* ---------- canvas fx ---------- */
+let bubs=[],steam=[],foams=[],sparks=[];
+const rimY=x=>{const u=(x-400)/256;return 276+30*(1-u*u);};
+function fxStep(dt){
+  cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,cv.width,cv.height);cx.setTransform(2,0,0,2,TALL?-200:0,0);
+  const bi=G.actBub/100,k=RM?.5:1;
+  G.bAcc+=dt*bi*55*k;
+  while(G.bAcc>=1){G.bAcc-=1;if(bubs.length<150){const x=rand(205,595);bubs.push({x,y:rimY(x)-rand(4,14),r:rand(1.8,5.5),vy:rand(26,58)+bi*50,ph:rand(0,6.3),top:rand(264,272)});}}
+  for(let i=bubs.length-1;i>=0;i--){const b=bubs[i];b.y-=b.vy*dt;b.ph+=dt*4;b.x+=Math.sin(b.ph)*.3;
+    if(b.y<=b.top){foams.push({x:b.x,y:b.top,l:.55});bubs.splice(i,1);continue;}
+    cx.beginPath();cx.arc(b.x,b.y,b.r,0,6.283);cx.fillStyle='rgba(255,255,255,.2)';cx.fill();cx.lineWidth=1;cx.strokeStyle='rgba(255,255,255,.75)';cx.stroke();}
+  for(let i=foams.length-1;i>=0;i--){const f=foams[i];f.l-=dt;if(f.l<=0){foams.splice(i,1);continue;}cx.fillStyle=`rgba(255,255,255,${f.l*.8})`;cx.beginPath();cx.ellipse(f.x,f.y,5+(.55-f.l)*10,1.8,0,0,6.283);cx.fill();}
+  G.sAcc+=dt*clamp((G.actTemp-32)/12,0,1)*9*k;
+  while(G.sAcc>=1){G.sAcc-=1;if(steam.length<70)steam.push({x:rand(250,550),y:rand(236,258),vy:rand(18,36),r:rand(8,16),l:0,m:rand(2.4,4)});}
+  for(let i=steam.length-1;i>=0;i--){const s=steam[i];s.l+=dt;s.y-=s.vy*dt;s.r+=dt*7;if(s.l>=s.m){steam.splice(i,1);continue;}
+    const a=.08*(1-s.l/s.m),g=cx.createRadialGradient(s.x,s.y,0,s.x,s.y,s.r);g.addColorStop(0,`rgba(255,255,255,${a})`);g.addColorStop(1,'rgba(255,255,255,0)');cx.fillStyle=g;cx.beginPath();cx.arc(s.x,s.y,s.r,0,6.283);cx.fill();}
+  if(R&&R.bomb&&R.phase==='soak'){G.fAcc+=dt*14*k;while(G.fAcc>=1){G.fAcc-=1;sparks.push({x:rand(230,570),y:rand(258,270),vx:rand(-8,8),vy:-rand(20,55),l:rand(.8,1.6),m:1.6,col:BOMBS[R.bomb].col,s:R.bomb==='glitter'?rand(1.5,3):rand(2,4.5),sq:R.bomb==='glitter'});}}
+  for(let i=sparks.length-1;i>=0;i--){const p=sparks[i];p.l-=dt;if(p.l<=0){sparks.splice(i,1);continue;}
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=(p.g||0)*dt;cx.globalAlpha=clamp(p.l/p.m*1.6,0,1);cx.fillStyle=p.col;
+    if(p.sq){cx.save();cx.translate(p.x,p.y);cx.rotate(p.l*6);cx.fillRect(-p.s,-p.s,p.s*2,p.s*2);cx.restore();}else{cx.beginPath();cx.arc(p.x,p.y,p.s,0,6.283);cx.fill();}
+    cx.globalAlpha=1;}
+}
+function burst(col,n,x,y,sq){for(let i=0;i<n;i++){const a=rand(0,6.283),sp=rand(30,140);sparks.push({x:x||400,y:y||270,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,g:120,l:rand(.7,1.5),m:1.5,col,s:rand(2,4.5),sq});}}
+
+/* ---------- tips, banner, cards ---------- */
+let tipTimer=0,coachSticky=false;
+/* messaging: exactly one guest line and one coach line, in fixed places, never stacked */
+function coach(text,o){o=o||{};const c=$('#coach');c.innerHTML=`<b>Ren</b><span>${fmt(text)}</span>`;c.classList.remove('off');coachSticky=!!o.sticky;tipTimer=o.sticky?Infinity:(o.dur||6);}
+function clearCoach(){$('#coach').classList.add('off');coachSticky=false;tipTimer=0;}
+const showTip=(text,o)=>coach(text,{dur:o&&o.dur,sticky:!(o&&o.dur)});
+const hideTip=clearCoach;
+function notice(key,title,text,dur){if(S.seen[key]||coachSticky)return false;S.seen[key]=true;save();coach(text,{dur:dur||6});return true;}
+const banner=()=>{};
+
+let storyOpen=false,cardQ=[],cardDone=null,curCard=null,fullText='',shown=0,cardOpenedAt=0;
+function showCards(list,done){
+  if(!list.length){done&&done();return;}
+  cardQ=list.slice();cardDone=done||null;storyOpen=true;storyEl.hidden=false;hideTip();cardOpenedAt=realT;nextCard();
+}
+function renderCard(){
+  const t=$('#sText');t.innerHTML='';t.append(document.createTextNode(fullText.slice(0,shown)));
+  const g=document.createElement('span');g.className='ghost';g.textContent=fullText.slice(shown);t.append(g);
+  $('#sNext').style.opacity=shown>=fullText.length?1:0;
+}
+function nextCard(){
+  if(!cardQ.length){storyOpen=false;storyEl.hidden=true;curCard=null;const d=cardDone;cardDone=null;d&&d();return;}
+  curCard=cardQ.shift();$('#sLabel').textContent=curCard.label||'';fullText=curCard.text;shown=RM?fullText.length:0;
+  $('#sNext').textContent=cardQ.length?'Tap to continue':'Tap to start';renderCard();
+}
+function advanceCard(){if(realT-cardOpenedAt<.25)return;if(shown<fullText.length){shown=fullText.length;renderCard();}else{sfx.click();nextCard();}}
+
+/* ---------- speech bubble, dialog sheet, story runner ---------- */
+let typeTok=0,bubTok=0,curSkip=null,contFn=null,bubbleT=0,bubbleQ=null,bubbleHold=0,bubbleSticky=false;
+function typeInto(el,text,cb,getTok,myTok){
+  const plain=text.replace(/\*/g,'');let i=0,iv=null;
+  const finish=()=>{if(iv)clearInterval(iv);if(getTok()!==myTok)return;el.innerHTML=fmt(text);cb&&cb();};
+  if(RM){finish();return{skip(){}};}
+  iv=setInterval(()=>{if(getTok()!==myTok){clearInterval(iv);return;}i+=2;el.textContent=plain.slice(0,i);if(i>=plain.length)finish();},18);
+  return{skip(){if(i<plain.length){i=plain.length;finish();}}};
+}
+function showBubble(who,color,text,o){
+  o=o||{};
+  if(!o.force&&realT<bubbleHold){bubbleQ={who,color,text,o};return null;}
+  bubbleQ=null;const el=$('#bubble');
+  $('#bwho').textContent=who;el.style.setProperty('--bc',lerpCol(color,'#000000',.5));
+  const hold=o.hold||Math.max(3.8,text.length*.06+2.4);
+  bubbleSticky=!!o.sticky;bubbleHold=realT+hold;bubbleT=o.sticky?Infinity:hold+1.2;
+  el.classList.remove('off');const tok=++bubTok;
+  const t=typeInto($('#btext'),text,o.done,()=>bubTok,tok);curSkip=t;return t;
+}
+function hideBubble(){bubbleQ=null;bubbleSticky=false;bubbleT=0;bubTok++;$('#bubble').classList.add('off');}
+/* guests speak in bubbles over the tub; lines never overwrite one another before they can be read */
+function hint(who,color,text){if(!who)return;showBubble(who,color,text,{});}
+function dialog(o){
+  beatEl.hidden=false;const tok=++typeTok;clearCoach();
+  const speaker=!!o.who&&o.bubble!==false;
+  const done=()=>{if(tok!==typeTok)return;let h='';
+    if(o.choices)h=o.choices.map(c=>`<button class="choice" data-act="beat" data-s="${c.s}">${c.html}</button>`).join('');
+    if(o.cont)h+=`<button class="pill primary" data-act="cont" style="justify-self:end">${o.cont}</button>`;
+    $('#dchoices').innerHTML=h;const f=$('#dchoices button');if(f)f.focus({preventScroll:true});};
+  if(speaker){
+    sheet.innerHTML=`${o.pre?`<p class="pre">${o.pre}</p>`:''}<div class="choices" id="dchoices"></div>`;
+    curSkip=showBubble(o.who,o.color,o.text,{force:true,sticky:true,done});
+  }else{
+    hideBubble();
+    sheet.innerHTML=`<div class="who" style="color:${o.color||'var(--haze)'}">${o.who||''}</div>${o.pre?`<p class="pre">${o.pre}</p>`:''}<p class="line narr" id="dline"></p><div class="choices" id="dchoices"></div>`;
+    curSkip=typeInto($('#dline'),o.text,done,()=>typeTok,tok);
+  }
+}
+const closeDialog=()=>{typeTok++;beatEl.hidden=true;sheet.innerHTML='';if(bubbleSticky)hideBubble();};
+sheet.addEventListener('click',e=>{if(e.target.closest('button'))return;curSkip&&curSkip.skip&&curSkip.skip();});
+$('#bubble').addEventListener('click',()=>{curSkip&&curSkip.skip&&curSkip.skip();});
+/* story: a run of lines, each waiting for the player to tap Continue */
+function story(steps,done){
+  let i=0;
+  const next=()=>{
+    if(i>=steps.length){closeDialog();contFn=null;done&&done();return;}
+    const st=steps[i++];dialog({who:st.who,color:st.color,text:st.text,cont:'Continue'});contFn=next;
+  };
+  next();
+}
+
+/* ---------- overlay ---------- */
+function setOverlay(o){
+  $('#ovTitle').textContent=o.title||'';$('#ovText').textContent=o.text||'';$('#ovExtra').innerHTML=o.extra||'';$('#ovCta').textContent=o.cta||'';
+  overlay.classList.toggle('low',!!o.low);const b=$('#ovBtns');b.innerHTML='';
+  (o.buttons||[]).forEach((x,k)=>{const el=document.createElement('button');el.className='pill'+(k===0?' primary':'');el.textContent=x.label;
+    el.addEventListener('click',e=>{e.stopPropagation();ensureAudio();el.blur();x.act();});b.append(el);});
+  ovPrimary=o.buttons&&o.buttons[0]?o.buttons[0].act:null;overlay.classList.remove('hidden');
+}
+const hideOverlay=()=>{overlay.classList.add('hidden');ovPrimary=null;};
+
+/* ---------- HUD ---------- */
+function updateHUD(){
+  hudEl.dataset.mode=(state==='title'||state==='story')?'title':(state==='lobby'||state==='night')?'lobby':'play';
+  $('#secName').textContent=!U().bombs?'':state==='lobby'?`Night ${S.night}`:state==='night'?`Night ${S.night-1} complete`:(N&&R)?`Night ${S.night}, guest ${Math.min(N.i+1,3)} of 3`:'';
+  $('#clout').textContent=`✦ ${S.clout} Clout`;
+  const nb=MIDS.filter(id=>S.col[id]&&!S.col[id].viewed).length,b=$('#badge');
+  b.hidden=!nb;b.textContent=nb;applyUnlocks();
+}
+function setupTicks(){
+  const w=$('#vwrap');w.querySelectorAll('.tick').forEach(t=>t.remove());
+  if(R)R.beats.forEach(b=>{const t=document.createElement('span');t.className='tick';t.style.left=b.at+'%';w.append(t);});
+}
+
+/* ---------- controls ---------- */
+const bombsEl=$('#bombs');
+bombsEl.innerHTML=Object.keys(BOMBS).map(k=>{const b=BOMBS[k];return `<button class="bomb" data-id="${k}" aria-label="${b.n}"><span class="bc" id="bc-${k}">0</span><span class="bi" style="background:${b.col}">${b.ic}</span><span class="bn">${b.s}</span></button>`;}).join('');
+function syncSliders(){$('#sT').value=G.setTemp;$('#sB').value=G.setBub;}
+function refreshControls(){
+  const lock=!R||state!=='play'||R.phase!=='soak';
+  $('#controls').classList.toggle('locked',lock);
+  $('#controls').querySelectorAll('input').forEach(i=>i.disabled=lock);
+  Object.keys(BOMBS).forEach(k=>{
+    const b=bombsEl.querySelector(`[data-id="${k}"]`);$('#bc-'+k).textContent=S.bombs[k];
+    b.disabled=lock||!!R&&!!R.bomb||S.bombs[k]<=0;
+    b.classList.toggle('sel',selBomb===k);b.classList.toggle('active',!!R&&R.bomb===k);
+    b.classList.toggle('ph',!S.ub[k]);b.classList.toggle('tut-glow',!!R&&R.focus==='bombs'&&R.ts===2&&k===R.mon.love);
+  });
+  $('#ctrlT').classList.toggle('tut-glow',!!R&&R.focus==='temp'&&R.ts===0&&R.phase==='soak');
+  $('#ctrlB').classList.toggle('tut-glow',!!R&&R.focus==='bubbles'&&R.ts===0&&R.phase==='soak');
+  ph('#dropBtn',!selBomb||!!(R&&R.bomb));ph('#wrapBtn',!R||!U().wrap);
+  const bf=$('#buff');
+  if(R&&R.bomb)bf.textContent=`In the water: ${BOMBS[R.bomb].n}. ${BOMBS[R.bomb].buff}`;
+  else if(selBomb)bf.textContent=`${BOMBS[selBomb].n}: ${BOMBS[selBomb].d} ${BOMBS[selBomb].buff}`;
+  else bf.textContent='One bath bomb per guest. Tap one to read about it, tap again to drop it.';
+}
+
+/* ---------- simulation ---------- */
+const tolerances=()=>{const b=R&&R.bomb,k=R&&R.tut?1.4:1;return{tT:(4+S.up.heater)*(b==='salts'?1.2:1)*k,tB:(22+S.up.jets*6)*(b==='ecto'?1.2:1)*k};};
+const ideal=()=>({t:clamp(R.mon.temp+R.shT+Math.sin(R.clock*.35+R.ph)*(R.tut?0:.8),24.5,47.5),b:clamp(R.mon.bub+R.shB+Math.sin(R.clock*.5+R.ph*2)*(R.tut?0:4),2,98)});
+const moodIdx=f=>f<-.1?0:f<.15?1:f<.4?2:f<.7?3:4;
+const MOODL=['Miserable','Grumpy','Fine','Cozy','Blissful'];
+
+function sim(dt){
+  const heat=(1.6+1.0*S.up.heater)*(R&&R.bomb==='brim'?2:1);
+  G.actTemp+=clamp(G.setTemp-G.actTemp,-heat*dt,heat*dt);
+  const bs=70+25*S.up.jets;G.actBub+=clamp(G.setBub-G.actBub,-bs*dt,bs*dt);
+  if(G.force){G.force.t-=dt;if(G.force.t<=0)G.force=null;}
+  if(!R||state!=='play'||R.phase!=='soak')return;
+  R.clock+=dt;
+  const id=ideal(),tol=tolerances(),dT=G.actTemp-id.t,dB=G.actBub-id.b;
+  const ft=clamp(1-Math.abs(dT)/tol.tT,-1,1),fb=clamp(1-Math.abs(dB)/tol.tB,-1,1),fit=clamp((ft+fb)/2,-.8,1);
+  R.fitS=lerp(R.fitS,fit,Math.min(1,dt*2.5));R.id=id;R.tol=tol;R.sT+=dT*dt;R.sB+=dB*dt;R.el+=dt;
+  const b=R.bomb,love=b&&b===R.mon.love,hate=b&&b===R.mon.hate;let rate;
+  if(fit>=0){rate=3.4*fit*(1+.1*S.up.jets)*(love?1.5:hate?.5:b?1.15:1)*(b==='crimson'?1.1:1)*(R.tut?1.3:1);}
+  else rate=3.4*fit*1.1*(hate?1.6:1)*(R.tut?.5:1);
+  R.vibe=clamp(R.vibe+rate*dt,0,100);
+  if(!R.freeze)R.t-=dt;
+  // mood shifts (off while learning)
+  if(!R.tut){
+    R.shiftIn-=dt;
+    if(R.shiftIn<=0){
+      R.shiftIn=rand(11,16)*(b==='lavender'?1.7:1);
+      if(Math.random()<.5){const d=(Math.random()<.5?-1:1)*rand(2,3.5);R.shT=clamp(R.mon.temp+R.shT+d,26,46)-R.mon.temp;}
+      else{const d=(Math.random()<.5?-1:1)*rand(10,18);R.shB=clamp(R.mon.bub+R.shB+d,6,94)-R.mon.bub;}
+      R.hintCD=Math.min(R.hintCD,1.5);hint('','',`${R.mon.short} shifts in the water. Their mood has changed.`);
+      notice('shift','Mood swing','Guests change what they want mid-soak. Keep listening for new hints.',6);
+    }
+  }
+  // reactions: speak only when something changes
+  const eT=dT/tol.tT,eB=dB/tol.tB,mo=R.mon;
+  R.fxKind=eT<-.7?'cold':eT>.7?'hot':eB>.9?'foam':'';
+  const stT=eT<-.9?'cold':eT>.9?'hot':Math.abs(eT)<.45?'ok':'near';
+  const stB=eB<-.9?'low':eB>.9?'high':Math.abs(eB)<.45?'ok':'near';
+  R.sayCD-=dt;
+  if(R.focus==='temp'||R.focus==='bubbles'){
+    const key=R.focus==='temp'?stT:stB;
+    if(key!==R.last){
+      R.last=key;
+      const line={cold:mo.hints.cold,hot:mo.hints.hot,low:mo.hints.low,high:mo.hints.high,ok:NICE[mo.id]}[key];
+      if(line&&(R.sayCD<=0||key==='ok')){hint(mo.name,mo.color,line);R.sayCD=1.6;}
+      coach({cold:'Drag the temperature slider right to warm the water.',hot:'Too far. Drag the slider left to cool it down.',low:'Drag the bubble slider right for more bubbles.',high:'Drag the bubble slider left for gentler bubbles.',ok:R.focus==='temp'?'Hold it there. The vibe meter under the tub fills while they’re happy.':'Hold it there and watch the vibe fill.',near:'Almost. Small nudges.'}[key],{sticky:true});
+      if(key==='ok'){R.vibeShown=true;sfx.good();if(R.focus==='temp'&&!R.nudged){R.nudged=true;const r=R;later(4.5,()=>{if(R===r&&r.last==='ok'&&r.phase==='soak')coach('Curious? Slide it a little too hot and watch their reaction, then bring it back.',{sticky:true});});}}
+    }
+  }else{
+    R.hintCD-=dt;const aT=Math.abs(eT),aB=Math.abs(eB);
+    if(R.hintCD<=0&&Math.max(aT,aB)>.9){
+      hint(mo.name,mo.color,aT>=aB?(dT>0?mo.hints.hot:mo.hints.cold):(dB>0?mo.hints.high:mo.hints.low));R.hintCD=6.5;
+    }
+  }
+  const lowT=R.t<10&&!R.freeze;$('#heat').classList.toggle('low',lowT&&!RM);
+  if(R.bi<R.beats.length&&R.vibe>=R.beats[R.bi].at){startBeat();return;}
+  if(R.vibe>=100&&R.bi>=R.beats.length&&!R.peak){startFinale();return;}
+  if(R.t<=0)finishPatron('time');
+}
+function stageVisuals(){
+  hudEl.classList.toggle('novibe',state==='play'&&(!R||(R.focus==='temp'&&!R.vibeShown)));
+  if(Math.abs(G.actTemp-G.lastTemp)>.08){G.lastTemp=G.actTemp;const c=waterColors(G.actTemp);$('#w0').setAttribute('stop-color',lerpCol(c,'#ffffff',.35));$('#w1').setAttribute('stop-color',c);$('#waterFront').setAttribute('fill',c);}
+  const tintEl=$('#tint');if(G.tint){tintEl.setAttribute('fill',G.tint);tintEl.setAttribute('fill-opacity','.3');}else tintEl.setAttribute('fill','none');
+  const dB=Math.round(G.actBub)+'%',dT=G.actTemp.toFixed(1)+'°';
+  if(G.shown.b!==dB){G.shown.b=dB;$('#dBub').textContent=dB;}
+  if(G.shown.t!==dT){G.shown.t=dT;$('#dTemp').textContent=dT;}
+  const jo=(G.actBub/100).toFixed(2);if(G.shown.j!==jo){G.shown.j=jo;$('#jetGlowL').setAttribute('opacity',jo);$('#jetGlowR').setAttribute('opacity',jo);}
+  let mm=0,rm='smug';
+  if(R&&state==='play'){
+    if(G.force){const r=G.force.rating;mm=r>=2?2:r;rm=r>=2?'love':r<0?'flat':'smug';if(r>=1&&G.force.t>2.6)rm='wink';}
+    else if(R.phase==='finale'){mm=2;rm='love';}
+    else if(R.phase==='done'){mm=R.vibe>=65?2:R.vibe>=30?1:-1;rm=mm>=2?'love':mm<0?'flat':'smug';}
+    else if(R.phase==='soak'||R.phase==='beat'||R.phase==='reply'){const i=moodIdx(R.fitS);mm=i>=4?2:i===3?1:i===2?0:-1;rm=i>=4?'love':i<=0?'flat':'smug';}
+  }else if(state==='over'&&R){mm=R.vibe>=65?2:R.vibe>=30?1:-1;rm=mm>=2?'love':mm<0?'flat':'smug';}
+  setMonMood(mm);setRen(rm);
+  setFx(R&&state==='play'&&R.phase==='soak'?(R.fxKind||''):'');
+  if(R&&state==='play'){
+    $('#vfill').style.width=R.vibe+'%';
+    const vn=Math.round(R.vibe);if(G.shown.v!==vn){G.shown.v=vn;$('#score').textContent=vn;}
+    $('#tfill').style.transform=`scaleX(${clamp(R.t/DUR,0,1)})`;
+    const ml=R.phase==='soak'||R.phase==='beat'||R.phase==='reply'?MOODL[moodIdx(R.fitS)]:R.phase==='finale'?'Blissful':'';
+    if(G.shown.m!==ml){G.shown.m=ml;$('#moodTxt').textContent=ml;}
+  }
+  $('#aT').textContent=G.actTemp.toFixed(1);$('#aB').textContent=Math.round(G.actBub);
+  $('#nT').style.left=`calc(15px + (100% - 30px) * ${(G.actTemp-24)/24})`;$('#nB').style.left=`calc(15px + (100% - 30px) * ${G.actBub/100})`;
+  const dd=G.setTemp-G.actTemp;$('#aTarr').textContent=Math.abs(dd)<.3?'':dd>0?'heating':'cooling';
+  if(R&&R.id&&R.phase==='soak'){
+    if(S.up.neon>=2){$('#sT').style.setProperty('--z0',clamp((R.id.t-R.tol.tT*.5-24)/24*100,0,100)+'%');$('#sT').style.setProperty('--z1',clamp((R.id.t+R.tol.tT*.5-24)/24*100,0,100)+'%');}
+    else{$('#sT').style.setProperty('--z0','0%');$('#sT').style.setProperty('--z1','0%');}
+    if(S.up.neon>=3){$('#sB').style.setProperty('--z0',clamp(R.id.b-R.tol.tB*.5,0,100)+'%');$('#sB').style.setProperty('--z1',clamp(R.id.b+R.tol.tB*.5,0,100)+'%');}
+    else{$('#sB').style.setProperty('--z0','0%');$('#sB').style.setProperty('--z1','0%');}
+  }
+}
+let last=performance.now();
+function frame(now){
+  const real=Math.min(.05,(now-last)/1000);last=now;realT+=real;
+  const dt=slowmo>0?real*.3:real;if(slowmo>0)slowmo-=real;
+  try{
+    if(storyOpen&&shown<fullText.length){shown=Math.min(fullText.length,shown+real*48);renderCard();}
+    for(let i=timers.length-1;i>=0;i--){timers[i].t-=real;if(timers[i].t<=0){const f=timers[i].f;timers.splice(i,1);f();}}
+    if(tipTimer!==Infinity&&tipTimer>0){tipTimer-=real;if(tipTimer<=0)hideTip();}
+    if(bubbleT!==Infinity&&bubbleT>0){bubbleT-=real;if(bubbleT<=0)$('#bubble').classList.add('off');}
+    if(bubbleQ&&realT>=bubbleHold&&beatEl.hidden){const q=bubbleQ;showBubble(q.who,q.color,q.text,Object.assign({},q.o,{force:true}));}
+    if(!storyOpen&&!guideOpen&&!closetOpen)sim(dt);
+    fxStep(dt);stageVisuals();
+  }catch(e){console.error(e);}
+  requestAnimationFrame(frame);
+}
+
+/* ---------- flow ---------- */
+function resetStageState(){R=null;N=null;selBomb=null;timers.length=0;contFn=null;hideBubble();$('#shake').classList.remove('leave','shiver');setFx('');closeDialog();G.tint=null;G.force=null;sparks.length=0;setMonster(null);hideTip();storyOpen=false;storyEl.hidden=true;cardQ=[];cardDone=null;$('#heat').classList.remove('low');}
+function showTitle(){
+  state='title';resetStageState();hideOverlay();refreshControls();updateHUD();hint('','','Welcome to the spa.');
+  const has=loadSave(),hearts=has?Object.keys(has.hearts).length:0;
+  setOverlay({low:true,title:'Soak & Seduced',
+    text:has?`Night ${has.night}. ${hearts} of 5 hearts unlocked. The water is still warm.`:'Midnight in the underworld. The neon is on, the water is hot, and somebody is knocking.',
+    buttons:has?[{label:`Continue, night ${has.night}`,act:()=>continueGame(has)},{label:'New game',act:newGame}]:[{label:'Begin the night',act:newGame}],
+    cta:'Tap, click or press Space to start.'});
+}
+function newGame(){
+  S=fresh();save();applyNeon();hideOverlay();state='story';updateHUD();
+  showCards(PROLOGUE,()=>beginNight(0));
+}
+function continueGame(has){
+  S=has;applyNeon();
+  if(S.soaks<3){beginNight(S.soaks);return;}
+  if(S.night===1){S.night=2;S.roster=newRoster(2);}
+  goLobby();
+}
+function goLobby(){
+  state='lobby';resetStageState();G.renMood='smug';drawRen();applyNeon();save();refreshControls();updateHUD();
+  const m=S.roster.map(id=>`<figure>${portrait(id)}<figcaption>${MON[id].short}</figcaption></figure>`).join('');
+  const btns=[{label:S.soaks===0?'Open the spa':'Open the spa',act:startNight}];if(U().closet)btns.push({label:'Supply closet',act:openCloset});
+  setOverlay({low:true,title:`Night ${S.night}`,text:S.soaks===0?'Your first guest is on the way. You’ll learn the controls one at a time.':'Three guests are on tonight’s list.',extra:`<div class="guestrow">${m}</div>`,buttons:btns,cta:'Tap, click or press Space to open.'});
+  later(.6,()=>{if(state==='lobby'&&U().closet)notice('closet','Supply closet unlocked','Spend Clout on more bath bombs before you open.',6);});
+}
+function startNight(){if(state!=='lobby')return;beginNight(0);}
+function beginNight(i0){hideOverlay();clearCoach();N={i:i0,results:[],clout:0};state='play';R=null;updateHUD();later(.6,startPatron);}
+function pickScene(m){
+  const v=S.visits[m.id]||0,aff=S.aff[m.id]||0;
+  if(v<m.scenes.length)return{kind:'story',sc:m.scenes[v]};
+  if(!S.hearts[m.id]&&aff>=6)return{kind:'date',sc:m.date};
+  const pr=m.banter.slice().sort(()=>Math.random()-.5).slice(0,2),st=pick(SETS);
+  const mk=(at,say)=>({at,say,banter:true,f:[st.f,''],s:[st.s,''],j:[st.j,'']});
+  return{kind:'banter',sc:{arrive:`${m.short} settles into the water like they own the place.`,beats:[mk(38,pr[0]),mk(72,pr[1])]}};
+}
+function startPatron(){
+  const m=MON[S.roster[N.i]],pk=pickScene(m),focus=FOCUS[S.soaks]||null;
+  R={mon:m,kind:pk.kind,sc:pk.sc,beats:U().dialogue?pk.sc.beats:[],bi:0,vibe:8*S.up.neon,t:DUR,clock:0,ph:rand(0,6),shT:0,shB:0,shiftIn:rand(10,14),hintCD:5,bomb:null,phase:'intro',affGain:0,beatsSeen:0,fitS:.4,id:null,tol:null,peak:false,sT:0,sB:0,el:0,focus,tut:!!focus,freeze:focus==='temp'||focus==='bubbles',ts:focus==='bombs'?2:0,first:!S.col[m.id],last:null,sayCD:0,revT:false,revB:false,vibeShown:focus!=='temp',fxKind:''};
+  if(focus==='temp'){G.setTemp=G.actTemp=m.temp>=31?m.temp-7:m.temp+7;G.setBub=G.actBub=m.bub;syncSliders();}
+  else if(focus==='bubbles'){G.setTemp=G.actTemp=m.temp;G.setBub=G.actBub=clamp(m.bub+(m.bub<50?35:-35),0,100);syncSliders();}
+  else if(focus==='talk'){G.setTemp=G.actTemp=m.temp+(m.temp>34?-3:3);G.setBub=G.actBub=clamp(m.bub+(m.bub<50?15:-15),0,100);syncSliders();}
+  selBomb=null;G.tint=null;sparks.length=0;G.shown={};G.lastTemp=-99;clearCoach();hideBubble();
+  setMonster(m);setupTicks();updateHUD();refreshControls();
+  $('#score').textContent='0';$('#vfill').style.width='0';
+  const r=R;
+  /* 1. the guest walks in and the player reads the arrival at their own pace */
+  later(1.2,()=>{
+    if(R!==r)return;
+    const steps=[{text:pk.sc.arrive}];
+    if(focus==='talk')steps.push({text:'New: conversation. Happy guests want to talk. When the vibe reaches the first white mark under the tub, they’ll speak and you’ll choose a reply. Guests only stay about a minute, so watch the thin time bar.'});
+    if(focus==='bombs')steps.push({text:`New: bath bombs. Every guest has a favourite and one they hate. ${m.short} loves ${BOMBS[m.love].n}. Tap the glowing bomb to read about it, then tap it again to drop it.`});
+    story(steps,()=>{
+      if(R!==r)return;
+      if(focus==='temp'||focus==='bubbles'){
+        /* 2. the guest complains in a speech bubble; only then do the controls fade in */
+        const init=focus==='temp'?(G.actTemp<m.temp?'cold':'hot'):(G.actBub<m.bub?'low':'high');R.last=init;
+        showBubble(m.name,m.color,m.hints[init],{force:true,hold:4.6});
+        later(5,()=>{
+          if(R!==r)return;R.phase='soak';reveal(focus==='temp'?'#ctrlT':'#ctrlB');refreshControls();
+          coach({cold:'Drag the temperature slider right to warm the water.',hot:'Drag the temperature slider left to cool the water.',low:'Drag the bubble slider right for more bubbles.',high:'Drag the bubble slider left for gentler bubbles.'}[init],{sticky:true});
+        });
+      }else{
+        R.phase='soak';refreshControls();
+        if(focus==='bombs')coach(`${m.short} loves ${BOMBS[m.love].n}. Tap the glowing bomb, then tap it again.`,{sticky:true});
+        else if(focus==='talk')coach('Tune the water until the vibe reaches the first white mark.',{dur:8});
+        else if(R.first)later(5,()=>{if(R===r&&state==='play'&&!coachSticky)coach(`New regular: ${m.short}. ${m.tag} Soak them to learn what they like.`,{dur:7});});
+        else if(R.kind==='date')later(5,()=>{if(R===r)notice('date','Date night','This one’s special. Keep the vibe high through the whole date.',7);});
+        else if(S.up.neon>=2)later(5,()=>{if(R===r)notice('aura','Neon aura on','The green zone on your sliders shows the sweet spot.',7);});
+      }
+    });
+  });
+}
+function useBomb(id){
+  if(!R||R.phase!=='soak'||R.bomb||S.bombs[id]<=0)return;
+  S.bombs[id]--;S.used[id]=(S.used[id]||0)+1;R.bomb=id;selBomb=null;
+  if(R.focus==='bombs'&&R.ts<3){R.ts=3;clearCoach();}
+  const m=R.mon,b=BOMBS[id],j=S.journal[m.id]=S.journal[m.id]||{};let line,dv;
+  if(id===m.love){dv=10;line=m.loveLine;j.love=id;floatTxt('Favourite!',b.col);sfx.good();notice('love','Favourite!','Loved bombs boost the vibe fast. Your journal remembers who loves what.',5);}
+  else if(id===m.hate){dv=-10;line=m.hateLine;j.hate=id;floatTxt('Yikes.','#ff8a8a');sfx.bad();notice('hate','Ouch','Every guest has a bomb they hate. It’s noted in your journal.',5);}
+  else{dv=4;line=pick(NEUTRAL);floatTxt('Fizzzz','#fff');sfx.bomb();}
+  R.vibe=clamp(R.vibe+dv,0,100);G.tint=b.col;burst(b.col,36,400,268,id==='glitter');G.force={rating:dv>5?2:dv>0?1:-1,t:2.2};
+  showBubble(m.name,m.color,line,{force:true});
+  refreshControls();save();updateHUD();
+}
+function startBeat(){
+  const b=R.beats[R.bi];R.phase='beat';R.cur=b;refreshControls();sfx.beat();
+  let pre='Choose a reply';
+  if(R.focus==='talk'&&R.bi===0)pre='Choose a reply. Guests each have a type: some like flirting, some like honesty. Watch how they react.';
+  else if(U().joke&&!S.seen.joke){S.seen.joke=true;save();pre='New reply style: Joke. Some guests adore jokes. Some really don’t.';}
+  dialog({who:R.mon.name,color:R.mon.color,text:b.say,pre,choices:['f','s','j'].filter(k=>k!=='j'||U().joke).map(k=>({s:k,html:`<span class="tag ${k}">${TAGN[k]}</span>${b[k][0]}`}))});
+}
+const addAff=n=>{const id=R.mon.id;S.aff[id]=clamp((S.aff[id]||0)+n,0,12);};
+function chooseBeat(k){
+  if(!R||R.phase!=='beat')return;
+  const b=R.cur,m=R.mon,rating=m.pref[k],reply=b.banter?m.react[rating+1]:b[k][1];
+  R.affGain+=rating;addAff(rating);R.vibe=clamp(R.vibe+[-8,0,6,12][rating+1],0,100);R.beatsSeen++;R.bi++;G.force={rating,t:3.4};
+  if(U().affinity)floatTxt(rating>0?`+${rating} affinity`:rating<0?`${rating} affinity`:'Meh',rating>=2?'#ff9bd0':rating===1?'#9dffc9':rating===0?'#fff':'#ff8a8a');
+  rating>0?sfx.good():rating<0?sfx.bad():sfx.click();
+  R.phase='reply';
+  dialog({who:m.name,color:m.color,pre:`You: “${b[k][0]}”`,text:reply,cont:'Continue'});
+  contFn=()=>{
+    closeDialog();R.phase='soak';refreshControls();
+    if(R.focus==='talk'&&!S.seen.talkdone){S.seen.talkdone=true;save();later(.6,()=>coach('That’s conversation. Keep the water right, and keep them talking.',{dur:7}));}
+  };
+}
+function startFinale(){
+  R.phase='finale';R.peak=true;refreshControls();addAff(1);R.affGain+=1;burst('#ffd27a',50,400,230);burst('#ff6fae',30,400,230);sfx.peak();vibrate([20,40,20]);clearCoach();
+  const r=R;later(1.4,()=>{if(R===r)finishPatron('peak');});
+}
+function advice(){
+  const m=R.mon,tol=R.tol||tolerances(),el=Math.max(1,R.el),aT=R.sT/el/tol.tT,aB=R.sB/el/tol.tB;
+  if(R.bomb&&R.bomb===m.hate)return `That ${BOMBS[R.bomb].n} was a bomb ${m.short} hates. It’s in your journal now.`;
+  if(Math.max(Math.abs(aT),Math.abs(aB))>.45)return Math.abs(aT)>=Math.abs(aB)?(aT>0?'The water ran hotter than they liked. Listen for “cool it down.”':'The water ran colder than they liked. Listen for “warmer.”'):(aB>0?'The bubbles ran too strong for them. Listen for “gentler.”':'The bubbles ran too weak for them. Listen for “more bubbles.”');
+  if(!R.bomb)return 'You never dropped a bath bomb. Every guest has a favourite worth finding.';
+  return 'Close one. Adjust the moment you hear a hint.';
+}
+function finishPatron(kind){
+  if(!R||R.phase==='done')return;
+  const m=R.mon,v=R.vibe;let line,title,bonus=0,heart=false,adv='';
+  R.phase='done';refreshControls();closeDialog();hideTip();hideBubble();
+  if(kind==='peak'){line=m.good;title='Peak vibes';bonus=10;}
+  else if(v>=65){line=m.good;title='Cozy and glowing';}
+  else if(v>=30){line=m.ok;title='Decently soaked';adv=advice();}
+  else{line=m.leave;title='Left early';addAff(-1);R.affGain-=1;adv=advice();sfx.bad();}
+  if(R.kind==='date'){
+    if(v>=65&&R.beatsSeen>=2){S.hearts[m.id]=true;heart=true;bonus+=25;title='Heart unlocked';line=m.date.end;adv='';burst('#ff6fae',60,400,220);sfx.peak();}
+    else{adv='They’d like to try that date again. Keep the vibe above 65 to the end.';title+=', date unfinished';}
+  }
+  if(R.kind==='story'&&R.beatsSeen>0)S.visits[m.id]=(S.visits[m.id]||0)+1;
+  const j=S.journal[m.id]=S.journal[m.id]||{};j.temp=m.temp;j.bub=m.bub;
+  const firstMet=!S.col[m.id];S.col[m.id]=S.col[m.id]||{count:0,viewed:false};S.col[m.id].count++;S.soaks++;
+  if(firstMet){S.ub[m.love]=true;S.bombs[m.love]=(S.bombs[m.love]||0)+1;}if(kind==='peak')S.peaks++;
+  let clout=Math.round(v*.45*(1+.25*S.up.neon))+bonus;if(R.bomb==='glitter')clout=Math.round(clout*1.25);
+  S.clout+=clout;N.clout+=clout;N.results.push({id:m.id,title,clout,vibe:Math.round(v)});save();updateHUD();
+  const last=N.i>=2;
+  const u=U(),tz=S.soaks===1?'Your journal is open now (the book, top right). Next guest unlocks a second control: bubbles.':S.soaks===2?'Next guest unlocks conversation and a timer.':'';
+  const extra=`<div class="rstats"><div><b>+${clout}</b><span>Clout</span></div><div><b>${Math.round(v)}</b><span>Vibe</span></div>${u.affinity?`<div><b>${R.affGain>=0?'+':''}${R.affGain}</b><span>Affinity</span></div>`:''}</div>${firstMet&&S.soaks>1?'<p class="lead" style="margin:10px 0 0">Added to your journal.</p>':''}${tz?`<p class="unlockline">${tz}</p>`:''}`;
+  const steps=speechSteps(m,(kind==='peak'&&!heart)?m.peak:line);
+  const refl=reflect(kind,v,m,heart),rr=R;
+  /* the guest says goodbye (tap to continue), visibly leaves, then a quiet moment to reflect */
+  story(steps,()=>guestLeaves(()=>{
+    if(R!==rr)return;
+    state='over';overT=realT;
+    setOverlay({title,text:refl+(adv?' '+adv:''),extra,buttons:[{label:last?'Close the night':'Next guest',act:nextPatron}],cta:''});
+    if(firstMet){$('#help').classList.remove('attn');void $('#help').offsetWidth;$('#help').classList.add('attn');}
+  }));
+}
+/* narration goes to the sheet; only what the guest actually says goes in their speech bubble */
+function speechSteps(m,text){
+  const out=[],qs=[...text.matchAll(/“([^”]+)”/g)].map(x=>x[1]),narr=text.replace(/“[^”]+”/g,'').replace(/\s+/g,' ').trim();
+  if(narr)out.push({text:narr});if(qs.length)out.push({who:m.name,color:m.color,text:qs.join(' ')});
+  return out.length?out:[{text}];
+}
+function guestLeaves(cb){
+  closeDialog();hideBubble();setFx('');const sh=$('#shake');sh.classList.remove('shiver');sh.classList.add('leave');
+  later(1.3,()=>{sh.classList.remove('leave');setMonster(null);cb&&cb();});
+}
+function nextPatron(){
+  if(state!=='over'||realT-overT<.7)return;
+  hideOverlay();N.i++;state='play';R=null;
+  if(N.i>=3)showSummary();else{updateHUD();later(1.4,startPatron);}
+}
+function showSummary(){
+  if(!U().bombs&&S.soaks>=3){}
+  state='night';S.night++;S.roster=newRoster(S.night);
+  let unl='';if(S.night===3){S.ub.salts=true;S.bombs.salts+=2;unl=' A new bomb arrives: '+BOMBS.salts.n+'.';}
+  const ub=unlockedBombs(),gift=ub.length?pick(ub):null;if(gift)S.bombs[gift]++;
+  const tease=S.night===2?'Tomorrow unlocks bath bombs, the supply closet, the Joke reply, and a new regular.':S.night===3?'Tomorrow unlocks upgrades, wrap-up, a new bath bomb, and another new regular.':'';
+  const nres=N.results,tot=N.clout;overT=realT;save();updateHUD();setMonster(null);R=null;
+  const list=`<div class="sumlist">${nres.map(r=>`<div class="sum">${portrait(r.id)}<div><b>${MON[r.id].short}</b><small>${r.title}</small></div><b>+${r.clout}</b></div>`).join('')}</div>`;
+  setOverlay({title:`Night ${S.night-1} is a wrap`,text:`+${tot} Clout tonight.${gift&&U().bombs?' A fan left a free '+BOMBS[gift].n+' in the tip jar.':''}${unl}`,extra:list+(tease?`<p class="unlockline">${tease}</p>`:''),buttons:[{label:'Back to the lobby',act:()=>{if(realT-overT>.7)goLobby();}}],cta:''});
+  if(Object.keys(S.hearts).length>=5&&!S.won){S.won=true;save();later(1.2,openEnd);}
+}
+
+/* ---------- journal ---------- */
+let jTab='r';
+function openGuide(){if(guideOpen)return;guideOpen=true;$('#guide').hidden=false;setTab(jTab);$('#closeGuide').focus();}
+function closeGuide(){guideOpen=false;$('#guide').hidden=true;$('#help').blur();updateHUD();}
+function setTab(w){
+  jTab=w;$('#tabR').classList.toggle('on',w==='r');$('#tabB').classList.toggle('on',w==='b');
+  $('#tabR').setAttribute('aria-selected',w==='r');$('#tabB').setAttribute('aria-selected',w==='b');
+  $('#detail').hidden=true;$('#backBtn').hidden=true;$('#gridView').hidden=w!=='r';$('#bombView').hidden=w!=='b';
+  if(w==='r')renderGrid();else renderBombTab();
+}
+function renderGrid(){
+  const met=MIDS.filter(id=>S.col[id]).length;
+  $('#colCount').textContent=met===MIDS.length?'You’ve met every regular. Now win their hearts.':`${met} of ${MIDS.length} regulars met. Soak a guest to add them here.`;
+  $('#colBar').style.width=(met/MIDS.length*100)+'%';
+  $('#grid').innerHTML='';
+  MIDS.forEach(id=>{
+    const c=S.col[id],m=MON[id],b=document.createElement('button');b.className='entry'+(c?'':' locked');
+    b.innerHTML=(c?portrait(id):'<div class="q">?</div>')+`<span>${c?m.short:'???'}</span><small>${c?(S.hearts[id]?'Heart unlocked':`Soaked ${c.count}×`):'Not met yet'}</small>${c&&!c.viewed?'<span class="new">New</span>':''}`;
+    b.setAttribute('aria-label',c?`${m.name}, soaked ${c.count} times`:'Unknown regular, not met yet');
+    b.addEventListener('click',()=>showDetail(id));$('#grid').append(b);
+  });
+}
+const pipRow=(l,n,v)=>`<span>${l}</span><div class="pips">${[1,2,3,4,5].map(i=>`<i class="${i<=n?'on':''}"></i>`).join('')}</div><span class="v">${v}</span>`;
+function showDetail(id){
+  const m=MON[id],c=S.col[id],j=S.journal[id]||{},a=S.aff[id]||0;let h;
+  if(!c){h=`<div class="dhead"><div><h3>Unknown regular</h3><p>Not met yet</p></div></div><p class="lead">Somebody out there is waiting to be soaked. Open the spa and see who walks in.</p>`;}
+  else{
+    c.viewed=true;save();updateHUD();
+    const tp=clamp(Math.round((m.temp-24)/24*4+1),1,5),bp=clamp(Math.ceil(m.bub/20),1,5),known=j.temp!=null;
+    h=`<div class="dhead">${portrait(id)}<div><h3>${m.name}</h3><p>${m.tag}</p></div></div><p class="lore">${LORE[id]}</p>
+    <div class="stats">${known?pipRow('Likes it',tp,`~${m.temp}°C`)+pipRow('Bubbles',bp,`~${m.bub}%`):'<span style="grid-column:1/-1;color:var(--haze)">Soak them once to learn their water preferences.</span>'}
+      <span>Loves</span><span style="grid-column:2/-1">${j.love?BOMBS[j.love].ic+' '+BOMBS[j.love].n:'???'}</span>
+      <span>Hates</span><span style="grid-column:2/-1">${j.hate?BOMBS[j.hate].ic+' '+BOMBS[j.hate].n:'???'}</span></div>
+    <div class="minis"><div><b>${c.count}</b><span>Soaks</span></div><div><b>${a}/6</b><span>${S.hearts[id]?'Heart unlocked':'Affinity for a date'}</span></div></div>`;
+  }
+  $('#detail').innerHTML=h;$('#gridView').hidden=true;$('#bombView').hidden=true;$('#detail').hidden=false;$('#backBtn').hidden=false;$('#backBtn').focus();
+}
+function renderBombTab(){
+  $('#bombView').innerHTML=(unlockedBombs().length?unlockedBombs():[]).map(k=>{
+    const b=BOMBS[k],loved=MIDS.filter(id=>S.journal[id]&&S.journal[id].love===k).map(id=>MON[id].short),hated=MIDS.filter(id=>S.journal[id]&&S.journal[id].hate===k).map(id=>MON[id].short);
+    return `<div class="brow"><div class="bi" style="background:${b.col}">${b.ic}</div><div><b>${b.n}</b><p>${b.d} ${b.buff}</p><p>Loved by: ${loved.join(', ')||'unknown'}. Hated by: ${hated.join(', ')||'unknown'}.</p></div><span class="badge2">×${S.bombs[k]}</span></div>`;
+  }).join('');
+}
+
+/* ---------- closet ---------- */
+let cTab='s';
+function openCloset(){if(state!=='lobby')return;closetOpen=true;$('#closet').hidden=false;renderCloset();$('#closeCloset').focus();}
+function closeCloset(){closetOpen=false;$('#closet').hidden=true;updateHUD();}
+function renderCloset(){
+  $('#closetClout').textContent=`✦ ${S.clout} Clout`;$('#tabS').classList.toggle('on',cTab==='s');$('#tabU').classList.toggle('on',cTab==='u');
+  $('#tabS').setAttribute('aria-selected',cTab==='s');$('#tabU').setAttribute('aria-selected',cTab==='u');
+  if(!U().upgrades)cTab='s';
+  if(cTab==='s')$('#closetBody').innerHTML=unlockedBombs().map(k=>{const b=BOMBS[k];return `<div class="brow"><div class="bi" style="background:${b.col}">${b.ic}</div><div><b>${b.n}</b> <span class="lead">(owned ${S.bombs[k]})</span><p>${b.d} ${b.buff}</p></div><button class="pill small" data-buy="${k}" ${S.clout<b.price?'disabled':''}>Buy ${b.price}</button></div>`;}).join('');
+  else $('#closetBody').innerHTML=Object.keys(UPS).map(k=>{const u=UPS[k],l=S.up[k],cost=u.costs[l];return `<div class="brow"><div class="bi" style="background:rgba(255,255,255,.08)">${k==='jets'?'💨':k==='heater'?'🌡️':'💡'}</div><div><b>${u.n}</b><p>${u.d}</p><div class="pipsmall">${[0,1,2].map(i=>`<i class="${i<l?'on':''}"></i>`).join('')}</div></div>${l>=3?'<span class="badge2">Maxed</span>':`<button class="pill small" data-up="${k}" ${S.clout<cost?'disabled':''}>Buy ${cost}</button>`}</div>`;}).join('');
+}
+
+/* ---------- ending ---------- */
+function openEnd(){endOpen=true;$('#end').hidden=false;$('#endStats').innerHTML=`<div><b>${S.night-1}</b><span>Nights</span></div><div><b>${S.soaks}</b><span>Soaks</span></div><div><b>${S.peaks}</b><span>Peak vibes</span></div>`;$('#endKeep').focus();sfx.peak();}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');
+  if(b&&!b.disabled){const a=b.dataset.act;if(a==='beat')chooseBeat(b.dataset.s);else if(a==='cont'){const f=contFn;if(f){contFn=null;f();}}}
+  const bomb=e.target.closest('.bomb');
+  if(bomb&&!bomb.disabled){const id=bomb.dataset.id;ensureAudio();if(selBomb===id)useBomb(id);else{selBomb=id;sfx.click();refreshControls();}}
+  const buy=e.target.closest('[data-buy]');
+  if(buy&&!buy.disabled){const k=buy.dataset.buy,p=BOMBS[k].price;if(S.clout>=p){S.clout-=p;S.bombs[k]++;save();sfx.good();renderCloset();updateHUD();}}
+  const up=e.target.closest('[data-up]');
+  if(up&&!up.disabled){const k=up.dataset.up,l=S.up[k];if(l<3&&S.clout>=UPS[k].costs[l]){S.clout-=UPS[k].costs[l];S.up[k]++;save();applyNeon();sfx.peak();renderCloset();updateHUD();}}
+});
+$('#dropBtn').addEventListener('click',()=>{if(selBomb)useBomb(selBomb);});
+$('#wrapBtn').addEventListener('click',()=>{if(R&&R.phase==='soak'&&!R.tut)finishPatron('wrap');});
+$('#sT').addEventListener('input',e=>{G.setTemp=parseFloat(e.target.value);});
+$('#sB').addEventListener('input',e=>{G.setBub=parseFloat(e.target.value);});
+$('#help').addEventListener('click',()=>{ensureAudio();openGuide();});
+$('#closeGuide').addEventListener('click',closeGuide);
+$('#tabR').addEventListener('click',()=>setTab('r'));$('#tabB').addEventListener('click',()=>setTab('b'));
+$('#backBtn').addEventListener('click',()=>setTab('r'));
+$('#guide').addEventListener('click',e=>{if(e.target.id==='guide')closeGuide();});
+$('#replayTut').addEventListener('click',()=>{S.seen={};save();closeGuide();showTip('Tips reset. Each one will show again the next time it comes up.',{title:'Tips reset',dur:4.5});});
+$('#tabS').addEventListener('click',()=>{cTab='s';renderCloset();});$('#tabU').addEventListener('click',()=>{cTab='u';renderCloset();});
+$('#closeCloset').addEventListener('click',closeCloset);
+$('#closet').addEventListener('click',e=>{if(e.target.id==='closet')closeCloset();});
+$('#endKeep').addEventListener('click',()=>{endOpen=false;$('#end').hidden=true;});
+$('#endAgain').addEventListener('click',()=>{endOpen=false;$('#end').hidden=true;newGame();});
+const muteBtn=$('#mute');
+const paintMute=()=>{muteBtn.textContent=muted?'🔇':'🔊';muteBtn.setAttribute('aria-label',muted?'Unmute sound':'Mute sound');};
+muteBtn.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem(MUTE,muted?'1':'0');}catch(e){}paintMute();ensureAudio();if(!muted)sfx.click();muteBtn.blur();});
+function onPress(){
+  ensureAudio();
+  if(guideOpen||closetOpen||endOpen)return;
+  if(storyOpen){advanceCard();return;}
+  if(state==='title'||state==='lobby'){ovPrimary&&ovPrimary();return;}
+  if((state==='over'||state==='night')&&realT-overT>.7&&ovPrimary)ovPrimary();
+}
+document.addEventListener('pointerdown',e=>{
+  if(e.target.closest('button,input,.modal,#dock,#beat,.corner,#overlay .panel'))return;
+  onPress();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){if(guideOpen)closeGuide();else if(closetOpen)closeCloset();return;}
+  if((e.key===' '||e.key==='Enter')&&!e.target.closest('button,input')){e.preventDefault();onPress();}
+});
+
+/* ---------- boot ---------- */
+paintMute();applyNeon();drawRen();showTitle();updateHUD();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
